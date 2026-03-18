@@ -18,6 +18,9 @@ CREATE TABLE IF NOT EXISTS clients (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(190) NOT NULL,
   email VARCHAR(190) NOT NULL,
+  cpf_cnpj VARCHAR(20) NULL,
+  phone VARCHAR(20) NULL,
+  mobile_phone VARCHAR(20) NULL,
   password VARCHAR(255) NOT NULL,
   asaas_customer_id VARCHAR(80) NULL,
   created_at DATETIME NOT NULL,
@@ -82,6 +85,20 @@ CREATE TABLE IF NOT EXISTS server_metrics (
   CONSTRAINT fk_server_metrics_server FOREIGN KEY (server_id) REFERENCES servers(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS plans (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(190) NOT NULL,
+  description VARCHAR(255) NULL,
+  cpu INT UNSIGNED NOT NULL,
+  ram BIGINT UNSIGNED NOT NULL,
+  storage BIGINT UNSIGNED NOT NULL,
+  price_monthly DECIMAL(10,2) NOT NULL,
+  specs_json LONGTEXT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  created_at DATETIME NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS vps (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   client_id INT UNSIGNED NOT NULL,
@@ -90,13 +107,16 @@ CREATE TABLE IF NOT EXISTS vps (
   cpu INT UNSIGNED NOT NULL,
   ram BIGINT UNSIGNED NOT NULL,
   storage BIGINT UNSIGNED NOT NULL,
+  plan_id INT UNSIGNED NULL,
   status VARCHAR(30) NOT NULL,
   created_at DATETIME NOT NULL,
   PRIMARY KEY (id),
   KEY idx_vps_client_id (client_id),
   KEY idx_vps_server_id (server_id),
+  KEY idx_vps_plan_id (plan_id),
   CONSTRAINT fk_vps_client FOREIGN KEY (client_id) REFERENCES clients(id),
-  CONSTRAINT fk_vps_server FOREIGN KEY (server_id) REFERENCES servers(id)
+  CONSTRAINT fk_vps_server FOREIGN KEY (server_id) REFERENCES servers(id),
+  CONSTRAINT fk_vps_plan FOREIGN KEY (plan_id) REFERENCES plans(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS applications (
@@ -128,6 +148,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   client_id INT UNSIGNED NOT NULL,
   vps_id INT UNSIGNED NULL,
+  plan_id INT UNSIGNED NULL,
   asaas_subscription_id VARCHAR(80) NOT NULL,
   status VARCHAR(30) NOT NULL,
   next_due_date DATE NULL,
@@ -135,20 +156,33 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   PRIMARY KEY (id),
   KEY idx_subscriptions_client_id (client_id),
   KEY idx_subscriptions_vps_id (vps_id),
+  KEY idx_subscriptions_plan_id (plan_id),
   CONSTRAINT fk_subscriptions_client FOREIGN KEY (client_id) REFERENCES clients(id),
-  CONSTRAINT fk_subscriptions_vps FOREIGN KEY (vps_id) REFERENCES vps(id)
+  CONSTRAINT fk_subscriptions_vps FOREIGN KEY (vps_id) REFERENCES vps(id),
+  CONSTRAINT fk_subscriptions_plan FOREIGN KEY (plan_id) REFERENCES plans(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS asaas_events (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  event_id VARCHAR(190) NOT NULL,
+  event_type VARCHAR(60) NOT NULL,
+  created_at DATETIME NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_asaas_events_event_id (event_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS jobs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   type VARCHAR(60) NOT NULL,
   payload LONGTEXT NOT NULL,
+  run_at DATETIME NULL,
   status VARCHAR(20) NOT NULL,
   log LONGTEXT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NULL,
   PRIMARY KEY (id),
-  KEY idx_jobs_status_created_at (status, created_at)
+  KEY idx_jobs_status_created_at (status, created_at),
+  KEY idx_jobs_status_run_at_id (status, run_at, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS tickets (

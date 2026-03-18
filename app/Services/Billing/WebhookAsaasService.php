@@ -84,7 +84,7 @@ final class WebhookAsaasService
                 $this->marcarAssinaturaAtiva($subId);
 
                 if ($vpsId > 0) {
-                    $upVps = $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id AND status = 'pending_payment'");
+                    $upVps = $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id AND status IN ('pending_payment','suspended_payment')");
                     $upVps->execute([':id' => $vpsId]);
 
                     $repoJobs = new RepositorioJobs();
