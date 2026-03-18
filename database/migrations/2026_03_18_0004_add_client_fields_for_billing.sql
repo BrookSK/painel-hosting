@@ -1,0 +1,4 @@
+ALTER TABLE clients
+  ADD COLUMN cpf_cnpj VARCHAR(20) NULL AFTER email,
+  ADD COLUMN phone VARCHAR(20) NULL AFTER cpf_cnpj,
+  ADD COLUMN mobile_phone VARCHAR(20) NULL AFTER phone;

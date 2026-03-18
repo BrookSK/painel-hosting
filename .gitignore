@@ -1,0 +1,7 @@
+/vendor/
+/data/
+/logs/
+/public/uploads/
+/config/instalacao.php
+.DS_Store
+Thumbs.db

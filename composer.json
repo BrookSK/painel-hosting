@@ -1,0 +1,16 @@
+{
+  "name": "lrv/lrv-cloud-manager",
+  "description": "LRV Cloud Manager",
+  "type": "project",
+  "require": {
+    "php": "^8.3",
+    "ext-pdo": "*",
+    "erusev/parsedown": "^1.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "LRV\\App\\": "app/",
+      "LRV\\Core\\": "core/"
+    }
+  }
+}
