@@ -31,6 +31,8 @@ function formatarGb(int $mb): string
       <div class="linha">
         <a href="/equipe/painel">Painel</a>
         <a href="/equipe/planos">Planos</a>
+        <a href="/equipe/vps">VPS</a>
+        <a href="/equipe/jobs">Jobs</a>
         <a href="/equipe/tickets">Tickets</a>
         <a href="/equipe/configuracoes">Configurações</a>
         <a href="/equipe/sair">Sair</a>
@@ -52,6 +54,8 @@ function formatarGb(int $mb): string
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Hostname</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">IP</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">SSH</th>
+              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Usuário</th>
+              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Chave</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">CPU</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Memória</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Armazenamento</th>
@@ -65,6 +69,8 @@ function formatarGb(int $mb): string
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong><?php echo View::e((string) ($s['hostname'] ?? '')); ?></strong></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($s['ip_address'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($s['ssh_port'] ?? '')); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($s['ssh_user'] ?? '')); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string) ($s['ssh_key_id'] ?? '')); ?></code></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
                   <?php echo View::e((string) ($s['cpu_used'] ?? 0)); ?> / <?php echo View::e((string) ($s['cpu_total'] ?? 0)); ?>
                 </td>
@@ -93,7 +99,7 @@ function formatarGb(int $mb): string
             <?php endforeach; ?>
             <?php if (empty($servidores)): ?>
               <tr>
-                <td colspan="8" style="padding:12px;">Nenhum servidor cadastrado ainda.</td>
+                <td colspan="10" style="padding:12px;">Nenhum servidor cadastrado ainda.</td>
               </tr>
             <?php endif; ?>
           </tbody>

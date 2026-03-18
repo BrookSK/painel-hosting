@@ -24,6 +24,9 @@ final class ConfiguracoesController
             'evolution_url_base' => ConfiguracoesSistema::evolutionUrlBase(),
             'evolution_token' => ConfiguracoesSistema::evolutionToken(),
             'email_admin' => ConfiguracoesSistema::emailAdmin(),
+            'whatsapp_admin_numero' => ConfiguracoesSistema::whatsappAdminNumero(),
+            'evolution_instance' => ConfiguracoesSistema::evolutionInstance(),
+            'ssh_key_dir' => ConfiguracoesSistema::sshKeyDir(),
         ]);
 
         return Resposta::html($html);
@@ -38,6 +41,9 @@ final class ConfiguracoesController
         $evoUrl = trim((string) ($req->post['evolution_url_base'] ?? ''));
         $evoToken = trim((string) ($req->post['evolution_token'] ?? ''));
         $emailAdmin = trim((string) ($req->post['email_admin'] ?? ''));
+        $whatsAdminNumero = trim((string) ($req->post['whatsapp_admin_numero'] ?? ''));
+        $evoInstance = trim((string) ($req->post['evolution_instance'] ?? ''));
+        $sshKeyDir = trim((string) ($req->post['ssh_key_dir'] ?? ''));
 
         if ($tolerancia <= 0) {
             $tolerancia = 3;
@@ -50,6 +56,9 @@ final class ConfiguracoesController
         Settings::definir('whatsapp.evolution.url_base', $evoUrl);
         Settings::definir('whatsapp.evolution.token', $evoToken);
         Settings::definir('alertas.email_admin', $emailAdmin);
+        Settings::definir('alertas.whatsapp_admin_numero', $whatsAdminNumero);
+        Settings::definir('whatsapp.evolution.instance', $evoInstance);
+        Settings::definir('infra.ssh_key_dir', $sshKeyDir);
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
             'salvo' => true,
@@ -61,6 +70,9 @@ final class ConfiguracoesController
             'evolution_url_base' => $evoUrl,
             'evolution_token' => $evoToken,
             'email_admin' => $emailAdmin,
+            'whatsapp_admin_numero' => $whatsAdminNumero,
+            'evolution_instance' => $evoInstance,
+            'ssh_key_dir' => $sshKeyDir,
         ]);
 
         return Resposta::html($html);

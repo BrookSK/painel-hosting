@@ -43,4 +43,19 @@ final class ConfiguracoesSistema
     {
         return (string) Settings::obter('alertas.email_admin', '');
     }
+
+    public static function whatsappAdminNumero(): string
+    {
+        return (string) Settings::obter('alertas.whatsapp_admin_numero', '');
+    }
+
+    public static function evolutionInstance(): string
+    {
+        return (string) Settings::obter('whatsapp.evolution.instance', '');
+    }
+
+    public static function sshKeyDir(): string
+    {
+        return (string) Settings::obter('infra.ssh_key_dir', '');
+    }
 }

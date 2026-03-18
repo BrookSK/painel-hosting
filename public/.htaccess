@@ -1,4 +1,13 @@
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [QSA,L]
+ 
+ # Se o arquivo ou diretório físico existir, entrega direto
+ RewriteCond %{REQUEST_FILENAME} -f [OR]
+ RewriteCond %{REQUEST_FILENAME} -d
+ RewriteRule ^ - [L]
+ 
+ # Permitir acesso direto a arquivos JS, CSS, imagens
+ RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ [NC]
+ RewriteRule ^ - [L]
+ 
+ # Caso contrário, encaminha tudo para o front controller
+ RewriteRule ^ index.php [L]

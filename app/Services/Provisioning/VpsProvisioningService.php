@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Services\Provisioning;
 
 use LRV\Core\BancoDeDados;
+use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Settings;
 
 final class VpsProvisioningService
@@ -50,6 +51,12 @@ final class VpsProvisioningService
             $log('Node selecionado: ' . $serverId);
         }
 
+        if (!$this->configurarDockerParaNode($serverId, $log)) {
+            $this->atualizarStatusVps($vpsId, 'pending_provisioning');
+            $log('Não foi possível configurar Docker remoto. VPS marcada como pending_provisioning.');
+            return;
+        }
+
         $this->atualizarStatusVps($vpsId, 'provisioning');
 
         $containerId = $containerIdExistente;
@@ -67,7 +74,8 @@ final class VpsProvisioningService
         $volumeHost = rtrim($volumeBase, '/') . '/client_' . (int) $vps['client_id'];
 
         if (!$this->docker->disponivel()) {
-            $log('Docker CLI indisponível. Mantendo VPS em provisioning.');
+            $this->atualizarStatusVps($vpsId, 'pending_provisioning');
+            $log('Docker CLI indisponível. VPS marcada como pending_provisioning.');
             return;
         }
 
@@ -102,12 +110,20 @@ final class VpsProvisioningService
     public function suspenderPorPagamento(int $vpsId, callable $log): void
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, container_id, status FROM vps WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT id, server_id, container_id, status FROM vps WHERE id = :id');
         $stmt->execute([':id' => $vpsId]);
         $vps = $stmt->fetch();
 
         if (!is_array($vps)) {
             throw new \RuntimeException('VPS não encontrada.');
+        }
+
+        $serverId = (int) ($vps['server_id'] ?? 0);
+        if ($serverId > 0) {
+            if (!$this->configurarDockerParaNode($serverId, $log)) {
+                $log('Não foi possível configurar Docker remoto. Suspensão não executada.');
+                return;
+            }
         }
 
         $containerId = (string) ($vps['container_id'] ?? '');
@@ -127,12 +143,20 @@ final class VpsProvisioningService
     public function reativarPorPagamento(int $vpsId, callable $log): void
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, container_id, status FROM vps WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT id, server_id, container_id, status FROM vps WHERE id = :id');
         $stmt->execute([':id' => $vpsId]);
         $vps = $stmt->fetch();
 
         if (!is_array($vps)) {
             throw new \RuntimeException('VPS não encontrada.');
+        }
+
+        $serverId = (int) ($vps['server_id'] ?? 0);
+        if ($serverId > 0) {
+            if (!$this->configurarDockerParaNode($serverId, $log)) {
+                $log('Não foi possível configurar Docker remoto. Reativação não executada.');
+                return;
+            }
         }
 
         $containerId = (string) ($vps['container_id'] ?? '');
@@ -165,24 +189,48 @@ final class VpsProvisioningService
     private function selecionarNodeDisponivel(int $cpu, int $ram, int $storage): int
     {
         $pdo = BancoDeDados::pdo();
-        $sql = "SELECT id,
-                       (ram_total - ram_used) AS ram_available,
-                       (cpu_total - cpu_used) AS cpu_available,
-                       (storage_total - storage_used) AS storage_available
-                FROM servers
-                WHERE status = 'active'
-                  AND (ram_total - ram_used) >= :ram
-                  AND (cpu_total - cpu_used) >= :cpu
-                  AND (storage_total - storage_used) >= :st
-                ORDER BY ram_available DESC
-                LIMIT 1";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':ram' => $ram,
-            ':cpu' => $cpu,
-            ':st' => $storage,
-        ]);
+        try {
+            $sql = "SELECT id,
+                           (ram_total - ram_used) AS ram_available,
+                           (cpu_total - cpu_used) AS cpu_available,
+                           (storage_total - storage_used) AS storage_available
+                    FROM servers
+                    WHERE status = 'active'
+                      AND COALESCE(ssh_user,'') <> ''
+                      AND COALESCE(ssh_key_id,'') <> ''
+                      AND (ram_total - ram_used) >= :ram
+                      AND (cpu_total - cpu_used) >= :cpu
+                      AND (storage_total - storage_used) >= :st
+                    ORDER BY ram_available DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':ram' => $ram,
+                ':cpu' => $cpu,
+                ':st' => $storage,
+            ]);
+        } catch (\Throwable $e) {
+            $sql = "SELECT id,
+                           (ram_total - ram_used) AS ram_available,
+                           (cpu_total - cpu_used) AS cpu_available,
+                           (storage_total - storage_used) AS storage_available
+                    FROM servers
+                    WHERE status = 'active'
+                      AND (ram_total - ram_used) >= :ram
+                      AND (cpu_total - cpu_used) >= :cpu
+                      AND (storage_total - storage_used) >= :st
+                    ORDER BY ram_available DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':ram' => $ram,
+                ':cpu' => $cpu,
+                ':st' => $storage,
+            ]);
+        }
 
         $s = $stmt->fetch();
         return is_array($s) ? (int) ($s['id'] ?? 0) : 0;
@@ -229,5 +277,67 @@ final class VpsProvisioningService
             $pdo->rollBack();
             throw $e;
         }
+    }
+
+    private function configurarDockerParaNode(int $serverId, callable $log): bool
+    {
+        if ($serverId <= 0) {
+            return false;
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        try {
+            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $serverId]);
+            $srv = $stmt->fetch();
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        if (!is_array($srv)) {
+            $log('Node não encontrado: ' . $serverId);
+            return false;
+        }
+
+        if ((string) ($srv['status'] ?? '') !== 'active') {
+            $log('Node não está ativo: ' . $serverId);
+            return false;
+        }
+
+        $host = trim((string) ($srv['ip_address'] ?? ''));
+        if ($host === '') {
+            $host = trim((string) ($srv['hostname'] ?? ''));
+        }
+
+        $porta = (int) ($srv['ssh_port'] ?? 22);
+        $usuario = trim((string) ($srv['ssh_user'] ?? ''));
+        $keyId = trim((string) ($srv['ssh_key_id'] ?? ''));
+
+        if ($host === '' || $porta <= 0 || $usuario === '' || $keyId === '') {
+            $log('Node sem dados de SSH completos (host/porta/usuário/chave).');
+            return false;
+        }
+
+        $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+        if ($keyDir === '') {
+            $log('Diretório base das chaves SSH não configurado (infra.ssh_key_dir).');
+            return false;
+        }
+
+        $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
+        if (!is_file($keyPath)) {
+            $log('Arquivo de chave não encontrado: ' . $keyId);
+            return false;
+        }
+
+        try {
+            $this->docker->definirRemoto($host, $porta, $usuario, $keyPath);
+        } catch (\Throwable $e) {
+            $log('Falha ao configurar destino remoto: ' . $e->getMessage());
+            return false;
+        }
+
+        return true;
     }
 }

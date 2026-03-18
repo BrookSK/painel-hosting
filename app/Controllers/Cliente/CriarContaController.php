@@ -22,6 +22,9 @@ final class CriarContaController
             'erro' => '',
             'nome' => '',
             'email' => '',
+            'cpf_cnpj' => '',
+            'phone' => '',
+            'mobile_phone' => '',
         ]);
 
         return Resposta::html($html);
@@ -37,11 +40,18 @@ final class CriarContaController
         $email = trim((string) ($req->post['email'] ?? ''));
         $senha = (string) ($req->post['senha'] ?? '');
 
+        $cpfCnpj = trim((string) ($req->post['cpf_cnpj'] ?? ''));
+        $phone = trim((string) ($req->post['phone'] ?? ''));
+        $mobilePhone = trim((string) ($req->post['mobile_phone'] ?? ''));
+
         if ($nome === '' || $email === '' || $senha === '') {
             $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
                 'erro' => 'Preencha nome, e-mail e senha.',
                 'nome' => $nome,
                 'email' => $email,
+                'cpf_cnpj' => $cpfCnpj,
+                'phone' => $phone,
+                'mobile_phone' => $mobilePhone,
             ]);
             return Resposta::html($html, 422);
         }
@@ -51,6 +61,9 @@ final class CriarContaController
                 'erro' => 'E-mail inválido.',
                 'nome' => $nome,
                 'email' => $email,
+                'cpf_cnpj' => $cpfCnpj,
+                'phone' => $phone,
+                'mobile_phone' => $mobilePhone,
             ]);
             return Resposta::html($html, 422);
         }
@@ -59,20 +72,41 @@ final class CriarContaController
         $agora = date('Y-m-d H:i:s');
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('INSERT INTO clients (name, email, password, created_at) VALUES (:n, :e, :p, :c)');
+
+        $stmt = $pdo->prepare('INSERT INTO clients (name, email, cpf_cnpj, phone, mobile_phone, password, created_at) VALUES (:n, :e, :cpf, :ph, :mph, :p, :c)');
 
         try {
             $stmt->execute([
                 ':n' => $nome,
                 ':e' => $email,
+                ':cpf' => $cpfCnpj !== '' ? $cpfCnpj : null,
+                ':ph' => $phone !== '' ? $phone : null,
+                ':mph' => $mobilePhone !== '' ? $mobilePhone : null,
                 ':p' => $hash,
                 ':c' => $agora,
             ]);
         } catch (\Throwable $e) {
+            try {
+                $stmt2 = $pdo->prepare('INSERT INTO clients (name, email, password, created_at) VALUES (:n, :e, :p, :c)');
+                $stmt2->execute([
+                    ':n' => $nome,
+                    ':e' => $email,
+                    ':p' => $hash,
+                    ':c' => $agora,
+                ]);
+
+                Auth::entrarCliente($email, $senha);
+                return Resposta::redirecionar('/cliente/painel');
+            } catch (\Throwable $e2) {
+            }
+
             $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
                 'erro' => 'Não foi possível criar a conta. Verifique se o e-mail já existe.',
                 'nome' => $nome,
                 'email' => $email,
+                'cpf_cnpj' => $cpfCnpj,
+                'phone' => $phone,
+                'mobile_phone' => $mobilePhone,
             ]);
             return Resposta::html($html, 400);
         }

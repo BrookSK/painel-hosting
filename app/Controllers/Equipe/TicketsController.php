@@ -8,6 +8,7 @@ use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
+use LRV\Core\Jobs\RepositorioJobs;
 use LRV\Core\View;
 
 final class TicketsController
@@ -123,6 +124,15 @@ final class TicketsController
             ]);
 
             $pdo->commit();
+
+            try {
+                $repoJobs = new RepositorioJobs();
+                $repoJobs->criar('alerta_ticket', [
+                    'titulo' => 'Resposta da equipe no ticket #' . $ticketId,
+                    'mensagem' => "Equipe respondeu no ticket.\n\nTicket: #{$ticketId}\nMensagem:\n{$message}",
+                ]);
+            } catch (\Throwable $e) {
+            }
             return Resposta::redirecionar('/equipe/tickets/ver?id=' . $ticketId);
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -143,11 +153,32 @@ final class TicketsController
         }
 
         $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, subject, status FROM tickets WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $ticketId]);
+        $ticket = $stmt->fetch();
+
+        if (!is_array($ticket)) {
+            return Resposta::texto('Ticket não encontrado.', 404);
+        }
+
+        if ((string) ($ticket['status'] ?? '') === 'closed') {
+            return Resposta::redirecionar('/equipe/tickets/ver?id=' . $ticketId);
+        }
+
         $up = $pdo->prepare("UPDATE tickets SET status = 'closed', updated_at = :u WHERE id = :id");
         $up->execute([
             ':u' => date('Y-m-d H:i:s'),
             ':id' => $ticketId,
         ]);
+
+        try {
+            $repoJobs = new RepositorioJobs();
+            $repoJobs->criar('alerta_ticket', [
+                'titulo' => 'Ticket fechado #' . $ticketId,
+                'mensagem' => "Ticket fechado pela equipe.\n\nTicket: #{$ticketId}\nAssunto: " . (string) ($ticket['subject'] ?? ''),
+            ]);
+        } catch (\Throwable $e) {
+        }
 
         return Resposta::redirecionar('/equipe/tickets/ver?id=' . $ticketId);
     }

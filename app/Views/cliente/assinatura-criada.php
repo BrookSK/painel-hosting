@@ -39,6 +39,7 @@ if (is_array($primeira)) {
       <div class="linha">
         <a href="/cliente/planos">Voltar</a>
         <a href="/cliente/painel">Painel</a>
+        <a href="/cliente/vps">VPS</a>
       </div>
     </div>
   </div>

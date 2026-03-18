@@ -22,6 +22,9 @@ use LRV\Core\View;
       </div>
       <div class="linha">
         <a href="/equipe/painel">Painel</a>
+        <a href="/equipe/ajuda">Ajuda</a>
+        <a href="/equipe/vps">VPS</a>
+        <a href="/equipe/jobs">Jobs</a>
         <a href="/equipe/sair">Sair</a>
       </div>
     </div>
@@ -81,6 +84,27 @@ use LRV\Core\View;
           <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">E-mail do admin para alertas</label>
             <input class="input" type="email" name="email_admin" value="<?php echo View::e((string) ($email_admin ?? '')); ?>" />
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">WhatsApp do admin (DDI+DDD+Número)</label>
+            <input class="input" type="text" name="whatsapp_admin_numero" value="<?php echo View::e((string) ($whatsapp_admin_numero ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Exemplo: <strong>5511999999999</strong></p>
+          </div>
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Evolution API - Instância</label>
+            <input class="input" type="text" name="evolution_instance" value="<?php echo View::e((string) ($evolution_instance ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Usado em <strong>/message/sendText/&lt;instance&gt;</strong></p>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Diretório das chaves SSH (base)</label>
+            <input class="input" type="text" name="ssh_key_dir" value="<?php echo View::e((string) ($ssh_key_dir ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">As chaves são referenciadas por identificador no cadastro de nodes. Não salvamos a chave no banco.</p>
           </div>
         </div>
 

@@ -26,6 +26,7 @@ $email = (string) ($cliente['email'] ?? '');
       <div class="linha">
         <a href="/">Início</a>
         <a href="/cliente/planos">Planos</a>
+        <a href="/cliente/vps">VPS</a>
         <a href="/cliente/tickets">Tickets</a>
         <a href="/cliente/sair">Sair</a>
       </div>

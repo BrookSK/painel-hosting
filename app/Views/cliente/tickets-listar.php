@@ -42,6 +42,7 @@ function badgePrioridade(string $p): string
       <div class="linha">
         <a href="/cliente/painel">Painel</a>
         <a href="/cliente/planos">Planos</a>
+        <a href="/cliente/vps">VPS</a>
         <a href="/cliente/sair">Sair</a>
       </div>
     </div>

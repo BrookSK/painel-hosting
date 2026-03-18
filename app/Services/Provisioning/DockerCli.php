@@ -6,18 +6,56 @@ namespace LRV\App\Services\Provisioning;
 
 final class DockerCli
 {
+    private ?array $remoto = null;
+
+    public function definirRemoto(string $host, int $porta, string $usuario, string $caminhoChavePrivada): void
+    {
+        $host = trim($host);
+        $usuario = trim($usuario);
+        $caminhoChavePrivada = trim($caminhoChavePrivada);
+
+        if ($host === '' || $porta <= 0 || $porta > 65535 || $usuario === '' || $caminhoChavePrivada === '') {
+            throw new \InvalidArgumentException('Destino remoto inválido.');
+        }
+
+        $this->remoto = [
+            'host' => $host,
+            'porta' => $porta,
+            'usuario' => $usuario,
+            'chave' => $caminhoChavePrivada,
+        ];
+    }
+
     public function disponivel(): bool
     {
         if (!function_exists('shell_exec')) {
             return false;
         }
 
-        $out = @shell_exec('docker version 2>&1');
-        if (!is_string($out)) {
-            return false;
+        $t = $this->testarConexao();
+        return (bool) ($t['ok'] ?? false);
+    }
+
+    public function testarConexao(): array
+    {
+        if (!function_exists('shell_exec')) {
+            return [
+                'ok' => false,
+                'comando' => '',
+                'saida' => 'shell_exec indisponível.',
+            ];
         }
 
-        return str_contains($out, 'Version') || str_contains($out, 'Client:');
+        $r = $this->executarComando('docker version');
+        $out = (string) ($r['saida'] ?? '');
+
+        $ok = str_contains($out, 'Version') || str_contains($out, 'Client:');
+
+        return [
+            'ok' => $ok,
+            'comando' => (string) ($r['comando'] ?? ''),
+            'saida' => $out,
+        ];
     }
 
     public function criarEIniciarContainer(
@@ -46,8 +84,10 @@ final class DockerCli
             $args[] = escapeshellarg((string) $c);
         }
 
-        $comando = implode(' ', $args) . ' 2>&1';
-        $saida = (string) @shell_exec($comando);
+        $dockerCmd = implode(' ', $args);
+        $r = $this->executarComando($dockerCmd);
+        $comando = (string) ($r['comando'] ?? '');
+        $saida = (string) ($r['saida'] ?? '');
 
         $containerId = trim($saida);
 
@@ -61,15 +101,57 @@ final class DockerCli
     public function parar(string $containerId): string
     {
         $this->validarIdContainer($containerId);
-        $cmd = 'docker stop ' . escapeshellarg($containerId) . ' 2>&1';
-        return (string) @shell_exec($cmd);
+        $cmd = 'docker stop ' . escapeshellarg($containerId);
+        $r = $this->executarComando($cmd);
+        return (string) ($r['saida'] ?? '');
     }
 
     public function iniciar(string $containerId): string
     {
         $this->validarIdContainer($containerId);
-        $cmd = 'docker start ' . escapeshellarg($containerId) . ' 2>&1';
-        return (string) @shell_exec($cmd);
+        $cmd = 'docker start ' . escapeshellarg($containerId);
+        $r = $this->executarComando($cmd);
+        return (string) ($r['saida'] ?? '');
+    }
+
+    private function executarComando(string $dockerCmd): array
+    {
+        $dockerCmd = trim($dockerCmd);
+        if ($dockerCmd === '') {
+            throw new \InvalidArgumentException('Comando docker vazio.');
+        }
+
+        if ($this->remoto === null) {
+            $comando = $dockerCmd;
+        } else {
+            $destino = (string) $this->remoto['usuario'] . '@' . (string) $this->remoto['host'];
+            $porta = (int) ($this->remoto['porta'] ?? 22);
+            $chave = (string) ($this->remoto['chave'] ?? '');
+
+            $args = [];
+            $args[] = 'ssh';
+            $args[] = '-i ' . escapeshellarg($chave);
+            $args[] = '-p ' . (int) $porta;
+            $args[] = '-o BatchMode=yes';
+            $args[] = '-o ConnectTimeout=8';
+            $args[] = '-o StrictHostKeyChecking=no';
+
+            $knownHosts = '/dev/null';
+            if (PHP_OS_FAMILY === 'Windows') {
+                $knownHosts = 'NUL';
+            }
+            $args[] = '-o UserKnownHostsFile=' . $knownHosts;
+            $args[] = escapeshellarg($destino);
+            $args[] = escapeshellarg($dockerCmd);
+
+            $comando = implode(' ', $args);
+        }
+
+        $saida = (string) @shell_exec($comando . ' 2>&1');
+        return [
+            'comando' => $comando,
+            'saida' => $saida,
+        ];
     }
 
     private function validarIdContainer(string $id): void

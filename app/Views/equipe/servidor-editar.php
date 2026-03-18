@@ -68,6 +68,18 @@ $id = $servidor['id'] ?? null;
 
         <div class="grid" style="margin-top:12px;">
           <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Usuário SSH</label>
+            <input class="input" type="text" name="ssh_user" value="<?php echo View::e((string) ($servidor['ssh_user'] ?? '')); ?>" />
+          </div>
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Identificador da chave SSH</label>
+            <input class="input" type="text" name="ssh_key_id" value="<?php echo View::e((string) ($servidor['ssh_key_id'] ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Arquivo dentro do diretório base configurado em <strong>/equipe/configuracoes</strong>.</p>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">CPU total</label>
             <input class="input" type="number" name="cpu_total" value="<?php echo View::e((string) ($servidor['cpu_total'] ?? '')); ?>" min="1" />
           </div>

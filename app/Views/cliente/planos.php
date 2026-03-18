@@ -27,6 +27,7 @@ function gb(int $mb): string {
       </div>
       <div class="linha">
         <a href="/cliente/painel">Painel</a>
+        <a href="/cliente/vps">VPS</a>
         <a href="/cliente/tickets">Tickets</a>
         <a href="/cliente/sair">Sair</a>
       </div>
@@ -34,6 +35,14 @@ function gb(int $mb): string {
   </div>
 
   <div class="conteudo">
+    <?php if (!empty($erro)): ?>
+      <div class="card" style="border:1px solid #fecaca; background:#fff1f2;">
+        <div style="font-weight:700;">Atenção</div>
+        <div class="texto" style="margin:6px 0 0 0;"><?php echo View::e((string) $erro); ?></div>
+      </div>
+      <div style="height:12px;"></div>
+    <?php endif; ?>
+
     <div class="grid">
       <?php foreach (($planos ?? []) as $p): ?>
         <div class="card">
@@ -53,7 +62,6 @@ function gb(int $mb): string {
             <select class="input" name="billing_type" style="margin-bottom:12px;">
               <option value="PIX">PIX</option>
               <option value="BOLETO">Boleto</option>
-              <option value="CREDIT_CARD">Cartão de crédito</option>
             </select>
 
             <button class="botao" type="submit">Assinar e gerar cobrança</button>

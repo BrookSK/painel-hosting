@@ -8,23 +8,55 @@ use LRV\Core\BancoDeDados;
 
 final class RepositorioJobs
 {
+    private static ?bool $temRunAt = null;
+
+    private function temColunaRunAt(): bool
+    {
+        if (self::$temRunAt !== null) {
+            return self::$temRunAt;
+        }
+
+        try {
+            $pdo = BancoDeDados::pdo();
+            $stmt = $pdo->query("SELECT COUNT(*) AS total FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'jobs' AND COLUMN_NAME = 'run_at'");
+            $r = $stmt->fetch();
+            self::$temRunAt = ((int) ($r['total'] ?? 0)) > 0;
+        } catch (\Throwable $e) {
+            self::$temRunAt = false;
+        }
+
+        return self::$temRunAt;
+    }
+
     public function criar(string $type, array $payload, ?\DateTimeInterface $runAt = null): int
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('INSERT INTO jobs (type, payload, run_at, status, log, created_at, updated_at) VALUES (:t, :p, :r, :s, :l, :c, :u)');
+
+        $temRunAt = $this->temColunaRunAt();
+        $stmt = $temRunAt
+            ? $pdo->prepare('INSERT INTO jobs (type, payload, run_at, status, log, created_at, updated_at) VALUES (:t, :p, :r, :s, :l, :c, :u)')
+            : $pdo->prepare('INSERT INTO jobs (type, payload, status, log, created_at, updated_at) VALUES (:t, :p, :s, :l, :c, :u)');
 
         $agora = date('Y-m-d H:i:s');
         $runAtDb = $runAt ? $runAt->format('Y-m-d H:i:s') : null;
 
-        $stmt->execute([
+        if (!$temRunAt && $runAtDb !== null) {
+            $payload['__run_at'] = $runAtDb;
+        }
+
+        $params = [
             ':t' => $type,
             ':p' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            ':r' => $runAtDb,
             ':s' => 'pending',
             ':l' => '',
             ':c' => $agora,
             ':u' => $agora,
-        ]);
+        ];
+        if ($temRunAt) {
+            $params[':r'] = $runAtDb;
+        }
+
+        $stmt->execute($params);
 
         return (int) $pdo->lastInsertId();
     }
@@ -36,9 +68,37 @@ final class RepositorioJobs
 
         try {
             $agora = date('Y-m-d H:i:s');
-            $stmt = $pdo->prepare("SELECT id, type, payload, status, COALESCE(log,'') AS log FROM jobs WHERE status = 'pending' AND (run_at IS NULL OR run_at <= :agora) ORDER BY id ASC LIMIT 1 FOR UPDATE");
-            $stmt->execute([':agora' => $agora]);
-            $linha = $stmt->fetch();
+
+            $temRunAt = $this->temColunaRunAt();
+            if ($temRunAt) {
+                $stmt = $pdo->prepare("SELECT id, type, payload, status, COALESCE(log,'') AS log FROM jobs WHERE status = 'pending' AND (run_at IS NULL OR run_at <= :agora) ORDER BY id ASC LIMIT 1 FOR UPDATE");
+                $stmt->execute([':agora' => $agora]);
+                $linha = $stmt->fetch();
+            } else {
+                $stmt = $pdo->query("SELECT id, type, payload, status, COALESCE(log,'') AS log FROM jobs WHERE status = 'pending' ORDER BY id ASC LIMIT 20 FOR UPDATE");
+                $linhas = $stmt->fetchAll();
+
+                $linha = null;
+                foreach ($linhas as $cand) {
+                    if (!is_array($cand)) {
+                        continue;
+                    }
+
+                    $payloadStr = (string) ($cand['payload'] ?? '');
+                    $payloadArray = json_decode($payloadStr, true);
+                    if (!is_array($payloadArray)) {
+                        $payloadArray = [];
+                    }
+
+                    $runAtPayload = (string) ($payloadArray['__run_at'] ?? '');
+                    if ($runAtPayload !== '' && $runAtPayload > $agora) {
+                        continue;
+                    }
+
+                    $linha = $cand;
+                    break;
+                }
+            }
 
             if (!is_array($linha)) {
                 $pdo->commit();
@@ -59,6 +119,10 @@ final class RepositorioJobs
             $payloadArray = json_decode($payload, true);
             if (!is_array($payloadArray)) {
                 $payloadArray = [];
+            }
+
+            if (!$temRunAt && array_key_exists('__run_at', $payloadArray)) {
+                unset($payloadArray['__run_at']);
             }
 
             return new Job(

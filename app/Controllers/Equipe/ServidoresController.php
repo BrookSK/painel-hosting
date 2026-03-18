@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Provisioning\DockerCli;
+use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
@@ -14,8 +16,14 @@ final class ServidoresController
     public function listar(Requisicao $req): Resposta
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status FROM servers ORDER BY id DESC');
-        $servidores = $stmt->fetchAll();
+
+        try {
+            $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status FROM servers ORDER BY id DESC');
+            $servidores = $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status FROM servers ORDER BY id DESC');
+            $servidores = $stmt->fetchAll();
+        }
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/servidores-listar.php', [
             'servidores' => is_array($servidores) ? $servidores : [],
@@ -33,6 +41,8 @@ final class ServidoresController
                 'hostname' => '',
                 'ip_address' => '',
                 'ssh_port' => 22,
+                'ssh_user' => 'root',
+                'ssh_key_id' => '',
                 'ram_total' => 64 * 1024,
                 'cpu_total' => 16,
                 'storage_total' => 1000 * 1024,
@@ -73,6 +83,8 @@ final class ServidoresController
         $hostname = trim((string) ($req->post['hostname'] ?? ''));
         $ip = trim((string) ($req->post['ip_address'] ?? ''));
         $sshPort = (int) ($req->post['ssh_port'] ?? 0);
+        $sshUser = trim((string) ($req->post['ssh_user'] ?? ''));
+        $sshKeyId = trim((string) ($req->post['ssh_key_id'] ?? ''));
         $ramTotal = (int) ($req->post['ram_total'] ?? 0);
         $cpuTotal = (int) ($req->post['cpu_total'] ?? 0);
         $storageTotal = (int) ($req->post['storage_total'] ?? 0);
@@ -83,45 +95,113 @@ final class ServidoresController
         }
 
         if ($hostname === '' || $ip === '' || $sshPort <= 0 || $sshPort > 65535 || $ramTotal <= 0 || $cpuTotal <= 0 || $storageTotal <= 0) {
-            return $this->renderizarErro($id, $hostname, $ip, $sshPort, $ramTotal, $cpuTotal, $storageTotal, $status, 'Preencha os campos obrigatórios.');
+            return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Preencha os campos obrigatórios.');
+        }
+
+        if ($status === 'active') {
+            if ($sshUser === '' || $sshKeyId === '') {
+                return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Informe usuário SSH e identificador da chave para nodes ativos.');
+            }
+
+            if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/', $sshKeyId) !== 1) {
+                return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Identificador da chave inválido.');
+            }
+
+            $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+            if ($keyDir === '') {
+                return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Configure o diretório base das chaves SSH em /equipe/configuracoes.');
+            }
+
+            $keyPath = $keyDir . DIRECTORY_SEPARATOR . $sshKeyId;
+            if (!is_file($keyPath)) {
+                return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Arquivo de chave não encontrado: ' . $sshKeyId);
+            }
+
+            try {
+                $docker = new DockerCli();
+                $docker->definirRemoto($ip, $sshPort, $sshUser, $keyPath);
+                $t = $docker->testarConexao();
+                if (empty($t['ok'])) {
+                    $saida = trim((string) ($t['saida'] ?? ''));
+                    $msg = 'Falha ao validar conexão SSH/Docker.';
+                    if ($saida !== '') {
+                        $msg .= "\n\n" . $saida;
+                    }
+                    return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, $msg);
+                }
+            } catch (\Throwable $e) {
+                return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Falha ao validar conexão: ' . $e->getMessage());
+            }
         }
 
         $pdo = BancoDeDados::pdo();
 
         try {
             if ($id > 0) {
-                $stmt = $pdo->prepare('UPDATE servers SET hostname=:h, ip_address=:ip, ssh_port=:sp, ram_total=:rt, cpu_total=:ct, storage_total=:st, status=:s WHERE id=:id');
-                $stmt->execute([
-                    ':h' => $hostname,
-                    ':ip' => $ip,
-                    ':sp' => $sshPort,
-                    ':rt' => $ramTotal,
-                    ':ct' => $cpuTotal,
-                    ':st' => $storageTotal,
-                    ':s' => $status,
-                    ':id' => $id,
-                ]);
+                try {
+                    $stmt = $pdo->prepare('UPDATE servers SET hostname=:h, ip_address=:ip, ssh_port=:sp, ssh_user=:su, ssh_key_id=:sk, ram_total=:rt, cpu_total=:ct, storage_total=:st, status=:s WHERE id=:id');
+                    $stmt->execute([
+                        ':h' => $hostname,
+                        ':ip' => $ip,
+                        ':sp' => $sshPort,
+                        ':su' => $sshUser !== '' ? $sshUser : null,
+                        ':sk' => $sshKeyId !== '' ? $sshKeyId : null,
+                        ':rt' => $ramTotal,
+                        ':ct' => $cpuTotal,
+                        ':st' => $storageTotal,
+                        ':s' => $status,
+                        ':id' => $id,
+                    ]);
+                } catch (\Throwable $e) {
+                    $stmt = $pdo->prepare('UPDATE servers SET hostname=:h, ip_address=:ip, ssh_port=:sp, ram_total=:rt, cpu_total=:ct, storage_total=:st, status=:s WHERE id=:id');
+                    $stmt->execute([
+                        ':h' => $hostname,
+                        ':ip' => $ip,
+                        ':sp' => $sshPort,
+                        ':rt' => $ramTotal,
+                        ':ct' => $cpuTotal,
+                        ':st' => $storageTotal,
+                        ':s' => $status,
+                        ':id' => $id,
+                    ]);
+                }
             } else {
-                $stmt = $pdo->prepare('INSERT INTO servers (hostname, ip_address, ssh_port, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, created_at) VALUES (:h,:ip,:sp,:rt,0,:ct,0,:st,0,:s,:cr)');
-                $stmt->execute([
-                    ':h' => $hostname,
-                    ':ip' => $ip,
-                    ':sp' => $sshPort,
-                    ':rt' => $ramTotal,
-                    ':ct' => $cpuTotal,
-                    ':st' => $storageTotal,
-                    ':s' => $status,
-                    ':cr' => date('Y-m-d H:i:s'),
-                ]);
+                try {
+                    $stmt = $pdo->prepare('INSERT INTO servers (hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, created_at) VALUES (:h,:ip,:sp,:su,:sk,:rt,0,:ct,0,:st,0,:s,:cr)');
+                    $stmt->execute([
+                        ':h' => $hostname,
+                        ':ip' => $ip,
+                        ':sp' => $sshPort,
+                        ':su' => $sshUser !== '' ? $sshUser : null,
+                        ':sk' => $sshKeyId !== '' ? $sshKeyId : null,
+                        ':rt' => $ramTotal,
+                        ':ct' => $cpuTotal,
+                        ':st' => $storageTotal,
+                        ':s' => $status,
+                        ':cr' => date('Y-m-d H:i:s'),
+                    ]);
+                } catch (\Throwable $e) {
+                    $stmt = $pdo->prepare('INSERT INTO servers (hostname, ip_address, ssh_port, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, created_at) VALUES (:h,:ip,:sp,:rt,0,:ct,0,:st,0,:s,:cr)');
+                    $stmt->execute([
+                        ':h' => $hostname,
+                        ':ip' => $ip,
+                        ':sp' => $sshPort,
+                        ':rt' => $ramTotal,
+                        ':ct' => $cpuTotal,
+                        ':st' => $storageTotal,
+                        ':s' => $status,
+                        ':cr' => date('Y-m-d H:i:s'),
+                    ]);
+                }
             }
         } catch (\Throwable $e) {
-            return $this->renderizarErro($id, $hostname, $ip, $sshPort, $ramTotal, $cpuTotal, $storageTotal, $status, 'Não foi possível salvar o servidor.');
+            return $this->renderizarErro($id, $hostname, $ip, $sshPort, $sshUser, $sshKeyId, $ramTotal, $cpuTotal, $storageTotal, $status, 'Não foi possível salvar o servidor.');
         }
 
         return Resposta::redirecionar('/equipe/servidores');
     }
 
-    private function renderizarErro(int $id, string $hostname, string $ip, int $sshPort, int $ramTotal, int $cpuTotal, int $storageTotal, string $status, string $erro): Resposta
+    private function renderizarErro(int $id, string $hostname, string $ip, int $sshPort, string $sshUser, string $sshKeyId, int $ramTotal, int $cpuTotal, int $storageTotal, string $status, string $erro): Resposta
     {
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/servidor-editar.php', [
             'erro' => $erro,
@@ -130,6 +210,8 @@ final class ServidoresController
                 'hostname' => $hostname,
                 'ip_address' => $ip,
                 'ssh_port' => $sshPort,
+                'ssh_user' => $sshUser,
+                'ssh_key_id' => $sshKeyId,
                 'ram_total' => $ramTotal,
                 'cpu_total' => $cpuTotal,
                 'storage_total' => $storageTotal,

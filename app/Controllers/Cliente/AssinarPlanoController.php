@@ -23,7 +23,7 @@ final class AssinarPlanoController
 
         $planId = (int) ($req->post['plan_id'] ?? 0);
         $billingType = (string) ($req->post['billing_type'] ?? 'PIX');
-        if (!in_array($billingType, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
+        if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
             $billingType = 'PIX';
         }
 

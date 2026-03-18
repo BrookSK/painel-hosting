@@ -26,9 +26,14 @@ $role = (string) ($usuario['role'] ?? '');
       </div>
       <div class="linha">
         <a href="/">Início</a>
+        <a href="/equipe/ajuda">Ajuda</a>
         <a href="/equipe/planos">Planos</a>
+        <a href="/equipe/assinaturas">Assinaturas</a>
+        <a href="/equipe/asaas-eventos">Eventos Asaas</a>
         <a href="/equipe/servidores">Servidores</a>
+        <a href="/equipe/vps">VPS</a>
         <a href="/equipe/tickets">Tickets</a>
+        <a href="/equipe/jobs">Jobs</a>
         <a href="/equipe/configuracoes">Configurações</a>
         <a href="/equipe/sair">Sair</a>
       </div>

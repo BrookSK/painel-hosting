@@ -46,6 +46,18 @@ use LRV\Core\View;
             <label style="display:block; font-size:13px; margin-bottom:6px;">E-mail</label>
             <input class="input" type="email" name="email" value="<?php echo View::e((string) ($email ?? '')); ?>" autocomplete="email" />
           </div>
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">CPF/CNPJ (opcional)</label>
+            <input class="input" type="text" name="cpf_cnpj" value="<?php echo View::e((string) ($cpf_cnpj ?? '')); ?>" />
+          </div>
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Telefone (opcional)</label>
+            <input class="input" type="text" name="phone" value="<?php echo View::e((string) ($phone ?? '')); ?>" autocomplete="tel" />
+          </div>
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Celular (opcional)</label>
+            <input class="input" type="text" name="mobile_phone" value="<?php echo View::e((string) ($mobile_phone ?? '')); ?>" autocomplete="tel" />
+          </div>
         </div>
 
         <div style="margin-top:12px;">

@@ -8,6 +8,7 @@ use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
+use LRV\Core\Jobs\RepositorioJobs;
 use LRV\Core\View;
 
 final class TicketsController
@@ -99,6 +100,15 @@ final class TicketsController
 
             $pdo->commit();
 
+            try {
+                $repoJobs = new RepositorioJobs();
+                $repoJobs->criar('alerta_ticket', [
+                    'titulo' => 'Novo ticket #' . $ticketId,
+                    'mensagem' => "Novo ticket criado pelo cliente.\n\nTicket: #{$ticketId}\nAssunto: {$subject}\nPrioridade: {$priority}\nDepartamento: {$department}",
+                ]);
+            } catch (\Throwable $e) {
+            }
+
             return Resposta::redirecionar('/cliente/tickets/ver?id=' . $ticketId);
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -184,6 +194,15 @@ final class TicketsController
             $up->execute([':u' => $agora, ':id' => $ticketId]);
 
             $pdo->commit();
+
+            try {
+                $repoJobs = new RepositorioJobs();
+                $repoJobs->criar('alerta_ticket', [
+                    'titulo' => 'Resposta do cliente no ticket #' . $ticketId,
+                    'mensagem' => "Cliente respondeu no ticket.\n\nTicket: #{$ticketId}\nMensagem:\n{$message}",
+                ]);
+            } catch (\Throwable $e) {
+            }
             return Resposta::redirecionar('/cliente/tickets/ver?id=' . $ticketId);
         } catch (\Throwable $e) {
             $pdo->rollBack();

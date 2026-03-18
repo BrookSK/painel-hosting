@@ -18,9 +18,16 @@ final class AssinaturasService
     public function garantirClienteAsaas(int $clientId): string
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, name, email, cpf_cnpj, phone, mobile_phone, asaas_customer_id FROM clients WHERE id = :id');
-        $stmt->execute([':id' => $clientId]);
-        $c = $stmt->fetch();
+
+        try {
+            $stmt = $pdo->prepare('SELECT id, name, email, cpf_cnpj, phone, mobile_phone, asaas_customer_id FROM clients WHERE id = :id');
+            $stmt->execute([':id' => $clientId]);
+            $c = $stmt->fetch();
+        } catch (\Throwable $e) {
+            $stmt = $pdo->prepare('SELECT id, name, email, asaas_customer_id FROM clients WHERE id = :id');
+            $stmt->execute([':id' => $clientId]);
+            $c = $stmt->fetch();
+        }
 
         if (!is_array($c)) {
             throw new \RuntimeException('Cliente não encontrado.');
@@ -81,16 +88,28 @@ final class AssinaturasService
 
         $pdo->beginTransaction();
         try {
-            $insVps = $pdo->prepare('INSERT INTO vps (client_id, server_id, container_id, cpu, ram, storage, status, created_at, plan_id) VALUES (:c, NULL, NULL, :cpu, :ram, :st, :s, :cr, :pid)');
-            $insVps->execute([
-                ':c' => $clientId,
-                ':cpu' => (int) $plano['cpu'],
-                ':ram' => (int) $plano['ram'],
-                ':st' => (int) $plano['storage'],
-                ':s' => 'pending_payment',
-                ':cr' => $agora,
-                ':pid' => (int) $plano['id'],
-            ]);
+            try {
+                $insVps = $pdo->prepare('INSERT INTO vps (client_id, server_id, container_id, cpu, ram, storage, status, created_at, plan_id) VALUES (:c, NULL, NULL, :cpu, :ram, :st, :s, :cr, :pid)');
+                $insVps->execute([
+                    ':c' => $clientId,
+                    ':cpu' => (int) $plano['cpu'],
+                    ':ram' => (int) $plano['ram'],
+                    ':st' => (int) $plano['storage'],
+                    ':s' => 'pending_payment',
+                    ':cr' => $agora,
+                    ':pid' => (int) $plano['id'],
+                ]);
+            } catch (\Throwable $e) {
+                $insVps = $pdo->prepare('INSERT INTO vps (client_id, server_id, container_id, cpu, ram, storage, status, created_at) VALUES (:c, NULL, NULL, :cpu, :ram, :st, :s, :cr)');
+                $insVps->execute([
+                    ':c' => $clientId,
+                    ':cpu' => (int) $plano['cpu'],
+                    ':ram' => (int) $plano['ram'],
+                    ':st' => (int) $plano['storage'],
+                    ':s' => 'pending_payment',
+                    ':cr' => $agora,
+                ]);
+            }
 
             $vpsId = (int) $pdo->lastInsertId();
 
@@ -110,16 +129,28 @@ final class AssinaturasService
                 throw new \RuntimeException('Asaas não retornou o id da assinatura.');
             }
 
-            $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, asaas_subscription_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :a, :s, :n, :cr)');
-            $insSub->execute([
-                ':c' => $clientId,
-                ':v' => $vpsId,
-                ':p' => (int) $plano['id'],
-                ':a' => $asaasSubId,
-                ':s' => 'PENDING',
-                ':n' => $due,
-                ':cr' => $agora,
-            ]);
+            try {
+                $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, asaas_subscription_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :a, :s, :n, :cr)');
+                $insSub->execute([
+                    ':c' => $clientId,
+                    ':v' => $vpsId,
+                    ':p' => (int) $plano['id'],
+                    ':a' => $asaasSubId,
+                    ':s' => 'PENDING',
+                    ':n' => $due,
+                    ':cr' => $agora,
+                ]);
+            } catch (\Throwable $e) {
+                $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, asaas_subscription_id, status, next_due_date, created_at) VALUES (:c, :v, :a, :s, :n, :cr)');
+                $insSub->execute([
+                    ':c' => $clientId,
+                    ':v' => $vpsId,
+                    ':a' => $asaasSubId,
+                    ':s' => 'PENDING',
+                    ':n' => $due,
+                    ':cr' => $agora,
+                ]);
+            }
 
             $pdo->commit();
         } catch (\Throwable $e) {

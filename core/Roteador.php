@@ -39,7 +39,7 @@ final class Roteador
         $rota = $this->rotas[$metodo][$caminho] ?? null;
 
         if ($rota === null) {
-            Resposta::texto('Rota não encontrada.', 404)->enviar();
+            Resposta::texto(I18n::t('geral.rota_nao_encontrada'), 404)->enviar();
             return;
         }
 
@@ -69,7 +69,7 @@ final class Roteador
 
             Resposta::html((string) $resultado)->enviar();
         } catch (\Throwable $e) {
-            Resposta::texto('Erro interno.', 500)->enviar();
+            Resposta::texto(I18n::t('geral.erro_interno'), 500)->enviar();
         }
     }
 
