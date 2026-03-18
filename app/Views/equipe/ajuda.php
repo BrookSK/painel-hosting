@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-$langAtual = (string) ($_GET['lang'] ?? ($_COOKIE['lang'] ?? 'pt-BR'));
-$langAtual = trim($langAtual) !== '' ? trim($langAtual) : 'pt-BR';
+use LRV\Core\I18n;
+use LRV\Core\View;
 
 ?>
 <!doctype html>
-<html lang="<?php echo htmlspecialchars($langAtual, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,9 +22,7 @@ $langAtual = trim($langAtual) !== '' ? trim($langAtual) : 'pt-BR';
         <div style="opacity:.9; font-size:13px;">Configuração e operação</div>
       </div>
       <div class="linha">
-        <a href="/equipe/ajuda?lang=pt-BR">PT</a>
-        <a href="/equipe/ajuda?lang=en-US">EN</a>
-        <a href="/equipe/ajuda?lang=es-ES">ES</a>
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/equipe/painel">Painel</a>
         <a href="/equipe/configuracoes">Configurações</a>
         <a href="/equipe/jobs">Jobs</a>

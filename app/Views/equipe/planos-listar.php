@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function formatarGb(int $mb): string {
     if ($mb <= 0) { return '0 GB'; }
@@ -16,7 +17,7 @@ function formatarGbStorage(int $mb): string {
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,6 +32,7 @@ function formatarGbStorage(int $mb): string {
         <div style="opacity:.9; font-size:13px;">CPU, memória, armazenamento e preço</div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/equipe/painel">Painel</a>
         <a href="/equipe/servidores">Servidores</a>
         <a href="/equipe/configuracoes">Configurações</a>

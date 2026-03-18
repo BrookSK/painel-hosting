@@ -27,6 +27,27 @@ final class VpsProvisioningService
         }
 
         $statusAtual = (string) ($vps['status'] ?? '');
+        if (in_array($statusAtual, ['pending_payment', 'suspended_payment'], true)) {
+            $assinaturaAtiva = false;
+            try {
+                $st = $pdo->prepare('SELECT status FROM subscriptions WHERE vps_id = :id ORDER BY id DESC LIMIT 1');
+                $st->execute([':id' => $vpsId]);
+                $sub = $st->fetch();
+                $assinaturaAtiva = is_array($sub) && strtoupper((string) ($sub['status'] ?? '')) === 'ACTIVE';
+            } catch (\Throwable $e) {
+                $assinaturaAtiva = false;
+            }
+
+            if (!$assinaturaAtiva) {
+                if ($statusAtual === 'pending_payment') {
+                    $log('Aguardando pagamento. Provisionamento ignorado.');
+                } else {
+                    $log('VPS suspensa por pagamento. Provisionamento ignorado.');
+                }
+                return;
+            }
+        }
+
         $containerIdExistente = (string) ($vps['container_id'] ?? '');
         if ($statusAtual === 'provisioning') {
             $log('VPS já está em status provisioning.');
@@ -57,14 +78,23 @@ final class VpsProvisioningService
             return;
         }
 
-        $this->atualizarStatusVps($vpsId, 'provisioning');
-
         $containerId = $containerIdExistente;
         if ($containerId !== '') {
-            $log('VPS já possui container_id.');
+            if (!$this->docker->disponivel()) {
+                $this->atualizarStatusVps($vpsId, 'pending_provisioning');
+                $log('Docker CLI indisponível. VPS marcada como pending_provisioning.');
+                return;
+            }
+
+            $log('VPS já possui container_id. Iniciando container...');
+            $out = $this->docker->iniciar($containerId);
+            $log('Saída: ' . $out);
+
             $this->atualizarStatusVps($vpsId, 'running');
             return;
         }
+
+        $this->atualizarStatusVps($vpsId, 'provisioning');
 
         $rede = (string) Settings::obter('infra.docker_rede', 'lrvcloud_network');
         $volumeBase = (string) Settings::obter('infra.volume_base', '/vps');
@@ -118,17 +148,26 @@ final class VpsProvisioningService
             throw new \RuntimeException('VPS não encontrada.');
         }
 
+        $statusAtual = (string) ($vps['status'] ?? '');
+        if ($statusAtual === 'suspended_payment') {
+            $log('VPS já está suspensa por pagamento.');
+            return;
+        }
+
         $serverId = (int) ($vps['server_id'] ?? 0);
+
+        $dockerConfigurado = false;
         if ($serverId > 0) {
             if (!$this->configurarDockerParaNode($serverId, $log)) {
-                $log('Não foi possível configurar Docker remoto. Suspensão não executada.');
-                return;
+                $log('Não foi possível configurar Docker remoto. A VPS será marcada como suspensa, mas o container não foi parado.');
+            } else {
+                $dockerConfigurado = true;
             }
         }
 
         $containerId = (string) ($vps['container_id'] ?? '');
 
-        if ($containerId !== '' && $this->docker->disponivel()) {
+        if ($dockerConfigurado && $containerId !== '' && $this->docker->disponivel()) {
             $log('Parando container...');
             $out = $this->docker->parar($containerId);
             $log('Saída: ' . $out);
@@ -151,10 +190,19 @@ final class VpsProvisioningService
             throw new \RuntimeException('VPS não encontrada.');
         }
 
+        $statusAtual = (string) ($vps['status'] ?? '');
+        if ($statusAtual === 'running') {
+            $log('VPS está marcada como running. Garantindo que o container esteja iniciado...');
+        }
+
         $serverId = (int) ($vps['server_id'] ?? 0);
         if ($serverId > 0) {
             if (!$this->configurarDockerParaNode($serverId, $log)) {
                 $log('Não foi possível configurar Docker remoto. Reativação não executada.');
+
+                if ($statusAtual !== 'running') {
+                    $this->atualizarStatusVps($vpsId, 'pending_provisioning');
+                }
                 return;
             }
         }
@@ -162,12 +210,17 @@ final class VpsProvisioningService
         $containerId = (string) ($vps['container_id'] ?? '');
 
         if ($containerId === '') {
-            $log('Container não encontrado. Nada para reativar.');
+            $this->atualizarStatusVps($vpsId, 'pending_provisioning');
+            $log('Container não encontrado. VPS marcada como pending_provisioning para reprovisionamento.');
             return;
         }
 
         if (!$this->docker->disponivel()) {
             $log('Docker indisponível. Não foi possível reativar.');
+
+            if ($statusAtual !== 'running') {
+                $this->atualizarStatusVps($vpsId, 'pending_provisioning');
+            }
             return;
         }
 

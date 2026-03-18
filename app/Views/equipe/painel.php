@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $nome = (string) ($usuario['name'] ?? '');
 $email = (string) ($usuario['email'] ?? '');
@@ -10,7 +11,7 @@ $role = (string) ($usuario['role'] ?? '');
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,8 +26,10 @@ $role = (string) ($usuario['role'] ?? '');
         <div style="opacity:.9; font-size:13px;">Você está logado como <?php echo View::e($nome); ?></div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/">Início</a>
         <a href="/equipe/ajuda">Ajuda</a>
+        <a href="/equipe/usuarios">Usuários</a>
         <a href="/equipe/planos">Planos</a>
         <a href="/equipe/assinaturas">Assinaturas</a>
         <a href="/equipe/asaas-eventos">Eventos Asaas</a>

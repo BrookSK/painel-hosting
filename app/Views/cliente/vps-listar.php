@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function gb(int $mb): string
 {
@@ -47,7 +48,7 @@ function badgeStatusVps(string $st): string
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -62,6 +63,7 @@ function badgeStatusVps(string $st): string
         <div style="opacity:.9; font-size:13px;">Status e informações básicas</div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/cliente/painel">Painel</a>
         <a href="/cliente/planos">Planos</a>
         <a href="/cliente/tickets">Tickets</a>

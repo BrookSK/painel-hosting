@@ -23,6 +23,7 @@ use LRV\App\Controllers\Equipe\ServidoresController;
 use LRV\App\Controllers\Equipe\PrimeiroAcessoController;
 use LRV\App\Controllers\Equipe\SairController as EquipeSairController;
 use LRV\App\Controllers\Equipe\TicketsController as EquipeTicketsController;
+use LRV\App\Controllers\Equipe\UsuariosController;
 use LRV\App\Controllers\Equipe\VpsController as EquipeVpsController;
 use LRV\App\Controllers\Webhooks\AsaasController;
 use LRV\Core\Middlewares;
@@ -47,6 +48,10 @@ $roteador->get('/equipe/servidores', [ServidoresController::class, 'listar'], [M
 $roteador->get('/equipe/servidores/novo', [ServidoresController::class, 'novo'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/servidores/editar', [ServidoresController::class, 'editar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/salvar', [ServidoresController::class, 'salvar'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->get('/equipe/usuarios', [UsuariosController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->get('/equipe/usuarios/novo', [UsuariosController::class, 'novo'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->get('/equipe/usuarios/editar', [UsuariosController::class, 'editar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/usuarios/salvar', [UsuariosController::class, 'salvar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->get('/equipe/tickets', [EquipeTicketsController::class, 'listar'], [Middlewares::exigirPermissao('view_tickets')]);
 $roteador->get('/equipe/tickets/ver', [EquipeTicketsController::class, 'ver'], [Middlewares::exigirPermissao('view_tickets')]);
 $roteador->post('/equipe/tickets/responder', [EquipeTicketsController::class, 'responder'], [Middlewares::exigirPermissao('reply_tickets')]);

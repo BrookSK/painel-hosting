@@ -14,6 +14,11 @@ final class I18n
         self::$idioma = $idioma;
     }
 
+    public static function idioma(): string
+    {
+        return self::$idioma;
+    }
+
     public static function t(string $chave): string
     {
         $idioma = self::$idioma;

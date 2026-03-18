@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $id = $servidor['id'] ?? null;
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,6 +24,7 @@ $id = $servidor['id'] ?? null;
         <div style="opacity:.9; font-size:13px;"><?php echo $id ? 'Editar' : 'Novo'; ?></div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/equipe/servidores">Voltar</a>
         <a href="/equipe/sair">Sair</a>
       </div>

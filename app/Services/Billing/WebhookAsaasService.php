@@ -25,27 +25,42 @@ final class WebhookAsaasService
 
         $pdo->beginTransaction();
         try {
-            $ja = $pdo->prepare('SELECT id FROM asaas_events WHERE event_id = :i LIMIT 1');
-            $ja->execute([':i' => $idEvento]);
-            if ($ja->fetch()) {
-                $pdo->commit();
-                return;
+            try {
+                $ja = $pdo->prepare('SELECT id FROM asaas_events WHERE event_id = :i LIMIT 1');
+                $ja->execute([':i' => $idEvento]);
+                if ($ja->fetch()) {
+                    $pdo->commit();
+                    return;
+                }
+
+                $ins = $pdo->prepare('INSERT INTO asaas_events (event_id, event_type, created_at) VALUES (:i, :t, :c)');
+                $ins->execute([
+                    ':i' => $idEvento,
+                    ':t' => $tipo,
+                    ':c' => date('Y-m-d H:i:s'),
+                ]);
+            } catch (\PDOException $e) {
+                $code = (string) $e->getCode();
+                if ($code === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
+                    $pdo->commit();
+                    return;
+                }
+            } catch (\Throwable $e) {
             }
 
-            $ins = $pdo->prepare('INSERT INTO asaas_events (event_id, event_type, created_at) VALUES (:i, :t, :c)');
-            $ins->execute([
-                ':i' => $idEvento,
-                ':t' => $tipo,
-                ':c' => date('Y-m-d H:i:s'),
-            ]);
-
             $subscriptionId = '';
+            $nextDueDate = null;
 
             $payment = $evento['payment'] ?? null;
             if (is_array($payment)) {
                 $subscriptionId = (string) ($payment['subscription'] ?? '');
                 if ($subscriptionId === '') {
                     $subscriptionId = (string) ($payment['subscriptionId'] ?? '');
+                }
+
+                $due = (string) ($payment['dueDate'] ?? '');
+                if ($due !== '') {
+                    $nextDueDate = substr($due, 0, 10);
                 }
             }
 
@@ -55,6 +70,11 @@ final class WebhookAsaasService
                     $subscriptionId = $subObj;
                 } elseif (is_array($subObj)) {
                     $subscriptionId = (string) ($subObj['id'] ?? '');
+
+                    $nd = (string) ($subObj['nextDueDate'] ?? '');
+                    if ($nd !== '') {
+                        $nextDueDate = substr($nd, 0, 10);
+                    }
                 }
             }
 
@@ -81,9 +101,11 @@ final class WebhookAsaasService
             $clienteId = (int) ($sub['client_id'] ?? 0);
 
             if ($tipo === 'PAYMENT_CONFIRMED' || $tipo === 'PAYMENT_RECEIVED') {
-                $this->marcarAssinaturaAtiva($subId);
+                $this->marcarAssinaturaAtiva($subId, $nextDueDate);
 
                 if ($vpsId > 0) {
+                    $this->concluirSuspensoesPendentes($pdo, $vpsId, $subId, 'Pagamento confirmado/recebido.');
+
                     $upVps = $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id AND status IN ('pending_payment','suspended_payment')");
                     $upVps->execute([':id' => $vpsId]);
 
@@ -101,7 +123,7 @@ final class WebhookAsaasService
             }
 
             if ($tipo === 'PAYMENT_OVERDUE') {
-                $this->marcarAssinaturaOverdue($subId);
+                $this->marcarAssinaturaOverdue($subId, $nextDueDate);
 
                 if ($vpsId > 0) {
                     $dias = ConfiguracoesSistema::toleranciaPagamentoDias();
@@ -122,8 +144,8 @@ final class WebhookAsaasService
                 return;
             }
 
-            if ($tipo === 'SUBSCRIPTION_CANCELED') {
-                $this->marcarAssinaturaCancelada($subId);
+            if ($tipo === 'SUBSCRIPTION_CANCELED' || $tipo === 'SUBSCRIPTION_DELETED' || $tipo === 'SUBSCRIPTION_INACTIVATED') {
+                $this->marcarAssinaturaCancelada($subId, $nextDueDate);
 
                 if ($vpsId > 0) {
                     $repoJobs = new RepositorioJobs();
@@ -141,6 +163,65 @@ final class WebhookAsaasService
                 return;
             }
 
+            if (str_starts_with($tipo, 'SUBSCRIPTION_')) {
+                $subPayload = $evento['subscription'] ?? null;
+                if (is_array($subPayload)) {
+                    $statusAnterior = strtoupper(trim((string) ($sub['status'] ?? '')));
+                    $statusPayload = strtoupper(trim((string) ($subPayload['status'] ?? '')));
+                    if ($statusPayload !== '') {
+                        if ($statusPayload === 'ACTIVE') {
+                            $this->marcarAssinaturaAtiva($subId, $nextDueDate);
+
+                            if ($vpsId > 0 && $statusAnterior !== 'ACTIVE') {
+                                $this->concluirSuspensoesPendentes($pdo, $vpsId, $subId, 'Assinatura reativada (ACTIVE).');
+
+                                $upVps = $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id AND status IN ('pending_payment','suspended_payment')");
+                                $upVps->execute([':id' => $vpsId]);
+
+                                $repoJobs = new RepositorioJobs();
+                                $repoJobs->criar('alerta_billing', [
+                                    'titulo' => 'Assinatura ativa (Asaas)',
+                                    'mensagem' => "Assinatura marcada como ACTIVE via evento {$tipo}.\n\nCliente: #{$clienteId}\nAssinatura: #{$subId}\nVPS: #{$vpsId}",
+                                ]);
+                                $repoJobs->criar('reativar_vps', ['vps_id' => $vpsId]);
+                                $repoJobs->criar('provisionar_vps', ['vps_id' => $vpsId]);
+                            }
+                        } elseif (in_array($statusPayload, ['INACTIVE', 'CANCELED', 'DELETED'], true)) {
+                            $this->marcarAssinaturaCancelada($subId, $nextDueDate);
+
+                            if ($vpsId > 0 && !in_array($statusAnterior, ['INACTIVE', 'CANCELED', 'DELETED'], true)) {
+                                $repoJobs = new RepositorioJobs();
+                                $repoJobs->criar('alerta_billing', [
+                                    'titulo' => 'Assinatura inativa/cancelada (Asaas)',
+                                    'mensagem' => "Assinatura marcada como {$statusPayload} via evento {$tipo}.\n\nCliente: #{$clienteId}\nAssinatura: #{$subId}\nVPS: #{$vpsId}",
+                                ]);
+                                $repoJobs->criar('suspender_vps', [
+                                    'vps_id' => $vpsId,
+                                    'assinatura_id' => $subId,
+                                ]);
+                            }
+                        } elseif ($statusPayload === 'SUSPENDED') {
+                            $this->marcarAssinaturaSuspensa($subId, $nextDueDate);
+
+                            if ($vpsId > 0 && $statusAnterior !== 'SUSPENDED') {
+                                $repoJobs = new RepositorioJobs();
+                                $repoJobs->criar('alerta_billing', [
+                                    'titulo' => 'Assinatura suspensa (Asaas)',
+                                    'mensagem' => "Assinatura marcada como SUSPENDED via evento {$tipo}.\n\nCliente: #{$clienteId}\nAssinatura: #{$subId}\nVPS: #{$vpsId}",
+                                ]);
+                                $repoJobs->criar('suspender_vps', [
+                                    'vps_id' => $vpsId,
+                                    'assinatura_id' => $subId,
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                $pdo->commit();
+                return;
+            }
+
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -148,24 +229,98 @@ final class WebhookAsaasService
         }
     }
 
-    private function marcarAssinaturaAtiva(int $id): void
+    private function marcarAssinaturaAtiva(int $id, ?string $nextDueDate): void
     {
         $pdo = BancoDeDados::pdo();
-        $up = $pdo->prepare("UPDATE subscriptions SET status = 'ACTIVE' WHERE id = :id");
-        $up->execute([':id' => $id]);
+        $this->atualizarAssinatura($pdo, $id, 'ACTIVE', $nextDueDate);
     }
 
-    private function marcarAssinaturaOverdue(int $id): void
+    private function marcarAssinaturaOverdue(int $id, ?string $nextDueDate): void
     {
         $pdo = BancoDeDados::pdo();
-        $up = $pdo->prepare("UPDATE subscriptions SET status = 'OVERDUE' WHERE id = :id");
-        $up->execute([':id' => $id]);
+        $this->atualizarAssinatura($pdo, $id, 'OVERDUE', $nextDueDate);
     }
 
-    private function marcarAssinaturaCancelada(int $id): void
+    private function marcarAssinaturaCancelada(int $id, ?string $nextDueDate): void
     {
         $pdo = BancoDeDados::pdo();
-        $up = $pdo->prepare("UPDATE subscriptions SET status = 'CANCELED' WHERE id = :id");
-        $up->execute([':id' => $id]);
+        $this->atualizarAssinatura($pdo, $id, 'CANCELED', $nextDueDate);
+    }
+
+    private function marcarAssinaturaSuspensa(int $id, ?string $nextDueDate): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $this->atualizarAssinatura($pdo, $id, 'SUSPENDED', $nextDueDate);
+    }
+
+    private function atualizarAssinatura(\PDO $pdo, int $id, string $status, ?string $nextDueDate): void
+    {
+        $params = [
+            ':id' => $id,
+        ];
+
+        $setDue = false;
+        if (is_string($nextDueDate)) {
+            $d = trim($nextDueDate);
+            if ($d !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) === 1) {
+                $setDue = true;
+                $params[':n'] = $d;
+            }
+        }
+
+        if ($setDue) {
+            $up = $pdo->prepare('UPDATE subscriptions SET status = :s, next_due_date = :n WHERE id = :id');
+            $params[':s'] = $status;
+            $up->execute($params);
+            return;
+        }
+
+        $up = $pdo->prepare('UPDATE subscriptions SET status = :s WHERE id = :id');
+        $up->execute([
+            ':s' => $status,
+            ':id' => $id,
+        ]);
+    }
+
+    private function concluirSuspensoesPendentes(\PDO $pdo, int $vpsId, int $assinaturaId, string $motivo): void
+    {
+        $stmt = $pdo->prepare("SELECT id, payload FROM jobs WHERE status = 'pending' AND type = 'suspender_vps' ORDER BY id DESC LIMIT 200");
+        $stmt->execute();
+        $jobs = $stmt->fetchAll();
+
+        if (!is_array($jobs) || $jobs === []) {
+            return;
+        }
+
+        foreach ($jobs as $j) {
+            if (!is_array($j)) {
+                continue;
+            }
+
+            $payloadStr = (string) ($j['payload'] ?? '');
+            $payloadArr = json_decode($payloadStr, true);
+            if (!is_array($payloadArr)) {
+                continue;
+            }
+
+            $jVpsId = (int) ($payloadArr['vps_id'] ?? 0);
+            $jAssId = (int) ($payloadArr['assinatura_id'] ?? 0);
+            if ($jVpsId !== $vpsId || $jAssId !== $assinaturaId) {
+                continue;
+            }
+
+            $jobId = (int) ($j['id'] ?? 0);
+            if ($jobId <= 0) {
+                continue;
+            }
+
+            $msg = "\n[CANCELADO] suspender_vps encerrado automaticamente. Motivo: " . $motivo . ' - ' . date('Y-m-d H:i:s');
+            $up = $pdo->prepare("UPDATE jobs SET status = 'completed', log = CONCAT(COALESCE(log,''), :m), updated_at = :u WHERE id = :id AND status = 'pending'");
+            $up->execute([
+                ':m' => $msg,
+                ':u' => date('Y-m-d H:i:s'),
+                ':id' => $jobId,
+            ]);
+        }
     }
 }

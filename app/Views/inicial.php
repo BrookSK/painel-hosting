@@ -1,5 +1,13 @@
-<!doctype html>
-<html lang="pt-BR">
+<?php
+ 
+ declare(strict_types=1);
+ 
+ use LRV\Core\I18n;
+ use LRV\Core\View;
+ 
+ ?>
+ <!doctype html>
+ <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,12 +22,16 @@
     .linha{display:flex; gap:12px; flex-wrap:wrap;}
     .badge{display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; color:#1E3A8A; font-size:12px;}
     a{color:#4F46E5; text-decoration:none;}
+    .topo a{color:#fff;}
   </style>
 </head>
 <body>
   <div class="topo">
     <div class="conteudo">
       <h1 style="margin:0;font-size:26px;">LRV Cloud Manager</h1>
+      <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+        <?php require __DIR__ . '/_partials/idioma.php'; ?>
+      </div>
       <div style="margin-top:8px;" class="linha">
         <span class="badge">Painel</span>
         <span class="badge">API Interna</span>

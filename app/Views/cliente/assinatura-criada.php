@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $assinatura = is_array($resultado ?? null) ? ($resultado['assinatura'] ?? null) : null;
 $cobrancas = is_array($resultado ?? null) ? ($resultado['cobrancas'] ?? null) : null;
@@ -22,7 +23,7 @@ if (is_array($primeira)) {
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -37,6 +38,7 @@ if (is_array($primeira)) {
         <div style="opacity:.9; font-size:13px;">Cobrança gerada</div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/cliente/planos">Voltar</a>
         <a href="/cliente/painel">Painel</a>
         <a href="/cliente/vps">VPS</a>

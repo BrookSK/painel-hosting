@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $st = (string) ($ticket['status'] ?? 'open');
 
@@ -27,7 +28,7 @@ function badgePrioridadeEquipeTicket(string $p): string
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -42,6 +43,7 @@ function badgePrioridadeEquipeTicket(string $p): string
         <div style="opacity:.9; font-size:13px;"><?php echo View::e((string) ($ticket['subject'] ?? '')); ?></div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/equipe/tickets">Tickets</a>
         <a href="/equipe/painel">Painel</a>
       </div>

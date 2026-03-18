@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function gb(int $mb): string {
     if ($mb <= 0) { return '0 GB'; }
@@ -11,7 +12,7 @@ function gb(int $mb): string {
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,6 +27,7 @@ function gb(int $mb): string {
         <div style="opacity:.9; font-size:13px;">Escolha um plano e faça a assinatura</div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/cliente/painel">Painel</a>
         <a href="/cliente/vps">VPS</a>
         <a href="/cliente/tickets">Tickets</a>

@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $nome = (string) ($cliente['name'] ?? '');
 $email = (string) ($cliente['email'] ?? '');
 
 ?>
 <!doctype html>
-<html lang="pt-BR">
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,6 +25,7 @@ $email = (string) ($cliente['email'] ?? '');
         <div style="opacity:.9; font-size:13px;">Bem-vindo, <?php echo View::e($nome); ?></div>
       </div>
       <div class="linha">
+        <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/">Início</a>
         <a href="/cliente/planos">Planos</a>
         <a href="/cliente/vps">VPS</a>
