@@ -9,11 +9,13 @@ use LRV\App\Services\Alertas\NotificacoesService;
 use LRV\App\Services\Backup\VpsBackupService;
 use LRV\App\Services\Provisioning\DockerCli;
 use LRV\App\Services\Provisioning\VpsProvisioningService;
+use LRV\App\Services\Status\StatusCollectorService;
 use LRV\App\Services\Http\ClienteHttp;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Jobs\ContextoJob;
 use LRV\Core\Jobs\ProcessadorJobs;
 use LRV\Core\Jobs\RepositorioJobs;
+use LRV\Core\Settings;
 
 final class RegistroHandlers
 {
@@ -233,6 +235,35 @@ final class RegistroHandlers
 
             $svc = new VpsProvisioningService(new DockerCli());
             $svc->reativarPorPagamento($vpsId, fn (string $m) => $ctx->log($m));
+        });
+
+        $p->registrar('coletar_status', static function (array $payload, ContextoJob $ctx): void {
+            $svc = new StatusCollectorService();
+            $svc->coletar(fn (string $m) => $ctx->log($m));
+
+            $reagendar = (bool) ($payload['reagendar'] ?? true);
+            if (!$reagendar) {
+                $ctx->log('Coleta concluída (sem reagendamento).');
+                return;
+            }
+
+            $min = Settings::obter('status.coleta_interval_minutos', 2);
+            $min = is_int($min) ? $min : (int) $min;
+            if ($min < 1) {
+                $min = 2;
+            }
+            if ($min > 60) {
+                $min = 60;
+            }
+
+            try {
+                $repo = new RepositorioJobs();
+                $quando = new \DateTimeImmutable('now +' . $min . ' minutes');
+                $repo->criar('coletar_status', ['reagendar' => true], $quando);
+                $ctx->log('Reagendado coletar_status para: ' . $quando->format('Y-m-d H:i:s'));
+            } catch (\Throwable $e) {
+                $ctx->log('Falha ao reagendar coletar_status: ' . $e->getMessage());
+            }
         });
     }
 }

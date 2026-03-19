@@ -63,6 +63,7 @@ final class VpsProvisioningService
         if ($serverId <= 0) {
             $serverId = $this->selecionarNodeDisponivel((int) $vps['cpu'], (int) $vps['ram'], (int) $vps['storage']);
             if ($serverId <= 0) {
+                $this->notificarSemNode($vpsId, (int) $vps['cpu'], (int) $vps['ram'], (int) $vps['storage']);
                 $this->atualizarStatusVps($vpsId, 'pending_node');
                 $log('Nenhum node disponível. VPS marcada como pending_node.');
                 return;
@@ -118,6 +119,10 @@ final class VpsProvisioningService
             $volumeHost,
             $rede,
             $imagemBase,
+            [
+                'lrv.vps_id' => (string) $vpsId,
+                'lrv.client_id' => (string) ((int) ($vps['client_id'] ?? 0)),
+            ],
             ['tail', '-f', '/dev/null'],
         );
 
@@ -243,11 +248,12 @@ final class VpsProvisioningService
     {
         $pdo = BancoDeDados::pdo();
 
+        $maxUtil = ConfiguracoesSistema::infraNodeMaxUtilPercent();
+
+        $candidatos = [];
+
         try {
-            $sql = "SELECT id,
-                           (ram_total - ram_used) AS ram_available,
-                           (cpu_total - cpu_used) AS cpu_available,
-                           (storage_total - storage_used) AS storage_available
+            $sql = "SELECT id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used
                     FROM servers
                     WHERE status = 'active'
                       AND is_online = 1
@@ -255,9 +261,7 @@ final class VpsProvisioningService
                       AND COALESCE(ssh_key_id,'') <> ''
                       AND (ram_total - ram_used) >= :ram
                       AND (cpu_total - cpu_used) >= :cpu
-                      AND (storage_total - storage_used) >= :st
-                    ORDER BY ram_available DESC
-                    LIMIT 1";
+                      AND (storage_total - storage_used) >= :st";
 
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
@@ -265,21 +269,17 @@ final class VpsProvisioningService
                 ':cpu' => $cpu,
                 ':st' => $storage,
             ]);
+            $candidatos = $stmt->fetchAll();
         } catch (\Throwable $e) {
             try {
-                $sql = "SELECT id,
-                               (ram_total - ram_used) AS ram_available,
-                               (cpu_total - cpu_used) AS cpu_available,
-                               (storage_total - storage_used) AS storage_available
+                $sql = "SELECT id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used
                         FROM servers
                         WHERE status = 'active'
                           AND COALESCE(ssh_user,'') <> ''
                           AND COALESCE(ssh_key_id,'') <> ''
                           AND (ram_total - ram_used) >= :ram
                           AND (cpu_total - cpu_used) >= :cpu
-                          AND (storage_total - storage_used) >= :st
-                        ORDER BY ram_available DESC
-                        LIMIT 1";
+                          AND (storage_total - storage_used) >= :st";
 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
@@ -287,18 +287,14 @@ final class VpsProvisioningService
                     ':cpu' => $cpu,
                     ':st' => $storage,
                 ]);
+                $candidatos = $stmt->fetchAll();
             } catch (\Throwable $e2) {
-                $sql = "SELECT id,
-                               (ram_total - ram_used) AS ram_available,
-                               (cpu_total - cpu_used) AS cpu_available,
-                               (storage_total - storage_used) AS storage_available
+                $sql = "SELECT id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used
                         FROM servers
                         WHERE status = 'active'
                           AND (ram_total - ram_used) >= :ram
                           AND (cpu_total - cpu_used) >= :cpu
-                          AND (storage_total - storage_used) >= :st
-                        ORDER BY ram_available DESC
-                        LIMIT 1";
+                          AND (storage_total - storage_used) >= :st";
 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
@@ -306,11 +302,115 @@ final class VpsProvisioningService
                     ':cpu' => $cpu,
                     ':st' => $storage,
                 ]);
+                $candidatos = $stmt->fetchAll();
             }
         }
 
-        $s = $stmt->fetch();
-        return is_array($s) ? (int) ($s['id'] ?? 0) : 0;
+        $melhorId = 0;
+        $melhorScore = null;
+
+        foreach (($candidatos ?: []) as $s) {
+            if (!is_array($s)) {
+                continue;
+            }
+
+            $id = (int) ($s['id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+
+            $ramTotal = (int) ($s['ram_total'] ?? 0);
+            $ramUsed = (int) ($s['ram_used'] ?? 0);
+            $cpuTotal = (int) ($s['cpu_total'] ?? 0);
+            $cpuUsed = (int) ($s['cpu_used'] ?? 0);
+            $stTotal = (int) ($s['storage_total'] ?? 0);
+            $stUsed = (int) ($s['storage_used'] ?? 0);
+
+            if ($ramTotal <= 0 || $cpuTotal <= 0 || $stTotal <= 0) {
+                continue;
+            }
+
+            $cpuPct = (($cpuUsed + $cpu) / $cpuTotal) * 100.0;
+            $ramPct = (($ramUsed + $ram) / $ramTotal) * 100.0;
+            $stPct = (($stUsed + $storage) / $stTotal) * 100.0;
+
+            $score = max($cpuPct, $ramPct, $stPct);
+            if ($score > (float) $maxUtil) {
+                continue;
+            }
+
+            if ($melhorScore === null || $score < $melhorScore) {
+                $melhorScore = $score;
+                $melhorId = $id;
+            }
+        }
+
+        return $melhorId;
+    }
+
+    private function notificarSemNode(int $vpsId, int $cpu, int $ram, int $storage): void
+    {
+        $pdo = BancoDeDados::pdo();
+
+        $maxUtil = ConfiguracoesSistema::infraNodeMaxUtilPercent();
+        if ($maxUtil <= 0) {
+            $maxUtil = 85;
+        }
+
+        $agora = date('Y-m-d H:i:s');
+        $limite = date('Y-m-d H:i:s', time() - 3600);
+
+        try {
+            $stmt = $pdo->prepare('SELECT id FROM notifications WHERE message LIKE :m AND created_at >= :c LIMIT 1');
+            $stmt->execute([
+                ':m' => '%[Infra] Sem node para VPS #' . $vpsId . '%',
+                ':c' => $limite,
+            ]);
+            $existe = $stmt->fetch();
+            if (is_array($existe)) {
+                return;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        $recCpu = (int) ceil(($cpu * 100) / $maxUtil);
+        $recRam = (int) ceil(($ram * 100) / $maxUtil);
+        $recSt = (int) ceil(($storage * 100) / $maxUtil);
+
+        $ramGb = (int) ceil($recRam / 1024);
+        $stGb = (int) ceil($recSt / 1024);
+
+        $msg = "[Infra] Sem node para VPS #" . $vpsId . ".\n";
+        $msg .= "Pedido: CPU=" . $cpu . ", RAM=" . (int) ceil($ram / 1024) . "GB, Storage=" . (int) ceil($storage / 1024) . "GB.\n";
+        $msg .= "Limite de utilização: " . $maxUtil . "%.\n";
+        $msg .= "Sugestão novo servidor (mínimo): CPU=" . $recCpu . ", RAM=" . $ramGb . "GB, Storage=" . $stGb . "GB.";
+
+        $usuarios = [];
+        try {
+            $stmtUsers = $pdo->query("SELECT id FROM users WHERE status = 'active' AND role IN ('superadmin','admin','devops')");
+            $usuarios = $stmtUsers->fetchAll();
+        } catch (\Throwable $e) {
+            $usuarios = [];
+        }
+
+        try {
+            $ins = $pdo->prepare('INSERT INTO notifications (user_id, message, `read`, created_at) VALUES (:u,:m,0,:c)');
+            foreach (($usuarios ?: []) as $u) {
+                if (!is_array($u)) {
+                    continue;
+                }
+                $uid = (int) ($u['id'] ?? 0);
+                if ($uid <= 0) {
+                    continue;
+                }
+                $ins->execute([
+                    ':u' => $uid,
+                    ':m' => $msg,
+                    ':c' => $agora,
+                ]);
+            }
+        } catch (\Throwable $e) {
+        }
     }
 
     private function alocarRecursosNode(int $serverId, int $cpu, int $ram, int $storage, int $vpsId): void

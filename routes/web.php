@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LRV\App\Controllers\InicialController;
+use LRV\App\Controllers\StatusController;
 use LRV\App\Controllers\Cliente\CriarContaController;
 use LRV\App\Controllers\Cliente\EntrarController as ClienteEntrarController;
 use LRV\App\Controllers\Cliente\AssinarPlanoController;
@@ -11,6 +12,8 @@ use LRV\App\Controllers\Cliente\MonitoramentoController as ClienteMonitoramentoC
 use LRV\App\Controllers\Cliente\PainelController as ClientePainelController;
 use LRV\App\Controllers\Cliente\PlanosController as ClientePlanosController;
 use LRV\App\Controllers\Cliente\SairController as ClienteSairController;
+use LRV\App\Controllers\Cliente\StatusController as ClienteStatusController;
+use LRV\App\Controllers\Cliente\TerminalController as ClienteTerminalController;
 use LRV\App\Controllers\Cliente\TicketsController as ClienteTicketsController;
 use LRV\App\Controllers\Cliente\VpsController as ClienteVpsController;
 use LRV\App\Controllers\Equipe\ConfiguracoesController;
@@ -26,16 +29,20 @@ use LRV\App\Controllers\Equipe\PainelController as EquipePainelController;
 use LRV\App\Controllers\Equipe\PlanosController as EquipePlanosController;
 use LRV\App\Controllers\Equipe\AplicacoesController;
 use LRV\App\Controllers\Equipe\MonitoramentoController;
+use LRV\App\Controllers\Equipe\StatusController as EquipeStatusController;
 use LRV\App\Controllers\Equipe\ServidoresController;
 use LRV\App\Controllers\Equipe\PrimeiroAcessoController;
 use LRV\App\Controllers\Equipe\SairController as EquipeSairController;
 use LRV\App\Controllers\Equipe\TicketsController as EquipeTicketsController;
 use LRV\App\Controllers\Equipe\UsuariosController;
 use LRV\App\Controllers\Equipe\VpsController as EquipeVpsController;
+use LRV\App\Controllers\Equipe\TerminalController;
 use LRV\App\Controllers\Webhooks\AsaasController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
+
+$roteador->get('/status', [StatusController::class, 'index']);
 
 $roteador->get('/equipe/entrar', [EquipeEntrarController::class, 'formulario']);
 $roteador->post('/equipe/entrar', [EquipeEntrarController::class, 'entrar']);
@@ -53,7 +60,12 @@ $roteador->post('/equipe/inicializacao/aplicar-migrations', [InicializacaoContro
 $roteador->post('/equipe/inicializacao/criar-diretorios', [InicializacaoController::class, 'criarDiretorios'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/gerar-tokens', [InicializacaoController::class, 'gerarTokensEDefaults'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/processar-job', [InicializacaoController::class, 'processarUmJob'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/coletar-status', [InicializacaoController::class, 'enfileirarColetaStatus'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/coletar-status-continuo', [InicializacaoController::class, 'iniciarColetaStatusContinua'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/testar-nodes', [InicializacaoController::class, 'testarNodes'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/terminal/instalar-deps', [InicializacaoController::class, 'terminalInstalarDependencias'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/terminal/iniciar-daemon', [InicializacaoController::class, 'terminalIniciarDaemon'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/terminal/parar-daemon', [InicializacaoController::class, 'terminalPararDaemon'], [Middlewares::exigirPermissao('manage_servers')]);
 
 $roteador->get('/equipe/configuracoes', [ConfiguracoesController::class, 'formulario'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes', [ConfiguracoesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
@@ -66,6 +78,7 @@ $roteador->post('/equipe/planos/salvar', [EquipePlanosController::class, 'salvar
 $roteador->get('/equipe/servidores', [ServidoresController::class, 'listar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/servidores/novo', [ServidoresController::class, 'novo'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/servidores/editar', [ServidoresController::class, 'editar'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->get('/equipe/servidores/terminal-seguro', [ServidoresController::class, 'terminalSeguro'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/salvar', [ServidoresController::class, 'salvar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/testar-conexao', [ServidoresController::class, 'testarConexao'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/backups', [BackupsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
@@ -88,10 +101,18 @@ $roteador->post('/equipe/aplicacoes/excluir', [AplicacoesController::class, 'exc
 $roteador->post('/equipe/aplicacoes/deploy', [AplicacoesController::class, 'deploy'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/monitoramento', [MonitoramentoController::class, 'listar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/monitoramento/ver', [MonitoramentoController::class, 'ver'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->get('/equipe/status', [EquipeStatusController::class, 'listar'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/status/incidentes/criar', [EquipeStatusController::class, 'criarIncidente'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/status/incidentes/atualizar', [EquipeStatusController::class, 'atualizarIncidente'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/status/incidentes/servicos', [EquipeStatusController::class, 'atualizarIncidenteServicos'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/vps', [EquipeVpsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/vps/provisionar', [EquipeVpsController::class, 'provisionar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/vps/suspender', [EquipeVpsController::class, 'suspender'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/vps/reativar', [EquipeVpsController::class, 'reativar'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->get('/equipe/terminal', [TerminalController::class, 'index'], [Middlewares::exigirPermissao('manage_terminal')]);
+$roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal')]);
+$roteador->get('/equipe/terminal/auditoria', [TerminalController::class, 'auditoria'], [Middlewares::exigirPermissao('manage_terminal')]);
+$roteador->get('/equipe/terminal/auditoria/ver', [TerminalController::class, 'auditoriaVer'], [Middlewares::exigirPermissao('manage_terminal')]);
 $roteador->get('/equipe/jobs', [JobsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/jobs/ver', [JobsController::class, 'ver'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/sair', [EquipeSairController::class, 'sair'], [Middlewares::exigirLoginEquipe()]);
@@ -106,12 +127,15 @@ $roteador->post('/cliente/assinar', [AssinarPlanoController::class, 'assinar'], 
 $roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/monitoramento', [ClienteMonitoramentoController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/status', [ClienteStatusController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/tickets', [ClienteTicketsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/tickets/novo', [ClienteTicketsController::class, 'novo'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/tickets/criar', [ClienteTicketsController::class, 'criar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/tickets/ver', [ClienteTicketsController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/tickets/responder', [ClienteTicketsController::class, 'responder'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/vps', [ClienteVpsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/vps/terminal', [ClienteTerminalController::class, 'vps'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class, 'emitirToken'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);

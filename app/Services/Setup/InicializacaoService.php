@@ -263,6 +263,36 @@ final class InicializacaoService
             Settings::definir('infra.imagem_base', 'debian:12-slim');
             $log('infra.imagem_base definido para debian:12-slim.');
         }
+
+        $nodeMax = Settings::obter('infra.node_max_util_percent', '');
+        if ($nodeMax === '') {
+            Settings::definir('infra.node_max_util_percent', 85);
+            $log('infra.node_max_util_percent definido para 85.');
+        }
+
+        $wsPort = Settings::obter('terminal.ws_internal_port', '');
+        if ($wsPort === '') {
+            Settings::definir('terminal.ws_internal_port', 8081);
+            $log('terminal.ws_internal_port definido para 8081.');
+        }
+
+        $tokenTtl = Settings::obter('terminal.token_ttl_seconds', '');
+        if ($tokenTtl === '') {
+            Settings::definir('terminal.token_ttl_seconds', 60);
+            $log('terminal.token_ttl_seconds definido para 60.');
+        }
+
+        $idleTtl = Settings::obter('terminal.idle_timeout_seconds', '');
+        if ($idleTtl === '') {
+            Settings::definir('terminal.idle_timeout_seconds', 900);
+            $log('terminal.idle_timeout_seconds definido para 900.');
+        }
+
+        $safeMode = Settings::obter('terminal.safe_mode', '');
+        if ($safeMode === '') {
+            Settings::definir('terminal.safe_mode', 1);
+            $log('terminal.safe_mode definido para 1.');
+        }
     }
 
     private function listarMigrationsPendentes(): array

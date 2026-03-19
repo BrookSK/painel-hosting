@@ -13,6 +13,17 @@ function badgeInit(bool $ok): string
     return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Pendente</span>';
 }
 
+function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
+{
+    if ($ok === null) {
+        return '<span class="badge" style="background:#f1f5f9;color:#334155;">N/A</span>';
+    }
+    if ($ok) {
+        return '<span class="badge" style="background:#dcfce7;color:#166534;">' . View::e($textoOk) . '</span>';
+    }
+    return '<span class="badge" style="background:#fee2e2;color:#991b1b;">' . View::e($textoKo) . '</span>';
+}
+
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
@@ -63,7 +74,7 @@ function badgeInit(bool $ok): string
             </tr>
           </thead>
           <tbody>
-            <?php foreach (($status ?? []) as $k => $v): ?>
+            <?php foreach (((array) ($status ?? [])) as $k => $v): ?>
               <tr>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong><?php echo View::e((string) $k); ?></strong></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
@@ -116,10 +127,97 @@ function badgeInit(bool $ok): string
             <button class="botao" type="submit">Executar</button>
           </form>
 
+          <form method="post" action="/equipe/inicializacao/coletar-status" class="card" style="margin:0;">
+            <div class="texto" style="margin:0 0 10px 0;"><strong>Coletar status (1x)</strong></div>
+            <button class="botao" type="submit">Enfileirar</button>
+          </form>
+
+          <form method="post" action="/equipe/inicializacao/coletar-status-continuo" class="card" style="margin:0;">
+            <div class="texto" style="margin:0 0 10px 0;"><strong>Iniciar coleta contínua</strong></div>
+            <button class="botao" type="submit">Iniciar</button>
+          </form>
+
           <form method="post" action="/equipe/inicializacao/testar-nodes" class="card" style="margin:0;">
             <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conectividade dos nodes</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+        <h2 class="titulo" style="font-size:16px;">Terminal WS (Admin)</h2>
+
+        <?php $tw = (array) ($terminal_ws ?? []); ?>
+
+        <div style="overflow:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Item</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Status</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Detalhe</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Script</strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeInfo(isset($tw['script_ok']) ? (bool) $tw['script_ok'] : null, 'OK', 'Ausente'); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code>terminal-ws.php</code></td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Composer</strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeInfo(isset($tw['composer_ok']) ? (bool) $tw['composer_ok'] : null, 'OK', 'Ausente'); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code>composer</code></td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Dependências (vendor)</strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeInfo(isset($tw['vendor_ok']) ? (bool) $tw['vendor_ok'] : null, 'OK', 'Pendente'); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code>vendor/autoload.php</code></td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Daemon</strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeInfo(isset($tw['daemon_ok']) ? (bool) $tw['daemon_ok'] : null, 'Rodando', 'Parado'); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code>pid=<?php echo View::e((string) ($tw['pid'] ?? '')); ?></code></td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Porta interna</strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeInfo(isset($tw['porta_ok']) ? (bool) $tw['porta_ok'] : null, 'Respondendo', 'Fechada'); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code>127.0.0.1:<?php echo (int) ($tw['porta'] ?? 0); ?></code></td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Instalação (composer)</strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeInfo(isset($tw['composer_running']) ? (bool) $tw['composer_running'] : null, 'Rodando', 'Inativo'); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code>pid=<?php echo View::e((string) ($tw['composer_pid'] ?? '')); ?></code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid" style="margin-top:12px; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));">
+          <form method="post" action="/equipe/inicializacao/terminal/instalar-deps" class="card" style="margin:0;">
+            <div class="texto" style="margin:0 0 10px 0;"><strong>Instalar dependências (composer)</strong></div>
+            <button class="botao" type="submit">Executar</button>
+            <div class="texto" style="font-size:13px; opacity:.9; margin-top:10px;">
+              Log: <code><?php echo View::e((string) ($tw['composer_log_path'] ?? '')); ?></code>
+            </div>
+          </form>
+
+          <form method="post" action="/equipe/inicializacao/terminal/iniciar-daemon" class="card" style="margin:0;">
+            <div class="texto" style="margin:0 0 10px 0;"><strong>Iniciar daemon</strong></div>
+            <button class="botao" type="submit">Executar</button>
+            <div class="texto" style="font-size:13px; opacity:.9; margin-top:10px;">
+              Log: <code><?php echo View::e((string) ($tw['log_path'] ?? '')); ?></code>
+            </div>
+          </form>
+
+          <form method="post" action="/equipe/inicializacao/terminal/parar-daemon" class="card" style="margin:0;">
+            <div class="texto" style="margin:0 0 10px 0;"><strong>Parar daemon</strong></div>
+            <button class="botao" type="submit">Executar</button>
+          </form>
+        </div>
+
+        <div class="texto" style="margin-top:10px; font-size:13px; opacity:.9;">
+          Proxy reverso deve apontar <strong>/ws/terminal</strong> para <code>127.0.0.1:<?php echo (int) ($tw['porta'] ?? 0); ?></code>.
         </div>
       </div>
 

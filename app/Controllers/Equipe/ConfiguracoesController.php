@@ -28,6 +28,11 @@ final class ConfiguracoesController
             'evolution_instance' => ConfiguracoesSistema::evolutionInstance(),
             'ssh_key_dir' => ConfiguracoesSistema::sshKeyDir(),
             'monitoring_token' => ConfiguracoesSistema::monitoringToken(),
+            'infra_node_max_util_percent' => (string) ConfiguracoesSistema::infraNodeMaxUtilPercent(),
+            'terminal_ws_internal_port' => (string) ConfiguracoesSistema::terminalWsInternalPort(),
+            'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
+            'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
+            'terminal_safe_mode' => ConfiguracoesSistema::terminalSafeModeHabilitado() ? '1' : '0',
         ]);
 
         return Resposta::html($html);
@@ -46,6 +51,11 @@ final class ConfiguracoesController
         $evoInstance = trim((string) ($req->post['evolution_instance'] ?? ''));
         $sshKeyDir = trim((string) ($req->post['ssh_key_dir'] ?? ''));
         $monitoringToken = trim((string) ($req->post['monitoring_token'] ?? ''));
+        $infraNodeMaxUtilPercent = (int) ($req->post['infra_node_max_util_percent'] ?? 85);
+        $terminalPorta = (int) ($req->post['terminal_ws_internal_port'] ?? 8081);
+        $terminalTokenTtl = (int) ($req->post['terminal_token_ttl_seconds'] ?? 60);
+        $terminalIdleTimeout = (int) ($req->post['terminal_idle_timeout_seconds'] ?? 900);
+        $terminalSafeMode = (string) ($req->post['terminal_safe_mode'] ?? '0');
 
         if ($tolerancia <= 0) {
             $tolerancia = 3;
@@ -62,6 +72,11 @@ final class ConfiguracoesController
         Settings::definir('whatsapp.evolution.instance', $evoInstance);
         Settings::definir('infra.ssh_key_dir', $sshKeyDir);
         Settings::definir('monitoring.token', $monitoringToken);
+        Settings::definir('infra.node_max_util_percent', ($infraNodeMaxUtilPercent >= 50 && $infraNodeMaxUtilPercent <= 100) ? $infraNodeMaxUtilPercent : 85);
+        Settings::definir('terminal.ws_internal_port', ($terminalPorta > 0 && $terminalPorta <= 65535) ? $terminalPorta : 8081);
+        Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl >= 10 ? $terminalTokenTtl : 60);
+        Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900);
+        Settings::definir('terminal.safe_mode', ($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? 1 : 0);
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
             'salvo' => true,
@@ -77,6 +92,11 @@ final class ConfiguracoesController
             'evolution_instance' => $evoInstance,
             'ssh_key_dir' => $sshKeyDir,
             'monitoring_token' => $monitoringToken,
+            'infra_node_max_util_percent' => (string) (($infraNodeMaxUtilPercent >= 50 && $infraNodeMaxUtilPercent <= 100) ? $infraNodeMaxUtilPercent : 85),
+            'terminal_ws_internal_port' => (string) (($terminalPorta > 0 && $terminalPorta <= 65535) ? $terminalPorta : 8081),
+            'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl >= 10 ? $terminalTokenTtl : 60),
+            'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900),
+            'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
         ]);
 
         return Resposta::html($html);

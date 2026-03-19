@@ -90,6 +90,7 @@ final class DockerCli
         string $volumeHost,
         string $rede,
         string $imagem,
+        array $labels = [],
         array $cmd = []
     ): array {
         $this->validarNome($nome);
@@ -103,6 +104,17 @@ final class DockerCli
         $args[] = '-m ' . escapeshellarg((string) $ramMb . 'm');
         $args[] = '-v ' . escapeshellarg($volumeHost . ':/data');
         $args[] = '--network ' . escapeshellarg($rede);
+
+        foreach ($labels as $k => $v) {
+            $k = trim((string) $k);
+            $v = (string) $v;
+
+            $this->validarLabelKey($k);
+            $this->validarLabelValue($v);
+
+            $args[] = '--label ' . escapeshellarg($k . '=' . $v);
+        }
+
         $args[] = escapeshellarg($imagem);
 
         foreach ($cmd as $c) {
@@ -121,6 +133,20 @@ final class DockerCli
             'saida' => $saida,
             'container_id' => $containerId,
         ];
+    }
+
+    private function validarLabelKey(string $k): void
+    {
+        if ($k === '' || strlen($k) > 120 || preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/', $k) !== 1) {
+            throw new \InvalidArgumentException('Label key inválida.');
+        }
+    }
+
+    private function validarLabelValue(string $v): void
+    {
+        if (str_contains($v, "\0") || strlen($v) > 200) {
+            throw new \InvalidArgumentException('Label value inválida.');
+        }
     }
 
     public function parar(string $containerId): string

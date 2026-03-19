@@ -130,6 +130,30 @@ $id = $servidor['id'] ?? null;
           </div>
         </div>
 
+        <div class="card" style="margin:12px 0 0 0;">
+          <div class="texto" style="margin:0 0 10px 0;"><strong>Terminal seguro (clientes)</strong></div>
+          <div class="texto" style="margin:0; opacity:.9; font-size:13px;">
+            Usado para abrir sessões de terminal do cliente dentro do contêiner via <code>ForceCommand</code>.
+          </div>
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Usuário SSH do terminal</label>
+              <input class="input" type="text" name="terminal_ssh_user" value="<?php echo View::e((string) ($servidor['terminal_ssh_user'] ?? 'lrv-terminal')); ?>" />
+            </div>
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Identificador da chave do terminal</label>
+              <input class="input" type="text" name="terminal_ssh_key_id" value="<?php echo View::e((string) ($servidor['terminal_ssh_key_id'] ?? '')); ?>" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Deixe em branco para desativar terminal seguro neste node.</p>
+            </div>
+          </div>
+
+          <?php if (!empty($servidor['id'])): ?>
+            <div style="margin-top:12px;">
+              <a class="botao" href="/equipe/servidores/terminal-seguro?id=<?php echo (int) ($servidor['id'] ?? 0); ?>">Passo-a-passo de configuração no node</a>
+            </div>
+          <?php endif; ?>
+        </div>
+
         <div class="grid" style="margin-top:12px;">
           <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">CPU total</label>

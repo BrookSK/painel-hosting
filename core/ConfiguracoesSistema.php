@@ -63,4 +63,66 @@ final class ConfiguracoesSistema
     {
         return (string) Settings::obter('monitoring.token', '');
     }
+
+    public static function terminalWsInternalPort(): int
+    {
+        $v = Settings::obter('terminal.ws_internal_port', 8081);
+        $porta = is_int($v) ? $v : (int) $v;
+        if ($porta <= 0 || $porta > 65535) {
+            return 8081;
+        }
+        return $porta;
+    }
+
+    public static function terminalTokenTtlSegundos(): int
+    {
+        $v = Settings::obter('terminal.token_ttl_seconds', 60);
+        $ttl = is_int($v) ? $v : (int) $v;
+        if ($ttl < 10) {
+            return 60;
+        }
+        return $ttl;
+    }
+
+    public static function terminalIdleTimeoutSegundos(): int
+    {
+        $v = Settings::obter('terminal.idle_timeout_seconds', 900);
+        $ttl = is_int($v) ? $v : (int) $v;
+        if ($ttl < 60) {
+            return 900;
+        }
+        return $ttl;
+    }
+
+    public static function terminalSafeModeHabilitado(): bool
+    {
+        $v = Settings::obter('terminal.safe_mode', 1);
+        if (is_bool($v)) {
+            return $v;
+        }
+        if (is_int($v)) {
+            return $v === 1;
+        }
+        $s = strtolower(trim((string) $v));
+        if ($s === '1' || $s === 'true' || $s === 'on' || $s === 'yes') {
+            return true;
+        }
+        if ($s === '0' || $s === 'false' || $s === 'off' || $s === 'no') {
+            return false;
+        }
+        return true;
+    }
+
+    public static function infraNodeMaxUtilPercent(): int
+    {
+        $v = Settings::obter('infra.node_max_util_percent', 85);
+        $p = is_int($v) ? $v : (int) $v;
+        if ($p < 50) {
+            return 85;
+        }
+        if ($p > 100) {
+            return 100;
+        }
+        return $p;
+    }
 }

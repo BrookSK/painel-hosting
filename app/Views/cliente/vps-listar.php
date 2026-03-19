@@ -86,6 +86,7 @@ function badgeStatusVps(string $st): string
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Armazenamento</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Status</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Node</th>
+              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -97,11 +98,14 @@ function badgeStatusVps(string $st): string
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e(gb((int) ($v['storage'] ?? 0))); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusVps((string) ($v['status'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($v['server_id'] ?? '')); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                  <a href="/cliente/vps/terminal?id=<?php echo (int) ($v['id'] ?? 0); ?>">Terminal</a>
+                </td>
               </tr>
             <?php endforeach; ?>
             <?php if (empty($vps)): ?>
               <tr>
-                <td colspan="6" style="padding:12px;">Você ainda não tem VPS.</td>
+                <td colspan="7" style="padding:12px;">Você ainda não tem VPS.</td>
               </tr>
             <?php endif; ?>
           </tbody>

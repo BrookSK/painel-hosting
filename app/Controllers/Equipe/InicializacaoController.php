@@ -7,6 +7,7 @@ namespace LRV\App\Controllers\Equipe;
 use LRV\App\Jobs\RegistroHandlers;
 use LRV\App\Services\Infra\NodeHealthService;
 use LRV\App\Services\Setup\InicializacaoService;
+use LRV\App\Services\Terminal\TerminalWsSetupService;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
@@ -32,6 +33,131 @@ final class InicializacaoController
 
         try {
             $svc->aplicarSchema(function (string $m) use (&$logs): void {
+                $logs[] = $m;
+            });
+            $ok = true;
+        } catch (\Throwable $e) {
+            $erro = $e->getMessage();
+        }
+
+        return $this->renderizar($erro, $logs, $ok);
+    }
+
+    public function enfileirarColetaStatus(Requisicao $req): Resposta
+    {
+        $logs = [];
+        $ok = false;
+        $erro = '';
+
+        try {
+            $pdo = BancoDeDados::pdo();
+            try {
+                $st = $pdo->prepare("SELECT id, status, COALESCE(run_at,'') AS run_at FROM jobs WHERE type = 'coletar_status' AND status IN ('pending','running') ORDER BY id DESC LIMIT 1");
+                $st->execute();
+                $ja = $st->fetch();
+            } catch (\Throwable $e) {
+                $st = $pdo->prepare("SELECT id, status FROM jobs WHERE type = 'coletar_status' AND status IN ('pending','running') ORDER BY id DESC LIMIT 1");
+                $st->execute();
+                $ja = $st->fetch();
+            }
+            if (is_array($ja)) {
+                $logs[] = 'Já existe um coletar_status em fila/rodando: #' . (int) ($ja['id'] ?? 0) . ' (status=' . (string) ($ja['status'] ?? '') . (array_key_exists('run_at', $ja) ? (' run_at=' . (string) ($ja['run_at'] ?? '')) : '') . ')';
+                $ok = true;
+                return $this->renderizar($erro, $logs, $ok);
+            }
+
+            $repo = new RepositorioJobs();
+            $id = $repo->criar('coletar_status', ['reagendar' => false]);
+            $logs[] = 'Job coletar_status enfileirado: #' . $id;
+            $ok = true;
+        } catch (\Throwable $e) {
+            $erro = $e->getMessage();
+        }
+
+        return $this->renderizar($erro, $logs, $ok);
+    }
+
+    public function iniciarColetaStatusContinua(Requisicao $req): Resposta
+    {
+        $logs = [];
+        $ok = false;
+        $erro = '';
+
+        try {
+            $pdo = BancoDeDados::pdo();
+            try {
+                $st = $pdo->prepare("SELECT id, status, COALESCE(run_at,'') AS run_at FROM jobs WHERE type = 'coletar_status' AND status IN ('pending','running') ORDER BY id DESC LIMIT 1");
+                $st->execute();
+                $ja = $st->fetch();
+            } catch (\Throwable $e) {
+                $st = $pdo->prepare("SELECT id, status FROM jobs WHERE type = 'coletar_status' AND status IN ('pending','running') ORDER BY id DESC LIMIT 1");
+                $st->execute();
+                $ja = $st->fetch();
+            }
+            if (is_array($ja)) {
+                $logs[] = 'Já existe um coletar_status em fila/rodando: #' . (int) ($ja['id'] ?? 0) . ' (status=' . (string) ($ja['status'] ?? '') . (array_key_exists('run_at', $ja) ? (' run_at=' . (string) ($ja['run_at'] ?? '')) : '') . ')';
+                $ok = true;
+                return $this->renderizar($erro, $logs, $ok);
+            }
+
+            $repo = new RepositorioJobs();
+            $id = $repo->criar('coletar_status', ['reagendar' => true]);
+            $logs[] = 'Coleta contínua iniciada. Job coletar_status enfileirado: #' . $id;
+            $ok = true;
+        } catch (\Throwable $e) {
+            $erro = $e->getMessage();
+        }
+
+        return $this->renderizar($erro, $logs, $ok);
+    }
+
+    public function terminalInstalarDependencias(Requisicao $req): Resposta
+    {
+        $logs = [];
+        $ok = false;
+        $erro = '';
+
+        try {
+            $svc = new TerminalWsSetupService();
+            $svc->instalarDependencias(function (string $m) use (&$logs): void {
+                $logs[] = $m;
+            });
+            $ok = true;
+        } catch (\Throwable $e) {
+            $erro = $e->getMessage();
+        }
+
+        return $this->renderizar($erro, $logs, $ok);
+    }
+
+    public function terminalIniciarDaemon(Requisicao $req): Resposta
+    {
+        $logs = [];
+        $ok = false;
+        $erro = '';
+
+        try {
+            $svc = new TerminalWsSetupService();
+            $svc->iniciarDaemon(function (string $m) use (&$logs): void {
+                $logs[] = $m;
+            });
+            $ok = true;
+        } catch (\Throwable $e) {
+            $erro = $e->getMessage();
+        }
+
+        return $this->renderizar($erro, $logs, $ok);
+    }
+
+    public function terminalPararDaemon(Requisicao $req): Resposta
+    {
+        $logs = [];
+        $ok = false;
+        $erro = '';
+
+        try {
+            $svc = new TerminalWsSetupService();
+            $svc->pararDaemon(function (string $m) use (&$logs): void {
                 $logs[] = $m;
             });
             $ok = true;
@@ -188,6 +314,13 @@ final class InicializacaoController
         $svc = new InicializacaoService();
         $st = $svc->status();
 
+        $terminalWs = [];
+        try {
+            $terminalWs = (new TerminalWsSetupService())->status();
+        } catch (\Throwable $e) {
+            $terminalWs = [];
+        }
+
         $nodes = [];
         try {
             $pdo = BancoDeDados::pdo();
@@ -209,6 +342,7 @@ final class InicializacaoController
             'status' => $st['itens'] ?? [],
             'pendentes' => $st['pendentes'] ?? [],
             'nodes' => is_array($nodes) ? $nodes : [],
+            'terminal_ws' => $terminalWs,
         ]);
 
         return Resposta::html($html);

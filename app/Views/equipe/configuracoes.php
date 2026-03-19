@@ -112,9 +112,53 @@ use LRV\Core\I18n;
 
         <div class="grid" style="margin-top:12px;">
           <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Limite máximo de utilização do node (%)</label>
+            <input class="input" type="number" name="infra_node_max_util_percent" value="<?php echo View::e((string) ($infra_node_max_util_percent ?? '85')); ?>" min="50" max="100" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Quando um node passa desse limite (CPU/RAM/Storage), ele não é escolhido para provisionamento automático.</p>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">Token do monitoramento (x-monitoring-token)</label>
             <input class="input" type="password" name="monitoring_token" value="<?php echo View::e((string) ($monitoring_token ?? '')); ?>" />
             <p class="texto" style="font-size:13px; margin-top:8px;">Endpoint: <strong>/api/metrics/servers</strong></p>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <h2 class="titulo" style="font-size:16px;">Terminal (Admin)</h2>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Porta interna do WebSocket (bind em 127.0.0.1)</label>
+              <input class="input" type="number" name="terminal_ws_internal_port" value="<?php echo View::e((string) ($terminal_ws_internal_port ?? '8081')); ?>" min="1" max="65535" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Proxy reverso deve apontar <strong>/ws/terminal</strong> para <strong>127.0.0.1:&lt;porta&gt;</strong>.</p>
+            </div>
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">TTL do token (segundos)</label>
+              <input class="input" type="number" name="terminal_token_ttl_seconds" value="<?php echo View::e((string) ($terminal_token_ttl_seconds ?? '60')); ?>" min="10" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Recomendado: <strong>60</strong> (token de uso único).</p>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Timeout por inatividade (segundos)</label>
+              <input class="input" type="number" name="terminal_idle_timeout_seconds" value="<?php echo View::e((string) ($terminal_idle_timeout_seconds ?? '900')); ?>" min="60" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Quando expira, a sessão no WS é encerrada.</p>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Modo seguro (bloqueia comandos perigosos)</label>
+              <select class="input" name="terminal_safe_mode">
+                <option value="1" <?php echo ((string) ($terminal_safe_mode ?? '1')) === '1' ? 'selected' : ''; ?>>Ativado</option>
+                <option value="0" <?php echo ((string) ($terminal_safe_mode ?? '1')) === '0' ? 'selected' : ''; ?>>Desativado</option>
+              </select>
+              <p class="texto" style="font-size:13px; margin-top:8px;">Recomendado manter ativado. Bloqueia pipes/redirecionamentos e comandos sensíveis.</p>
+            </div>
           </div>
         </div>
 
