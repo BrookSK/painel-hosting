@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace LRV\App\Services\Provisioning;
 
+use LRV\App\Services\Infra\SshExecutor;
+
 final class DockerCli
 {
     private ?array $remoto = null;
+
+    private readonly SshExecutor $exec;
+
+    public function __construct(?SshExecutor $exec = null)
+    {
+        $this->exec = $exec ?? new SshExecutor();
+    }
 
     public function definirRemoto(string $host, int $porta, string $usuario, string $caminhoChavePrivada): void
     {
@@ -28,7 +37,7 @@ final class DockerCli
 
     public function disponivel(): bool
     {
-        if (!function_exists('shell_exec')) {
+        if (!function_exists('shell_exec') && !function_exists('proc_open') && !function_exists('exec')) {
             return false;
         }
 
@@ -38,24 +47,40 @@ final class DockerCli
 
     public function testarConexao(): array
     {
-        if (!function_exists('shell_exec')) {
+        if ($this->remoto === null) {
             return [
                 'ok' => false,
                 'comando' => '',
-                'saida' => 'shell_exec indisponível.',
+                'saida' => 'Destino remoto não configurado.',
             ];
         }
 
-        $r = $this->executarComando('docker version');
-        $out = (string) ($r['saida'] ?? '');
+        if (!function_exists('shell_exec') && !function_exists('proc_open') && !function_exists('exec')) {
+            return [
+                'ok' => false,
+                'comando' => '',
+                'saida' => 'Nenhum método de execução disponível (proc_open/exec/shell_exec).',
+            ];
+        }
 
-        $ok = str_contains($out, 'Version') || str_contains($out, 'Client:');
+        try {
+            $r = $this->executarComando('docker version');
+            $out = (string) ($r['saida'] ?? '');
 
-        return [
-            'ok' => $ok,
-            'comando' => (string) ($r['comando'] ?? ''),
-            'saida' => $out,
-        ];
+            $ok = str_contains($out, 'Version') || str_contains($out, 'Client:');
+
+            return [
+                'ok' => $ok,
+                'comando' => (string) ($r['comando'] ?? ''),
+                'saida' => $out,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'comando' => '',
+                'saida' => $e->getMessage(),
+            ];
+        }
     }
 
     public function criarEIniciarContainer(
@@ -134,32 +159,21 @@ final class DockerCli
         }
 
         if ($this->remoto === null) {
-            $comando = $dockerCmd;
-        } else {
-            $destino = (string) $this->remoto['usuario'] . '@' . (string) $this->remoto['host'];
-            $porta = (int) ($this->remoto['porta'] ?? 22);
-            $chave = (string) ($this->remoto['chave'] ?? '');
-
-            $args = [];
-            $args[] = 'ssh';
-            $args[] = '-i ' . escapeshellarg($chave);
-            $args[] = '-p ' . (int) $porta;
-            $args[] = '-o BatchMode=yes';
-            $args[] = '-o ConnectTimeout=8';
-            $args[] = '-o StrictHostKeyChecking=no';
-
-            $knownHosts = '/dev/null';
-            if (PHP_OS_FAMILY === 'Windows') {
-                $knownHosts = 'NUL';
-            }
-            $args[] = '-o UserKnownHostsFile=' . $knownHosts;
-            $args[] = escapeshellarg($destino);
-            $args[] = escapeshellarg($dockerCmd);
-
-            $comando = implode(' ', $args);
+            throw new \RuntimeException('Destino remoto não configurado. O painel não deve executar Docker localmente.');
         }
 
-        $saida = (string) @shell_exec($comando . ' 2>&1');
+        $host = (string) ($this->remoto['host'] ?? '');
+        $porta = (int) ($this->remoto['porta'] ?? 22);
+        $usuario = (string) ($this->remoto['usuario'] ?? '');
+        $chave = (string) ($this->remoto['chave'] ?? '');
+
+        $r = $this->exec->executar($host, $porta, $usuario, $chave, $dockerCmd, 60);
+        $comando = (string) ($r['comando'] ?? '');
+        $saida = (string) ($r['saida'] ?? '');
+
+        if (empty($r['ok'])) {
+            throw new \RuntimeException('Falha ao executar comando remoto via SSH.' . ($saida !== '' ? "\n\n" . $saida : ''));
+        }
         return [
             'comando' => $comando,
             'saida' => $saida,

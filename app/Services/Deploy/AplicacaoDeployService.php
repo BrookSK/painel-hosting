@@ -43,9 +43,15 @@ final class AplicacaoDeployService
             throw new \RuntimeException('VPS sem node associado.');
         }
 
-        $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $serverId]);
-        $srv = $stmt->fetch();
+        try {
+            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status, is_online FROM servers WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $serverId]);
+            $srv = $stmt->fetch();
+        } catch (\Throwable $e) {
+            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $serverId]);
+            $srv = $stmt->fetch();
+        }
 
         if (!is_array($srv)) {
             throw new \RuntimeException('Node não encontrado.');
@@ -53,6 +59,10 @@ final class AplicacaoDeployService
 
         if ((string) ($srv['status'] ?? '') !== 'active') {
             throw new \RuntimeException('Node não está ativo.');
+        }
+
+        if (array_key_exists('is_online', $srv) && (int) ($srv['is_online'] ?? 0) !== 1) {
+            throw new \RuntimeException('Node está offline.');
         }
 
         $host = trim((string) ($srv['ip_address'] ?? ''));

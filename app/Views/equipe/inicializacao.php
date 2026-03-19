@@ -115,6 +115,80 @@ function badgeInit(bool $ok): string
             <div class="texto" style="margin:0 0 10px 0;"><strong>Processar 1 job</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
+
+          <form method="post" action="/equipe/inicializacao/testar-nodes" class="card" style="margin:0;">
+            <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conectividade dos nodes</strong></div>
+            <button class="botao" type="submit">Executar</button>
+          </form>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+        <h2 class="titulo" style="font-size:16px;">Nodes cadastrados</h2>
+
+        <div class="texto" style="margin:0 0 10px 0; opacity:.9;">
+          Esta lista mostra o status e o último resultado de conectividade (SSH + <code>docker version</code>).
+        </div>
+
+        <div style="overflow:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Node</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Host</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Status</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Conectividade</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Última checagem</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Último erro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach (((array) ($nodes ?? [])) as $n): ?>
+                <tr>
+                  <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>#<?php echo (int) ($n['id'] ?? 0); ?></strong> <?php echo View::e((string) ($n['hostname'] ?? '')); ?></td>
+                  <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string) ($n['ip_address'] ?? '')); ?></code></td>
+                  <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                    <?php
+                      $stNode = (string) ($n['status'] ?? '');
+                      if ($stNode === 'active') {
+                          echo '<span class="badge">Ativo</span>';
+                      } elseif ($stNode === 'maintenance') {
+                          echo '<span class="badge" style="background:#fef3c7;color:#92400e;">Manutenção</span>';
+                      } else {
+                          echo '<span class="badge" style="background:#f1f5f9;color:#334155;">Inativo</span>';
+                      }
+                    ?>
+                  </td>
+                  <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                    <?php
+                      if (!array_key_exists('is_online', (array) $n)) {
+                          echo '<span class="badge" style="background:#f1f5f9;color:#334155;">N/A</span>';
+                      } else {
+                          $on = (int) ($n['is_online'] ?? 0);
+                          if ($on === 1) {
+                              echo '<span class="badge" style="background:#dcfce7;color:#166534;">Online</span>';
+                          } else {
+                              echo '<span class="badge" style="background:#fee2e2;color:#991b1b;">Offline</span>';
+                          }
+                      }
+                    ?>
+                  </td>
+                  <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string) ($n['last_check_at'] ?? '')); ?></code></td>
+                  <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                    <?php
+                      $err = (string) ($n['last_error'] ?? '');
+                      echo '<code>' . View::e($err) . '</code>';
+                    ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+              <?php if (empty($nodes)): ?>
+                <tr>
+                  <td colspan="6" style="padding:12px;">Nenhum node cadastrado ainda.</td>
+                </tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
         </div>
       </div>
 

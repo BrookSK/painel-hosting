@@ -250,6 +250,7 @@ final class VpsProvisioningService
                            (storage_total - storage_used) AS storage_available
                     FROM servers
                     WHERE status = 'active'
+                      AND is_online = 1
                       AND COALESCE(ssh_user,'') <> ''
                       AND COALESCE(ssh_key_id,'') <> ''
                       AND (ram_total - ram_used) >= :ram
@@ -265,24 +266,47 @@ final class VpsProvisioningService
                 ':st' => $storage,
             ]);
         } catch (\Throwable $e) {
-            $sql = "SELECT id,
-                           (ram_total - ram_used) AS ram_available,
-                           (cpu_total - cpu_used) AS cpu_available,
-                           (storage_total - storage_used) AS storage_available
-                    FROM servers
-                    WHERE status = 'active'
-                      AND (ram_total - ram_used) >= :ram
-                      AND (cpu_total - cpu_used) >= :cpu
-                      AND (storage_total - storage_used) >= :st
-                    ORDER BY ram_available DESC
-                    LIMIT 1";
+            try {
+                $sql = "SELECT id,
+                               (ram_total - ram_used) AS ram_available,
+                               (cpu_total - cpu_used) AS cpu_available,
+                               (storage_total - storage_used) AS storage_available
+                        FROM servers
+                        WHERE status = 'active'
+                          AND COALESCE(ssh_user,'') <> ''
+                          AND COALESCE(ssh_key_id,'') <> ''
+                          AND (ram_total - ram_used) >= :ram
+                          AND (cpu_total - cpu_used) >= :cpu
+                          AND (storage_total - storage_used) >= :st
+                        ORDER BY ram_available DESC
+                        LIMIT 1";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                ':ram' => $ram,
-                ':cpu' => $cpu,
-                ':st' => $storage,
-            ]);
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':ram' => $ram,
+                    ':cpu' => $cpu,
+                    ':st' => $storage,
+                ]);
+            } catch (\Throwable $e2) {
+                $sql = "SELECT id,
+                               (ram_total - ram_used) AS ram_available,
+                               (cpu_total - cpu_used) AS cpu_available,
+                               (storage_total - storage_used) AS storage_available
+                        FROM servers
+                        WHERE status = 'active'
+                          AND (ram_total - ram_used) >= :ram
+                          AND (cpu_total - cpu_used) >= :cpu
+                          AND (storage_total - storage_used) >= :st
+                        ORDER BY ram_available DESC
+                        LIMIT 1";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':ram' => $ram,
+                    ':cpu' => $cpu,
+                    ':st' => $storage,
+                ]);
+            }
         }
 
         $s = $stmt->fetch();
@@ -295,12 +319,22 @@ final class VpsProvisioningService
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare('SELECT id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status FROM servers WHERE id = :id FOR UPDATE');
-            $stmt->execute([':id' => $serverId]);
-            $srv = $stmt->fetch();
+            try {
+                $stmt = $pdo->prepare('SELECT id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, is_online FROM servers WHERE id = :id FOR UPDATE');
+                $stmt->execute([':id' => $serverId]);
+                $srv = $stmt->fetch();
+            } catch (\Throwable $e) {
+                $stmt = $pdo->prepare('SELECT id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status FROM servers WHERE id = :id FOR UPDATE');
+                $stmt->execute([':id' => $serverId]);
+                $srv = $stmt->fetch();
+            }
 
             if (!is_array($srv) || (string) ($srv['status'] ?? '') !== 'active') {
                 throw new \RuntimeException('Servidor indisponível.');
+            }
+
+            if (array_key_exists('is_online', $srv) && (int) ($srv['is_online'] ?? 0) !== 1) {
+                throw new \RuntimeException('Servidor offline.');
             }
 
             $ramAvail = (int) $srv['ram_total'] - (int) $srv['ram_used'];
@@ -341,9 +375,15 @@ final class VpsProvisioningService
         $pdo = BancoDeDados::pdo();
 
         try {
-            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
-            $stmt->execute([':id' => $serverId]);
-            $srv = $stmt->fetch();
+            try {
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status, is_online FROM servers WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $serverId]);
+                $srv = $stmt->fetch();
+            } catch (\Throwable $e) {
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $serverId]);
+                $srv = $stmt->fetch();
+            }
         } catch (\Throwable $e) {
             return false;
         }
@@ -355,6 +395,11 @@ final class VpsProvisioningService
 
         if ((string) ($srv['status'] ?? '') !== 'active') {
             $log('Node não está ativo: ' . $serverId);
+            return false;
+        }
+
+        if (array_key_exists('is_online', $srv) && (int) ($srv['is_online'] ?? 0) !== 1) {
+            $log('Node está offline: ' . $serverId);
             return false;
         }
 

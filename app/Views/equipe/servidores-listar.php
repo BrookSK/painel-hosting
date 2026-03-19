@@ -93,6 +93,30 @@ function formatarGb(int $mb): string
                     } else {
                         echo '<span class="badge" style="background:#f1f5f9;color:#334155;">Inativo</span>';
                     }
+
+                    if (array_key_exists('is_online', $s)) {
+                        $online = (int) ($s['is_online'] ?? 0);
+                        if ($online === 1) {
+                            echo ' <span class="badge" style="background:#dcfce7;color:#166534;">Online</span>';
+                        } else {
+                            echo ' <span class="badge" style="background:#fee2e2;color:#991b1b;">Offline</span>';
+                        }
+                    }
+
+                    if (array_key_exists('last_check_at', $s)) {
+                        $lc = trim((string) ($s['last_check_at'] ?? ''));
+                        if ($lc !== '') {
+                            echo '<div style="margin-top:6px; font-size:12px; opacity:.85;"><code>' . View::e($lc) . '</code></div>';
+                        }
+                    }
+
+                    if (array_key_exists('last_error', $s)) {
+                        $err = trim((string) ($s['last_error'] ?? ''));
+                        if ($err !== '') {
+                            $errShort = (function_exists('mb_substr') ? mb_substr($err, 0, 80) : substr($err, 0, 80));
+                            echo '<div style="margin-top:4px; font-size:12px; opacity:.85;"><code>' . View::e($errShort) . '</code></div>';
+                        }
+                    }
                   ?>
                 </td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">

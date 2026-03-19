@@ -39,7 +39,57 @@ $id = $servidor['id'] ?? null;
         <div class="erro"><?php echo View::e((string) $erro); ?></div>
       <?php endif; ?>
 
-      <form method="post" action="/equipe/servidores/salvar">
+      <?php if (!empty($mensagem_ok)): ?>
+        <div style="background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;padding:10px 12px;border-radius:12px;margin-bottom:10px;">
+          <?php echo View::e((string) $mensagem_ok); ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if (array_key_exists('is_online', (array) $servidor) || array_key_exists('last_check_at', (array) $servidor) || array_key_exists('last_error', (array) $servidor)): ?>
+        <div class="card" style="margin:0 0 12px 0;">
+          <div class="texto" style="margin:0 0 6px 0;"><strong>Status de conectividade</strong></div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+            <div>
+              <div class="texto" style="margin:0; font-size:13px; opacity:.9;">Online</div>
+              <div style="margin-top:6px;">
+                <?php
+                  if (!array_key_exists('is_online', (array) $servidor)) {
+                      echo '<span class="badge" style="background:#f1f5f9;color:#334155;">N/A</span>';
+                  } else {
+                      $online = (int) ($servidor['is_online'] ?? 0);
+                      if ($online === 1) {
+                          echo '<span class="badge" style="background:#dcfce7;color:#166534;">Online</span>';
+                      } else {
+                          echo '<span class="badge" style="background:#fee2e2;color:#991b1b;">Offline</span>';
+                      }
+                  }
+                ?>
+              </div>
+            </div>
+            <div>
+              <div class="texto" style="margin:0; font-size:13px; opacity:.9;">Última checagem</div>
+              <div style="margin-top:6px;"><code><?php echo View::e((string) ($servidor['last_check_at'] ?? '')); ?></code></div>
+            </div>
+          </div>
+
+          <?php if (!empty($servidor['last_error'])): ?>
+            <div style="margin-top:10px;">
+              <div class="texto" style="margin:0; font-size:13px; opacity:.9;">Último erro</div>
+              <pre style="white-space:pre-wrap; background:#0b1020; color:#e5e7eb; padding:10px; border-radius:12px; overflow:auto; margin-top:6px;"><?php echo View::e((string) ($servidor['last_error'] ?? '')); ?></pre>
+            </div>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
+
+      <div class="card" style="margin:0 0 12px 0;">
+        <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conexão</strong></div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="botao" type="submit" form="form-servidor" formaction="/equipe/servidores/testar-conexao">Testar SSH/Docker</button>
+          <span class="texto" style="margin:0; opacity:.85;">Executa <code>docker version</code> no node.</span>
+        </div>
+      </div>
+
+      <form id="form-servidor" method="post" action="/equipe/servidores/salvar">
         <input type="hidden" name="id" value="<?php echo View::e((string) ($servidor['id'] ?? '')); ?>" />
 
         <div class="grid">

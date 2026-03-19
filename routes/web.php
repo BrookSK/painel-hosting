@@ -53,6 +53,7 @@ $roteador->post('/equipe/inicializacao/aplicar-migrations', [InicializacaoContro
 $roteador->post('/equipe/inicializacao/criar-diretorios', [InicializacaoController::class, 'criarDiretorios'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/gerar-tokens', [InicializacaoController::class, 'gerarTokensEDefaults'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/processar-job', [InicializacaoController::class, 'processarUmJob'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/testar-nodes', [InicializacaoController::class, 'testarNodes'], [Middlewares::exigirPermissao('manage_servers')]);
 
 $roteador->get('/equipe/configuracoes', [ConfiguracoesController::class, 'formulario'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes', [ConfiguracoesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
@@ -66,6 +67,7 @@ $roteador->get('/equipe/servidores', [ServidoresController::class, 'listar'], [M
 $roteador->get('/equipe/servidores/novo', [ServidoresController::class, 'novo'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/servidores/editar', [ServidoresController::class, 'editar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/salvar', [ServidoresController::class, 'salvar'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/servidores/testar-conexao', [ServidoresController::class, 'testarConexao'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/backups', [BackupsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/backups/criar', [BackupsController::class, 'criar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/backups/baixar', [BackupsController::class, 'baixar'], [Middlewares::exigirPermissao('manage_vps')]);
