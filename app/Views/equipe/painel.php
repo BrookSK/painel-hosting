@@ -29,12 +29,16 @@ $role = (string) ($usuario['role'] ?? '');
         <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/">Início</a>
         <a href="/equipe/ajuda">Ajuda</a>
+        <a href="/equipe/notificacoes">Notificações</a>
         <a href="/equipe/usuarios">Usuários</a>
         <a href="/equipe/planos">Planos</a>
         <a href="/equipe/assinaturas">Assinaturas</a>
         <a href="/equipe/asaas-eventos">Eventos Asaas</a>
         <a href="/equipe/servidores">Servidores</a>
+        <a href="/equipe/monitoramento">Monitoramento</a>
         <a href="/equipe/vps">VPS</a>
+        <a href="/equipe/backups">Backups</a>
+        <a href="/equipe/aplicacoes">Aplicações</a>
         <a href="/equipe/tickets">Tickets</a>
         <a href="/equipe/jobs">Jobs</a>
         <a href="/equipe/configuracoes">Configurações</a>

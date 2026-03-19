@@ -42,7 +42,9 @@ function badgeStatusJob(string $st): string
         <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/equipe/painel">Painel</a>
         <a href="/equipe/vps">VPS</a>
+        <a href="/equipe/aplicacoes">Aplicações</a>
         <a href="/equipe/servidores">Servidores</a>
+        <a href="/equipe/monitoramento">Monitoramento</a>
         <a href="/equipe/tickets">Tickets</a>
         <a href="/equipe/configuracoes">Configurações</a>
         <a href="/equipe/sair">Sair</a>

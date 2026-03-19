@@ -58,4 +58,9 @@ final class ConfiguracoesSistema
     {
         return (string) Settings::obter('infra.ssh_key_dir', '');
     }
+
+    public static function monitoringToken(): string
+    {
+        return (string) Settings::obter('monitoring.token', '');
+    }
 }

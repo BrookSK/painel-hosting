@@ -34,6 +34,7 @@ function formatarGb(int $mb): string
         <a href="/equipe/painel">Painel</a>
         <a href="/equipe/planos">Planos</a>
         <a href="/equipe/vps">VPS</a>
+        <a href="/equipe/monitoramento">Monitoramento</a>
         <a href="/equipe/jobs">Jobs</a>
         <a href="/equipe/tickets">Tickets</a>
         <a href="/equipe/configuracoes">Configurações</a>

@@ -27,6 +27,7 @@ final class ConfiguracoesController
             'whatsapp_admin_numero' => ConfiguracoesSistema::whatsappAdminNumero(),
             'evolution_instance' => ConfiguracoesSistema::evolutionInstance(),
             'ssh_key_dir' => ConfiguracoesSistema::sshKeyDir(),
+            'monitoring_token' => ConfiguracoesSistema::monitoringToken(),
         ]);
 
         return Resposta::html($html);
@@ -44,6 +45,7 @@ final class ConfiguracoesController
         $whatsAdminNumero = trim((string) ($req->post['whatsapp_admin_numero'] ?? ''));
         $evoInstance = trim((string) ($req->post['evolution_instance'] ?? ''));
         $sshKeyDir = trim((string) ($req->post['ssh_key_dir'] ?? ''));
+        $monitoringToken = trim((string) ($req->post['monitoring_token'] ?? ''));
 
         if ($tolerancia <= 0) {
             $tolerancia = 3;
@@ -59,6 +61,7 @@ final class ConfiguracoesController
         Settings::definir('alertas.whatsapp_admin_numero', $whatsAdminNumero);
         Settings::definir('whatsapp.evolution.instance', $evoInstance);
         Settings::definir('infra.ssh_key_dir', $sshKeyDir);
+        Settings::definir('monitoring.token', $monitoringToken);
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
             'salvo' => true,
@@ -73,6 +76,7 @@ final class ConfiguracoesController
             'whatsapp_admin_numero' => $whatsAdminNumero,
             'evolution_instance' => $evoInstance,
             'ssh_key_dir' => $sshKeyDir,
+            'monitoring_token' => $monitoringToken,
         ]);
 
         return Resposta::html($html);

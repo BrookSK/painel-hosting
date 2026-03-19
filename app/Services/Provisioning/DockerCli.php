@@ -114,6 +114,18 @@ final class DockerCli
         return (string) ($r['saida'] ?? '');
     }
 
+    public function executar(string $cmd): array
+    {
+        return $this->executarComando($cmd);
+    }
+
+    public function removerContainer(string $nome): array
+    {
+        $this->validarNome($nome);
+        $cmd = 'docker rm -f ' . escapeshellarg($nome);
+        return $this->executarComando($cmd);
+    }
+
     private function executarComando(string $dockerCmd): array
     {
         $dockerCmd = trim($dockerCmd);

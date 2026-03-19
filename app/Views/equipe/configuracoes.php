@@ -110,6 +110,14 @@ use LRV\Core\I18n;
           </div>
         </div>
 
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Token do monitoramento (x-monitoring-token)</label>
+            <input class="input" type="password" name="monitoring_token" value="<?php echo View::e((string) ($monitoring_token ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Endpoint: <strong>/api/metrics/servers</strong></p>
+          </div>
+        </div>
+
         <div style="margin-top:14px;">
           <button class="botao" type="submit">Salvar</button>
         </div>

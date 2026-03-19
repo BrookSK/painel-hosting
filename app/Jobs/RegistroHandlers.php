@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LRV\App\Jobs;
 
+use LRV\App\Services\Deploy\AplicacaoDeployService;
 use LRV\App\Services\Alertas\NotificacoesService;
+use LRV\App\Services\Backup\VpsBackupService;
 use LRV\App\Services\Provisioning\DockerCli;
 use LRV\App\Services\Provisioning\VpsProvisioningService;
 use LRV\App\Services\Http\ClienteHttp;
@@ -24,6 +26,7 @@ final class RegistroHandlers
         $p->registrar('alerta_ticket', static function (array $payload, ContextoJob $ctx): void {
             $titulo = trim((string) ($payload['titulo'] ?? ''));
             $mensagem = trim((string) ($payload['mensagem'] ?? ''));
+            $userId = (int) ($payload['user_id'] ?? 0);
 
             if ($titulo === '' || $mensagem === '') {
                 throw new \InvalidArgumentException('Payload inválido para alerta_ticket.');
@@ -32,6 +35,18 @@ final class RegistroHandlers
             $svc = new NotificacoesService(new ClienteHttp());
 
             try {
+                if ($userId > 0) {
+                    try {
+                        $pdo = BancoDeDados::pdo();
+                        $ins = $pdo->prepare('INSERT INTO notifications (user_id, message, `read`, created_at) VALUES (:u,:m,0,:c)');
+                        $ins->execute([
+                            ':u' => $userId,
+                            ':m' => '[Ticket] ' . $titulo . "\n" . $mensagem,
+                            ':c' => date('Y-m-d H:i:s'),
+                        ]);
+                    } catch (\Throwable $e) {
+                    }
+                }
                 $svc->alertarAdmin($titulo, $mensagem);
                 $ctx->log('Alerta enviado.');
             } catch (\Throwable $e) {
@@ -42,6 +57,7 @@ final class RegistroHandlers
         $p->registrar('alerta_billing', static function (array $payload, ContextoJob $ctx): void {
             $titulo = trim((string) ($payload['titulo'] ?? ''));
             $mensagem = trim((string) ($payload['mensagem'] ?? ''));
+            $userId = (int) ($payload['user_id'] ?? 0);
 
             if ($titulo === '' || $mensagem === '') {
                 throw new \InvalidArgumentException('Payload inválido para alerta_billing.');
@@ -50,10 +66,88 @@ final class RegistroHandlers
             $svc = new NotificacoesService(new ClienteHttp());
 
             try {
+                try {
+                    $pdo = BancoDeDados::pdo();
+
+                    if ($userId > 0) {
+                        $ins = $pdo->prepare('INSERT INTO notifications (user_id, message, `read`, created_at) VALUES (:u,:m,0,:c)');
+                        $ins->execute([
+                            ':u' => $userId,
+                            ':m' => '[Billing] ' . $titulo . "\n" . $mensagem,
+                            ':c' => date('Y-m-d H:i:s'),
+                        ]);
+                    } else {
+                        $stmtUsers = $pdo->query("SELECT id FROM users WHERE status = 'active' AND role IN ('superadmin','admin')");
+                        $admins = $stmtUsers->fetchAll();
+                        $ins = $pdo->prepare('INSERT INTO notifications (user_id, message, `read`, created_at) VALUES (:u,:m,0,:c)');
+                        foreach (($admins ?: []) as $a) {
+                            $uid = (int) ($a['id'] ?? 0);
+                            if ($uid > 0) {
+                                $ins->execute([
+                                    ':u' => $uid,
+                                    ':m' => '[Billing] ' . $titulo . "\n" . $mensagem,
+                                    ':c' => date('Y-m-d H:i:s'),
+                                ]);
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                }
                 $svc->alertarAdmin($titulo, $mensagem);
                 $ctx->log('Alerta enviado.');
             } catch (\Throwable $e) {
                 $ctx->log('Falha ao enviar alerta: ' . $e->getMessage());
+            }
+        });
+
+        $p->registrar('deploy_application', static function (array $payload, ContextoJob $ctx): void {
+            $appId = (int) ($payload['application_id'] ?? 0);
+            if ($appId <= 0) {
+                throw new \InvalidArgumentException('application_id inválido.');
+            }
+
+            $pdo = BancoDeDados::pdo();
+            $up = $pdo->prepare("UPDATE applications SET status = 'deploying' WHERE id = :id");
+            $up->execute([':id' => $appId]);
+
+            $svc = new AplicacaoDeployService(new DockerCli());
+
+            try {
+                $svc->deploy($appId, fn (string $m) => $ctx->log($m));
+            } catch (\Throwable $e) {
+                try {
+                    $up2 = $pdo->prepare("UPDATE applications SET status = 'error' WHERE id = :id");
+                    $up2->execute([':id' => $appId]);
+                } catch (\Throwable $e2) {
+                }
+                throw $e;
+            }
+        });
+
+        $p->registrar('backup_vps', static function (array $payload, ContextoJob $ctx): void {
+            $backupId = (int) ($payload['backup_id'] ?? 0);
+            if ($backupId <= 0) {
+                throw new \InvalidArgumentException('backup_id inválido.');
+            }
+
+            $pdo = BancoDeDados::pdo();
+            $up = $pdo->prepare("UPDATE backups SET status = 'running' WHERE id = :id");
+            $up->execute([':id' => $backupId]);
+
+            $svc = new VpsBackupService(new DockerCli());
+
+            try {
+                $svc->criar($backupId, fn (string $m) => $ctx->log($m));
+            } catch (\Throwable $e) {
+                try {
+                    $up2 = $pdo->prepare("UPDATE backups SET status='failed', error=:e WHERE id=:id");
+                    $up2->execute([
+                        ':e' => $e->getMessage(),
+                        ':id' => $backupId,
+                    ]);
+                } catch (\Throwable $e2) {
+                }
+                throw $e;
             }
         });
 

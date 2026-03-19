@@ -67,6 +67,8 @@ function badgeStatusVpsEquipe(string $st): string
         <a href="/equipe/painel">Painel</a>
         <a href="/equipe/planos">Planos</a>
         <a href="/equipe/servidores">Servidores</a>
+        <a href="/equipe/aplicacoes">Aplicações</a>
+        <a href="/equipe/backups">Backups</a>
         <a href="/equipe/tickets">Tickets</a>
         <a href="/equipe/jobs">Jobs</a>
         <a href="/equipe/configuracoes">Configurações</a>

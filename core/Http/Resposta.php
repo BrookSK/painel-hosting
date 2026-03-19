@@ -10,6 +10,7 @@ final class Resposta
         private readonly string $corpo,
         private readonly int $status,
         private readonly array $headers,
+        private readonly ?string $arquivoPath = null,
     ) {
     }
 
@@ -37,12 +38,48 @@ final class Resposta
         return new self('', $status, ['Location' => $url]);
     }
 
+    public static function arquivo(string $path, string $nomeArquivo, string $contentType = 'application/octet-stream'): self
+    {
+        $nomeArquivo = trim($nomeArquivo);
+        if ($nomeArquivo === '') {
+            $nomeArquivo = basename($path);
+        }
+
+        $size = 0;
+        if (is_file($path)) {
+            $size = (int) (@filesize($path) ?: 0);
+        }
+
+        $headers = [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $nomeArquivo) . '"',
+        ];
+
+        if ($size > 0) {
+            $headers['Content-Length'] = (string) $size;
+        }
+
+        return new self('', 200, $headers, $path);
+    }
+
     public function enviar(): void
     {
         http_response_code($this->status);
         foreach ($this->headers as $k => $v) {
             header($k . ': ' . $v);
         }
+
+        if ($this->arquivoPath !== null) {
+            $fp = @fopen($this->arquivoPath, 'rb');
+            if ($fp === false) {
+                echo '';
+                return;
+            }
+            @fpassthru($fp);
+            @fclose($fp);
+            return;
+        }
+
         echo $this->corpo;
     }
 }
