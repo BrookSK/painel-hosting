@@ -19,6 +19,7 @@ use LRV\App\Controllers\Equipe\AssinaturasController;
 use LRV\App\Controllers\Equipe\AsaasEventosController;
 use LRV\App\Controllers\Equipe\AjudaController;
 use LRV\App\Controllers\Equipe\BackupsController;
+use LRV\App\Controllers\Equipe\InicializacaoController;
 use LRV\App\Controllers\Equipe\JobsController;
 use LRV\App\Controllers\Equipe\NotificacoesController;
 use LRV\App\Controllers\Equipe\PainelController as EquipePainelController;
@@ -45,6 +46,14 @@ $roteador->get('/equipe/notificacoes', [NotificacoesController::class, 'listar']
 $roteador->post('/equipe/notificacoes/marcar-lida', [NotificacoesController::class, 'marcarLida'], [Middlewares::exigirLoginEquipe()]);
 $roteador->post('/equipe/notificacoes/marcar-todas', [NotificacoesController::class, 'marcarTodasLidas'], [Middlewares::exigirLoginEquipe()]);
 $roteador->get('/equipe/ajuda', [AjudaController::class, 'index'], [Middlewares::exigirLoginEquipe()]);
+
+$roteador->get('/equipe/inicializacao', [InicializacaoController::class, 'index'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/aplicar-schema', [InicializacaoController::class, 'aplicarSchema'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/aplicar-migrations', [InicializacaoController::class, 'aplicarMigrations'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/criar-diretorios', [InicializacaoController::class, 'criarDiretorios'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/gerar-tokens', [InicializacaoController::class, 'gerarTokensEDefaults'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/processar-job', [InicializacaoController::class, 'processarUmJob'], [Middlewares::exigirPermissao('manage_servers')]);
+
 $roteador->get('/equipe/configuracoes', [ConfiguracoesController::class, 'formulario'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes', [ConfiguracoesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->get('/equipe/assinaturas', [AssinaturasController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
