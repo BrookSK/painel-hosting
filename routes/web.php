@@ -44,6 +44,9 @@ use LRV\App\Controllers\Equipe\DoisFatoresController;
 use LRV\App\Controllers\Equipe\PermissoesController;
 use LRV\App\Controllers\Cliente\AssinaturasController as ClienteAssinaturasController;
 use LRV\App\Controllers\Cliente\AjudaController as ClienteAjudaController;
+use LRV\App\Controllers\Cliente\ChatController as ClienteChatController;
+use LRV\App\Controllers\Cliente\EmailController as ClienteEmailController;
+use LRV\App\Controllers\Equipe\ChatController as EquipeChatController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -181,3 +184,21 @@ $roteador->get('/status/incidentes', [StatusController::class, 'incidentes']);
 $roteador->get('/cliente/assinaturas', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/assinaturas/reembolso', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'solicitarReembolso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::class, 'index'], [Middlewares::exigirLoginCliente()]);
+
+// Chat cliente
+$roteador->get('/cliente/chat', [ClienteChatController::class, 'index'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
+
+// Chat equipe
+$roteador->get('/equipe/chat', [EquipeChatController::class, 'listar'], [Middlewares::exigirPermissao('view_tickets')]);
+$roteador->get('/equipe/chat/ver', [EquipeChatController::class, 'ver'], [Middlewares::exigirPermissao('view_tickets')]);
+$roteador->post('/equipe/chat/token', [EquipeChatController::class, 'token'], [Middlewares::exigirPermissao('reply_tickets'), Middlewares::rateLimitEquipe('chat_token', 10, 60)]);
+$roteador->post('/equipe/chat/fechar', [EquipeChatController::class, 'fechar'], [Middlewares::exigirPermissao('close_tickets')]);
+
+// Email cliente
+$roteador->get('/cliente/emails', [ClienteEmailController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/emails/criar', [ClienteEmailController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('email_create', 5, 60)]);
+$roteador->post('/cliente/emails/remover', [ClienteEmailController::class, 'remover'], [Middlewares::exigirLoginCliente()]);
+
+// Onboarding
+$roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);

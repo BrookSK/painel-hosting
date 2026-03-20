@@ -149,7 +149,6 @@ use LRV\Core\I18n;
 
         <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
           <h2 class="titulo" style="font-size:16px;">Terminal (Admin)</h2>
-
           <div class="grid" style="margin-top:12px;">
             <div>
               <label style="display:block; font-size:13px; margin-bottom:6px;">Porta interna do WebSocket (bind em 127.0.0.1)</label>
@@ -186,8 +185,47 @@ use LRV\Core\I18n;
         <div style="margin-top:14px;">
           <button class="botao" type="submit">Salvar</button>
         </div>
-      </form>
-    </div>
+
+        <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <h2 class="titulo" style="font-size:16px;">E-mail (Mailcow)</h2>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">URL base do Mailcow</label>
+              <input class="input" type="text" name="mailcow_url" value="<?php echo View::e((string) ($mailcow_url ?? '')); ?>" placeholder="https://mail.seudominio.com" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Exemplo: <strong>https://mail.seudominio.com</strong></p>
+            </div>
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">API Key do Mailcow</label>
+              <input class="input" type="password" name="mailcow_key" value="<?php echo View::e((string) ($mailcow_key ?? '')); ?>" />
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">URL do Webmail (Roundcube/SOGo)</label>
+              <input class="input" type="text" name="webmail_url" value="<?php echo View::e((string) ($webmail_url ?? '')); ?>" placeholder="https://webmail.seudominio.com" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Link exibido para o cliente acessar o webmail.</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <h2 class="titulo" style="font-size:16px;">Chat ao vivo (WebSocket)</h2>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Porta do WebSocket do chat</label>
+              <input class="input" type="number" name="chat_ws_port" value="<?php echo View::e((string) ($chat_ws_port ?? '8082')); ?>" min="1" max="65535" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Proxy reverso deve apontar <strong>/ws/chat</strong> para <strong>127.0.0.1:&lt;porta&gt;</strong>. Padrão: <strong>8082</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <button class="botao" type="submit">Salvar</button>
+        </div>
+      </form>    </div>
   </div>
 </body>
 </html>

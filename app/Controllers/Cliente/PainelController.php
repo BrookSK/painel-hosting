@@ -20,9 +20,12 @@ final class PainelController
         }
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = :id');
+
+        $stmt = $pdo->prepare('SELECT name, email, onboarding_done FROM clients WHERE id = :id');
         $stmt->execute([':id' => $id]);
         $c = $stmt->fetch();
+
+        $onboardingDone = (bool) ($c['onboarding_done'] ?? true);
 
         // Notificações não lidas
         $notifs = [];
@@ -34,14 +37,66 @@ final class PainelController
             );
             $stmtN->execute([':c' => $id]);
             $notifs = $stmtN->fetchAll() ?: [];
-        } catch (\Throwable $e) {
-        }
+        } catch (\Throwable) {}
+
+        // Contagem de VPS
+        $totalVps = 0;
+        $vpsRunning = 0;
+        try {
+            $stmtV = $pdo->prepare('SELECT status FROM vps WHERE client_id = :c');
+            $stmtV->execute([':c' => $id]);
+            $vpsList = $stmtV->fetchAll() ?: [];
+            $totalVps = count($vpsList);
+            foreach ($vpsList as $v) {
+                if (($v['status'] ?? '') === 'running') $vpsRunning++;
+            }
+        } catch (\Throwable) {}
+
+        // Tickets abertos
+        $ticketsAbertos = 0;
+        try {
+            $stmtT = $pdo->prepare("SELECT COUNT(*) FROM tickets WHERE client_id = :c AND status NOT IN ('closed','resolved')");
+            $stmtT->execute([':c' => $id]);
+            $ticketsAbertos = (int) $stmtT->fetchColumn();
+        } catch (\Throwable) {}
+
+        // Assinatura ativa
+        $assinatura = null;
+        try {
+            $stmtA = $pdo->prepare(
+                "SELECT s.status, p.name as plan_name FROM subscriptions s
+                 LEFT JOIN plans p ON p.id = s.plan_id
+                 WHERE s.client_id = :c AND s.status = 'active'
+                 ORDER BY s.id DESC LIMIT 1"
+            );
+            $stmtA->execute([':c' => $id]);
+            $assinatura = $stmtA->fetch() ?: null;
+        } catch (\Throwable) {}
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/painel.php', [
-            'cliente'       => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
-            'notificacoes'  => $notifs,
+            'cliente'        => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
+            'notificacoes'   => $notifs,
+            'totalVps'       => $totalVps,
+            'vpsRunning'     => $vpsRunning,
+            'ticketsAbertos' => $ticketsAbertos,
+            'assinatura'     => $assinatura,
+            'onboardingDone' => $onboardingDone,
         ]);
 
         return Resposta::html($html);
+    }
+
+    public function concluirOnboarding(Requisicao $req): Resposta
+    {
+        $id = Auth::clienteId();
+        if ($id === null) {
+            return Resposta::json(['ok' => false], 401);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('UPDATE clients SET onboarding_done = 1 WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+
+        return Resposta::json(['ok' => true]);
     }
 }

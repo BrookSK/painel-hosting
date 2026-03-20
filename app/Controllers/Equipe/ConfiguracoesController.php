@@ -37,6 +37,10 @@ final class ConfiguracoesController
             'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
             'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
             'terminal_safe_mode' => ConfiguracoesSistema::terminalSafeModeHabilitado() ? '1' : '0',
+            'mailcow_url'    => (string) Settings::obter('email.mailcow_url', ''),
+            'mailcow_key'    => (string) Settings::obter('email.mailcow_key', ''),
+            'webmail_url'    => (string) Settings::obter('email.webmail_url', ''),
+            'chat_ws_port'   => (string) Settings::obter('chat.ws_port', '8082'),
         ]);
 
         return Resposta::html($html);
@@ -70,6 +74,11 @@ final class ConfiguracoesController
         $terminalIdleTimeout = $in->postInt('terminal_idle_timeout_seconds', 60, 604800, false);
         $terminalSafeMode = $in->postEnum('terminal_safe_mode', ['0', '1', 'on', 'true'], '0');
 
+        $mailcowUrl    = $in->postUrl('mailcow_url', 255, false);
+        $mailcowKey    = $in->postString('mailcow_key', 255, false);
+        $webmailUrl    = $in->postUrl('webmail_url', 255, false);
+        $chatWsPort    = $in->postInt('chat_ws_port', 1, 65535, false);
+
         if ($in->temErros()) {
             $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
                 'salvo' => false,
@@ -93,6 +102,10 @@ final class ConfiguracoesController
                 'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
                 'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
                 'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
+                'mailcow_url'  => $mailcowUrl,
+                'mailcow_key'  => $mailcowKey,
+                'webmail_url'  => $webmailUrl,
+                'chat_ws_port' => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
             ]);
 
             return Resposta::html($html, 422);
@@ -121,6 +134,10 @@ final class ConfiguracoesController
         Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl > 0 ? $terminalTokenTtl : 60);
         Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900);
         Settings::definir('terminal.safe_mode', ($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? 1 : 0);
+        Settings::definir('email.mailcow_url', $mailcowUrl);
+        Settings::definir('email.mailcow_key', $mailcowKey);
+        Settings::definir('email.webmail_url', $webmailUrl);
+        Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
 
         $whatsLast4 = '';
         if ($whatsAdminNumero !== '') {
@@ -180,6 +197,10 @@ final class ConfiguracoesController
             'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
             'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),
             'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
+            'mailcow_url'  => $mailcowUrl,
+            'mailcow_key'  => $mailcowKey,
+            'webmail_url'  => $webmailUrl,
+            'chat_ws_port' => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
         ]);
 
         return Resposta::html($html);

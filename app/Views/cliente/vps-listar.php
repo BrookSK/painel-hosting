@@ -7,43 +7,22 @@ use LRV\Core\I18n;
 
 function gb(int $mb): string
 {
-    if ($mb <= 0) {
-        return '0 GB';
-    }
-    return (string) ((int) round($mb / 1024)) . ' GB';
+    if ($mb <= 0) return '0 GB';
+    return round($mb / 1024) . ' GB';
 }
 
-function badgeStatusVps(string $st): string
+function vpsStatusInfo(string $st): array
 {
-    if ($st === 'running') {
-        return '<span class="badge">Em execução</span>';
-    }
-
-    if ($st === 'suspended_payment') {
-        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Suspensa</span>';
-    }
-
-    if ($st === 'pending_payment') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Aguardando pagamento</span>';
-    }
-
-    if ($st === 'pending_node') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Aguardando node</span>';
-    }
-
-    if ($st === 'pending_provisioning') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Provisionamento pendente</span>';
-    }
-
-    if ($st === 'provisioning') {
-        return '<span class="badge" style="background:#e0e7ff;color:#1e3a8a;">Provisionando</span>';
-    }
-
-    if ($st === 'error') {
-        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Erro</span>';
-    }
-
-    return '<span class="badge" style="background:#f1f5f9;color:#334155;">' . View::e($st) . '</span>';
+    return match($st) {
+        'running'              => ['dot' => 'dot-online',  'label' => 'Em execução'],
+        'suspended_payment'    => ['dot' => 'dot-offline', 'label' => 'Suspensa'],
+        'pending_payment'      => ['dot' => 'dot-pending', 'label' => 'Aguardando pagamento'],
+        'pending_node'         => ['dot' => 'dot-pending', 'label' => 'Aguardando node'],
+        'pending_provisioning' => ['dot' => 'dot-pending', 'label' => 'Provisionamento pendente'],
+        'provisioning'         => ['dot' => 'dot-pending', 'label' => 'Provisionando'],
+        'error'                => ['dot' => 'dot-offline', 'label' => 'Erro'],
+        default                => ['dot' => 'dot-pending', 'label' => $st],
+    };
 }
 
 ?>
@@ -54,6 +33,17 @@ function badgeStatusVps(string $st): string
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Minhas VPS</title>
   <?php require __DIR__ . '/../_partials/estilo.php'; ?>
+  <style>
+    .vps-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .vps-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:18px 16px; }
+    .vps-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .vps-id { font-weight:700; font-size:16px; color:#0B1C3D; }
+    .vps-specs { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:14px; }
+    .vps-spec { font-size:13px; color:#64748b; }
+    .vps-spec strong { color:#1e293b; display:block; font-size:14px; }
+    .vps-status-row { display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:12px; }
+    .vps-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  </style>
 </head>
 <body>
   <div class="topo">
@@ -66,52 +56,71 @@ function badgeStatusVps(string $st): string
         <?php require __DIR__ . '/../_partials/idioma.php'; ?>
         <a href="/cliente/painel">Painel</a>
         <a href="/cliente/planos">Planos</a>
-        <a href="/cliente/tickets">Tickets</a>
-        <a href="/cliente/aplicacoes">Aplicações</a>
         <a href="/cliente/monitoramento">Monitoramento</a>
+        <a href="/cliente/tickets">Tickets</a>
         <a href="/cliente/sair">Sair</a>
       </div>
     </div>
   </div>
 
   <div class="conteudo">
-    <div class="card">
-      <div style="overflow:auto;">
-        <table style="width:100%; border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">VPS</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">CPU</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Memória</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Armazenamento</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Status</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Node</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach (($vps ?? []) as $v): ?>
-              <tr>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>#<?php echo (int) ($v['id'] ?? 0); ?></strong></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($v['cpu'] ?? '')); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e(gb((int) ($v['ram'] ?? 0))); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e(gb((int) ($v['storage'] ?? 0))); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusVps((string) ($v['status'] ?? '')); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($v['server_id'] ?? '')); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
-                  <a href="/cliente/vps/terminal?id=<?php echo (int) ($v['id'] ?? 0); ?>">Terminal</a>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-            <?php if (empty($vps)): ?>
-              <tr>
-                <td colspan="7" style="padding:12px;">Você ainda não tem VPS.</td>
-              </tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+    <?php if (empty($vps)): ?>
+      <div class="card">
+        <p class="texto">Você ainda não tem VPS.</p>
+        <a href="/cliente/planos" class="botao">Ver planos</a>
       </div>
-    </div>
+    <?php else: ?>
+      <div class="vps-grid">
+        <?php foreach (($vps ?? []) as $v):
+          $st = (string) ($v['status'] ?? '');
+          $info = vpsStatusInfo($st);
+        ?>
+          <div class="vps-card">
+            <div class="vps-card-header">
+              <span class="vps-id">VPS #<?php echo (int) ($v['id'] ?? 0); ?></span>
+              <div class="vps-status-row">
+                <span class="<?php echo View::e($info['dot']); ?>"></span>
+                <span><?php echo View::e($info['label']); ?></span>
+              </div>
+            </div>
+
+            <div class="vps-specs">
+              <div class="vps-spec">
+                <strong><?php echo View::e((string) ($v['cpu'] ?? '—')); ?></strong>
+                CPU
+              </div>
+              <div class="vps-spec">
+                <strong><?php echo View::e(gb((int) ($v['ram'] ?? 0))); ?></strong>
+                RAM
+              </div>
+              <div class="vps-spec">
+                <strong><?php echo View::e(gb((int) ($v['storage'] ?? 0))); ?></strong>
+                Disco
+              </div>
+              <div class="vps-spec">
+                <strong><?php echo View::e((string) ($v['server_id'] ?? '—')); ?></strong>
+                Node
+              </div>
+            </div>
+
+            <?php if (!empty($v['container_ip'])): ?>
+              <div style="font-size:12px; color:#64748b; margin-bottom:10px;">
+                IP: <?php echo View::e((string) $v['container_ip']); ?>
+              </div>
+            <?php endif; ?>
+
+            <div class="vps-actions">
+              <?php if ($st === 'running'): ?>
+                <a href="/cliente/vps/terminal?id=<?php echo (int) ($v['id'] ?? 0); ?>" class="botao sm">Terminal</a>
+                <a href="/cliente/monitoramento/ver?vps_id=<?php echo (int) ($v['id'] ?? 0); ?>" class="botao sm ghost">Monitor</a>
+              <?php elseif (in_array($st, ['pending_payment', 'suspended_payment'], true)): ?>
+                <a href="/cliente/planos" class="botao sm">Ver planos</a>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
   </div>
 </body>
 </html>
