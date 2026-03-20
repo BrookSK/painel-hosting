@@ -178,5 +178,6 @@ $onboardingDone = (bool) ($onboardingDone ?? true);
   </script>
   <?php endif; ?>
 
+  <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

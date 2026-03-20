@@ -1,5 +1,7 @@
 # LRV Cloud Manager
 
+> Versão atual: **1.4.0**
+
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
 ## Requisitos
@@ -9,6 +11,8 @@ Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 - Composer
 - SSH access ao servidor de nodes
 - (Opcional) Stripe, Asaas para billing
+- (Opcional) Mailcow para e-mail por cliente
+- (Opcional) Ratchet (já incluso via Composer) para WebSocket (terminal + chat)
 
 ## Instalação
 
@@ -30,6 +34,9 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0001_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0002_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0003_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0004_*.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0005_*.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0006_*.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0007_chat_email.sql
 ```
 
 ### 3. Configuração do banco
@@ -51,7 +58,12 @@ Configurações principais:
 | `stripe.secret_key` | Chave secreta Stripe |
 | `stripe.webhook_secret` | Segredo do webhook Stripe |
 | `infra.ssh_key_dir` | Diretório das chaves SSH dos nodes |
+| `terminal.ws_internal_port` | Porta interna do WS do terminal (padrão: 8081) |
 | `terminal.token_ttl_seconds` | TTL dos tokens de terminal (padrão: 60s) |
+| `chat.ws_port` | Porta interna do WS do chat (padrão: 8082) |
+| `email.mailcow_url` | URL base do Mailcow (ex: `https://mail.seudominio.com`) |
+| `email.mailcow_key` | API key do Mailcow |
+| `email.webmail_url` | URL do webmail (Roundcube/SOGo) — fallback global |
 | `alertas.email_admin` | E-mail para alertas |
 
 ### 5. Diretórios de armazenamento
@@ -76,49 +88,123 @@ RewriteRule ^ index.php [QSA,L]
 
 Acesse `/equipe/primeiro-acesso` para criar o usuário administrador inicial.
 
+---
+
 ## Terminal WebSocket
 
-O terminal usa Ratchet (WebSocket). Para iniciar o daemon:
+O terminal usa Ratchet. Para iniciar o daemon:
 
 ```bash
-php bin/terminal-server.php
+php terminal-ws.php
+```
+
+Porta configurável via `terminal.ws_internal_port` (padrão: 8081). Configure o proxy reverso para apontar `/ws/terminal` para `127.0.0.1:8081`.
+
+## Chat WebSocket
+
+O chat usa Ratchet em processo separado:
+
+```bash
+php chat-ws.php
+```
+
+Porta configurável via `chat.ws_port` (padrão: 8082). Configure o proxy reverso para apontar `/ws/chat` para `127.0.0.1:8082`.
+
+## Jobs / Worker
+
+```bash
+php worker.php          # loop contínuo
+php worker.php --once   # processa um job e sai
 ```
 
 Ou via painel em `/equipe/inicializacao`.
 
-## Jobs
+---
 
-Os jobs são processados via worker. Para processar manualmente:
+## Módulos
 
-```bash
-php bin/worker.php
-```
+### Billing
+- **Asaas** (BRL): criação de clientes, assinaturas, webhooks em `/webhooks/asaas`
+- **Stripe** (USD): checkout, webhooks em `/webhooks/stripe`
+- Pagamento confirmado → ativa VPS | Inadimplência → suspende VPS
 
-Ou via painel em `/equipe/inicializacao`.
+### Chat em tempo real
+- WebSocket Ratchet, processo separado (`chat-ws.php`)
+- Tokens de uso único (SHA-256, TTL 120s, replay protection)
+- Rate limit: 30 msgs/10s por IP no WS + 10 req/60s no endpoint HTTP
+- Isolamento por room: cliente só acessa a própria room
+
+### E-mail (Mailcow)
+- Integração via API REST do Mailcow
+- Criar, listar, remover e alterar senha de mailboxes
+- Webmail dinâmico por domínio (`https://webmail.{domain}`) com fallback global
+- Sem SMTP/IMAP manual — usa infraestrutura Mailcow existente
+
+### Terminal
+- SSH via WebSocket, isolado por cliente (docker exec no container)
+- Auditoria de sessões, upload/download de arquivos
+- Modo seguro configurável (bloqueia comandos perigosos)
+
+### VPS / Provisioning
+- Jobs assíncronos: criar, parar, reiniciar, remover VPS
+- Seleção automática de node por capacidade disponível
+- Métricas de CPU/RAM/Disco coletadas remotamente via SSH
+
+---
 
 ## Segurança
 
 - CSRF em todos os formulários POST
-- Rate limiting por IP e por usuário
+- Rate limiting por IP, cliente e equipe
 - Bloqueio de IP após 10 tentativas de login falhas em 30 min
-- 2FA (TOTP) disponível para usuários da equipe
-- Tokens de terminal de uso único com TTL curto (padrão 60s)
-- Validação de propriedade (IDOR) em todos os endpoints sensíveis
-- Prevenção de replay attack nos webhooks Stripe
+- 2FA (TOTP RFC 6238) para usuários da equipe
+- Tokens de terminal e chat de uso único com TTL curto
+- Validação de propriedade (IDOR) em todos os endpoints sensíveis — retorna 403
+- Prevenção de replay attack nos webhooks Stripe e Asaas
 - Logs de autenticação em `auth_logs`
 - Logs de aplicação em `storage/logs/app-YYYY-MM-DD.log`
+- Saída HTML sempre escapada com `View::e()`
+- Prepared statements em todas as queries
+
+---
 
 ## Estrutura
 
 ```
 app/
-  Controllers/    # Controllers MVC
-  Services/       # Lógica de negócio
-  Views/          # Templates PHP
-  Jobs/           # Handlers de jobs
-core/             # Framework próprio (Router, Auth, DB, etc.)
-database/         # Schema e migrations
-routes/           # Definição de rotas
+  Controllers/
+    Cliente/      # Painel do cliente
+    Equipe/       # Painel da equipe
+    Api/          # Endpoints internos
+    Webhooks/     # Asaas, Stripe
+  Services/
+    Billing/      # Asaas, Stripe
+    Chat/         # WebSocket chat
+    Email/        # Mailcow
+    Infra/        # SSH, NodeHealth
+    Provisioning/ # Docker, VPS
+    Terminal/     # WebSocket terminal
+    ...
+  Views/
+    cliente/      # Templates do cliente
+    equipe/       # Templates da equipe
+    _partials/    # estilo.php, footer.php, idioma.php
+  Jobs/           # Handlers de jobs assíncronos
+core/             # Framework próprio (Router, Auth, DB, CSRF, etc.)
+database/
+  schema.sql      # Schema inicial
+  migrations/     # Migrations incrementais
+routes/
+  web.php         # Todas as rotas
 storage/          # Logs, anexos, backups (não versionar)
 public/           # DocumentRoot (index.php)
+chat-ws.php       # Daemon WebSocket do chat
+terminal-ws.php   # Daemon WebSocket do terminal
+worker.php        # Worker de jobs
 ```
+
+---
+
+## Versões
+
+Veja o [CHANGELOG.md](CHANGELOG.md) para histórico completo de versões.

@@ -155,5 +155,6 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
   connect();
 })();
 </script>
+<?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

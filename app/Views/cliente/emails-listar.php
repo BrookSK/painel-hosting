@@ -171,5 +171,6 @@ $webmailUrl = (string) ($webmail_url ?? '');
     }
   });
   </script>
+  <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

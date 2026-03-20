@@ -134,6 +134,7 @@ function badgeStatusVpsEquipe(string $st): string
       </div>
     </div>
   </div>
+  <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>
 <script>
