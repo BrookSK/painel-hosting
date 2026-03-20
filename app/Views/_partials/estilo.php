@@ -1,4 +1,12 @@
-<?php declare(strict_types=1); ?>
+<?php
+declare(strict_types=1);
+use LRV\Core\SistemaConfig;
+use LRV\Core\View;
+$_favicon = SistemaConfig::faviconUrl();
+if ($_favicon !== ''):
+?>
+<link rel="icon" href="<?php echo View::e($_favicon); ?>" />
+<?php endif; ?>
 <style>
 *{box-sizing:border-box;}
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:#f8fafc;margin:0;color:#0f172a;}

@@ -47,6 +47,8 @@ use LRV\App\Controllers\Cliente\AjudaController as ClienteAjudaController;
 use LRV\App\Controllers\Cliente\ChatController as ClienteChatController;
 use LRV\App\Controllers\Cliente\EmailController as ClienteEmailController;
 use LRV\App\Controllers\Equipe\ChatController as EquipeChatController;
+use LRV\App\Controllers\LegalController;
+use LRV\App\Controllers\ChangelogController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -203,3 +205,8 @@ $roteador->post('/cliente/emails/alterar-senha', [ClienteEmailController::class,
 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
+
+// Páginas públicas legais e changelog
+$roteador->get('/termos', [LegalController::class, 'termos']);
+$roteador->get('/privacidade', [LegalController::class, 'privacidade']);
+$roteador->get('/changelog', [ChangelogController::class, 'index']);

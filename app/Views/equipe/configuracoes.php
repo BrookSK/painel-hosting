@@ -222,6 +222,55 @@ use LRV\Core\I18n;
           </div>
         </div>
 
+        <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <h2 class="titulo" style="font-size:16px;">🎨 Identidade Visual</h2>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Nome do sistema</label>
+              <input class="input" type="text" name="system_name" value="<?php echo View::e((string) ($system_name ?? '')); ?>" placeholder="LRV Cloud Manager" />
+            </div>
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Nome da empresa</label>
+              <input class="input" type="text" name="system_company_name" value="<?php echo View::e((string) ($system_company_name ?? '')); ?>" placeholder="LRV Cloud" />
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">URL do logotipo</label>
+              <input class="input" type="text" name="system_logo_url" value="<?php echo View::e((string) ($system_logo_url ?? '')); ?>" placeholder="https://seudominio.com/logo.png" />
+            </div>
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">URL do favicon</label>
+              <input class="input" type="text" name="system_favicon_url" value="<?php echo View::e((string) ($system_favicon_url ?? '')); ?>" placeholder="https://seudominio.com/favicon.ico" />
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label style="display:block; font-size:13px; margin-bottom:6px;">Texto de copyright (footer)</label>
+              <input class="input" type="text" name="system_copyright_text" value="<?php echo View::e((string) ($system_copyright_text ?? '')); ?>" placeholder="© 2025 LRV Cloud" />
+              <p class="texto" style="font-size:13px; margin-top:8px;">Deixe em branco para usar o padrão automático com o ano atual.</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <h2 class="titulo" style="font-size:16px;">⚖️ Páginas Legais</h2>
+          <p class="texto" style="font-size:13px;">HTML permitido. Acessível em <a href="/termos" target="_blank">/termos</a> e <a href="/privacidade" target="_blank">/privacidade</a>.</p>
+
+          <div style="margin-top:12px;">
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Termos de Uso (HTML)</label>
+            <textarea class="input" name="legal_terms_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string) ($legal_terms_html ?? '')); ?></textarea>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Política de Privacidade (HTML)</label>
+            <textarea class="input" name="legal_privacy_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string) ($legal_privacy_html ?? '')); ?></textarea>
+          </div>
+        </div>
+
         <div style="margin-top:14px;">
           <button class="botao" type="submit">Salvar</button>
         </div>

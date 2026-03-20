@@ -48,7 +48,8 @@ mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0003_*.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0004_*.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0005_*.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0006_*.sql
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0007_chat_email.sql</pre>
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0007_chat_email.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0008_branding_legal.sql</pre>
       <p class="texto">Ou via painel: <a href="/equipe/inicializacao">/equipe/inicializacao</a> → "Aplicar migrations".</p>
 
       <div class="section-title">⚙️ 2. Worker (Jobs)</div>
@@ -101,7 +102,20 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
       Configure permissões por role em <a href="/equipe/permissoes">/equipe/permissoes</a>.<br>
       2FA (TOTP) disponível para cada usuário em <a href="/equipe/2fa/configurar">/equipe/2fa/configurar</a>.</p>
 
-      <div class="section-title">🔒 11. Segurança</div>
+      <div class="section-title">🎨 11. Branding e Páginas Legais</div>
+      <p class="texto">Configure a identidade visual e páginas legais em <a href="/equipe/configuracoes">Configurações</a> → seções "Identidade Visual" e "Páginas Legais":</p>
+      <ul class="texto" style="padding-left:18px;">
+        <li><span class="badge-cmd">system.name</span> — nome do sistema exibido no footer e topo</li>
+        <li><span class="badge-cmd">system.logo_url</span> — URL do logotipo</li>
+        <li><span class="badge-cmd">system.favicon_url</span> — URL do favicon</li>
+        <li><span class="badge-cmd">system.company_name</span> — nome da empresa</li>
+        <li><span class="badge-cmd">system.copyright_text</span> — texto de copyright no footer (padrão: © {ano} LRV Cloud)</li>
+        <li><span class="badge-cmd">legal.terms_html</span> — HTML dos Termos de Uso (exibido em <a href="/termos">/termos</a>)</li>
+        <li><span class="badge-cmd">legal.privacy_html</span> — HTML da Política de Privacidade (exibido em <a href="/privacidade">/privacidade</a>)</li>
+      </ul>
+      <p class="texto">Changelog público disponível em <a href="/changelog">/changelog</a> — gerado automaticamente a partir do arquivo <code>CHANGELOG.md</code>.</p>
+
+      <div class="section-title">🔒 12. Segurança</div>
       <ul class="texto" style="padding-left:18px;">
         <li>CSRF em todos os formulários POST</li>
         <li>Rate limiting por IP, cliente e equipe</li>

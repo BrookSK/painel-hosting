@@ -8,7 +8,53 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ## [1.4.0] — 2026-03-20
 
 ### Adicionado
+- **Branding dinâmico**: `system.name`, `system.logo_url`, `system.favicon_url`, `system.company_name`, `system.copyright_text` configuráveis via `/equipe/configuracoes`
+- Helper `core/SistemaConfig.php` com métodos estáticos (`nome()`, `logoUrl()`, `faviconUrl()`, `empresaNome()`, `copyrightText()`, `termsHtml()`, `privacyHtml()`)
+- **Páginas legais públicas**: `/termos` e `/privacidade` com conteúdo HTML editável pelo admin (`legal.terms_html`, `legal.privacy_html`)
+- **Changelog público** em `/changelog` — lê `CHANGELOG.md` e converte Markdown → HTML com parser regex próprio (sem dependência externa)
+- Seções "Identidade Visual" e "Páginas Legais" em `/equipe/configuracoes`
+- Footer global atualizado com copyright dinâmico, links para Termos, Privacidade, Changelog, Status e Contato
+- Favicon dinâmico via `<link rel="icon">` em `estilo.php` (usa `system.favicon_url` se configurado)
+- Migration `0008_branding_legal.sql` com defaults para todas as novas chaves de settings
 - **Chat em tempo real** via WebSocket (Ratchet) — processo separado `chat-ws.php` na porta configurável (`chat.ws_port`, padrão 8082)
+- Módulo `app/Services/Chat/` com `ChatWsApp`, `ChatRoomService`, `ChatMessageService`, `ChatTokensService`
+- Tabelas `chat_rooms`, `chat_messages`, `chat_tokens` (migration `0007_chat_email.sql`)
+- Tokens de chat de uso único com TTL 120s e proteção contra replay (`FOR UPDATE` + `used_at`)
+- Rate limit no WebSocket (30 msgs/10s por IP) e no endpoint HTTP de token (10 req/60s)
+- Isolamento por room: cliente só acessa a própria room (validação de `client_id` no `onOpen`)
+- Atribuição automática de agente ao entrar na room
+- Histórico de mensagens enviado no `onOpen` (últimas 100)
+- Painel da equipe: listagem de rooms abertas (`/equipe/chat`) e interface de atendimento (`/equipe/chat/ver`)
+- Botão "Encerrar chat" com confirmação
+- **Sistema de e-mail via Mailcow** — integração com API REST (`/api/v1/add/mailbox`, `/api/v1/delete/mailbox`, `/api/v1/edit/mailbox`)
+- Módulo `app/Services/Email/MailcowService` com `criarEmail()`, `removerEmail()`, `alterarSenha()`, `listar()`, `webmailUrl()`
+- Tabela `client_emails` (migration `0007_chat_email.sql`)
+- Rotas `/cliente/emails` (listar, criar, remover, alterar-senha)
+- Link de webmail dinâmico por domínio (`https://webmail.{domain}`) com fallback para URL global
+- Modal de alteração de senha com validação JS de confirmação
+- Configurações Mailcow e Chat WS em `/equipe/configuracoes` (`email.mailcow_url`, `email.mailcow_key`, `email.webmail_url`, `chat.ws_port`)
+- **Dashboard do cliente** reformulado: stat-cards com dados reais (total VPS, VPS running, tickets abertos, plano ativo)
+- Nav-cards com ícones para todas as seções do painel
+- **Onboarding modal** para novos clientes (`onboarding_done = 0`): guia de 4 passos, marcado como concluído via `POST /cliente/onboarding/concluir`
+- Coluna `onboarding_done` em `clients` (migration `0007_chat_email.sql`)
+- **VPS do cliente** reformulada: cards responsivos com dots de status coloridos (verde/amarelo/vermelho), specs em grid, ações contextuais por status
+- **Monitoramento** melhorado: cards de resumo da última coleta com cores por threshold (verde < 70%, amarelo 70–90%, vermelho ≥ 90%), auto-refresh a cada 30s
+- Versão do sistema exibida no footer de todas as páginas
+- Responsividade completa: media queries 768px e 480px em `estilo.php`
+
+### Corrigido
+- Bug crítico: form de remoção de email enviava `local_part`/`domain` mas controller esperava `email_id`
+- Bug: campo `senha` no form de criação de email enviava `name="password"` mas controller lia `$req->post['senha']`
+- Bug: CSRF no chat do cliente era lido via `document.cookie` (frágil) — substituído por `json_encode(Csrf::token())` embutido no PHP
+- Bug: `MailcowService` chamava `$this->http->post()` inexistente — corrigido para `requestJson('POST', ...)` e `requestJson('DELETE', ...)`
+- Onboarding modal iniciava com `display:flex` no CSS — corrigido para `display:none` + ativação via JS (não trava interface se JS falhar)
+- Double-submit em forms de ação de VPS: botão desabilitado após primeiro clique com feedback "Processando..."
+- Reconexão do chat do cliente não chamava `setTimeout` em caso de erro no token — corrigido
+
+### Alterado
+- `PainelController` agora busca dados reais: contagem de VPS, VPS running, tickets abertos, assinatura ativa, `onboarding_done`
+- `ConfiguracoesController` e view de configurações expandidos com seções Mailcow, Chat WS, Identidade Visual e Páginas Legais
+- Footer global (`_partials/footer.php`) usa `SistemaConfig` para copyright e nome dinâmicos
 - Módulo `app/Services/Chat/` com `ChatWsApp`, `ChatRoomService`, `ChatMessageService`, `ChatTokensService`
 - Tabelas `chat_rooms`, `chat_messages`, `chat_tokens` (migration `0007_chat_email.sql`)
 - Tokens de chat de uso único com TTL 120s e proteção contra replay (`FOR UPDATE` + `used_at`)

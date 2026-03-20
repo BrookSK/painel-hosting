@@ -37,6 +37,7 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0004_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0005_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0006_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0007_chat_email.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0008_branding_legal.sql
 ```
 
 ### 3. Configuração do banco
@@ -65,6 +66,13 @@ Configurações principais:
 | `email.mailcow_key` | API key do Mailcow |
 | `email.webmail_url` | URL do webmail (Roundcube/SOGo) — fallback global |
 | `alertas.email_admin` | E-mail para alertas |
+| `system.name` | Nome do sistema (padrão: `LRV Cloud Manager`) |
+| `system.logo_url` | URL do logotipo |
+| `system.favicon_url` | URL do favicon |
+| `system.company_name` | Nome da empresa (padrão: `LRV Cloud`) |
+| `system.copyright_text` | Texto de copyright no footer |
+| `legal.terms_html` | HTML dos Termos de Uso (`/termos`) |
+| `legal.privacy_html` | HTML da Política de Privacidade (`/privacidade`) |
 
 ### 5. Diretórios de armazenamento
 
@@ -139,6 +147,12 @@ Ou via painel em `/equipe/inicializacao`.
 - Criar, listar, remover e alterar senha de mailboxes
 - Webmail dinâmico por domínio (`https://webmail.{domain}`) com fallback global
 - Sem SMTP/IMAP manual — usa infraestrutura Mailcow existente
+
+### Branding e Páginas Legais
+- Nome, logo, favicon e copyright configuráveis via `/equipe/configuracoes`
+- Páginas públicas `/termos` e `/privacidade` com HTML editável pelo admin
+- Changelog público em `/changelog` gerado a partir do `CHANGELOG.md`
+- Helper `SistemaConfig` com cache via `Settings`
 
 ### Terminal
 - SSH via WebSocket, isolado por cliente (docker exec no container)

@@ -9,6 +9,7 @@ use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
 use LRV\Core\Settings;
+use LRV\Core\SistemaConfig;
 use LRV\Core\View;
 
 final class ConfiguracoesController
@@ -41,6 +42,13 @@ final class ConfiguracoesController
             'mailcow_key'    => (string) Settings::obter('email.mailcow_key', ''),
             'webmail_url'    => (string) Settings::obter('email.webmail_url', ''),
             'chat_ws_port'   => (string) Settings::obter('chat.ws_port', '8082'),
+            'system_name'           => SistemaConfig::nome(),
+            'system_logo_url'       => SistemaConfig::logoUrl(),
+            'system_favicon_url'    => SistemaConfig::faviconUrl(),
+            'system_company_name'   => SistemaConfig::empresaNome(),
+            'system_copyright_text' => (string) Settings::obter('system.copyright_text', ''),
+            'legal_terms_html'      => SistemaConfig::termsHtml(),
+            'legal_privacy_html'    => SistemaConfig::privacyHtml(),
         ]);
 
         return Resposta::html($html);
@@ -79,6 +87,14 @@ final class ConfiguracoesController
         $webmailUrl    = $in->postUrl('webmail_url', 255, false);
         $chatWsPort    = $in->postInt('chat_ws_port', 1, 65535, false);
 
+        $systemName          = $in->postString('system_name', 190, false);
+        $systemLogoUrl       = $in->postString('system_logo_url', 500, false);
+        $systemFaviconUrl    = $in->postString('system_favicon_url', 500, false);
+        $systemCompanyName   = $in->postString('system_company_name', 190, false);
+        $systemCopyrightText = $in->postString('system_copyright_text', 255, false);
+        $legalTermsHtml      = $in->postString('legal_terms_html', 65535, false);
+        $legalPrivacyHtml    = $in->postString('legal_privacy_html', 65535, false);
+
         if ($in->temErros()) {
             $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
                 'salvo' => false,
@@ -106,6 +122,13 @@ final class ConfiguracoesController
                 'mailcow_key'  => $mailcowKey,
                 'webmail_url'  => $webmailUrl,
                 'chat_ws_port' => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
+                'system_name'           => $systemName,
+                'system_logo_url'       => $systemLogoUrl,
+                'system_favicon_url'    => $systemFaviconUrl,
+                'system_company_name'   => $systemCompanyName,
+                'system_copyright_text' => $systemCopyrightText,
+                'legal_terms_html'      => $legalTermsHtml,
+                'legal_privacy_html'    => $legalPrivacyHtml,
             ]);
 
             return Resposta::html($html, 422);
@@ -138,6 +161,14 @@ final class ConfiguracoesController
         Settings::definir('email.mailcow_key', $mailcowKey);
         Settings::definir('email.webmail_url', $webmailUrl);
         Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
+
+        Settings::definir('system.name', $systemName);
+        Settings::definir('system.logo_url', $systemLogoUrl);
+        Settings::definir('system.favicon_url', $systemFaviconUrl);
+        Settings::definir('system.company_name', $systemCompanyName);
+        Settings::definir('system.copyright_text', $systemCopyrightText);
+        Settings::definir('legal.terms_html', $legalTermsHtml);
+        Settings::definir('legal.privacy_html', $legalPrivacyHtml);
 
         $whatsLast4 = '';
         if ($whatsAdminNumero !== '') {
@@ -201,6 +232,13 @@ final class ConfiguracoesController
             'mailcow_key'  => $mailcowKey,
             'webmail_url'  => $webmailUrl,
             'chat_ws_port' => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
+            'system_name'           => $systemName,
+            'system_logo_url'       => $systemLogoUrl,
+            'system_favicon_url'    => $systemFaviconUrl,
+            'system_company_name'   => $systemCompanyName,
+            'system_copyright_text' => $systemCopyrightText,
+            'legal_terms_html'      => $legalTermsHtml,
+            'legal_privacy_html'    => $legalPrivacyHtml,
         ]);
 
         return Resposta::html($html);
