@@ -38,6 +38,21 @@ $email = (string) ($cliente['email'] ?? '');
   </div>
 
   <div class="conteudo">
+    <?php if (!empty($notificacoes)): ?>
+      <div class="card" style="margin-bottom:14px; border-left:3px solid #4F46E5;">
+        <h2 class="titulo" style="font-size:15px; margin-bottom:10px;">Notificações (<?php echo count($notificacoes); ?>)</h2>
+        <?php foreach ($notificacoes as $n): ?>
+          <div style="padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;">
+            <div style="font-weight:600; margin-bottom:2px;"><?php echo View::e((string) ($n['title'] ?? '')); ?></div>
+            <div style="color:#94a3b8;"><?php echo View::e((string) ($n['body'] ?? '')); ?></div>
+          </div>
+        <?php endforeach; ?>
+        <div style="margin-top:10px;">
+          <a href="/cliente/tickets" style="font-size:13px; color:#818cf8;">Ver tickets →</a>
+        </div>
+      </div>
+    <?php endif; ?>
+
     <div class="grid">
       <div class="card">
         <h2 class="titulo">Sua conta</h2>

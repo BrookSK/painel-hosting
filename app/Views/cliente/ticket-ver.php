@@ -77,6 +77,14 @@ function badgePrioridadeTicket(string $p): string
           <div style="white-space:pre-wrap; line-height:1.55; color:#0f172a; font-size:14px;">
             <?php echo View::e((string) ($m['message'] ?? '')); ?>
           </div>
+          <?php if (!empty($m['attachment_name'])): ?>
+            <div style="margin-top:8px; font-size:13px; color:#4F46E5;">
+              📎 <?php echo View::e((string) $m['attachment_name']); ?>
+              <?php if (!empty($m['attachment_size'])): ?>
+                <span style="color:#64748b;">(<?php echo number_format((int) $m['attachment_size'] / 1024, 1); ?> KB)</span>
+              <?php endif; ?>
+            </div>
+          <?php endif; ?>
         </div>
       <?php endforeach; ?>
 

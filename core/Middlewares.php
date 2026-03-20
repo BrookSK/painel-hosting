@@ -15,6 +15,17 @@ final class Middlewares
             if (Auth::equipeId() === null) {
                 return Resposta::redirecionar('/equipe/entrar');
             }
+
+            // Verificar expiração de sessão por inatividade (30 min)
+            $lastActivity = (int) ($_SESSION['equipe_last_activity'] ?? 0);
+            $timeout = 30 * 60; // 30 minutos
+            if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
+                session_unset();
+                session_destroy();
+                return Resposta::redirecionar('/equipe/entrar?sessao=expirada');
+            }
+            $_SESSION['equipe_last_activity'] = time();
+
             return null;
         };
     }
@@ -25,6 +36,17 @@ final class Middlewares
             if (Auth::clienteId() === null) {
                 return Resposta::redirecionar('/cliente/entrar');
             }
+
+            // Verificar expiração de sessão por inatividade (60 min)
+            $lastActivity = (int) ($_SESSION['cliente_last_activity'] ?? 0);
+            $timeout = 60 * 60; // 60 minutos
+            if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
+                session_unset();
+                session_destroy();
+                return Resposta::redirecionar('/cliente/entrar?sessao=expirada');
+            }
+            $_SESSION['cliente_last_activity'] = time();
+
             return null;
         };
     }

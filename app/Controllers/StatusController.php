@@ -191,4 +191,58 @@ final class StatusController
 
         return Resposta::html($html);
     }
+
+    public function incidentes(Requisicao $req): Resposta
+    {
+        $pdo = BancoDeDados::pdo();
+        $pagina = max(1, (int) ($req->query['pagina'] ?? 1));
+        $porPagina = 20;
+        $offset = ($pagina - 1) * $porPagina;
+
+        $total = 0;
+        $stmtTotal = $pdo->query("SELECT COUNT(*) AS total FROM status_incidents WHERE scope = 'public'");
+        $rowTotal = $stmtTotal->fetch();
+        if (is_array($rowTotal)) {
+            $total = (int) ($rowTotal['total'] ?? 0);
+        }
+
+        $stmt = $pdo->prepare("SELECT id, title, status, impact, message, started_at, resolved_at, created_at FROM status_incidents WHERE scope = 'public' ORDER BY started_at DESC, id DESC LIMIT :lim OFFSET :off");
+        $stmt->bindValue(':lim', $porPagina, \PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+        $incidents = $stmt->fetchAll();
+        $incidents = is_array($incidents) ? $incidents : [];
+
+        $incidentIds = array_filter(array_map(fn ($i) => is_array($i) ? (int) ($i['id'] ?? 0) : 0, $incidents));
+
+        $updates = [];
+        if (!empty($incidentIds)) {
+            $in = implode(',', array_map('intval', $incidentIds));
+            $st = $pdo->query("SELECT incident_id, status, message, created_at FROM status_incident_updates WHERE incident_id IN ({$in}) ORDER BY incident_id ASC, created_at ASC");
+            $rows = $st->fetchAll();
+            if (is_array($rows)) {
+                foreach ($rows as $r) {
+                    if (!is_array($r)) {
+                        continue;
+                    }
+                    $iid = (int) ($r['incident_id'] ?? 0);
+                    if ($iid > 0) {
+                        $updates[$iid][] = $r;
+                    }
+                }
+            }
+        }
+
+        $totalPaginas = (int) ceil($total / $porPagina);
+
+        $html = View::renderizar(__DIR__ . '/../Views/status-incidentes.php', [
+            'incidents' => $incidents,
+            'updates' => $updates,
+            'pagina' => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'total' => $total,
+        ]);
+
+        return Resposta::html($html);
+    }
 }

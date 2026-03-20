@@ -107,8 +107,35 @@ final class StripeCheckoutController
             $req,
         );
 
+        // Buscar dados da assinatura para exibir na view de sucesso
+        $assinatura = null;
+        $vps = null;
+        if ($erro === '' && $sessionId !== '') {
+            try {
+                $pdo = BancoDeDados::pdo();
+                $stmt = $pdo->prepare(
+                    'SELECT s.id, s.status, s.next_due_date, s.vps_id, p.name AS plan_name, p.price_monthly
+                     FROM subscriptions s
+                     INNER JOIN plans p ON p.id = s.plan_id
+                     WHERE s.client_id = :c AND s.stripe_checkout_session_id = :sid
+                     LIMIT 1'
+                );
+                $stmt->execute([':c' => $clienteId, ':sid' => $sessionId]);
+                $assinatura = $stmt->fetch() ?: null;
+
+                if (is_array($assinatura) && (int) ($assinatura['vps_id'] ?? 0) > 0) {
+                    $stmtV = $pdo->prepare('SELECT id, label, status FROM vps WHERE id = :id AND client_id = :c LIMIT 1');
+                    $stmtV->execute([':id' => (int) $assinatura['vps_id'], ':c' => $clienteId]);
+                    $vps = $stmtV->fetch() ?: null;
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/stripe-sucesso.php', [
-            'erro' => $erro,
+            'erro'       => $erro,
+            'assinatura' => $assinatura,
+            'vps'        => $vps,
         ]);
 
         return Resposta::html($html, $erro === '' ? 200 : 400);

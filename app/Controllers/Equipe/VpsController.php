@@ -38,6 +38,13 @@ final class VpsController
             return Resposta::texto('VPS inválida.', 400);
         }
 
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt->execute([':id' => $vpsId]);
+        if (!is_array($stmt->fetch())) {
+            return Resposta::texto('VPS não encontrada.', 404);
+        }
+
         $repo = new RepositorioJobs();
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
 
@@ -59,6 +66,13 @@ final class VpsController
         $vpsId = (int) ($req->post['vps_id'] ?? 0);
         if ($vpsId <= 0) {
             return Resposta::texto('VPS inválida.', 400);
+        }
+
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt->execute([':id' => $vpsId]);
+        if (!is_array($stmt->fetch())) {
+            return Resposta::texto('VPS não encontrada.', 404);
         }
 
         $repo = new RepositorioJobs();
@@ -84,6 +98,13 @@ final class VpsController
             return Resposta::texto('VPS inválida.', 400);
         }
 
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt->execute([':id' => $vpsId]);
+        if (!is_array($stmt->fetch())) {
+            return Resposta::texto('VPS não encontrada.', 404);
+        }
+
         $repo = new RepositorioJobs();
         $repo->criar('reativar_vps', ['vps_id' => $vpsId]);
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
@@ -92,6 +113,68 @@ final class VpsController
             'team',
             \LRV\Core\Auth::equipeId(),
             'vps.reactivate',
+            'vps',
+            $vpsId,
+            ['vps_id' => $vpsId],
+            $req,
+        );
+
+        return Resposta::redirecionar('/equipe/vps');
+    }
+
+    public function reiniciar(Requisicao $req): Resposta
+    {
+        $vpsId = (int) ($req->post['vps_id'] ?? 0);
+        if ($vpsId <= 0) {
+            return Resposta::texto('VPS inválida.', 400);
+        }
+
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt->execute([':id' => $vpsId]);
+        if (!is_array($stmt->fetch())) {
+            return Resposta::texto('VPS não encontrada.', 404);
+        }
+
+        $repo = new RepositorioJobs();
+        $repo->criar('reiniciar_vps', ['vps_id' => $vpsId]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'vps.restart',
+            'vps',
+            $vpsId,
+            ['vps_id' => $vpsId],
+            $req,
+        );
+
+        return Resposta::redirecionar('/equipe/vps');
+    }
+
+    public function remover(Requisicao $req): Resposta
+    {
+        $vpsId = (int) ($req->post['vps_id'] ?? 0);
+        if ($vpsId <= 0) {
+            return Resposta::texto('VPS inválida.', 400);
+        }
+
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, status FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt->execute([':id' => $vpsId]);
+        $vps = $stmt->fetch();
+
+        if (!is_array($vps)) {
+            return Resposta::texto('VPS não encontrada.', 404);
+        }
+
+        $repo = new RepositorioJobs();
+        $repo->criar('remover_vps', ['vps_id' => $vpsId]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'vps.remove',
             'vps',
             $vpsId,
             ['vps_id' => $vpsId],

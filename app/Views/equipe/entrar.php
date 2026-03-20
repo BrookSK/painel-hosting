@@ -37,6 +37,10 @@ use LRV\Core\I18n;
         <div class="erro"><?php echo View::e((string) $erro); ?></div>
       <?php endif; ?>
 
+      <?php if (isset($_GET['sessao']) && $_GET['sessao'] === 'expirada'): ?>
+        <div class="erro">Sua sessão expirou por inatividade. Faça login novamente.</div>
+      <?php endif; ?>
+
       <form method="post" action="/equipe/entrar">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <div style="margin-bottom:10px;">

@@ -64,11 +64,50 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
       <div style="margin-top:12px; border:1px solid #0b1220; border-radius:14px; overflow:hidden; background:#020617;">
         <div style="padding:10px 12px; border-bottom:1px solid rgba(148,163,184,.18); color:#e2e8f0; font-size:13px; display:flex; justify-content:space-between;">
           <div>Terminal</div>
-          <div id="status" style="opacity:.9;">Desconectado</div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button id="btnUpload" class="botao sec" type="button" style="padding:4px 10px; font-size:12px;" title="Enviar arquivo para a VPS">↑ Upload</button>
+            <button id="btnDownload" class="botao sec" type="button" style="padding:4px 10px; font-size:12px;" title="Baixar arquivo da VPS">↓ Download</button>
+            <div id="status" style="opacity:.9;">Desconectado</div>
+          </div>
         </div>
         <pre id="out" style="margin:0; padding:12px; color:#e2e8f0; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; height:420px; overflow:auto;"></pre>
         <div style="border-top:1px solid rgba(148,163,184,.18); padding:10px 12px;">
           <input class="input" id="in" type="text" autocomplete="off" placeholder="Digite um comando e pressione Enter" style="background:#0b1220; border-color:#1f2937; color:#e2e8f0;" />
+        </div>
+      </div>
+
+      <!-- Modal upload -->
+      <div id="modalUpload" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:999; align-items:center; justify-content:center;">
+        <div class="card" style="max-width:420px; width:90%;">
+          <h2 class="titulo" style="font-size:15px; margin-bottom:12px;">Enviar arquivo para a VPS</h2>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:13px; display:block; margin-bottom:4px;">Arquivo</label>
+            <input type="file" id="uploadFile" class="input" />
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:13px; display:block; margin-bottom:4px;">Caminho remoto (ex: /home/user/arquivo.txt)</label>
+            <input type="text" id="uploadPath" class="input" placeholder="/home/user/arquivo.txt" />
+          </div>
+          <div id="uploadStatus" style="font-size:13px; margin-bottom:10px; display:none;"></div>
+          <div class="linha" style="gap:8px;">
+            <button class="botao" id="btnUploadEnviar" type="button">Enviar</button>
+            <button class="botao sec" type="button" onclick="document.getElementById('modalUpload').style.display='none'">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal download -->
+      <div id="modalDownload" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:999; align-items:center; justify-content:center;">
+        <div class="card" style="max-width:420px; width:90%;">
+          <h2 class="titulo" style="font-size:15px; margin-bottom:12px;">Baixar arquivo da VPS</h2>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:13px; display:block; margin-bottom:4px;">Caminho remoto (ex: /home/user/arquivo.txt)</label>
+            <input type="text" id="downloadPath" class="input" placeholder="/home/user/arquivo.txt" />
+          </div>
+          <div class="linha" style="gap:8px;">
+            <button class="botao" id="btnDownloadIniciar" type="button">Baixar</button>
+            <button class="botao sec" type="button" onclick="document.getElementById('modalDownload').style.display='none'">Cancelar</button>
+          </div>
         </div>
       </div>
 
@@ -89,6 +128,16 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
 
       let ws = null;
       let conectado = false;
+
+      function sendResize(){
+        if(!ws || ws.readyState !== 1) return;
+        const cols = Math.max(40, Math.floor(elOut.offsetWidth / 8));
+        const rows = Math.max(10, Math.floor(elOut.offsetHeight / 16));
+        ws.send(JSON.stringify({type:'resize', cols, rows}));
+      }
+
+      const ro = new ResizeObserver(function(){ sendResize(); });
+      ro.observe(elOut);
 
       function setErro(msg){
         elAlerta.style.display = 'block';
@@ -144,6 +193,8 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
           elStatus.textContent = 'Conectado';
           append('Conectado.\n');
           elIn.focus();
+          // Enviar tamanho inicial
+          sendResize();
         };
         ws.onmessage = function(ev){
           const data = String(ev.data || '');
@@ -176,6 +227,42 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
         }
 
         ws.send(v + "\n");
+      });
+
+      // Upload
+      document.getElementById('btnUpload').addEventListener('click', function(){
+        document.getElementById('modalUpload').style.display = 'flex';
+      });
+
+      document.getElementById('btnUploadEnviar').addEventListener('click', async function(){
+        const file = document.getElementById('uploadFile').files[0];
+        const path = document.getElementById('uploadPath').value.trim();
+        const statusEl = document.getElementById('uploadStatus');
+        if(!file || !path){ statusEl.style.display='block'; statusEl.textContent='Selecione um arquivo e informe o caminho.'; return; }
+        statusEl.style.display='block'; statusEl.textContent='Enviando...';
+        const csrf = (document.querySelector('meta[name="csrf-token"]')||{}).content||'';
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('vps_id', String(VPS_ID));
+        fd.append('remote_path', path);
+        try {
+          const resp = await fetch('/cliente/vps/terminal/upload', {method:'POST', headers:{'x-csrf-token':csrf}, body:fd});
+          const json = await resp.json();
+          statusEl.textContent = json.ok ? '✓ ' + (json.mensagem||'Enviado.') : '✗ ' + (json.erro||'Erro.');
+        } catch(e){ statusEl.textContent = '✗ Erro de rede.'; }
+      });
+
+      // Download
+      document.getElementById('btnDownload').addEventListener('click', function(){
+        document.getElementById('modalDownload').style.display = 'flex';
+      });
+
+      document.getElementById('btnDownloadIniciar').addEventListener('click', function(){
+        const path = document.getElementById('downloadPath').value.trim();
+        if(!path){ return; }
+        const url = '/cliente/vps/terminal/download?vps_id=' + VPS_ID + '&remote_path=' + encodeURIComponent(path);
+        window.location.href = url;
+        document.getElementById('modalDownload').style.display = 'none';
       });
     })();
   </script>

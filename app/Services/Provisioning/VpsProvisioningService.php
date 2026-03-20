@@ -184,6 +184,91 @@ final class VpsProvisioningService
         $log('VPS suspensa por pagamento.');
     }
 
+    public function reiniciar(int $vpsId, callable $log): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, server_id, container_id, status FROM vps WHERE id = :id AND deleted_at IS NULL');
+        $stmt->execute([':id' => $vpsId]);
+        $vps = $stmt->fetch();
+
+        if (!is_array($vps)) {
+            throw new \RuntimeException('VPS não encontrada.');
+        }
+
+        $serverId = (int) ($vps['server_id'] ?? 0);
+        if ($serverId <= 0) {
+            throw new \RuntimeException('VPS sem node associado.');
+        }
+
+        if (!$this->configurarDockerParaNode($serverId, $log)) {
+            throw new \RuntimeException('Não foi possível configurar Docker remoto.');
+        }
+
+        $containerId = (string) ($vps['container_id'] ?? '');
+        if ($containerId === '') {
+            throw new \RuntimeException('VPS sem container_id.');
+        }
+
+        $log('Parando container...');
+        $out = $this->docker->parar($containerId);
+        $log('Saída stop: ' . $out);
+
+        $log('Iniciando container...');
+        $out = $this->docker->iniciar($containerId);
+        $log('Saída start: ' . $out);
+
+        $this->atualizarStatusVps($vpsId, 'running');
+        $log('VPS reiniciada.');
+    }
+
+    public function remover(int $vpsId, callable $log): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, client_id, server_id, container_id, cpu, ram, storage, status FROM vps WHERE id = :id AND deleted_at IS NULL');
+        $stmt->execute([':id' => $vpsId]);
+        $vps = $stmt->fetch();
+
+        if (!is_array($vps)) {
+            throw new \RuntimeException('VPS não encontrada.');
+        }
+
+        $serverId = (int) ($vps['server_id'] ?? 0);
+        $containerId = (string) ($vps['container_id'] ?? '');
+
+        if ($serverId > 0 && $containerId !== '') {
+            if ($this->configurarDockerParaNode($serverId, $log)) {
+                $log('Removendo container...');
+                try {
+                    $r = $this->docker->removerContainer($containerId);
+                    $log('Saída: ' . (string) ($r['saida'] ?? ''));
+                } catch (\Throwable $e) {
+                    $log('Aviso ao remover container: ' . $e->getMessage());
+                }
+            } else {
+                $log('Docker indisponível. Container não removido remotamente.');
+            }
+        }
+
+        // Liberar recursos do node
+        if ($serverId > 0) {
+            try {
+                $cpu = (int) ($vps['cpu'] ?? 0);
+                $ram = (int) ($vps['ram'] ?? 0);
+                $storage = (int) ($vps['storage'] ?? 0);
+                $upSrv = $pdo->prepare('UPDATE servers SET cpu_used = GREATEST(0, cpu_used - :cpu), ram_used = GREATEST(0, ram_used - :ram), storage_used = GREATEST(0, storage_used - :st) WHERE id = :id');
+                $upSrv->execute([':cpu' => $cpu, ':ram' => $ram, ':st' => $storage, ':id' => $serverId]);
+                $log('Recursos liberados no node #' . $serverId . '.');
+            } catch (\Throwable $e) {
+                $log('Aviso ao liberar recursos: ' . $e->getMessage());
+            }
+        }
+
+        // Soft delete
+        $up = $pdo->prepare('UPDATE vps SET status = :s, deleted_at = :d WHERE id = :id');
+        $up->execute([':s' => 'removed', ':d' => date('Y-m-d H:i:s'), ':id' => $vpsId]);
+        $log('VPS removida (soft delete).');
+    }
+
     public function reativarPorPagamento(int $vpsId, callable $log): void
     {
         $pdo = BancoDeDados::pdo();

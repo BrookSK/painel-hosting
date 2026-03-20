@@ -1,0 +1,539 @@
+openapi: "3.0.3"
+info:
+  title: LRV Cloud Manager API
+  version: "1.0.0"
+  description: |
+    API interna do LRV Cloud Manager.
+    Autenticação via sessão PHP (cookie de sessão).
+    Todos os endpoints POST/PUT/DELETE exigem o header `x-csrf-token` ou campo `_csrf` no body.
+
+servers:
+  - url: /
+    description: Servidor atual
+
+tags:
+  - name: Auth
+    description: Autenticação de equipe e cliente
+  - name: VPS
+    description: Gerenciamento de VPS
+  - name: Tickets
+    description: Sistema de suporte
+  - name: Assinaturas
+    description: Billing e assinaturas
+  - name: Terminal
+    description: Terminal SSH via WebSocket
+  - name: Status
+    description: Status público do sistema
+  - name: Webhooks
+    description: Webhooks de gateways de pagamento
+
+paths:
+  /equipe/entrar:
+    post:
+      tags: [Auth]
+      summary: Login da equipe
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, senha]
+              properties:
+                email:
+                  type: string
+                  format: email
+                senha:
+                  type: string
+                  format: password
+      responses:
+        "302":
+          description: Redireciona para /equipe/painel em caso de sucesso
+        "401":
+          description: Credenciais inválidas
+
+  /cliente/entrar:
+    post:
+      tags: [Auth]
+      summary: Login do cliente
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, senha]
+              properties:
+                email:
+                  type: string
+                  format: email
+                senha:
+                  type: string
+                  format: password
+      responses:
+        "302":
+          description: Redireciona para /cliente/painel em caso de sucesso
+        "401":
+          description: Credenciais inválidas
+        "429":
+          description: IP bloqueado por excesso de tentativas
+
+  /equipe/vps:
+    get:
+      tags: [VPS]
+      summary: Listar todas as VPS (equipe)
+      security:
+        - sessionEquipe: []
+      responses:
+        "200":
+          description: Lista de VPS
+        "403":
+          description: Sem permissão
+
+  /equipe/vps/provisionar:
+    post:
+      tags: [VPS]
+      summary: Provisionar nova VPS
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, subscription_id]
+              properties:
+                _csrf:
+                  type: string
+                subscription_id:
+                  type: integer
+      responses:
+        "302":
+          description: Redireciona após enfileirar job
+        "403":
+          description: Sem permissão
+
+  /equipe/vps/reiniciar:
+    post:
+      tags: [VPS]
+      summary: Reiniciar VPS
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, vps_id]
+              properties:
+                _csrf:
+                  type: string
+                vps_id:
+                  type: integer
+      responses:
+        "302":
+          description: Redireciona após enfileirar job
+        "403":
+          description: VPS não encontrada ou sem permissão
+
+  /equipe/vps/remover:
+    post:
+      tags: [VPS]
+      summary: Remover VPS definitivamente
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, vps_id]
+              properties:
+                _csrf:
+                  type: string
+                vps_id:
+                  type: integer
+      responses:
+        "302":
+          description: Redireciona após enfileirar job
+        "403":
+          description: VPS não encontrada ou sem permissão
+
+  /equipe/tickets:
+    get:
+      tags: [Tickets]
+      summary: Listar tickets (equipe)
+      security:
+        - sessionEquipe: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, waiting_client, closed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: department
+          in: query
+          schema:
+            type: string
+            enum: [suporte, financeiro, devops, comercial]
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de tickets
+
+  /equipe/tickets/responder:
+    post:
+      tags: [Tickets]
+      summary: Responder ticket
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [_csrf, ticket_id, message]
+              properties:
+                _csrf:
+                  type: string
+                ticket_id:
+                  type: integer
+                message:
+                  type: string
+                attachment:
+                  type: string
+                  format: binary
+      responses:
+        "302":
+          description: Redireciona para o ticket
+        "400":
+          description: Dados inválidos
+        "409":
+          description: Ticket fechado
+
+  /equipe/tickets/atribuir:
+    post:
+      tags: [Tickets]
+      summary: Atribuir ticket a um usuário
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, ticket_id]
+              properties:
+                _csrf:
+                  type: string
+                ticket_id:
+                  type: integer
+                user_id:
+                  type: integer
+      responses:
+        "302":
+          description: Redireciona para o ticket
+
+  /equipe/tickets/status:
+    post:
+      tags: [Tickets]
+      summary: Alterar status do ticket
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, ticket_id, status]
+              properties:
+                _csrf:
+                  type: string
+                ticket_id:
+                  type: integer
+                status:
+                  type: string
+                  enum: [open, in_progress, waiting_client, closed]
+      responses:
+        "302":
+          description: Redireciona para o ticket
+
+  /cliente/assinaturas:
+    get:
+      tags: [Assinaturas]
+      summary: Listar assinaturas do cliente
+      security:
+        - sessionCliente: []
+      responses:
+        "200":
+          description: Lista de assinaturas e cobranças
+
+  /cliente/assinaturas/reembolso:
+    post:
+      tags: [Assinaturas]
+      summary: Solicitar reembolso (abre ticket)
+      security:
+        - sessionCliente: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, subscription_id, motivo]
+              properties:
+                _csrf:
+                  type: string
+                subscription_id:
+                  type: integer
+                motivo:
+                  type: string
+      responses:
+        "302":
+          description: Redireciona para o ticket criado
+        "403":
+          description: Assinatura não pertence ao cliente
+
+  /equipe/terminal/token:
+    post:
+      tags: [Terminal]
+      summary: Emitir token de terminal (equipe)
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [server_id]
+              properties:
+                server_id:
+                  type: integer
+      responses:
+        "200":
+          description: Token emitido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  token:
+                    type: string
+        "400":
+          description: Servidor inválido
+
+  /equipe/terminal/upload:
+    post:
+      tags: [Terminal]
+      summary: Upload de arquivo para servidor via SCP
+      security:
+        - sessionEquipe: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [server_id, remote_path, file]
+              properties:
+                server_id:
+                  type: integer
+                remote_path:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Arquivo enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  mensagem:
+                    type: string
+
+  /equipe/terminal/download:
+    get:
+      tags: [Terminal]
+      summary: Download de arquivo do servidor via SCP
+      security:
+        - sessionEquipe: []
+      parameters:
+        - name: server_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: remote_path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Arquivo para download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /cliente/vps/terminal/token:
+    post:
+      tags: [Terminal]
+      summary: Emitir token de terminal (cliente)
+      security:
+        - sessionCliente: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [vps_id]
+              properties:
+                vps_id:
+                  type: integer
+      responses:
+        "200":
+          description: Token emitido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  token:
+                    type: string
+
+  /cliente/vps/terminal/upload:
+    post:
+      tags: [Terminal]
+      summary: Upload de arquivo para VPS via SCP + docker cp
+      security:
+        - sessionCliente: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [vps_id, remote_path, file]
+              properties:
+                vps_id:
+                  type: integer
+                remote_path:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Arquivo enviado
+
+  /cliente/vps/terminal/download:
+    get:
+      tags: [Terminal]
+      summary: Download de arquivo da VPS via docker cp + SCP
+      security:
+        - sessionCliente: []
+      parameters:
+        - name: vps_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: remote_path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Arquivo para download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /status:
+    get:
+      tags: [Status]
+      summary: Status público dos serviços
+      responses:
+        "200":
+          description: Página de status
+
+  /status/incidentes:
+    get:
+      tags: [Status]
+      summary: Histórico público de incidentes
+      responses:
+        "200":
+          description: Lista de incidentes
+
+  /webhooks/stripe:
+    post:
+      tags: [Webhooks]
+      summary: Webhook do Stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Evento processado
+        "400":
+          description: Assinatura inválida
+
+  /webhooks/asaas:
+    post:
+      tags: [Webhooks]
+      summary: Webhook do Asaas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Evento processado
+
+components:
+  securitySchemes:
+    sessionEquipe:
+      type: apiKey
+      in: cookie
+      name: PHPSESSID
+      description: Sessão PHP autenticada como equipe
+    sessionCliente:
+      type: apiKey
+      in: cookie
+      name: PHPSESSID
+      description: Sessão PHP autenticada como cliente

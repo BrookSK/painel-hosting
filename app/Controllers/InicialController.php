@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers;
 
+use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
+use LRV\Core\Settings;
+use LRV\Core\View;
 
 final class InicialController
 {
@@ -13,5 +16,65 @@ final class InicialController
     {
         $html = file_get_contents(__DIR__ . '/../Views/inicial.php');
         return Resposta::html((string) $html);
+    }
+
+    public function contato(Requisicao $req): Resposta
+    {
+        $html = View::renderizar(__DIR__ . '/../Views/contato.php', [
+            'erro' => '',
+            'ok' => '',
+            'form' => ['name' => '', 'email' => '', 'subject' => '', 'message' => ''],
+        ]);
+        return Resposta::html($html);
+    }
+
+    public function enviarContato(Requisicao $req): Resposta
+    {
+        $in = $req->input();
+        $name = $in->postString('name', 190, true);
+        $email = $in->postEmail('email', 190, true);
+        $subject = $in->postString('subject', 190, true);
+        $message = $in->postString('message', 5000, true);
+
+        if ($in->temErros() || $name === '' || $email === '' || $subject === '' || $message === '') {
+            $html = View::renderizar(__DIR__ . '/../Views/contato.php', [
+                'erro' => $in->temErros() ? $in->primeiroErro() : 'Preencha todos os campos.',
+                'ok' => '',
+                'form' => compact('name', 'email', 'subject', 'message'),
+            ]);
+            return Resposta::html($html, 422);
+        }
+
+        $ip = trim((string) ($req->headers['x-forwarded-for'] ?? ''));
+        if ($ip !== '') {
+            $partes = array_map('trim', explode(',', $ip));
+            $ip = (string) ($partes[0] ?? '');
+        }
+        if ($ip === '') {
+            $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        }
+
+        try {
+            $pdo = BancoDeDados::pdo();
+            $ins = $pdo->prepare('INSERT INTO contact_messages (name, email, subject, message, ip_address, created_at) VALUES (:n,:e,:s,:m,:ip,:c)');
+            $ins->execute([':n' => $name, ':e' => $email, ':s' => $subject, ':m' => $message, ':ip' => $ip ?: null, ':c' => date('Y-m-d H:i:s')]);
+        } catch (\Throwable $e) {
+        }
+
+        // Notificar admin
+        try {
+            $emailAdmin = trim((string) Settings::obter('alertas.email_admin', ''));
+            if ($emailAdmin !== '' && function_exists('mail')) {
+                @mail($emailAdmin, '[LRV] Contato: ' . $subject, "De: {$name} <{$email}>\n\n{$message}", 'MIME-Version: 1.0' . "\r\n" . 'Content-Type: text/plain; charset=utf-8');
+            }
+        } catch (\Throwable $e) {
+        }
+
+        $html = View::renderizar(__DIR__ . '/../Views/contato.php', [
+            'erro' => '',
+            'ok' => 'Mensagem enviada com sucesso. Entraremos em contato em breve.',
+            'form' => ['name' => '', 'email' => '', 'subject' => '', 'message' => ''],
+        ]);
+        return Resposta::html($html);
     }
 }

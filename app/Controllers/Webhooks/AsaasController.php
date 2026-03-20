@@ -26,8 +26,26 @@ final class AsaasController
             return Resposta::texto('Payload inválido.', 400);
         }
 
-        $eventId = (string) ($payload['id'] ?? '');
+        $eventId   = (string) ($payload['id'] ?? '');
         $eventType = (string) ($payload['event'] ?? '');
+
+        // Proteção contra replay attack
+        if ($eventId !== '') {
+            $pdo = \LRV\Core\BancoDeDados::pdo();
+            try {
+                $ins = $pdo->prepare(
+                    'INSERT INTO asaas_processed_events (event_id, received_at) VALUES (:eid, :now)'
+                );
+                $ins->execute([':eid' => $eventId, ':now' => date('Y-m-d H:i:s')]);
+            } catch (\PDOException $e) {
+                // Violação de UNIQUE KEY = evento já processado
+                if ((string) $e->getCode() === '23000') {
+                    return Resposta::json(['ok' => true, 'replay' => true]);
+                }
+                throw $e;
+            }
+        }
+
         $subscriptionId = (string) ($payload['subscriptionId'] ?? '');
         if ($subscriptionId === '') {
             $sub = $payload['subscription'] ?? null;

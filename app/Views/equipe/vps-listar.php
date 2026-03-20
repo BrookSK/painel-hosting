@@ -7,43 +7,24 @@ use LRV\Core\I18n;
 
 function gb(int $mb): string
 {
-    if ($mb <= 0) {
-        return '0 GB';
-    }
+    if ($mb <= 0) { return '0 GB'; }
     return (string) ((int) round($mb / 1024)) . ' GB';
 }
 
 function badgeStatusVpsEquipe(string $st): string
 {
-    if ($st === 'running') {
-        return '<span class="badge">Em execução</span>';
-    }
-
-    if ($st === 'suspended_payment') {
-        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Suspensa</span>';
-    }
-
-    if ($st === 'pending_payment') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Aguardando pagamento</span>';
-    }
-
-    if ($st === 'pending_node') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Aguardando node</span>';
-    }
-
-    if ($st === 'pending_provisioning') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Provisionamento pendente</span>';
-    }
-
-    if ($st === 'provisioning') {
-        return '<span class="badge" style="background:#e0e7ff;color:#1e3a8a;">Provisionando</span>';
-    }
-
-    if ($st === 'error') {
-        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Erro</span>';
-    }
-
-    return '<span class="badge" style="background:#f1f5f9;color:#334155;">' . View::e($st) . '</span>';
+    $map = [
+        'running'              => ['Em execução', '#dcfce7', '#166534'],
+        'suspended_payment'    => ['Suspensa', '#fee2e2', '#991b1b'],
+        'pending_payment'      => ['Aguardando pagamento', '#fef3c7', '#92400e'],
+        'pending_node'         => ['Aguardando node', '#fef3c7', '#92400e'],
+        'pending_provisioning' => ['Provisionamento pendente', '#fef3c7', '#92400e'],
+        'provisioning'         => ['Provisionando', '#e0e7ff', '#1e3a8a'],
+        'error'                => ['Erro', '#fee2e2', '#991b1b'],
+        'removed'              => ['Removida', '#f1f5f9', '#334155'],
+    ];
+    $d = $map[$st] ?? [View::e($st), '#f1f5f9', '#334155'];
+    return '<span class="badge" style="background:' . $d[1] . ';color:' . $d[2] . ';">' . $d[0] . '</span>';
 }
 
 ?>
@@ -85,9 +66,7 @@ function badgeStatusVpsEquipe(string $st): string
             <tr>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">VPS</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Cliente</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">CPU</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Memória</th>
-              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Armazenamento</th>
+              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">CPU / RAM / Disco</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Status</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Node</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Ações</th>
@@ -95,41 +74,59 @@ function badgeStatusVpsEquipe(string $st): string
           </thead>
           <tbody>
             <?php foreach (($vps ?? []) as $v): ?>
+              <?php $vid = (int) ($v['id'] ?? 0); ?>
               <tr>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>#<?php echo (int) ($v['id'] ?? 0); ?></strong></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                  <strong>#<?php echo $vid; ?></strong>
+                  <?php if (trim((string) ($v['name'] ?? '')) !== ''): ?>
+                    <div style="font-size:12px; opacity:.8;"><?php echo View::e((string) ($v['name'] ?? '')); ?></div>
+                  <?php endif; ?>
+                </td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
                   <div><strong><?php echo View::e((string) ($v['client_name'] ?? '')); ?></strong></div>
                   <div style="font-size:12px; opacity:.8;"><?php echo View::e((string) ($v['client_email'] ?? '')); ?></div>
                 </td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($v['cpu'] ?? '')); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e(gb((int) ($v['ram'] ?? 0))); ?></td>
-                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e(gb((int) ($v['storage'] ?? 0))); ?></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                  <?php echo View::e((string) ($v['cpu'] ?? '')); ?> vCPU /
+                  <?php echo View::e(gb((int) ($v['ram'] ?? 0))); ?> /
+                  <?php echo View::e(gb((int) ($v['storage'] ?? 0))); ?>
+                </td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusVpsEquipe((string) ($v['status'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($v['server_id'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
-                  <form method="post" action="/equipe/vps/provisionar" style="display:inline-block;">
-                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-                    <input type="hidden" name="vps_id" value="<?php echo (int) ($v['id'] ?? 0); ?>" />
-                    <button class="botao" type="submit" style="padding:8px 10px;">Provisionar</button>
-                  </form>
-
-                  <form method="post" action="/equipe/vps/reativar" style="display:inline-block; margin-left:6px;">
-                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-                    <input type="hidden" name="vps_id" value="<?php echo (int) ($v['id'] ?? 0); ?>" />
-                    <button class="botao" type="submit" style="padding:8px 10px; background:#0B1C3D;">Reativar</button>
-                  </form>
-
-                  <form method="post" action="/equipe/vps/suspender" style="display:inline-block; margin-left:6px;">
-                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-                    <input type="hidden" name="vps_id" value="<?php echo (int) ($v['id'] ?? 0); ?>" />
-                    <button class="botao" type="submit" style="padding:8px 10px; background:#991b1b;">Suspender</button>
-                  </form>
+                  <div class="linha" style="gap:6px; flex-wrap:wrap;">
+                    <form method="post" action="/equipe/vps/provisionar">
+                      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+                      <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
+                      <button class="botao" type="submit" style="padding:6px 10px; font-size:12px;">Provisionar</button>
+                    </form>
+                    <form method="post" action="/equipe/vps/reativar">
+                      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+                      <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
+                      <button class="botao" type="submit" style="padding:6px 10px; font-size:12px; background:#0B1C3D;">Reativar</button>
+                    </form>
+                    <form method="post" action="/equipe/vps/reiniciar">
+                      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+                      <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
+                      <button class="botao" type="submit" style="padding:6px 10px; font-size:12px; background:#7C3AED;">Reiniciar</button>
+                    </form>
+                    <form method="post" action="/equipe/vps/suspender">
+                      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+                      <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
+                      <button class="botao" type="submit" style="padding:6px 10px; font-size:12px; background:#b45309;">Suspender</button>
+                    </form>
+                    <form method="post" action="/equipe/vps/remover" onsubmit="return confirm('Remover definitivamente a VPS #<?php echo $vid; ?>? Esta ação não pode ser desfeita.');">
+                      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+                      <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
+                      <button class="botao" type="submit" style="padding:6px 10px; font-size:12px; background:#991b1b;">Remover</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; ?>
             <?php if (empty($vps)): ?>
               <tr>
-                <td colspan="8" style="padding:12px;">Nenhuma VPS encontrada.</td>
+                <td colspan="6" style="padding:12px;">Nenhuma VPS encontrada.</td>
               </tr>
             <?php endif; ?>
           </tbody>

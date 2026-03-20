@@ -24,8 +24,22 @@ final class PainelController
         $stmt->execute([':id' => $id]);
         $c = $stmt->fetch();
 
+        // Notificações não lidas
+        $notifs = [];
+        try {
+            $stmtN = $pdo->prepare(
+                'SELECT id, type, title, body, created_at FROM client_notifications
+                 WHERE client_id = :c AND read_at IS NULL
+                 ORDER BY id DESC LIMIT 10'
+            );
+            $stmtN->execute([':c' => $id]);
+            $notifs = $stmtN->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+        }
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/painel.php', [
-            'cliente' => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
+            'cliente'       => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
+            'notificacoes'  => $notifs,
         ]);
 
         return Resposta::html($html);

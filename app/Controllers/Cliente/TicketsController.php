@@ -83,7 +83,7 @@ final class TicketsController
 
             $ticketId = (int) $pdo->lastInsertId();
 
-            $insMsg = $pdo->prepare('INSERT INTO ticket_messages (ticket_id, sender_type, sender_id, message, attachment, created_at) VALUES (:t, :ty, :sid, :m, NULL, :cr)');
+            $insMsg = $pdo->prepare('INSERT INTO ticket_messages (ticket_id, sender_type, sender_id, message, attachment_name, attachment_size, created_at) VALUES (:t, :ty, :sid, :m, NULL, NULL, :cr)');
             $insMsg->execute([
                 ':t' => $ticketId,
                 ':ty' => 'client',
@@ -129,10 +129,10 @@ final class TicketsController
         $ticket = $stmt->fetch();
 
         if (!is_array($ticket)) {
-            return Resposta::texto('Ticket não encontrado.', 404);
+            return Resposta::texto('Acesso negado.', 403);
         }
 
-        $stmt2 = $pdo->prepare('SELECT id, sender_type, sender_id, message, created_at FROM ticket_messages WHERE ticket_id = :t ORDER BY id ASC');
+        $stmt2 = $pdo->prepare('SELECT id, sender_type, sender_id, message, attachment_name, attachment_size, created_at FROM ticket_messages WHERE ticket_id = :t ORDER BY id ASC');
         $stmt2->execute([':t' => $id]);
         $mensagens = $stmt2->fetchAll();
 
@@ -166,7 +166,7 @@ final class TicketsController
         $ticket = $stmt->fetch();
 
         if (!is_array($ticket)) {
-            return Resposta::texto('Ticket não encontrado.', 404);
+            return Resposta::texto('Acesso negado.', 403);
         }
 
         if ((string) ($ticket['status'] ?? '') === 'closed') {
@@ -177,7 +177,7 @@ final class TicketsController
 
         $pdo->beginTransaction();
         try {
-            $insMsg = $pdo->prepare('INSERT INTO ticket_messages (ticket_id, sender_type, sender_id, message, attachment, created_at) VALUES (:t, :ty, :sid, :m, NULL, :cr)');
+            $insMsg = $pdo->prepare('INSERT INTO ticket_messages (ticket_id, sender_type, sender_id, message, attachment_name, attachment_size, created_at) VALUES (:t, :ty, :sid, :m, NULL, NULL, :cr)');
             $insMsg->execute([
                 ':t' => $ticketId,
                 ':ty' => 'client',

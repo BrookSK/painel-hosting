@@ -22,6 +22,20 @@ final class Bootstrap
             if ($scheme === 'https') {
                 $https = true;
             }
+
+            // Forçar HTTPS se configurado
+            try {
+                $forceHttps = \LRV\Core\Settings::obter('app.force_https', '0');
+                if ($forceHttps === '1' && !$https) {
+                    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+                    $uri  = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+                    if ($host !== '') {
+                        header('Location: https://' . $host . $uri, true, 301);
+                        exit;
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
         }
 
         if (PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
@@ -70,6 +84,11 @@ final class Bootstrap
         error_reporting(E_ALL);
 
         set_exception_handler(static function (\Throwable $e): void {
+            AppLogger::erro('Uncaught exception: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => substr($e->getTraceAsString(), 0, 2000),
+            ]);
             http_response_code(500);
             header('Content-Type: text/html; charset=utf-8');
             echo I18n::t('geral.erro_interno');

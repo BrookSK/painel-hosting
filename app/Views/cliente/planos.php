@@ -57,6 +57,30 @@ function gb(int $mb): string {
           </div>
           <p class="texto" style="font-size:18px; color:#0f172a; margin-bottom:12px;"><strong>R$ <?php echo View::e((string) ($p['price_monthly'] ?? '0.00')); ?>/mês</strong></p>
 
+          <?php
+            $channels = [];
+            $chRaw = $p['support_channels'] ?? null;
+            if (is_string($chRaw) && $chRaw !== '') {
+                $dec = json_decode($chRaw, true);
+                if (is_array($dec)) { $channels = $dec; }
+            } elseif (is_array($chRaw)) {
+                $channels = $chRaw;
+            }
+            $channelLabels = ['email' => '📧 E-mail', 'whatsapp' => '💬 WhatsApp', 'chat' => '🗨️ Chat', 'telefone' => '📞 Telefone'];
+          ?>
+          <?php if (!empty($channels)): ?>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Canais de suporte</div>
+              <div class="linha" style="gap:6px;">
+                <?php foreach ($channels as $ch): ?>
+                  <span class="badge" style="background:#f0fdf4;color:#166534; font-size:11px;">
+                    <?php echo View::e($channelLabels[$ch] ?? $ch); ?>
+                  </span>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endif; ?>
+
           <form method="post" action="/cliente/assinar">
             <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <input type="hidden" name="plan_id" value="<?php echo (int) ($p['id'] ?? 0); ?>" />

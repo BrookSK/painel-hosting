@@ -35,6 +35,21 @@ final class StripeController
         $eventId = (string) ($event->id ?? '');
         $eventType = (string) ($event->type ?? '');
 
+        // Prevenir replay attack: verificar se event_id já foi processado
+        if ($eventId !== '') {
+            try {
+                $pdo = \LRV\Core\BancoDeDados::pdo();
+                $ins = $pdo->prepare('INSERT IGNORE INTO stripe_processed_events (event_id, event_type, created_at) VALUES (:eid, :et, :c)');
+                $ins->execute([':eid' => $eventId, ':et' => $eventType, ':c' => date('Y-m-d H:i:s')]);
+                if ($ins->rowCount() === 0) {
+                    // Evento já processado
+                    return Resposta::json(['ok' => true, 'duplicado' => true]);
+                }
+            } catch (\Throwable $e) {
+                // Se tabela não existe ainda, continua sem proteção de replay
+            }
+        }
+
         (new AuditLogService())->registrar(
             'stripe',
             null,

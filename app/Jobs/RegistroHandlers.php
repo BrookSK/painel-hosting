@@ -237,6 +237,26 @@ final class RegistroHandlers
             $svc->reativarPorPagamento($vpsId, fn (string $m) => $ctx->log($m));
         });
 
+        $p->registrar('reiniciar_vps', static function (array $payload, ContextoJob $ctx): void {
+            $vpsId = (int) ($payload['vps_id'] ?? 0);
+            if ($vpsId <= 0) {
+                throw new \InvalidArgumentException('vps_id inválido.');
+            }
+
+            $svc = new VpsProvisioningService(new DockerCli());
+            $svc->reiniciar($vpsId, fn (string $m) => $ctx->log($m));
+        });
+
+        $p->registrar('remover_vps', static function (array $payload, ContextoJob $ctx): void {
+            $vpsId = (int) ($payload['vps_id'] ?? 0);
+            if ($vpsId <= 0) {
+                throw new \InvalidArgumentException('vps_id inválido.');
+            }
+
+            $svc = new VpsProvisioningService(new DockerCli());
+            $svc->remover($vpsId, fn (string $m) => $ctx->log($m));
+        });
+
         $p->registrar('coletar_status', static function (array $payload, ContextoJob $ctx): void {
             $svc = new StatusCollectorService();
             $svc->coletar(fn (string $m) => $ctx->log($m));

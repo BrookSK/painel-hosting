@@ -68,7 +68,7 @@ final class MonitoramentoController
         $vps = $stmt->fetch();
 
         if (!is_array($vps)) {
-            return Resposta::texto('VPS não encontrada.', 404);
+            return Resposta::texto('Acesso negado.', 403);
         }
 
         $serverId = (int) ($vps['server_id'] ?? 0);

@@ -111,8 +111,15 @@ final class BackupsController
             return Resposta::texto('Arquivo não encontrado.', 404);
         }
 
+        // Prevenir path traversal: verificar que o arquivo está no diretório de backups
+        $realPath = realpath($path);
+        $backupDir = realpath(dirname(__DIR__, 3) . '/storage/backups');
+        if ($realPath === false || $backupDir === false || !str_starts_with($realPath, $backupDir . DIRECTORY_SEPARATOR)) {
+            return Resposta::texto('Acesso negado.', 403);
+        }
+
         $nome = 'backup_vps_' . (int) ($bk['vps_id'] ?? 0) . '_' . (int) ($bk['id'] ?? 0) . '.tar.gz';
-        return Resposta::arquivo($path, $nome);
+        return Resposta::arquivo($realPath, $nome);
     }
 
     public function excluir(Requisicao $req): Resposta

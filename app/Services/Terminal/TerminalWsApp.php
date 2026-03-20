@@ -328,6 +328,24 @@ final class TerminalWsApp implements \Ratchet\MessageComponentInterface
             return;
         }
 
+        // Tratar mensagem de resize JSON: {"type":"resize","cols":X,"rows":Y}
+        if ($texto[0] === '{') {
+            $decoded = json_decode($texto, true);
+            if (is_array($decoded) && ($decoded['type'] ?? '') === 'resize') {
+                $cols = max(1, min(500, (int) ($decoded['cols'] ?? 80)));
+                $rows = max(1, min(200, (int) ($decoded['rows'] ?? 24)));
+                $proc = $meta['proc'] ?? null;
+                if (is_resource($proc)) {
+                    // Enviar sequência de escape ANSI para resize (stty)
+                    $pipes = $meta['pipes'] ?? null;
+                    if (is_array($pipes) && isset($pipes[0]) && is_resource($pipes[0])) {
+                        @fwrite($pipes[0], "stty cols {$cols} rows {$rows}\n");
+                    }
+                }
+                return;
+            }
+        }
+
         if (strlen($texto) > 32_000) {
             $texto = substr($texto, 0, 32_000);
         }

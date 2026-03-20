@@ -95,6 +95,12 @@ $id = $plano['id'] ?? null;
           </div>
         </div>
 
+        <div style="margin-top:12px;">
+          <label style="display:block; font-size:13px; margin-bottom:6px;">Canais de suporte (JSON, ex: ["email","whatsapp","chat"])</label>
+          <input class="input" type="text" name="support_channels" value="<?php echo View::e((string) ($plano['support_channels'] ?? '')); ?>" placeholder='["email","whatsapp"]' />
+          <p class="texto" style="font-size:12px; margin-top:4px; opacity:.7;">Valores possíveis: email, whatsapp, chat, telefone</p>
+        </div>
+
         <div style="margin-top:14px;">
           <button class="botao" type="submit">Salvar</button>
         </div>

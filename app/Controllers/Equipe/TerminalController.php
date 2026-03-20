@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace LRV\App\Controllers\Equipe;
 
 use LRV\App\Services\Audit\AuditLogService;
+use LRV\App\Services\Infra\SshExecutor;
 use LRV\App\Services\Terminal\TerminalTokensService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
+use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
 use LRV\Core\View;
@@ -163,5 +165,146 @@ final class TerminalController
         ]);
 
         return Resposta::html($html);
+    }
+
+    public function upload(Requisicao $req): Resposta
+    {
+        $equipeId = Auth::equipeId();
+        if ($equipeId === null) {
+            return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+        }
+
+        $serverId = (int) ($req->post['server_id'] ?? 0);
+        $remotePath = trim((string) ($req->post['remote_path'] ?? ''));
+
+        if ($serverId <= 0 || $remotePath === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Parâmetros inválidos.'], 400);
+        }
+
+        if (str_contains($remotePath, '..') || preg_match('/[;&|`$]/', $remotePath)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Caminho remoto inválido.'], 400);
+        }
+
+        $uploadedFile = $_FILES['file'] ?? null;
+        if (!is_array($uploadedFile) || (int) ($uploadedFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return Resposta::json(['ok' => false, 'erro' => 'Arquivo não enviado.'], 400);
+        }
+
+        $size = (int) ($uploadedFile['size'] ?? 0);
+        if ($size > 50 * 1024 * 1024) {
+            return Resposta::json(['ok' => false, 'erro' => 'Arquivo muito grande (máx. 50 MB).'], 400);
+        }
+
+        $tmpPath = (string) ($uploadedFile['tmp_name'] ?? '');
+        if (!is_file($tmpPath)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Arquivo temporário inválido.'], 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $serverId]);
+        $server = $stmt->fetch();
+
+        if (!is_array($server) || (string) ($server['status'] ?? '') !== 'active') {
+            return Resposta::json(['ok' => false, 'erro' => 'Servidor não encontrado ou inativo.'], 404);
+        }
+
+        $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+        $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string) ($server['ssh_key_id'] ?? '');
+        if (!is_file($keyPath)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Chave SSH não encontrada.'], 500);
+        }
+
+        try {
+            $scp = new SshExecutor();
+            $result = $scp->scpUpload(
+                (string) $server['ip_address'],
+                (int) ($server['ssh_port'] ?? 22),
+                (string) $server['ssh_user'],
+                $keyPath,
+                $tmpPath,
+                $remotePath,
+            );
+
+            (new AuditLogService())->registrar('team', $equipeId, 'terminal.scp_upload', 'server', $serverId, [
+                'remote_path' => $remotePath,
+                'size' => $size,
+                'ok' => $result['ok'],
+            ], $req);
+
+            if (!$result['ok']) {
+                return Resposta::json(['ok' => false, 'erro' => 'SCP falhou: ' . ($result['saida'] ?? '')], 500);
+            }
+
+            return Resposta::json(['ok' => true, 'mensagem' => 'Arquivo enviado para ' . $remotePath]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 500);
+        }
+    }
+
+    public function download(Requisicao $req): Resposta
+    {
+        $equipeId = Auth::equipeId();
+        if ($equipeId === null) {
+            return Resposta::texto('Não autenticado.', 401);
+        }
+
+        $serverId = (int) ($req->query['server_id'] ?? 0);
+        $remotePath = trim((string) ($req->query['remote_path'] ?? ''));
+
+        if ($serverId <= 0 || $remotePath === '') {
+            return Resposta::texto('Parâmetros inválidos.', 400);
+        }
+
+        if (str_contains($remotePath, '..') || preg_match('/[;&|`$]/', $remotePath)) {
+            return Resposta::texto('Caminho remoto inválido.', 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $serverId]);
+        $server = $stmt->fetch();
+
+        if (!is_array($server) || (string) ($server['status'] ?? '') !== 'active') {
+            return Resposta::texto('Servidor não encontrado ou inativo.', 404);
+        }
+
+        $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+        $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string) ($server['ssh_key_id'] ?? '');
+        if (!is_file($keyPath)) {
+            return Resposta::texto('Chave SSH não encontrada.', 500);
+        }
+
+        try {
+            $scp = new SshExecutor();
+            $result = $scp->scpDownload(
+                (string) $server['ip_address'],
+                (int) ($server['ssh_port'] ?? 22),
+                (string) $server['ssh_user'],
+                $keyPath,
+                $remotePath,
+            );
+
+            (new AuditLogService())->registrar('team', $equipeId, 'terminal.scp_download', 'server', $serverId, [
+                'remote_path' => $remotePath,
+                'ok' => $result['ok'],
+            ], $req);
+
+            if (!$result['ok']) {
+                return Resposta::texto('SCP falhou: ' . ($result['saida'] ?? ''), 500);
+            }
+
+            $localPath = (string) ($result['local_path'] ?? '');
+            if (!is_file($localPath)) {
+                return Resposta::texto('Arquivo não encontrado após download.', 500);
+            }
+
+            $filename = basename($remotePath);
+            register_shutdown_function(static function() use ($localPath): void { @unlink($localPath); });
+
+            return Resposta::arquivo($localPath, $filename);
+        } catch (\Throwable $e) {
+            return Resposta::texto($e->getMessage(), 500);
+        }
     }
 }
