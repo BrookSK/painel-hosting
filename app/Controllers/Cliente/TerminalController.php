@@ -49,8 +49,9 @@ final class TerminalController
             return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
         }
 
-        $vpsId = (int) ($req->post['vps_id'] ?? 0);
-        if ($vpsId <= 0) {
+        $in = $req->input();
+        $vpsId = $in->postInt('vps_id', 1, 2147483647, true);
+        if ($in->temErros() || $vpsId <= 0) {
             return Resposta::json(['ok' => false, 'erro' => 'VPS inválida.'], 400);
         }
 

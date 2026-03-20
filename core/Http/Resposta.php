@@ -62,9 +62,56 @@ final class Resposta
         return new self('', 200, $headers, $path);
     }
 
+    public function comHeaders(array $headers): self
+    {
+        if (empty($headers)) {
+            return $this;
+        }
+
+        $novos = $this->headers;
+        foreach ($headers as $k => $v) {
+            $k = trim((string) $k);
+            if ($k === '') {
+                continue;
+            }
+            $novos[$k] = (string) $v;
+        }
+
+        return new self($this->corpo, $this->status, $novos, $this->arquivoPath);
+    }
+
     public function enviar(): void
     {
         http_response_code($this->status);
+
+        $headersLower = [];
+        foreach ($this->headers as $k => $_) {
+            $headersLower[strtolower((string) $k)] = true;
+        }
+
+        if (PHP_SAPI !== 'cli') {
+            if (!isset($headersLower['x-frame-options'])) {
+                header('X-Frame-Options: DENY');
+            }
+            if (!isset($headersLower['x-content-type-options'])) {
+                header('X-Content-Type-Options: nosniff');
+            }
+
+            $ct = '';
+            foreach ($this->headers as $k => $v) {
+                if (strtolower((string) $k) === 'content-type') {
+                    $ct = strtolower((string) $v);
+                    break;
+                }
+            }
+
+            if ($ct !== '' && str_starts_with($ct, 'text/html')) {
+                if (!isset($headersLower['content-security-policy'])) {
+                    header("Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:");
+                }
+            }
+        }
+
         foreach ($this->headers as $k => $v) {
             header($k . ': ' . $v);
         }

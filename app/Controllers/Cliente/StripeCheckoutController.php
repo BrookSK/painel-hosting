@@ -22,7 +22,17 @@ final class StripeCheckoutController
             return Resposta::redirecionar('/cliente/entrar');
         }
 
-        $sessionId = trim((string) ($req->query['session_id'] ?? ''));
+        $in = $req->input();
+        $sessionId = $in->queryString('session_id', 255, false);
+        if ($sessionId !== '') {
+            $sessionId = $in->queryRegex('session_id', 255, '/^cs_(?:test_|live_)?[A-Za-z0-9_]+$/', false, 'Checkout inválido.');
+            if ($sessionId === '') {
+                $html = View::renderizar(__DIR__ . '/../../Views/cliente/stripe-sucesso.php', [
+                    'erro' => $in->primeiroErro(),
+                ]);
+                return Resposta::html($html, 400);
+            }
+        }
 
         $erro = '';
         $stripeSubId = '';

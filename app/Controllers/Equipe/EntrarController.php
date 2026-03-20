@@ -35,12 +35,13 @@ final class EntrarController
             return Resposta::redirecionar('/equipe/primeiro-acesso');
         }
 
-        $email = trim((string) ($req->post['email'] ?? ''));
-        $senha = (string) ($req->post['senha'] ?? '');
+        $in = $req->input();
+        $email = $in->postEmail('email', 190, true);
+        $senha = $in->postStringRaw('senha', 255, true);
 
-        if ($email === '' || $senha === '') {
+        if ($in->temErros() || $email === '' || $senha === '') {
             $html = View::renderizar(__DIR__ . '/../../Views/equipe/entrar.php', [
-                'erro' => 'Preencha e-mail e senha.',
+                'erro' => $in->temErros() ? $in->primeiroErro() : 'Preencha e-mail e senha.',
                 'email' => $email,
             ]);
             return Resposta::html($html, 422);

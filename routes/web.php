@@ -47,7 +47,7 @@ $roteador->get('/', [InicialController::class, 'index']);
 $roteador->get('/status', [StatusController::class, 'index']);
 
 $roteador->get('/equipe/entrar', [EquipeEntrarController::class, 'formulario']);
-$roteador->post('/equipe/entrar', [EquipeEntrarController::class, 'entrar']);
+$roteador->post('/equipe/entrar', [EquipeEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_team', 10, 60)]);
 $roteador->get('/equipe/primeiro-acesso', [PrimeiroAcessoController::class, 'formulario']);
 $roteador->post('/equipe/primeiro-acesso', [PrimeiroAcessoController::class, 'criar']);
 $roteador->get('/equipe/painel', [EquipePainelController::class, 'index'], [Middlewares::exigirLoginEquipe()]);
@@ -108,11 +108,11 @@ $roteador->post('/equipe/status/incidentes/criar', [EquipeStatusController::clas
 $roteador->post('/equipe/status/incidentes/atualizar', [EquipeStatusController::class, 'atualizarIncidente'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/status/incidentes/servicos', [EquipeStatusController::class, 'atualizarIncidenteServicos'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/vps', [EquipeVpsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
-$roteador->post('/equipe/vps/provisionar', [EquipeVpsController::class, 'provisionar'], [Middlewares::exigirPermissao('manage_vps')]);
-$roteador->post('/equipe/vps/suspender', [EquipeVpsController::class, 'suspender'], [Middlewares::exigirPermissao('manage_vps')]);
-$roteador->post('/equipe/vps/reativar', [EquipeVpsController::class, 'reativar'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/vps/provisionar', [EquipeVpsController::class, 'provisionar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 30, 60)]);
+$roteador->post('/equipe/vps/suspender', [EquipeVpsController::class, 'suspender'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 30, 60)]);
+$roteador->post('/equipe/vps/reativar', [EquipeVpsController::class, 'reativar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 30, 60)]);
 $roteador->get('/equipe/terminal', [TerminalController::class, 'index'], [Middlewares::exigirPermissao('manage_terminal')]);
-$roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal')]);
+$roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_token', 60, 60)]);
 $roteador->get('/equipe/terminal/auditoria', [TerminalController::class, 'auditoria'], [Middlewares::exigirPermissao('manage_terminal')]);
 $roteador->get('/equipe/terminal/auditoria/ver', [TerminalController::class, 'auditoriaVer'], [Middlewares::exigirPermissao('manage_terminal')]);
 $roteador->get('/equipe/jobs', [JobsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
@@ -120,12 +120,12 @@ $roteador->get('/equipe/jobs/ver', [JobsController::class, 'ver'], [Middlewares:
 $roteador->get('/equipe/sair', [EquipeSairController::class, 'sair'], [Middlewares::exigirLoginEquipe()]);
 
 $roteador->get('/cliente/entrar', [ClienteEntrarController::class, 'formulario']);
-$roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar']);
+$roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_client', 10, 60)]);
 $roteador->get('/cliente/criar-conta', [CriarContaController::class, 'formulario']);
 $roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar']);
 $roteador->get('/cliente/painel', [ClientePainelController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos', [ClientePlanosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
-$roteador->post('/cliente/assinar', [AssinarPlanoController::class, 'assinar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/assinar', [AssinarPlanoController::class, 'assinar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('subscribe', 5, 60)]);
 $roteador->get('/cliente/stripe/sucesso', [StripeCheckoutController::class, 'sucesso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/stripe/cancelado', [StripeCheckoutController::class, 'cancelado'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
@@ -134,12 +134,12 @@ $roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::cl
 $roteador->get('/cliente/status', [ClienteStatusController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/tickets', [ClienteTicketsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/tickets/novo', [ClienteTicketsController::class, 'novo'], [Middlewares::exigirLoginCliente()]);
-$roteador->post('/cliente/tickets/criar', [ClienteTicketsController::class, 'criar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/tickets/criar', [ClienteTicketsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('ticket_create', 10, 60)]);
 $roteador->get('/cliente/tickets/ver', [ClienteTicketsController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
-$roteador->post('/cliente/tickets/responder', [ClienteTicketsController::class, 'responder'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/tickets/responder', [ClienteTicketsController::class, 'responder'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('ticket_reply', 20, 60)]);
 $roteador->get('/cliente/vps', [ClienteVpsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/vps/terminal', [ClienteTerminalController::class, 'vps'], [Middlewares::exigirLoginCliente()]);
-$roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class, 'emitirToken'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class, 'emitirToken'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('terminal_token', 30, 60)]);
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);

@@ -54,21 +54,15 @@ final class TicketsController
             return Resposta::redirecionar('/cliente/entrar');
         }
 
-        $subject = trim((string) ($req->post['subject'] ?? ''));
-        $priority = (string) ($req->post['priority'] ?? 'medium');
-        $department = (string) ($req->post['department'] ?? 'suporte');
-        $message = trim((string) ($req->post['message'] ?? ''));
+        $in = $req->input();
 
-        if (!in_array($priority, ['low', 'medium', 'high'], true)) {
-            $priority = 'medium';
-        }
+        $subject = $in->postString('subject', 190, true);
+        $priority = $in->postEnum('priority', ['low', 'medium', 'high'], 'medium');
+        $department = $in->postEnum('department', ['suporte', 'financeiro', 'devops', 'comercial'], 'suporte');
+        $message = $in->postString('message', 5000, true);
 
-        if (!in_array($department, ['suporte', 'financeiro', 'devops', 'comercial'], true)) {
-            $department = 'suporte';
-        }
-
-        if ($subject === '' || $message === '') {
-            return $this->renderizarErroNovo($subject, $priority, $department, $message, 'Preencha assunto e mensagem.');
+        if ($in->temErros() || $subject === '' || $message === '') {
+            return $this->renderizarErroNovo($subject, $priority, $department, $message, $in->temErros() ? $in->primeiroErro() : 'Preencha assunto e mensagem.');
         }
 
         $pdo = BancoDeDados::pdo();
@@ -123,8 +117,9 @@ final class TicketsController
             return Resposta::redirecionar('/cliente/entrar');
         }
 
-        $id = (int) ($req->query['id'] ?? 0);
-        if ($id <= 0) {
+        $in = $req->input();
+        $id = $in->queryInt('id', 1, 2147483647, true);
+        if ($in->temErros() || $id <= 0) {
             return Resposta::texto('Ticket inválido.', 400);
         }
 
@@ -157,10 +152,11 @@ final class TicketsController
             return Resposta::redirecionar('/cliente/entrar');
         }
 
-        $ticketId = (int) ($req->post['ticket_id'] ?? 0);
-        $message = trim((string) ($req->post['message'] ?? ''));
+        $in = $req->input();
+        $ticketId = $in->postInt('ticket_id', 1, 2147483647, true);
+        $message = $in->postString('message', 5000, true);
 
-        if ($ticketId <= 0 || $message === '') {
+        if ($in->temErros() || $ticketId <= 0 || $message === '') {
             return Resposta::texto('Requisição inválida.', 400);
         }
 

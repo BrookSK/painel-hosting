@@ -36,29 +36,19 @@ final class CriarContaController
             return Resposta::redirecionar('/cliente/painel');
         }
 
-        $nome = trim((string) ($req->post['nome'] ?? ''));
-        $email = trim((string) ($req->post['email'] ?? ''));
-        $senha = (string) ($req->post['senha'] ?? '');
+        $in = $req->input();
 
-        $cpfCnpj = trim((string) ($req->post['cpf_cnpj'] ?? ''));
-        $phone = trim((string) ($req->post['phone'] ?? ''));
-        $mobilePhone = trim((string) ($req->post['mobile_phone'] ?? ''));
+        $nome = $in->postString('nome', 190, true);
+        $email = $in->postEmail('email', 190, true);
+        $senha = $in->postStringRaw('senha', 255, true);
 
-        if ($nome === '' || $email === '' || $senha === '') {
+        $cpfCnpj = $in->postString('cpf_cnpj', 20, false);
+        $phone = $in->postString('phone', 20, false);
+        $mobilePhone = $in->postString('mobile_phone', 20, false);
+
+        if ($in->temErros() || $nome === '' || $email === '' || $senha === '') {
             $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
-                'erro' => 'Preencha nome, e-mail e senha.',
-                'nome' => $nome,
-                'email' => $email,
-                'cpf_cnpj' => $cpfCnpj,
-                'phone' => $phone,
-                'mobile_phone' => $mobilePhone,
-            ]);
-            return Resposta::html($html, 422);
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
-                'erro' => 'E-mail inválido.',
+                'erro' => $in->temErros() ? $in->primeiroErro() : 'Preencha nome, e-mail e senha.',
                 'nome' => $nome,
                 'email' => $email,
                 'cpf_cnpj' => $cpfCnpj,

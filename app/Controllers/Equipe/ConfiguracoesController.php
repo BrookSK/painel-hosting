@@ -44,37 +44,71 @@ final class ConfiguracoesController
 
     public function salvar(Requisicao $req): Resposta
     {
-        $asaasToken = trim((string) ($req->post['asaas_token'] ?? ''));
-        $asaasUrl = trim((string) ($req->post['asaas_url_base'] ?? ''));
-        $asaasSegredo = trim((string) ($req->post['asaas_webhook_segredo'] ?? ''));
-        $stripeSecretKey = trim((string) ($req->post['stripe_secret_key'] ?? ''));
-        $stripeWebhookSecret = trim((string) ($req->post['stripe_webhook_secret'] ?? ''));
-        $appUrlBase = trim((string) ($req->post['app_url_base'] ?? ''));
-        $tolerancia = (int) ($req->post['tolerancia_dias'] ?? 3);
-        $evoUrl = trim((string) ($req->post['evolution_url_base'] ?? ''));
-        $evoToken = trim((string) ($req->post['evolution_token'] ?? ''));
-        $emailAdmin = trim((string) ($req->post['email_admin'] ?? ''));
-        $whatsAdminNumero = trim((string) ($req->post['whatsapp_admin_numero'] ?? ''));
-        $evoInstance = trim((string) ($req->post['evolution_instance'] ?? ''));
-        $sshKeyDir = trim((string) ($req->post['ssh_key_dir'] ?? ''));
-        $monitoringToken = trim((string) ($req->post['monitoring_token'] ?? ''));
-        $infraNodeMaxUtilPercent = (int) ($req->post['infra_node_max_util_percent'] ?? 85);
-        $terminalPorta = (int) ($req->post['terminal_ws_internal_port'] ?? 8081);
-        $terminalTokenTtl = (int) ($req->post['terminal_token_ttl_seconds'] ?? 60);
-        $terminalIdleTimeout = (int) ($req->post['terminal_idle_timeout_seconds'] ?? 900);
-        $terminalSafeMode = (string) ($req->post['terminal_safe_mode'] ?? '0');
+        $in = $req->input();
 
-        if ($tolerancia <= 0) {
-            $tolerancia = 3;
+        $asaasToken = $in->postString('asaas_token', 300, false);
+        $asaasUrl = $in->postUrl('asaas_url_base', 255, false);
+        $asaasSegredo = $in->postString('asaas_webhook_segredo', 255, false);
+        $stripeSecretKey = $in->postString('stripe_secret_key', 255, false);
+        $stripeWebhookSecret = $in->postString('stripe_webhook_secret', 255, false);
+        $appUrlBase = $in->postUrl('app_url_base', 255, false);
+
+        $tolerancia = $in->postInt('tolerancia_dias', 1, 365, false);
+
+        $evoUrl = $in->postUrl('evolution_url_base', 255, false);
+        $evoToken = $in->postString('evolution_token', 255, false);
+        $emailAdmin = $in->postEmail('email_admin', 190, false);
+
+        $whatsAdminNumero = $in->postString('whatsapp_admin_numero', 30, false);
+        $evoInstance = $in->postString('evolution_instance', 190, false);
+        $sshKeyDir = $in->postString('ssh_key_dir', 400, false);
+        $monitoringToken = $in->postString('monitoring_token', 255, false);
+
+        $infraNodeMaxUtilPercent = $in->postInt('infra_node_max_util_percent', 50, 100, false);
+        $terminalPorta = $in->postInt('terminal_ws_internal_port', 1, 65535, false);
+        $terminalTokenTtl = $in->postInt('terminal_token_ttl_seconds', 10, 86400, false);
+        $terminalIdleTimeout = $in->postInt('terminal_idle_timeout_seconds', 60, 604800, false);
+        $terminalSafeMode = $in->postEnum('terminal_safe_mode', ['0', '1', 'on', 'true'], '0');
+
+        if ($in->temErros()) {
+            $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
+                'salvo' => false,
+                'erro' => $in->primeiroErro(),
+                'asaas_token' => $asaasToken,
+                'asaas_url_base' => $asaasUrl,
+                'asaas_webhook_segredo' => $asaasSegredo,
+                'stripe_secret_key' => $stripeSecretKey,
+                'stripe_webhook_secret' => $stripeWebhookSecret,
+                'app_url_base' => $appUrlBase,
+                'tolerancia_dias' => $tolerancia > 0 ? (string) $tolerancia : '3',
+                'evolution_url_base' => $evoUrl,
+                'evolution_token' => $evoToken,
+                'email_admin' => $emailAdmin,
+                'whatsapp_admin_numero' => $whatsAdminNumero,
+                'evolution_instance' => $evoInstance,
+                'ssh_key_dir' => $sshKeyDir,
+                'monitoring_token' => $monitoringToken,
+                'infra_node_max_util_percent' => $infraNodeMaxUtilPercent > 0 ? (string) $infraNodeMaxUtilPercent : '85',
+                'terminal_ws_internal_port' => $terminalPorta > 0 ? (string) $terminalPorta : '8081',
+                'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
+                'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
+                'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
+            ]);
+
+            return Resposta::html($html, 422);
+        }
+
+        if ($asaasUrl === '') {
+            $asaasUrl = 'https://api.asaas.com/v3';
         }
 
         Settings::definir('asaas.token', $asaasToken);
-        Settings::definir('asaas.url_base', $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3');
+        Settings::definir('asaas.url_base', $asaasUrl);
         Settings::definir('asaas.webhook_segredo', $asaasSegredo);
         Settings::definir('stripe.secret_key', $stripeSecretKey);
         Settings::definir('stripe.webhook_secret', $stripeWebhookSecret);
         Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
-        Settings::definir('cobranca.tolerancia_dias', $tolerancia);
+        Settings::definir('cobranca.tolerancia_dias', $tolerancia > 0 ? $tolerancia : 3);
         Settings::definir('whatsapp.evolution.url_base', $evoUrl);
         Settings::definir('whatsapp.evolution.token', $evoToken);
         Settings::definir('alertas.email_admin', $emailAdmin);
@@ -82,10 +116,10 @@ final class ConfiguracoesController
         Settings::definir('whatsapp.evolution.instance', $evoInstance);
         Settings::definir('infra.ssh_key_dir', $sshKeyDir);
         Settings::definir('monitoring.token', $monitoringToken);
-        Settings::definir('infra.node_max_util_percent', ($infraNodeMaxUtilPercent >= 50 && $infraNodeMaxUtilPercent <= 100) ? $infraNodeMaxUtilPercent : 85);
-        Settings::definir('terminal.ws_internal_port', ($terminalPorta > 0 && $terminalPorta <= 65535) ? $terminalPorta : 8081);
-        Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl >= 10 ? $terminalTokenTtl : 60);
-        Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900);
+        Settings::definir('infra.node_max_util_percent', $infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85);
+        Settings::definir('terminal.ws_internal_port', $terminalPorta > 0 ? $terminalPorta : 8081);
+        Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl > 0 ? $terminalTokenTtl : 60);
+        Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900);
         Settings::definir('terminal.safe_mode', ($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? 1 : 0);
 
         $whatsLast4 = '';
@@ -101,13 +135,13 @@ final class ConfiguracoesController
             'settings',
             null,
             [
-                'asaas_url_base' => $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3',
+                'asaas_url_base' => $asaasUrl,
                 'asaas_token_set' => $asaasToken !== '',
                 'asaas_webhook_segredo_set' => $asaasSegredo !== '',
                 'stripe_secret_key_set' => $stripeSecretKey !== '',
                 'stripe_webhook_secret_set' => $stripeWebhookSecret !== '',
                 'app_url_base' => rtrim($appUrlBase, '/'),
-                'tolerancia_dias' => $tolerancia,
+                'tolerancia_dias' => $tolerancia > 0 ? $tolerancia : 3,
                 'evolution_url_base' => $evoUrl,
                 'evolution_token_set' => $evoToken !== '',
                 'evolution_instance' => $evoInstance,
@@ -115,10 +149,10 @@ final class ConfiguracoesController
                 'whatsapp_admin_last4' => $whatsLast4,
                 'ssh_key_dir' => $sshKeyDir,
                 'monitoring_token_set' => $monitoringToken !== '',
-                'infra_node_max_util_percent' => ($infraNodeMaxUtilPercent >= 50 && $infraNodeMaxUtilPercent <= 100) ? $infraNodeMaxUtilPercent : 85,
-                'terminal_ws_internal_port' => ($terminalPorta > 0 && $terminalPorta <= 65535) ? $terminalPorta : 8081,
-                'terminal_token_ttl_seconds' => $terminalTokenTtl >= 10 ? $terminalTokenTtl : 60,
-                'terminal_idle_timeout_seconds' => $terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900,
+                'infra_node_max_util_percent' => $infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85,
+                'terminal_ws_internal_port' => $terminalPorta > 0 ? $terminalPorta : 8081,
+                'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? $terminalTokenTtl : 60,
+                'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900,
                 'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? 1 : 0),
             ],
             $req,
@@ -128,12 +162,12 @@ final class ConfiguracoesController
             'salvo' => true,
             'erro' => '',
             'asaas_token' => $asaasToken,
-            'asaas_url_base' => $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3',
+            'asaas_url_base' => $asaasUrl,
             'asaas_webhook_segredo' => $asaasSegredo,
             'stripe_secret_key' => $stripeSecretKey,
             'stripe_webhook_secret' => $stripeWebhookSecret,
             'app_url_base' => rtrim($appUrlBase, '/'),
-            'tolerancia_dias' => (string) $tolerancia,
+            'tolerancia_dias' => (string) ($tolerancia > 0 ? $tolerancia : 3),
             'evolution_url_base' => $evoUrl,
             'evolution_token' => $evoToken,
             'email_admin' => $emailAdmin,
@@ -141,10 +175,10 @@ final class ConfiguracoesController
             'evolution_instance' => $evoInstance,
             'ssh_key_dir' => $sshKeyDir,
             'monitoring_token' => $monitoringToken,
-            'infra_node_max_util_percent' => (string) (($infraNodeMaxUtilPercent >= 50 && $infraNodeMaxUtilPercent <= 100) ? $infraNodeMaxUtilPercent : 85),
-            'terminal_ws_internal_port' => (string) (($terminalPorta > 0 && $terminalPorta <= 65535) ? $terminalPorta : 8081),
-            'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl >= 10 ? $terminalTokenTtl : 60),
-            'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900),
+            'infra_node_max_util_percent' => (string) ($infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85),
+            'terminal_ws_internal_port' => (string) ($terminalPorta > 0 ? $terminalPorta : 8081),
+            'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
+            'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),
             'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
         ]);
 

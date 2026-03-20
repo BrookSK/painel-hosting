@@ -23,11 +23,12 @@ final class AssinarPlanoController
             return Resposta::redirecionar('/cliente/entrar');
         }
 
-        $planId = (int) ($req->post['plan_id'] ?? 0);
-        $gateway = strtolower(trim((string) ($req->post['gateway'] ?? '')));
+        $in = $req->input();
+        $planId = $in->postInt('plan_id', 1, 2147483647, true);
+        $gateway = $in->postEnum('gateway', ['stripe'], '');
 
         if ($gateway === 'stripe') {
-            if ($planId <= 0) {
+            if ($in->temErros() || $planId <= 0) {
                 return Resposta::texto('Plano inválido.', 400);
             }
 
@@ -72,12 +73,9 @@ final class AssinarPlanoController
             return Resposta::redirecionar($checkoutUrl);
         }
 
-        $billingType = (string) ($req->post['billing_type'] ?? 'PIX');
-        if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
-            $billingType = 'PIX';
-        }
+        $billingType = $in->postEnum('billing_type', ['PIX', 'BOLETO'], 'PIX');
 
-        if ($planId <= 0) {
+        if ($in->temErros() || $planId <= 0) {
             return Resposta::texto('Plano inválido.', 400);
         }
 

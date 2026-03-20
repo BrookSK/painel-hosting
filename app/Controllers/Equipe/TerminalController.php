@@ -39,8 +39,9 @@ final class TerminalController
             return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
         }
 
-        $serverId = (int) ($req->post['server_id'] ?? 0);
-        if ($serverId <= 0) {
+        $in = $req->input();
+        $serverId = $in->postInt('server_id', 1, 2147483647, true);
+        if ($in->temErros() || $serverId <= 0) {
             return Resposta::json(['ok' => false, 'erro' => 'Servidor inválido.'], 400);
         }
 
@@ -122,8 +123,9 @@ final class TerminalController
 
     public function auditoriaVer(Requisicao $req): Resposta
     {
-        $id = (int) ($req->query['id'] ?? 0);
-        if ($id <= 0) {
+        $in = $req->input();
+        $id = $in->queryInt('id', 1, 2147483647, true);
+        if ($in->temErros() || $id <= 0) {
             return Resposta::texto('Sessão inválida.', 400);
         }
 

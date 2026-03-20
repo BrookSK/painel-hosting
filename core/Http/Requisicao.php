@@ -47,4 +47,9 @@ final class Requisicao
         $decodificado = json_decode($this->corpoRaw, true);
         return is_array($decodificado) ? $decodificado : [];
     }
+
+    public function input(): Input
+    {
+        return new Input($this);
+    }
 }
