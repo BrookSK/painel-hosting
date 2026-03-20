@@ -120,6 +120,7 @@ $incidentServicesMap = is_array($incidentServices ?? null) ? $incidentServices :
       <h2 class="titulo" style="font-size:16px; margin-bottom:12px;">Criar incidente</h2>
 
       <form method="post" action="/equipe/status/incidentes/criar">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <div class="grid" style="margin-bottom:10px;">
           <div>
             <div class="texto" style="margin:0 0 6px 0;"><strong>Título</strong></div>
@@ -200,6 +201,7 @@ $incidentServicesMap = is_array($incidentServices ?? null) ? $incidentServices :
 
               <div style="margin-top:10px; border-top:1px solid #e5e7eb; padding-top:10px;">
                 <form method="post" action="/equipe/status/incidentes/servicos" class="grid" style="align-items:end;">
+                  <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                   <input type="hidden" name="incident_id" value="<?php echo $iid; ?>" />
                   <div style="grid-column: span 3;">
                     <div class="texto" style="margin:0 0 6px 0;"><strong>Serviços (IDs)</strong></div>
@@ -213,6 +215,7 @@ $incidentServicesMap = is_array($incidentServices ?? null) ? $incidentServices :
 
               <div style="margin-top:10px; border-top:1px solid #e5e7eb; padding-top:10px;">
                 <form method="post" action="/equipe/status/incidentes/atualizar" class="grid" style="align-items:end;">
+                  <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                   <input type="hidden" name="incident_id" value="<?php echo $iid; ?>" />
                   <div>
                     <div class="texto" style="margin:0 0 6px 0;"><strong>Status</strong></div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -47,6 +48,16 @@ final class NotificacoesController
         $up = $pdo->prepare('UPDATE notifications SET `read` = 1 WHERE id = :id AND user_id = :u');
         $up->execute([':id' => $id, ':u' => $equipeId]);
 
+        (new AuditLogService())->registrar(
+            'team',
+            $equipeId,
+            'notification.mark_read',
+            'notification',
+            $id,
+            ['notification_id' => $id],
+            $req,
+        );
+
         return Resposta::redirecionar('/equipe/notificacoes');
     }
 
@@ -60,6 +71,23 @@ final class NotificacoesController
         $pdo = BancoDeDados::pdo();
         $up = $pdo->prepare('UPDATE notifications SET `read` = 1 WHERE user_id = :u AND `read` = 0');
         $up->execute([':u' => $equipeId]);
+
+        $count = 0;
+        try {
+            $count = (int) $up->rowCount();
+        } catch (\Throwable $e) {
+            $count = 0;
+        }
+
+        (new AuditLogService())->registrar(
+            'team',
+            $equipeId,
+            'notification.mark_all_read',
+            'notification',
+            null,
+            ['count' => $count],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/notificacoes');
     }

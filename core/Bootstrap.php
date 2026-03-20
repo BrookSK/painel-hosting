@@ -8,7 +8,36 @@ final class Bootstrap
 {
     public static function iniciar(): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
+        $https = false;
+        if (PHP_SAPI !== 'cli') {
+            $httpsSrv = (string) ($_SERVER['HTTPS'] ?? '');
+            if ($httpsSrv !== '' && strtolower($httpsSrv) !== 'off') {
+                $https = true;
+            }
+            $xfp = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+            if ($xfp === 'https') {
+                $https = true;
+            }
+            $scheme = strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? ''));
+            if ($scheme === 'https') {
+                $https = true;
+            }
+        }
+
+        if (PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
+            @ini_set('session.use_strict_mode', '1');
+            @ini_set('session.use_only_cookies', '1');
+            @ini_set('session.use_trans_sid', '0');
+            @ini_set('session.cookie_httponly', '1');
+
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'secure' => $https,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+
             session_start();
         }
 
@@ -24,6 +53,8 @@ final class Bootstrap
                         setcookie('lang', $idioma, [
                             'expires' => time() + 31536000,
                             'path' => '/',
+                            'secure' => $https,
+                            'httponly' => true,
                             'samesite' => 'Lax',
                         ]);
                     }

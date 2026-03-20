@@ -41,6 +41,7 @@ $id = $plano['id'] ?? null;
       <?php endif; ?>
 
       <form method="post" action="/equipe/planos/salvar">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo View::e((string) ($plano['id'] ?? '')); ?>" />
 
         <div class="grid">

@@ -96,6 +96,7 @@ function badgePrioridadeTicket(string $p): string
         <div class="texto" style="margin:0;">Este ticket está fechado.</div>
       <?php else: ?>
         <form method="post" action="/cliente/tickets/responder">
+          <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
           <input type="hidden" name="ticket_id" value="<?php echo (int) ($ticket['id'] ?? 0); ?>" />
           <textarea class="input" name="message" rows="6" style="margin-bottom:12px;"></textarea>
           <button class="botao" type="submit">Enviar resposta</button>

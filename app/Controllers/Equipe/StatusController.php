@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -186,6 +187,23 @@ final class StatusController
             return Resposta::texto('Não foi possível criar o incidente.', 500);
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            $userId,
+            'status_incident.create',
+            'status_incident',
+            $id,
+            [
+                'incident_id' => $id,
+                'impact' => $impact,
+                'scope' => $scope,
+                'service_ids' => array_values($serviceIds),
+                'message_len' => strlen($message),
+                'title_len' => strlen($title),
+            ],
+            $req,
+        );
+
         return Resposta::redirecionar('/equipe/status');
     }
 
@@ -236,6 +254,20 @@ final class StatusController
             $pdo->rollBack();
             return Resposta::texto('Não foi possível atualizar os serviços.', 500);
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            Auth::equipeId(),
+            'status_incident.update_services',
+            'status_incident',
+            $incidentId,
+            [
+                'incident_id' => $incidentId,
+                'service_ids' => array_values($serviceIds),
+                'scope' => $scope,
+            ],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/status');
     }
@@ -290,6 +322,20 @@ final class StatusController
             ':u' => $userId,
             ':c' => $agora,
         ]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            $userId,
+            'status_incident.add_update',
+            'status_incident',
+            $incidentId,
+            [
+                'incident_id' => $incidentId,
+                'status' => $status,
+                'message_len' => strlen($message),
+            ],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/status');
     }

@@ -40,6 +40,7 @@ $id = $aplicacao['id'] ?? null;
       <?php endif; ?>
 
       <form method="post" action="/equipe/aplicacoes/salvar">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo View::e((string) ($aplicacao['id'] ?? '')); ?>" />
 
         <div class="grid">
@@ -97,6 +98,7 @@ $id = $aplicacao['id'] ?? null;
       <?php if ($id): ?>
         <div style="margin-top:14px;" class="linha">
           <form method="post" action="/equipe/aplicacoes/deploy" onsubmit="return confirm('Iniciar deploy agora?');">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <input type="hidden" name="id" value="<?php echo (int) $id; ?>" />
             <button class="botao sec" type="submit">Deploy</button>
           </form>
@@ -106,6 +108,7 @@ $id = $aplicacao['id'] ?? null;
       <?php if ($id): ?>
         <div style="margin-top:14px; border-top:1px solid #e5e7eb; padding-top:14px;">
           <form method="post" action="/equipe/aplicacoes/excluir" onsubmit="return confirm('Excluir aplicação?');">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <input type="hidden" name="id" value="<?php echo (int) $id; ?>" />
             <button class="botao sec" type="submit">Excluir</button>
           </form>

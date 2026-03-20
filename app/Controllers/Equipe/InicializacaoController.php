@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Controllers\Equipe;
 
 use LRV\App\Jobs\RegistroHandlers;
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\App\Services\Infra\NodeHealthService;
 use LRV\App\Services\Setup\InicializacaoService;
 use LRV\App\Services\Terminal\TerminalWsSetupService;
@@ -40,6 +41,16 @@ final class InicializacaoController
             $erro = $e->getMessage();
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'setup.apply_schema',
+            'setup',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
+
         return $this->renderizar($erro, $logs, $ok);
     }
 
@@ -63,6 +74,22 @@ final class InicializacaoController
             if (is_array($ja)) {
                 $logs[] = 'Já existe um coletar_status em fila/rodando: #' . (int) ($ja['id'] ?? 0) . ' (status=' . (string) ($ja['status'] ?? '') . (array_key_exists('run_at', $ja) ? (' run_at=' . (string) ($ja['run_at'] ?? '')) : '') . ')';
                 $ok = true;
+
+                (new AuditLogService())->registrar(
+                    'team',
+                    \LRV\Core\Auth::equipeId(),
+                    'status.enqueue_collect_once',
+                    'job',
+                    (int) ($ja['id'] ?? 0) ?: null,
+                    [
+                        'ok' => true,
+                        'ja_existia' => true,
+                        'job_id' => (int) ($ja['id'] ?? 0),
+                        'job_status' => (string) ($ja['status'] ?? ''),
+                        'run_at' => array_key_exists('run_at', $ja) ? (string) ($ja['run_at'] ?? '') : '',
+                    ],
+                    $req,
+                );
                 return $this->renderizar($erro, $logs, $ok);
             }
 
@@ -70,8 +97,28 @@ final class InicializacaoController
             $id = $repo->criar('coletar_status', ['reagendar' => false]);
             $logs[] = 'Job coletar_status enfileirado: #' . $id;
             $ok = true;
+
+            (new AuditLogService())->registrar(
+                'team',
+                \LRV\Core\Auth::equipeId(),
+                'status.enqueue_collect_once',
+                'job',
+                $id,
+                ['ok' => true, 'ja_existia' => false, 'job_id' => $id, 'reagendar' => false],
+                $req,
+            );
         } catch (\Throwable $e) {
             $erro = $e->getMessage();
+
+            (new AuditLogService())->registrar(
+                'team',
+                \LRV\Core\Auth::equipeId(),
+                'status.enqueue_collect_once',
+                'job',
+                null,
+                ['ok' => false, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+                $req,
+            );
         }
 
         return $this->renderizar($erro, $logs, $ok);
@@ -97,6 +144,22 @@ final class InicializacaoController
             if (is_array($ja)) {
                 $logs[] = 'Já existe um coletar_status em fila/rodando: #' . (int) ($ja['id'] ?? 0) . ' (status=' . (string) ($ja['status'] ?? '') . (array_key_exists('run_at', $ja) ? (' run_at=' . (string) ($ja['run_at'] ?? '')) : '') . ')';
                 $ok = true;
+
+                (new AuditLogService())->registrar(
+                    'team',
+                    \LRV\Core\Auth::equipeId(),
+                    'status.enqueue_collect_continuous',
+                    'job',
+                    (int) ($ja['id'] ?? 0) ?: null,
+                    [
+                        'ok' => true,
+                        'ja_existia' => true,
+                        'job_id' => (int) ($ja['id'] ?? 0),
+                        'job_status' => (string) ($ja['status'] ?? ''),
+                        'run_at' => array_key_exists('run_at', $ja) ? (string) ($ja['run_at'] ?? '') : '',
+                    ],
+                    $req,
+                );
                 return $this->renderizar($erro, $logs, $ok);
             }
 
@@ -104,8 +167,28 @@ final class InicializacaoController
             $id = $repo->criar('coletar_status', ['reagendar' => true]);
             $logs[] = 'Coleta contínua iniciada. Job coletar_status enfileirado: #' . $id;
             $ok = true;
+
+            (new AuditLogService())->registrar(
+                'team',
+                \LRV\Core\Auth::equipeId(),
+                'status.enqueue_collect_continuous',
+                'job',
+                $id,
+                ['ok' => true, 'ja_existia' => false, 'job_id' => $id, 'reagendar' => true],
+                $req,
+            );
         } catch (\Throwable $e) {
             $erro = $e->getMessage();
+
+            (new AuditLogService())->registrar(
+                'team',
+                \LRV\Core\Auth::equipeId(),
+                'status.enqueue_collect_continuous',
+                'job',
+                null,
+                ['ok' => false, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+                $req,
+            );
         }
 
         return $this->renderizar($erro, $logs, $ok);
@@ -127,6 +210,16 @@ final class InicializacaoController
             $erro = $e->getMessage();
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'terminal_ws.install_deps',
+            'terminal_ws',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
+
         return $this->renderizar($erro, $logs, $ok);
     }
 
@@ -145,6 +238,16 @@ final class InicializacaoController
         } catch (\Throwable $e) {
             $erro = $e->getMessage();
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'terminal_ws.start_daemon',
+            'terminal_ws',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
 
         return $this->renderizar($erro, $logs, $ok);
     }
@@ -165,6 +268,16 @@ final class InicializacaoController
             $erro = $e->getMessage();
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'terminal_ws.stop_daemon',
+            'terminal_ws',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
+
         return $this->renderizar($erro, $logs, $ok);
     }
 
@@ -173,6 +286,7 @@ final class InicializacaoController
         $logs = [];
         $ok = false;
         $erro = '';
+        $testados = 0;
 
         try {
             $pdo = BancoDeDados::pdo();
@@ -213,12 +327,24 @@ final class InicializacaoController
                 $svc->verificarNode($nodeId, function (string $m) use (&$logs, $nodeId): void {
                     $logs[] = '[' . $nodeId . '] ' . $m;
                 });
+
+                $testados++;
             }
 
             $ok = true;
         } catch (\Throwable $e) {
             $erro = $e->getMessage();
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'servers.test_nodes',
+            'server',
+            null,
+            ['ok' => $ok, 'testados' => $testados, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
 
         return $this->renderizar($erro, $logs, $ok);
     }
@@ -240,6 +366,16 @@ final class InicializacaoController
             $erro = $e->getMessage();
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'setup.apply_migrations',
+            'setup',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
+
         return $this->renderizar($erro, $logs, $ok);
     }
 
@@ -259,6 +395,16 @@ final class InicializacaoController
         } catch (\Throwable $e) {
             $erro = $e->getMessage();
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'setup.create_directories',
+            'setup',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
 
         return $this->renderizar($erro, $logs, $ok);
     }
@@ -280,6 +426,16 @@ final class InicializacaoController
             $erro = $e->getMessage();
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'setup.generate_tokens_defaults',
+            'setup',
+            null,
+            ['ok' => $ok, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
+
         return $this->renderizar($erro, $logs, $ok);
     }
 
@@ -288,6 +444,7 @@ final class InicializacaoController
         $logs = [];
         $ok = false;
         $erro = '';
+        $executou = false;
 
         try {
             $repo = new RepositorioJobs();
@@ -305,6 +462,16 @@ final class InicializacaoController
         } catch (\Throwable $e) {
             $erro = $e->getMessage();
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'jobs.run_once',
+            'job',
+            null,
+            ['ok' => $ok, 'executou' => $executou, 'erro' => $erro !== '' ? substr($erro, 0, 200) : ''],
+            $req,
+        );
 
         return $this->renderizar($erro, $logs, $ok);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
@@ -40,6 +41,16 @@ final class VpsController
         $repo = new RepositorioJobs();
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'vps.provision',
+            'vps',
+            $vpsId,
+            ['vps_id' => $vpsId],
+            $req,
+        );
+
         return Resposta::redirecionar('/equipe/vps');
     }
 
@@ -52,6 +63,16 @@ final class VpsController
 
         $repo = new RepositorioJobs();
         $repo->criar('suspender_vps', ['vps_id' => $vpsId]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'vps.suspend',
+            'vps',
+            $vpsId,
+            ['vps_id' => $vpsId],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/vps');
     }
@@ -66,6 +87,16 @@ final class VpsController
         $repo = new RepositorioJobs();
         $repo->criar('reativar_vps', ['vps_id' => $vpsId]);
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'vps.reactivate',
+            'vps',
+            $vpsId,
+            ['vps_id' => $vpsId],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/vps');
     }

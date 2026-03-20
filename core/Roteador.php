@@ -47,6 +47,14 @@ final class Roteador
         $middlewares = $rota['middlewares'] ?? [];
 
         try {
+            if ($metodo === 'POST' && $this->csrfObrigatorio($caminho)) {
+                $token = (string) ($req->post['_csrf'] ?? ($req->headers['x-csrf-token'] ?? ''));
+                if (!Csrf::validar($token)) {
+                    $this->responderCsrfInvalido($req)->enviar();
+                    return;
+                }
+            }
+
             foreach ($middlewares as $mw) {
                 $resultadoMw = $mw($req);
                 if ($resultadoMw instanceof Resposta) {
@@ -88,5 +96,28 @@ final class Roteador
     {
         $caminho = '/' . trim($caminho, '/');
         return $caminho === '/' ? '/' : $caminho;
+    }
+
+    private function csrfObrigatorio(string $caminho): bool
+    {
+        if (str_starts_with($caminho, '/webhooks/')) {
+            return false;
+        }
+        if (str_starts_with($caminho, '/api/metrics/')) {
+            return false;
+        }
+        if (str_starts_with($caminho, '/api/worker/')) {
+            return false;
+        }
+        return true;
+    }
+
+    private function responderCsrfInvalido(Requisicao $req): Resposta
+    {
+        $accept = strtolower((string) ($req->headers['accept'] ?? ''));
+        if (str_contains($accept, 'application/json')) {
+            return Resposta::json(['ok' => false, 'erro' => 'csrf_invalid'], 419);
+        }
+        return Resposta::texto('CSRF inválido.', 419);
     }
 }

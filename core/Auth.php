@@ -9,6 +9,20 @@ final class Auth
     private const SESSAO_EQUIPE_ID = 'auth_equipe_id';
     private const SESSAO_CLIENTE_ID = 'auth_cliente_id';
 
+    private static function regenerarSessao(): void
+    {
+        if (PHP_SAPI === 'cli') {
+            return;
+        }
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+        try {
+            @session_regenerate_id(true);
+        } catch (\Throwable $e) {
+        }
+    }
+
     public static function equipeId(): ?int
     {
         $v = $_SESSION[self::SESSAO_EQUIPE_ID] ?? null;
@@ -47,6 +61,9 @@ final class Auth
             return false;
         }
 
+        self::regenerarSessao();
+        Csrf::invalidar();
+
         $_SESSION[self::SESSAO_EQUIPE_ID] = (int) $u['id'];
         unset($_SESSION[self::SESSAO_CLIENTE_ID]);
 
@@ -56,6 +73,8 @@ final class Auth
     public static function sairEquipe(): void
     {
         unset($_SESSION[self::SESSAO_EQUIPE_ID]);
+        Csrf::invalidar();
+        self::regenerarSessao();
     }
 
     public static function entrarCliente(string $email, string $senha): bool
@@ -74,6 +93,9 @@ final class Auth
             return false;
         }
 
+        self::regenerarSessao();
+        Csrf::invalidar();
+
         $_SESSION[self::SESSAO_CLIENTE_ID] = (int) $c['id'];
         unset($_SESSION[self::SESSAO_EQUIPE_ID]);
 
@@ -83,6 +105,8 @@ final class Auth
     public static function sairCliente(): void
     {
         unset($_SESSION[self::SESSAO_CLIENTE_ID]);
+        Csrf::invalidar();
+        self::regenerarSessao();
     }
 
     public static function equipeExiste(): bool

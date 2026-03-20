@@ -81,6 +81,7 @@ function badgeStatusAplicacao(string $st): string
                   <a href="/equipe/aplicacoes/editar?id=<?php echo (int) ($a['id'] ?? 0); ?>">Editar</a>
                   <span style="opacity:.4; margin:0 6px;">|</span>
                   <form method="post" action="/equipe/aplicacoes/deploy" style="display:inline;" onsubmit="return confirm('Iniciar deploy agora?');">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="id" value="<?php echo (int) ($a['id'] ?? 0); ?>" />
                     <button class="botao sec" type="submit" style="padding:6px 10px; border-radius:10px;">Deploy</button>
                   </form>

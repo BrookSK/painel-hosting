@@ -43,6 +43,7 @@ $message = (string) (($form['message'] ?? '') ?? '');
       <?php endif; ?>
 
       <form method="post" action="/cliente/tickets/criar">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <div style="margin-bottom:12px;">
           <label style="display:block; font-size:13px; margin-bottom:6px;">Assunto</label>
           <input class="input" type="text" name="subject" value="<?php echo View::e($subject); ?>" />

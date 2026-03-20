@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\App\Services\Terminal\TerminalTokensService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
@@ -75,6 +76,16 @@ final class TerminalController
         try {
             $svc = new TerminalTokensService();
             $token = $svc->criarToken($equipeId, $serverId, $ip, $ua);
+
+            (new AuditLogService())->registrar(
+                'team',
+                $equipeId,
+                'terminal.token_issue',
+                'server',
+                $serverId,
+                ['server_id' => $serverId],
+                $req,
+            );
 
             return Resposta::json([
                 'ok' => true,

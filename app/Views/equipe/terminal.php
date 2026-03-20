@@ -15,6 +15,7 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Terminal (Admin)</title>
+  <meta name="csrf-token" content="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
   <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 </head>
 <body>
@@ -122,11 +123,12 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
         if(!serverId){
           throw new Error('Selecione um node.');
         }
+        const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
         const body = new URLSearchParams();
         body.set('server_id', serverId);
         const resp = await fetch('/equipe/terminal/token', {
           method: 'POST',
-          headers: {'Content-Type':'application/x-www-form-urlencoded'},
+          headers: {'Content-Type':'application/x-www-form-urlencoded', 'x-csrf-token': csrf, 'Accept':'application/json'},
           body
         });
         const json = await resp.json();

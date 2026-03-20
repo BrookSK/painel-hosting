@@ -58,6 +58,7 @@ function gb(int $mb): string {
           <p class="texto" style="font-size:18px; color:#0f172a; margin-bottom:12px;"><strong>R$ <?php echo View::e((string) ($p['price_monthly'] ?? '0.00')); ?>/mês</strong></p>
 
           <form method="post" action="/cliente/assinar">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <input type="hidden" name="plan_id" value="<?php echo (int) ($p['id'] ?? 0); ?>" />
 
             <label style="display:block; font-size:13px; margin-bottom:6px;">Forma de pagamento</label>

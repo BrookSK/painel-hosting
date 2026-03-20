@@ -18,6 +18,7 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Terminal VPS #<?php echo (int) $vpsId; ?></title>
+  <meta name="csrf-token" content="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
   <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 </head>
 <body>
@@ -105,11 +106,12 @@ $porta = (int) ConfiguracoesSistema::terminalWsInternalPort();
       }
 
       async function emitirToken(){
+        const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
         const body = new URLSearchParams();
         body.set('vps_id', String(VPS_ID));
         const resp = await fetch('/cliente/vps/terminal/token', {
           method: 'POST',
-          headers: {'Content-Type':'application/x-www-form-urlencoded'},
+          headers: {'Content-Type':'application/x-www-form-urlencoded', 'x-csrf-token': csrf, 'Accept':'application/json'},
           body
         });
         const json = await resp.json();

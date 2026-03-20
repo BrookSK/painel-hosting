@@ -90,6 +90,7 @@ $id = $servidor['id'] ?? null;
       </div>
 
       <form id="form-servidor" method="post" action="/equipe/servidores/salvar">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo View::e((string) ($servidor['id'] ?? '')); ?>" />
 
         <div class="grid">

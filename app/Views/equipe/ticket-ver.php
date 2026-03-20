@@ -100,6 +100,7 @@ function badgePrioridadeEquipeTicket(string $p): string
           <div class="texto" style="margin:0;">Ticket fechado.</div>
         <?php else: ?>
           <form method="post" action="/equipe/tickets/responder">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <input type="hidden" name="ticket_id" value="<?php echo (int) ($ticket['id'] ?? 0); ?>" />
             <textarea class="input" name="message" rows="6" style="margin-bottom:12px;"></textarea>
             <button class="botao" type="submit">Enviar resposta</button>
@@ -114,6 +115,7 @@ function badgePrioridadeEquipeTicket(string $p): string
           <div class="texto" style="margin:0;">Nenhuma ação disponível.</div>
         <?php else: ?>
           <form method="post" action="/equipe/tickets/fechar">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <input type="hidden" name="ticket_id" value="<?php echo (int) ($ticket['id'] ?? 0); ?>" />
             <button class="botao sec" type="submit">Fechar ticket</button>
           </form>

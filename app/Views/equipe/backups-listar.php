@@ -69,6 +69,7 @@ function fmtBytes(int $b): string
   <div class="conteudo">
     <div class="card" style="margin-bottom:12px;">
       <form method="post" action="/equipe/backups/criar" class="linha" style="justify-content:space-between;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <div style="flex:1; min-width:280px;">
           <label style="display:block; font-size:13px; margin-bottom:6px;">Criar backup para VPS</label>
           <select class="input" name="vps_id">
@@ -119,6 +120,7 @@ function fmtBytes(int $b): string
                   <?php endif; ?>
 
                   <form method="post" action="/equipe/backups/excluir" style="display:inline;" onsubmit="return confirm('Excluir este backup?');">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="id" value="<?php echo (int) ($b['id'] ?? 0); ?>" />
                     <button class="botao sec" type="submit" style="padding:6px 10px; border-radius:10px;">Excluir</button>
                   </form>

@@ -108,16 +108,19 @@ function badgeStatusVpsEquipe(string $st): string
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($v['server_id'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
                   <form method="post" action="/equipe/vps/provisionar" style="display:inline-block;">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo (int) ($v['id'] ?? 0); ?>" />
                     <button class="botao" type="submit" style="padding:8px 10px;">Provisionar</button>
                   </form>
 
                   <form method="post" action="/equipe/vps/reativar" style="display:inline-block; margin-left:6px;">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo (int) ($v['id'] ?? 0); ?>" />
                     <button class="botao" type="submit" style="padding:8px 10px; background:#0B1C3D;">Reativar</button>
                   </form>
 
                   <form method="post" action="/equipe/vps/suspender" style="display:inline-block; margin-left:6px;">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo (int) ($v['id'] ?? 0); ?>" />
                     <button class="botao" type="submit" style="padding:8px 10px; background:#991b1b;">Suspender</button>
                   </form>

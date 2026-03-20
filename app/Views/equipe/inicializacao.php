@@ -103,41 +103,49 @@ function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
 
         <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));">
           <form method="post" action="/equipe/inicializacao/aplicar-schema" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Aplicar schema.sql</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/aplicar-migrations" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Aplicar migrations</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/criar-diretorios" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Criar diretórios</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/gerar-tokens" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Gerar tokens/defaults</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/processar-job" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Processar 1 job</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/coletar-status" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Coletar status (1x)</strong></div>
             <button class="botao" type="submit">Enfileirar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/coletar-status-continuo" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Iniciar coleta contínua</strong></div>
             <button class="botao" type="submit">Iniciar</button>
           </form>
 
           <form method="post" action="/equipe/inicializacao/testar-nodes" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conectividade dos nodes</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>
@@ -195,6 +203,7 @@ function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
 
         <div class="grid" style="margin-top:12px; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));">
           <form method="post" action="/equipe/inicializacao/terminal/instalar-deps" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Instalar dependências (composer)</strong></div>
             <button class="botao" type="submit">Executar</button>
             <div class="texto" style="font-size:13px; opacity:.9; margin-top:10px;">
@@ -203,6 +212,7 @@ function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
           </form>
 
           <form method="post" action="/equipe/inicializacao/terminal/iniciar-daemon" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Iniciar daemon</strong></div>
             <button class="botao" type="submit">Executar</button>
             <div class="texto" style="font-size:13px; opacity:.9; margin-top:10px;">
@@ -211,6 +221,7 @@ function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
           </form>
 
           <form method="post" action="/equipe/inicializacao/terminal/parar-daemon" class="card" style="margin:0;">
+            <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
             <div class="texto" style="margin:0 0 10px 0;"><strong>Parar daemon</strong></div>
             <button class="botao" type="submit">Executar</button>
           </form>

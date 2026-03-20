@@ -41,6 +41,7 @@ function badgeLida(int $read): string
     <div class="linha" style="justify-content:space-between; margin-bottom:12px;">
       <div class="texto" style="margin:0;">Alertas internos do painel (billing/tickets/etc).</div>
       <form method="post" action="/equipe/notificacoes/marcar-todas" onsubmit="return confirm('Marcar todas como lidas?');">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <button class="botao" type="submit">Marcar todas como lidas</button>
       </form>
     </div>
@@ -65,6 +66,7 @@ function badgeLida(int $read): string
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
                   <?php if (((int) ($n['read'] ?? 0)) === 0): ?>
                     <form method="post" action="/equipe/notificacoes/marcar-lida" style="display:inline;">
+                      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                       <input type="hidden" name="id" value="<?php echo (int) ($n['id'] ?? 0); ?>" />
                       <button class="botao sec" type="submit">Marcar lida</button>
                     </form>

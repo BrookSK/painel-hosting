@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
@@ -121,6 +122,35 @@ final class PlanosController
         } catch (\Throwable $e) {
             return $this->renderizarErro($id, $nome, $desc, $cpu, $ram, $storage, $preco, $specs, $status, 'Não foi possível salvar o plano.');
         }
+
+        $auditId = $id;
+        if ($auditId <= 0) {
+            try {
+                $auditId = (int) $pdo->lastInsertId();
+            } catch (\Throwable $e) {
+                $auditId = 0;
+            }
+        }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            $id > 0 ? 'plan.update' : 'plan.create',
+            'plan',
+            $auditId > 0 ? $auditId : null,
+            [
+                'plan_id' => $auditId > 0 ? $auditId : null,
+                'name' => $nome,
+                'cpu' => $cpu,
+                'ram' => $ram,
+                'storage' => $storage,
+                'price_monthly' => $preco,
+                'status' => $status,
+                'specs_json_set' => $specs !== '',
+                'specs_json_len' => $specs !== '' ? strlen($specs) : 0,
+            ],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/planos');
     }

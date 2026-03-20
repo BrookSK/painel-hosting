@@ -40,6 +40,7 @@ $id = $usuario['id'] ?? null;
       <?php endif; ?>
 
       <form method="post" action="/equipe/usuarios/salvar">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo View::e((string) ($usuario['id'] ?? '')); ?>" />
 
         <div class="grid">

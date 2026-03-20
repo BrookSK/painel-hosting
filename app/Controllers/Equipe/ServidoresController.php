@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\App\Services\Provisioning\DockerCli;
 use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\BancoDeDados;
@@ -263,6 +264,28 @@ final class ServidoresController
             }
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            $id > 0 ? 'server.update' : 'server.create',
+            'server',
+            $savedId > 0 ? $savedId : null,
+            [
+                'server_id' => $savedId > 0 ? $savedId : null,
+                'hostname' => $hostname,
+                'ip_address' => $ip,
+                'ssh_port' => $sshPort,
+                'status' => $status,
+                'ram_total' => $ramTotal,
+                'cpu_total' => $cpuTotal,
+                'storage_total' => $storageTotal,
+                'terminal_ssh_user_set' => $terminalSshUser !== '',
+                'terminal_ssh_key_id_set' => $terminalSshKeyId !== '',
+                'conexao_validada' => $conexaoValidada,
+            ],
+            $req,
+        );
+
         return Resposta::redirecionar('/equipe/servidores');
     }
 
@@ -349,6 +372,24 @@ final class ServidoresController
                 }
             }
 
+            (new AuditLogService())->registrar(
+                'team',
+                \LRV\Core\Auth::equipeId(),
+                'server.test_connection',
+                'server',
+                $id > 0 ? $id : null,
+                [
+                    'server_id' => $id > 0 ? $id : null,
+                    'ip_address' => $ip,
+                    'ssh_port' => $sshPort,
+                    'ssh_user_set' => $sshUser !== '',
+                    'ssh_key_id_set' => $sshKeyId !== '',
+                    'ok' => false,
+                    'output_len' => $saida !== '' ? strlen($saida) : 0,
+                ],
+                $req,
+            );
+
             return $this->renderizarServidor($servidor, $msg, '', 422);
         }
 
@@ -366,6 +407,23 @@ final class ServidoresController
             } catch (\Throwable $e) {
             }
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'server.test_connection',
+            'server',
+            $id > 0 ? $id : null,
+            [
+                'server_id' => $id > 0 ? $id : null,
+                'ip_address' => $ip,
+                'ssh_port' => $sshPort,
+                'ssh_user_set' => $sshUser !== '',
+                'ssh_key_id_set' => $sshKeyId !== '',
+                'ok' => true,
+            ],
+            $req,
+        );
 
         return $this->renderizarServidor($servidor, '', 'Conexão SSH/Docker validada com sucesso.', 200);
     }

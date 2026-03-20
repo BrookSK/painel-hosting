@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -69,6 +70,7 @@ final class UsuariosController
     public function salvar(Requisicao $req): Resposta
     {
         $id = (int) ($req->post['id'] ?? 0);
+        $isUpdate = $id > 0;
         $nome = trim((string) ($req->post['name'] ?? ''));
         $email = trim((string) ($req->post['email'] ?? ''));
         $role = trim((string) ($req->post['role'] ?? ''));
@@ -137,10 +139,31 @@ final class UsuariosController
                     ':s' => $status,
                     ':c' => date('Y-m-d H:i:s'),
                 ]);
+
+                try {
+                    $id = (int) $pdo->lastInsertId();
+                } catch (\Throwable $e) {
+                }
             }
         } catch (\Throwable $e) {
             return $this->renderizarErro($id, $nome, $email, $role, $status, 'Não foi possível salvar o usuário. Verifique se o e-mail já existe.');
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            $isUpdate ? 'user.update' : 'user.create',
+            'user',
+            $id > 0 ? $id : null,
+            [
+                'user_id' => $id > 0 ? $id : null,
+                'email' => $email,
+                'role' => $role,
+                'status' => $status,
+                'password_changed' => trim($senha) !== '',
+            ],
+            $req,
+        );
 
         Rbac::limparCache();
 

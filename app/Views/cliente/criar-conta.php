@@ -39,6 +39,7 @@ use LRV\Core\I18n;
       <?php endif; ?>
 
       <form method="post" action="/cliente/criar-conta">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <div class="grid">
           <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">Nome</label>

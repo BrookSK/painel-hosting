@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -133,6 +134,16 @@ final class TicketsController
                 ]);
             } catch (\Throwable $e) {
             }
+
+            (new AuditLogService())->registrar(
+                'team',
+                \LRV\Core\Auth::equipeId(),
+                'ticket.reply',
+                'ticket',
+                $ticketId,
+                ['ticket_id' => $ticketId, 'message_len' => strlen($message)],
+                $req,
+            );
             return Resposta::redirecionar('/equipe/tickets/ver?id=' . $ticketId);
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -170,6 +181,16 @@ final class TicketsController
             ':u' => date('Y-m-d H:i:s'),
             ':id' => $ticketId,
         ]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'ticket.close',
+            'ticket',
+            $ticketId,
+            ['ticket_id' => $ticketId],
+            $req,
+        );
 
         try {
             $repoJobs = new RepositorioJobs();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -72,6 +73,16 @@ final class BackupsController
         $up = $pdo->prepare('UPDATE backups SET job_id = :j WHERE id = :id');
         $up->execute([':j' => $jobId, ':id' => $backupId]);
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'backup.create',
+            'backup',
+            $backupId,
+            ['backup_id' => $backupId, 'vps_id' => $vpsId, 'job_id' => $jobId],
+            $req,
+        );
+
         return Resposta::redirecionar('/equipe/jobs/ver?id=' . $jobId);
     }
 
@@ -128,6 +139,16 @@ final class BackupsController
         if ($path !== '' && is_file($path)) {
             @unlink($path);
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'backup.delete',
+            'backup',
+            $id,
+            ['backup_id' => $id],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/backups');
     }

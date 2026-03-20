@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -88,6 +89,7 @@ final class AplicacoesController
     public function salvar(Requisicao $req): Resposta
     {
         $id = (int) ($req->post['id'] ?? 0);
+        $isUpdate = $id > 0;
         $vpsId = (int) ($req->post['vps_id'] ?? 0);
         $type = trim((string) ($req->post['type'] ?? ''));
         $domain = trim((string) ($req->post['domain'] ?? ''));
@@ -180,6 +182,24 @@ final class AplicacoesController
             return $this->renderizarErro($id, $vpsId, $type, $domain, $portStr, $repository, $status, $msg);
         }
 
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            $isUpdate ? 'application.update' : 'application.create',
+            'application',
+            $id > 0 ? $id : null,
+            [
+                'application_id' => $id > 0 ? $id : null,
+                'vps_id' => $vpsId,
+                'type' => $type,
+                'domain' => $domain,
+                'port' => $portStr,
+                'repository_set' => $repository !== '',
+                'status' => $status,
+            ],
+            $req,
+        );
+
         return Resposta::redirecionar('/equipe/aplicacoes');
     }
 
@@ -207,6 +227,16 @@ final class AplicacoesController
             'application_id' => $id,
             'user_id' => (int) (Auth::equipeId() ?? 0),
         ]);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'application.deploy',
+            'application',
+            $id,
+            ['application_id' => $id, 'job_id' => $jobId],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/jobs/ver?id=' . $jobId);
     }
@@ -244,6 +274,16 @@ final class AplicacoesController
             }
             return Resposta::texto('Não foi possível excluir a aplicação.', 500);
         }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'application.delete',
+            'application',
+            $id,
+            ['application_id' => $id],
+            $req,
+        );
 
         return Resposta::redirecionar('/equipe/aplicacoes');
     }

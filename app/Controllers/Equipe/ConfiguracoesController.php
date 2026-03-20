@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Controllers\Equipe;
 
+use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
@@ -77,6 +78,39 @@ final class ConfiguracoesController
         Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl >= 10 ? $terminalTokenTtl : 60);
         Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900);
         Settings::definir('terminal.safe_mode', ($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? 1 : 0);
+
+        $whatsLast4 = '';
+        if ($whatsAdminNumero !== '') {
+            $digits = preg_replace('/\D+/', '', $whatsAdminNumero);
+            $whatsLast4 = (string) substr((string) $digits, -4);
+        }
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'settings.update',
+            'settings',
+            null,
+            [
+                'asaas_url_base' => $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3',
+                'asaas_token_set' => $asaasToken !== '',
+                'asaas_webhook_segredo_set' => $asaasSegredo !== '',
+                'tolerancia_dias' => $tolerancia,
+                'evolution_url_base' => $evoUrl,
+                'evolution_token_set' => $evoToken !== '',
+                'evolution_instance' => $evoInstance,
+                'email_admin' => $emailAdmin,
+                'whatsapp_admin_last4' => $whatsLast4,
+                'ssh_key_dir' => $sshKeyDir,
+                'monitoring_token_set' => $monitoringToken !== '',
+                'infra_node_max_util_percent' => ($infraNodeMaxUtilPercent >= 50 && $infraNodeMaxUtilPercent <= 100) ? $infraNodeMaxUtilPercent : 85,
+                'terminal_ws_internal_port' => ($terminalPorta > 0 && $terminalPorta <= 65535) ? $terminalPorta : 8081,
+                'terminal_token_ttl_seconds' => $terminalTokenTtl >= 10 ? $terminalTokenTtl : 60,
+                'terminal_idle_timeout_seconds' => $terminalIdleTimeout >= 60 ? $terminalIdleTimeout : 900,
+                'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? 1 : 0),
+            ],
+            $req,
+        );
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
             'salvo' => true,
