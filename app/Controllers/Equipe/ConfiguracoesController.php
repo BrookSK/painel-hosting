@@ -21,6 +21,9 @@ final class ConfiguracoesController
             'asaas_token' => ConfiguracoesSistema::asaasToken(),
             'asaas_url_base' => ConfiguracoesSistema::asaasUrlBase(),
             'asaas_webhook_segredo' => ConfiguracoesSistema::webhookSegredoAsaas(),
+            'stripe_secret_key' => ConfiguracoesSistema::stripeSecretKey(),
+            'stripe_webhook_secret' => ConfiguracoesSistema::stripeWebhookSecret(),
+            'app_url_base' => ConfiguracoesSistema::appUrlBase(),
             'tolerancia_dias' => (string) ConfiguracoesSistema::toleranciaPagamentoDias(),
             'evolution_url_base' => ConfiguracoesSistema::evolutionUrlBase(),
             'evolution_token' => ConfiguracoesSistema::evolutionToken(),
@@ -44,6 +47,9 @@ final class ConfiguracoesController
         $asaasToken = trim((string) ($req->post['asaas_token'] ?? ''));
         $asaasUrl = trim((string) ($req->post['asaas_url_base'] ?? ''));
         $asaasSegredo = trim((string) ($req->post['asaas_webhook_segredo'] ?? ''));
+        $stripeSecretKey = trim((string) ($req->post['stripe_secret_key'] ?? ''));
+        $stripeWebhookSecret = trim((string) ($req->post['stripe_webhook_secret'] ?? ''));
+        $appUrlBase = trim((string) ($req->post['app_url_base'] ?? ''));
         $tolerancia = (int) ($req->post['tolerancia_dias'] ?? 3);
         $evoUrl = trim((string) ($req->post['evolution_url_base'] ?? ''));
         $evoToken = trim((string) ($req->post['evolution_token'] ?? ''));
@@ -65,6 +71,9 @@ final class ConfiguracoesController
         Settings::definir('asaas.token', $asaasToken);
         Settings::definir('asaas.url_base', $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3');
         Settings::definir('asaas.webhook_segredo', $asaasSegredo);
+        Settings::definir('stripe.secret_key', $stripeSecretKey);
+        Settings::definir('stripe.webhook_secret', $stripeWebhookSecret);
+        Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
         Settings::definir('cobranca.tolerancia_dias', $tolerancia);
         Settings::definir('whatsapp.evolution.url_base', $evoUrl);
         Settings::definir('whatsapp.evolution.token', $evoToken);
@@ -95,6 +104,9 @@ final class ConfiguracoesController
                 'asaas_url_base' => $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3',
                 'asaas_token_set' => $asaasToken !== '',
                 'asaas_webhook_segredo_set' => $asaasSegredo !== '',
+                'stripe_secret_key_set' => $stripeSecretKey !== '',
+                'stripe_webhook_secret_set' => $stripeWebhookSecret !== '',
+                'app_url_base' => rtrim($appUrlBase, '/'),
                 'tolerancia_dias' => $tolerancia,
                 'evolution_url_base' => $evoUrl,
                 'evolution_token_set' => $evoToken !== '',
@@ -118,6 +130,9 @@ final class ConfiguracoesController
             'asaas_token' => $asaasToken,
             'asaas_url_base' => $asaasUrl !== '' ? $asaasUrl : 'https://api.asaas.com/v3',
             'asaas_webhook_segredo' => $asaasSegredo,
+            'stripe_secret_key' => $stripeSecretKey,
+            'stripe_webhook_secret' => $stripeWebhookSecret,
+            'app_url_base' => rtrim($appUrlBase, '/'),
             'tolerancia_dias' => (string) $tolerancia,
             'evolution_url_base' => $evoUrl,
             'evolution_token' => $evoToken,

@@ -29,6 +29,22 @@ final class ConfiguracoesSistema
         return (string) Settings::obter('asaas.webhook_segredo', '');
     }
 
+    public static function stripeSecretKey(): string
+    {
+        return (string) Settings::obter('stripe.secret_key', '');
+    }
+
+    public static function stripeWebhookSecret(): string
+    {
+        return (string) Settings::obter('stripe.webhook_secret', '');
+    }
+
+    public static function appUrlBase(): string
+    {
+        $url = trim((string) Settings::obter('app.url_base', ''));
+        return rtrim($url, '/');
+    }
+
     public static function evolutionUrlBase(): string
     {
         return (string) Settings::obter('whatsapp.evolution.url_base', '');

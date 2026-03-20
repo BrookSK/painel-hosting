@@ -69,6 +69,17 @@ function gb(int $mb): string {
 
             <button class="botao" type="submit">Assinar e gerar cobrança</button>
           </form>
+
+          <?php if (trim((string) ($p['stripe_price_id'] ?? '')) !== ''): ?>
+            <div style="height:10px;"></div>
+
+            <form method="post" action="/cliente/assinar">
+              <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+              <input type="hidden" name="plan_id" value="<?php echo (int) ($p['id'] ?? 0); ?>" />
+              <input type="hidden" name="gateway" value="stripe" />
+              <button class="botao" type="submit" style="background:#111827;">Assinar com cartão (Stripe)</button>
+            </form>
+          <?php endif; ?>
         </div>
       <?php endforeach; ?>
 

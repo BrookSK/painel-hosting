@@ -86,6 +86,10 @@ $id = $plano['id'] ?? null;
             <input class="input" type="text" name="price_monthly" value="<?php echo View::e((string) ($plano['price_monthly'] ?? '')); ?>" />
           </div>
           <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Stripe Price ID (opcional)</label>
+            <input class="input" type="text" name="stripe_price_id" value="<?php echo View::e((string) ($plano['stripe_price_id'] ?? '')); ?>" />
+          </div>
+          <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">Especificações extras (JSON opcional)</label>
             <input class="input" type="text" name="specs_json" value="<?php echo View::e((string) ($plano['specs_json'] ?? '')); ?>" />
           </div>

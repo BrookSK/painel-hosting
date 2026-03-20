@@ -16,6 +16,7 @@ use LRV\App\Controllers\Cliente\StatusController as ClienteStatusController;
 use LRV\App\Controllers\Cliente\TerminalController as ClienteTerminalController;
 use LRV\App\Controllers\Cliente\TicketsController as ClienteTicketsController;
 use LRV\App\Controllers\Cliente\VpsController as ClienteVpsController;
+use LRV\App\Controllers\Cliente\StripeCheckoutController;
 use LRV\App\Controllers\Equipe\ConfiguracoesController;
 use LRV\App\Controllers\Equipe\EntrarController as EquipeEntrarController;
 use LRV\App\Controllers\Equipe\AssinaturasController;
@@ -38,6 +39,7 @@ use LRV\App\Controllers\Equipe\UsuariosController;
 use LRV\App\Controllers\Equipe\VpsController as EquipeVpsController;
 use LRV\App\Controllers\Equipe\TerminalController;
 use LRV\App\Controllers\Webhooks\AsaasController;
+use LRV\App\Controllers\Webhooks\StripeController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -124,6 +126,8 @@ $roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar']);
 $roteador->get('/cliente/painel', [ClientePainelController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos', [ClientePlanosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/assinar', [AssinarPlanoController::class, 'assinar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/stripe/sucesso', [StripeCheckoutController::class, 'sucesso'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/stripe/cancelado', [StripeCheckoutController::class, 'cancelado'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/monitoramento', [ClienteMonitoramentoController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
@@ -139,3 +143,4 @@ $roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
+$roteador->post('/webhooks/stripe', [StripeController::class, 'receber']);

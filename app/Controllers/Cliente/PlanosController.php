@@ -17,8 +17,13 @@ final class PlanosController
 
         $erro = '';
         try {
-            $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
-            $planos = $stmt->fetchAll();
+            try {
+                $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
+                $planos = $stmt->fetchAll();
+            } catch (\Throwable $e) {
+                $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
+                $planos = $stmt->fetchAll();
+            }
         } catch (\Throwable $e) {
             $planos = [];
             $erro = 'Não foi possível carregar os planos. Verifique se as migrations foram executadas.';

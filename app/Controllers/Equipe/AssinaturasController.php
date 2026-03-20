@@ -17,18 +17,30 @@ final class AssinaturasController
 
         $erro = '';
 
-        $sql = "SELECT s.id, s.client_id, s.vps_id, s.plan_id, s.asaas_subscription_id, s.status, s.next_due_date, s.created_at,
-                       c.name AS client_name, c.email AS client_email,
-                       p.name AS plan_name, p.price_monthly AS plan_price
-                FROM subscriptions s
-                INNER JOIN clients c ON c.id = s.client_id
-                LEFT JOIN plans p ON p.id = s.plan_id
-                ORDER BY s.id DESC
-                LIMIT 300";
-
         try {
-            $stmt = $pdo->query($sql);
-            $assinaturas = $stmt->fetchAll();
+            try {
+                $sql = "SELECT s.id, s.client_id, s.vps_id, s.plan_id, s.asaas_subscription_id, s.stripe_subscription_id, s.stripe_checkout_session_id, s.status, s.next_due_date, s.created_at,
+                               c.name AS client_name, c.email AS client_email,
+                               p.name AS plan_name, p.price_monthly AS plan_price
+                        FROM subscriptions s
+                        INNER JOIN clients c ON c.id = s.client_id
+                        LEFT JOIN plans p ON p.id = s.plan_id
+                        ORDER BY s.id DESC
+                        LIMIT 300";
+                $stmt = $pdo->query($sql);
+                $assinaturas = $stmt->fetchAll();
+            } catch (\Throwable $e) {
+                $sql = "SELECT s.id, s.client_id, s.vps_id, s.plan_id, s.asaas_subscription_id, s.status, s.next_due_date, s.created_at,
+                               c.name AS client_name, c.email AS client_email,
+                               p.name AS plan_name, p.price_monthly AS plan_price
+                        FROM subscriptions s
+                        INNER JOIN clients c ON c.id = s.client_id
+                        LEFT JOIN plans p ON p.id = s.plan_id
+                        ORDER BY s.id DESC
+                        LIMIT 300";
+                $stmt = $pdo->query($sql);
+                $assinaturas = $stmt->fetchAll();
+            }
         } catch (\Throwable $e) {
             $assinaturas = [];
             $erro = 'Não foi possível carregar assinaturas. Verifique se as migrations foram executadas.';

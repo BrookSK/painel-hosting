@@ -46,7 +46,7 @@ function badgeStatusAssinatura(string $st): string
     <div class="conteudo linha" style="justify-content:space-between;">
       <div>
         <div style="font-size:18px;font-weight:700;">Assinaturas</div>
-        <div style="opacity:.9; font-size:13px;">Status de cobrança (Asaas)</div>
+        <div style="opacity:.9; font-size:13px;">Status de cobrança</div>
       </div>
       <div class="linha">
         <?php require __DIR__ . '/../_partials/idioma.php'; ?>
@@ -81,6 +81,8 @@ function badgeStatusAssinatura(string $st): string
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Status</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Próximo venc.</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Asaas ID</th>
+              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Stripe Sub</th>
+              <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Stripe Session</th>
               <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Criado</th>
             </tr>
           </thead>
@@ -100,12 +102,14 @@ function badgeStatusAssinatura(string $st): string
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAssinatura((string) ($s['status'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($s['next_due_date'] ?? '')); ?></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string) ($s['asaas_subscription_id'] ?? '')); ?></code></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string) ($s['stripe_subscription_id'] ?? '')); ?></code></td>
+                <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string) ($s['stripe_checkout_session_id'] ?? '')); ?></code></td>
                 <td style="padding:10px; border-bottom:1px solid #f1f5f9;"><?php echo View::e((string) ($s['created_at'] ?? '')); ?></td>
               </tr>
             <?php endforeach; ?>
             <?php if (empty($assinaturas)): ?>
               <tr>
-                <td colspan="8" style="padding:12px;">Nenhuma assinatura encontrada.</td>
+                <td colspan="10" style="padding:12px;">Nenhuma assinatura encontrada.</td>
               </tr>
             <?php endif; ?>
           </tbody>

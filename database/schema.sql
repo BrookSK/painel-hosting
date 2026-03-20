@@ -23,8 +23,10 @@ CREATE TABLE IF NOT EXISTS clients (
   mobile_phone VARCHAR(20) NULL,
   password VARCHAR(255) NOT NULL,
   asaas_customer_id VARCHAR(80) NULL,
+  stripe_customer_id VARCHAR(80) NULL,
   created_at DATETIME NOT NULL,
   PRIMARY KEY (id),
+  KEY idx_clients_stripe_customer_id (stripe_customer_id),
   UNIQUE KEY uq_clients_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -93,6 +95,7 @@ CREATE TABLE IF NOT EXISTS plans (
   ram BIGINT UNSIGNED NOT NULL,
   storage BIGINT UNSIGNED NOT NULL,
   price_monthly DECIMAL(10,2) NOT NULL,
+  stripe_price_id VARCHAR(80) NULL,
   specs_json LONGTEXT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'active',
   created_at DATETIME NOT NULL,
@@ -149,7 +152,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   client_id INT UNSIGNED NOT NULL,
   vps_id INT UNSIGNED NULL,
   plan_id INT UNSIGNED NULL,
-  asaas_subscription_id VARCHAR(80) NOT NULL,
+  asaas_subscription_id VARCHAR(80) NULL,
+  stripe_subscription_id VARCHAR(80) NULL,
+  stripe_checkout_session_id VARCHAR(120) NULL,
   status VARCHAR(30) NOT NULL,
   next_due_date DATE NULL,
   created_at DATETIME NOT NULL,
@@ -157,6 +162,8 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   KEY idx_subscriptions_client_id (client_id),
   KEY idx_subscriptions_vps_id (vps_id),
   KEY idx_subscriptions_plan_id (plan_id),
+  KEY idx_subscriptions_stripe_subscription_id (stripe_subscription_id),
+  KEY idx_subscriptions_stripe_checkout_session_id (stripe_checkout_session_id),
   CONSTRAINT fk_subscriptions_client FOREIGN KEY (client_id) REFERENCES clients(id),
   CONSTRAINT fk_subscriptions_vps FOREIGN KEY (vps_id) REFERENCES vps(id),
   CONSTRAINT fk_subscriptions_plan FOREIGN KEY (plan_id) REFERENCES plans(id)
@@ -169,6 +176,15 @@ CREATE TABLE IF NOT EXISTS asaas_events (
   created_at DATETIME NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_asaas_events_event_id (event_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS stripe_events (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  event_id VARCHAR(190) NOT NULL,
+  event_type VARCHAR(80) NOT NULL,
+  created_at DATETIME NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_stripe_events_event_id (event_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS audit_logs (

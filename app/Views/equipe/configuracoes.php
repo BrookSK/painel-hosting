@@ -74,6 +74,26 @@ use LRV\Core\I18n;
 
         <div class="grid" style="margin-top:12px;">
           <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Stripe - Secret Key</label>
+            <input class="input" type="password" name="stripe_secret_key" value="<?php echo View::e((string) ($stripe_secret_key ?? '')); ?>" />
+          </div>
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">Stripe - Webhook Secret</label>
+            <input class="input" type="text" name="stripe_webhook_secret" value="<?php echo View::e((string) ($stripe_webhook_secret ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Endpoint: <strong>/webhooks/stripe</strong></p>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label style="display:block; font-size:13px; margin-bottom:6px;">URL base pública da aplicação</label>
+            <input class="input" type="text" name="app_url_base" value="<?php echo View::e((string) ($app_url_base ?? '')); ?>" />
+            <p class="texto" style="font-size:13px; margin-top:8px;">Exemplo: <strong>https://painel.seudominio.com</strong></p>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
             <label style="display:block; font-size:13px; margin-bottom:6px;">Evolution API - URL base</label>
             <input class="input" type="text" name="evolution_url_base" value="<?php echo View::e((string) ($evolution_url_base ?? '')); ?>" />
           </div>

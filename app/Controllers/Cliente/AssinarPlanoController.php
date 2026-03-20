@@ -7,6 +7,7 @@ namespace LRV\App\Controllers\Cliente;
 use LRV\App\Services\Audit\AuditLogService;
 use LRV\App\Services\Billing\AssinaturasService;
 use LRV\App\Services\Billing\Asaas\AsaasApi;
+use LRV\App\Services\Billing\Stripe\StripeCheckoutService;
 use LRV\App\Services\Http\ClienteHttp;
 use LRV\Core\Auth;
 use LRV\Core\Http\Requisicao;
@@ -23,6 +24,54 @@ final class AssinarPlanoController
         }
 
         $planId = (int) ($req->post['plan_id'] ?? 0);
+        $gateway = strtolower(trim((string) ($req->post['gateway'] ?? '')));
+
+        if ($gateway === 'stripe') {
+            if ($planId <= 0) {
+                return Resposta::texto('Plano inválido.', 400);
+            }
+
+            $service = new StripeCheckoutService();
+
+            try {
+                $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId);
+            } catch (\Throwable $e) {
+                (new AuditLogService())->registrar(
+                    'client',
+                    $clienteId,
+                    'billing.subscribe_plan',
+                    'plan',
+                    $planId,
+                    ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false],
+                    $req,
+                );
+
+                $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
+                    'erro' => 'Não foi possível iniciar o checkout. Verifique as configurações do Stripe e tente novamente.',
+                    'resultado' => null,
+                ]);
+                return Resposta::html($html, 400);
+            }
+
+            $checkoutUrl = is_array($resultado) ? (string) ($resultado['checkout_url'] ?? '') : '';
+
+            (new AuditLogService())->registrar(
+                'client',
+                $clienteId,
+                'billing.subscribe_plan',
+                'plan',
+                $planId,
+                ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => true, 'checkout_url_set' => $checkoutUrl !== ''],
+                $req,
+            );
+
+            if ($checkoutUrl === '') {
+                return Resposta::texto('Falha ao iniciar checkout.', 500);
+            }
+
+            return Resposta::redirecionar($checkoutUrl);
+        }
+
         $billingType = (string) ($req->post['billing_type'] ?? 'PIX');
         if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
             $billingType = 'PIX';
