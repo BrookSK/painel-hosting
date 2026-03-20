@@ -54,12 +54,13 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
 
 <script>
 (function(){
-  const roomId = <?php echo $roomId; ?>;
-  const wsPort = <?php echo $wsPort; ?>;
-  const box    = document.getElementById('chat-box');
-  const input  = document.getElementById('chat-input');
-  const btn    = document.getElementById('btn-enviar');
-  const status = document.getElementById('chat-status');
+  const roomId  = <?php echo $roomId; ?>;
+  const wsPort  = <?php echo $wsPort; ?>;
+  const CSRF    = <?php echo json_encode(\LRV\Core\Csrf::token()); ?>;
+  const box     = document.getElementById('chat-box');
+  const input   = document.getElementById('chat-input');
+  const btn     = document.getElementById('btn-enviar');
+  const status  = document.getElementById('chat-status');
   let ws = null;
 
   function setStatus(txt, dotClass){
@@ -90,12 +91,16 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
   function connect(){
     setStatus('Conectando...', 'dot-pending');
 
-    fetch('/cliente/chat/token', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRF-Token': getCsrf()}, body:'_csrf=' + encodeURIComponent(getCsrf())})
+    fetch('/cliente/chat/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: '_csrf=' + encodeURIComponent(CSRF)
+    })
       .then(r => r.json())
       .then(data => {
-        if(!data.ok){ setStatus('Erro ao obter token.', 'dot-offline'); return; }
+        if(!data.ok){ setStatus('Erro ao obter token.', 'dot-offline'); setTimeout(connect, 5000); return; }
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        ws = new WebSocket(proto + '://127.0.0.1:' + wsPort + '/?token=' + encodeURIComponent(data.token));
+        ws = new WebSocket(proto + '://' + location.hostname + ':' + wsPort + '/?token=' + encodeURIComponent(data.token));
 
         ws.onopen = function(){
           setStatus('Conectado', 'dot-online');
@@ -129,9 +134,7 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
           setTimeout(connect, 3000);
         };
 
-        ws.onerror = function(){
-          ws.close();
-        };
+        ws.onerror = function(){ ws.close(); };
       })
       .catch(function(){ setStatus('Erro de conexão.', 'dot-offline'); setTimeout(connect, 5000); });
   }
@@ -148,11 +151,6 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
   input.addEventListener('keydown', function(e){
     if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }
   });
-
-  function getCsrf(){
-    const m = document.cookie.match(/csrf_token=([^;]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  }
 
   connect();
 })();

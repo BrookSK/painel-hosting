@@ -199,6 +199,7 @@ $roteador->post('/equipe/chat/fechar', [EquipeChatController::class, 'fechar'], 
 $roteador->get('/cliente/emails', [ClienteEmailController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/emails/criar', [ClienteEmailController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('email_create', 5, 60)]);
 $roteador->post('/cliente/emails/remover', [ClienteEmailController::class, 'remover'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/emails/alterar-senha', [ClienteEmailController::class, 'alterarSenha'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('email_pw', 10, 60)]);
 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);

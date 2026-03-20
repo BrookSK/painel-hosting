@@ -61,24 +61,30 @@ $webmailUrl = (string) ($webmail_url ?? '');
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($emails as $em): ?>
+                <?php foreach ($emails as $em):
+                  $emailAddr = (string) ($em['email'] ?? ($em['local_part'] ?? '') . '@' . ($em['domain'] ?? ''));
+                  $emailId   = (int) ($em['id'] ?? 0);
+                  // Webmail: URL por domínio se possível, senão fallback global
+                  $domainPart  = (string) ($em['domain'] ?? '');
+                  $webmailLink = $webmailUrl !== '' ? $webmailUrl : ($domainPart !== '' ? 'https://webmail.' . $domainPart : '');
+                ?>
                   <tr>
                     <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
-                      <?php echo View::e((string) ($em['local_part'] ?? '') . '@' . (string) ($em['domain'] ?? '')); ?>
+                      <?php echo View::e($emailAddr); ?>
                     </td>
                     <td style="padding:10px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#64748b;">
                       <?php echo (int) ($em['quota_mb'] ?? 0); ?> MB
                     </td>
                     <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
                       <div class="linha" style="gap:8px;">
-                        <?php if ($webmailUrl !== ''): ?>
-                          <a href="<?php echo View::e($webmailUrl); ?>" target="_blank" rel="noopener" class="botao sm ghost">Webmail</a>
+                        <?php if ($webmailLink !== ''): ?>
+                          <a href="<?php echo View::e($webmailLink); ?>" target="_blank" rel="noopener" class="botao sm ghost">Webmail</a>
                         <?php endif; ?>
-                        <form method="post" action="/cliente/emails/remover" style="display:inline;">
+                        <button class="botao sm ghost" onclick="abrirAlterarSenha(<?php echo $emailId; ?>, '<?php echo View::e($emailAddr); ?>')">Alterar senha</button>
+                        <form method="post" action="/cliente/emails/remover" style="display:inline;" onsubmit="return confirm('Remover <?php echo View::e($emailAddr); ?>?')">
                           <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
-                          <input type="hidden" name="local_part" value="<?php echo View::e((string) ($em['local_part'] ?? '')); ?>" />
-                          <input type="hidden" name="domain" value="<?php echo View::e((string) ($em['domain'] ?? '')); ?>" />
-                          <button class="botao danger sm" type="submit" onclick="return confirm('Remover este e-mail?')">Remover</button>
+                          <input type="hidden" name="email_id" value="<?php echo $emailId; ?>" />
+                          <button class="botao danger sm" type="submit">Remover</button>
                         </form>
                       </div>
                     </td>
@@ -105,8 +111,7 @@ $webmailUrl = (string) ($webmail_url ?? '');
           <div style="margin-bottom:10px;">
             <label style="display:block; font-size:13px; margin-bottom:5px;">Senha</label>
             <input class="input" type="password" name="password" required minlength="8" />
-          </div>
-          <div style="margin-bottom:14px;">
+          </div>          <div style="margin-bottom:14px;">
             <label style="display:block; font-size:13px; margin-bottom:5px;">Quota (MB)</label>
             <input class="input" type="number" name="quota_mb" value="1024" min="100" max="10240" />
           </div>
@@ -116,5 +121,55 @@ $webmailUrl = (string) ($webmail_url ?? '');
 
     </div>
   </div>
+
+  <!-- Modal alterar senha -->
+  <div id="modalSenha" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;padding:24px;max-width:400px;width:90%;">
+      <h2 style="font-size:16px;font-weight:700;margin:0 0 14px;">Alterar senha</h2>
+      <p id="modalSenhaEmail" style="font-size:13px;color:#64748b;margin:0 0 14px;"></p>
+      <form method="post" action="/cliente/emails/alterar-senha" id="formAlterarSenha">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+        <input type="hidden" name="email_id" id="modalEmailId" value="" />
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:13px;margin-bottom:5px;">Nova senha</label>
+          <input class="input" type="password" name="nova_senha" id="modalNovaSenha" required minlength="8" />
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:13px;margin-bottom:5px;">Confirmar senha</label>
+          <input class="input" type="password" name="confirmar_senha" id="modalConfirmarSenha" required minlength="8" />
+        </div>
+        <div id="modalSenhaErro" style="display:none;" class="erro"></div>
+        <div class="linha" style="gap:8px;">
+          <button class="botao" type="submit" id="btnSalvarSenha">Salvar</button>
+          <button class="botao ghost" type="button" onclick="fecharModalSenha()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  function abrirAlterarSenha(id, email) {
+    document.getElementById('modalEmailId').value = id;
+    document.getElementById('modalSenhaEmail').textContent = email;
+    document.getElementById('modalNovaSenha').value = '';
+    document.getElementById('modalConfirmarSenha').value = '';
+    document.getElementById('modalSenhaErro').style.display = 'none';
+    document.getElementById('modalSenha').style.display = 'flex';
+    document.getElementById('modalNovaSenha').focus();
+  }
+  function fecharModalSenha() {
+    document.getElementById('modalSenha').style.display = 'none';
+  }
+  document.getElementById('formAlterarSenha').addEventListener('submit', function(e) {
+    var s1 = document.getElementById('modalNovaSenha').value;
+    var s2 = document.getElementById('modalConfirmarSenha').value;
+    if (s1 !== s2) {
+      e.preventDefault();
+      var err = document.getElementById('modalSenhaErro');
+      err.textContent = 'As senhas não coincidem.';
+      err.style.display = 'block';
+    }
+  });
+  </script>
 </body>
 </html>

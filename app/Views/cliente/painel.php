@@ -147,7 +147,7 @@ $onboardingDone = (bool) ($onboardingDone ?? true);
   </div>
 
   <?php if (!$onboardingDone): ?>
-  <div class="modal-overlay" id="onboardingModal">
+  <div class="modal-overlay" id="onboardingModal" style="display:none;">
     <div class="modal-box">
       <h2>👋 Bem-vindo ao LRV Cloud!</h2>
       <p>Sua conta está pronta. Veja como começar:</p>
@@ -161,11 +161,17 @@ $onboardingDone = (bool) ($onboardingDone ?? true);
     </div>
   </div>
   <script>
+  // Ativar modal via JS — garante que não trava se CSS falhar
+  (function() {
+    var m = document.getElementById('onboardingModal');
+    if (m) { m.style.display = 'flex'; }
+  })();
   function fecharOnboarding() {
-    document.getElementById('onboardingModal').style.display = 'none';
+    var m = document.getElementById('onboardingModal');
+    if (m) { m.style.display = 'none'; }
     fetch('/cliente/onboarding/concluir', {
       method: 'POST',
-      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: '_csrf=<?php echo View::e(\LRV\Core\Csrf::token()); ?>'
     });
   }

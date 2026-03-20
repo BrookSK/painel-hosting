@@ -115,6 +115,10 @@ function vpsStatusInfo(string $st): array
                 <a href="/cliente/monitoramento/ver?vps_id=<?php echo (int) ($v['id'] ?? 0); ?>" class="botao sm ghost">Monitor</a>
               <?php elseif (in_array($st, ['pending_payment', 'suspended_payment'], true)): ?>
                 <a href="/cliente/planos" class="botao sm">Ver planos</a>
+              <?php elseif (in_array($st, ['provisioning', 'pending_provisioning', 'pending_node'], true)): ?>
+                <span style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px;">
+                  <span class="dot-pending"></span> Aguardando...
+                </span>
               <?php endif; ?>
             </div>
           </div>
@@ -124,3 +128,16 @@ function vpsStatusInfo(string $st): array
   </div>
 </body>
 </html>
+<script>
+// Proteção double-submit em qualquer form da página
+document.querySelectorAll('form').forEach(function(form) {
+  form.addEventListener('submit', function() {
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn && !btn.disabled) {
+      btn.disabled = true;
+      btn.dataset.original = btn.textContent;
+      btn.innerHTML = '<span class="loading"></span> Processando...';
+    }
+  });
+});
+</script>

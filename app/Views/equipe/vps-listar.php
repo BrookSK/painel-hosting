@@ -136,3 +136,16 @@ function badgeStatusVpsEquipe(string $st): string
   </div>
 </body>
 </html>
+<script>
+// Proteção double-submit: desabilita botão e mostra "Processando..." após clique
+document.querySelectorAll('form').forEach(function(form) {
+  form.addEventListener('submit', function() {
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn && !btn.disabled) {
+      btn.disabled = true;
+      btn.dataset.original = btn.textContent;
+      btn.innerHTML = '<span class="loading"></span> Processando...';
+    }
+  });
+});
+</script>

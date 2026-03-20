@@ -71,6 +71,32 @@ final class MailcowService
         return ['email' => $email, 'quota_mb' => $quotaMb, 'mailcow_id' => $mailcowId];
     }
 
+    /** Altera senha de uma mailbox no Mailcow */
+    public function alterarSenha(int $clientId, int $emailId, string $novaSenha): void
+    {
+        $this->validarConfig();
+
+        if (strlen($novaSenha) < 8) {
+            throw new \InvalidArgumentException('Senha mínima de 8 caracteres.');
+        }
+
+        $pdo  = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT email FROM client_emails WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $emailId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('E-mail não encontrado.');
+        }
+
+        $this->post('/api/v1/edit/mailbox/' . rawurlencode((string) $row['email']), [
+            'attr' => [
+                'password'  => $novaSenha,
+                'password2' => $novaSenha,
+            ],
+        ]);
+    }
+
     /** Remove mailbox do Mailcow e do banco */
     public function removerEmail(int $clientId, int $emailId): void
     {
@@ -117,22 +143,14 @@ final class MailcowService
     private function post(string $path, array $data): array
     {
         $url  = $this->baseUrl . $path;
-        $resp = $this->http->post($url, $data, [
-            'X-API-Key: ' . $this->apiKey,
-            'Content-Type: application/json',
-        ]);
-
-        $decoded = json_decode((string) $resp, true);
+        $resp = $this->http->requestJson('POST', $url, ['X-API-Key' => $this->apiKey], $data);
+        $decoded = $resp['json'] ?? json_decode($resp['body'] ?? '', true);
         return is_array($decoded) ? $decoded : [];
     }
 
     private function delete(string $path, array $items): void
     {
         $url = $this->baseUrl . $path;
-        $this->http->post($url, $items, [
-            'X-API-Key: ' . $this->apiKey,
-            'Content-Type: application/json',
-            'X-HTTP-Method-Override: DELETE',
-        ]);
+        $this->http->requestJson('DELETE', $url, ['X-API-Key' => $this->apiKey], $items);
     }
 }

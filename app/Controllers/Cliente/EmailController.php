@@ -43,7 +43,7 @@ final class EmailController
         $in         = $req->input();
         $localPart  = $in->postString('local_part', 64, true);
         $domain     = $in->postString('domain', 191, true);
-        $senha      = trim((string) ($req->post['senha'] ?? ''));
+        $senha      = trim((string) ($req->post['password'] ?? ''));
 
         if ($in->temErros() || $localPart === '' || $domain === '' || strlen($senha) < 8) {
             return $this->renderizarErro($clienteId, 'Preencha todos os campos. Senha mínima: 8 caracteres.');
@@ -52,6 +52,30 @@ final class EmailController
         try {
             $svc = new MailcowService(new ClienteHttp());
             $svc->criarEmail($clienteId, $localPart, $domain, $senha);
+        } catch (\Throwable $e) {
+            return $this->renderizarErro($clienteId, $e->getMessage());
+        }
+
+        return Resposta::redirecionar('/cliente/emails');
+    }
+
+    public function alterarSenha(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::redirecionar('/cliente/entrar');
+        }
+
+        $emailId    = (int) ($req->post['email_id'] ?? 0);
+        $novaSenha  = trim((string) ($req->post['nova_senha'] ?? ''));
+        $confirmar  = trim((string) ($req->post['confirmar_senha'] ?? ''));
+
+        if ($emailId <= 0 || strlen($novaSenha) < 8 || $novaSenha !== $confirmar) {
+            return $this->renderizarErro($clienteId, 'Dados inválidos. Verifique a senha (mínimo 8 caracteres) e confirmação.');
+        }
+
+        try {
+            (new MailcowService(new ClienteHttp()))->alterarSenha($clienteId, $emailId, $novaSenha);
         } catch (\Throwable $e) {
             return $this->renderizarErro($clienteId, $e->getMessage());
         }
