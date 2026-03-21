@@ -12,7 +12,6 @@ $_topo_links = [
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Termos de Uso — <?php echo View::e($nome_sistema ?? SistemaConfig::nome()); ?></title>
   <?php $seo_titulo = 'Termos de Uso — ' . ($nome_sistema ?? SistemaConfig::nome()); require __DIR__ . '/_partials/seo.php'; ?>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>

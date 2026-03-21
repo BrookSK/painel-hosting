@@ -102,7 +102,6 @@ $_geral_color = match($geral) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Status — <?php echo View::e(\LRV\Core\SistemaConfig::nome()); ?></title>
   <?php $seo_titulo = 'Status — ' . \LRV\Core\SistemaConfig::nome(); require __DIR__ . '/_partials/seo.php'; ?>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>

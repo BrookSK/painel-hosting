@@ -2,11 +2,16 @@
 declare(strict_types=1);
 use LRV\Core\SistemaConfig;
 use LRV\Core\View;
-$_favicon = SistemaConfig::faviconUrl();
-if ($_favicon !== ''):
+// Só emite favicon se o partial seo.php ainda não foi incluído (ele já cuida disso)
+if (!defined('_SEO_PARTIAL_LOADED')):
+    $_favicon = SistemaConfig::faviconUrl();
+    if ($_favicon !== ''):
 ?>
 <link rel="icon" href="<?php echo View::e($_favicon); ?>" />
-<?php endif; ?>
+<?php
+    endif;
+endif;
+?>
 <style>
 /* ── Reset & Base ─────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
