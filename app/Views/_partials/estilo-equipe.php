@@ -1,4 +1,5 @@
 <?php declare(strict_types=1); ?>
+<?php require __DIR__ . '/estilo.php'; ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -503,12 +504,12 @@ a { color: inherit; text-decoration: none; }
   padding: 3px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 600;
 }
-.badge-green  { background: #dcfce7; color: #166534; }
-.badge-red    { background: #fee2e2; color: #991b1b; }
-.badge-yellow { background: #fef3c7; color: #92400e; }
-.badge-blue   { background: #dbeafe; color: #1e40af; }
-.badge-purple { background: #f5f3ff; color: #6d28d9; }
-.badge-gray   { background: #f1f5f9; color: #475569; }
+.badge-green, .badge-success  { background: #dcfce7; color: #166534; }
+.badge-red, .badge-danger      { background: #fee2e2; color: #991b1b; }
+.badge-yellow, .badge-warning  { background: #fef3c7; color: #92400e; }
+.badge-blue, .badge-info       { background: #dbeafe; color: #1e40af; }
+.badge-purple                  { background: #f5f3ff; color: #6d28d9; }
+.badge-gray, .badge-neutral    { background: #f1f5f9; color: #475569; }
 
 /* ── Skeleton ─────────────────────────────────────────────── */
 .skeleton {
