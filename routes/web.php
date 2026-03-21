@@ -60,6 +60,7 @@ use LRV\App\Controllers\Equipe\ClientesController;
 use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaController;
 use LRV\App\Controllers\Equipe\SatisfacaoController;
 use LRV\App\Controllers\Cliente\AvaliacaoController;
+use LRV\App\Controllers\Cliente\MinhaContaController as ClienteMinhaContaController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -257,6 +258,10 @@ $roteador->get('/cliente/reset-senha', [ClienteResetSenhaController::class, 'for
 $roteador->post('/cliente/reset-senha/solicitar', [ClienteResetSenhaController::class, 'solicitar'], [Middlewares::rateLimitIp('reset_cliente', 5, 300)]);
 $roteador->get('/cliente/reset-senha/nova', [ClienteResetSenhaController::class, 'formularioNovaSenha']);
 $roteador->post('/cliente/reset-senha/salvar', [ClienteResetSenhaController::class, 'salvar'], [Middlewares::rateLimitIp('reset_cliente_save', 10, 300)]);
+
+// Minha conta — cliente
+$roteador->get('/cliente/minha-conta', [ClienteMinhaContaController::class, 'index'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/minha-conta/salvar', [ClienteMinhaContaController::class, 'salvar'], [Middlewares::exigirLoginCliente()]);
 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);

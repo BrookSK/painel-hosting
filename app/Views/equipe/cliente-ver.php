@@ -83,6 +83,10 @@ if (count($nomePartes) >= 2) {
         <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['phone'] ?? '—')); ?></div>
       </div>
       <div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Celular</div>
+        <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['mobile_phone'] ?? '—')); ?></div>
+      </div>
+      <div>
         <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">CPF / CNPJ</div>
         <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['cpf_cnpj'] ?? '—')); ?></div>
       </div>
@@ -95,6 +99,21 @@ if (count($nomePartes) >= 2) {
         <div style="font-size:14px;color:#94a3b8;">#<?php echo (int)$cliente['id']; ?></div>
       </div>
     </div>
+    <?php
+    $temEndereco = !empty($cliente['address_street']) || !empty($cliente['address_city']);
+    if ($temEndereco):
+      $endLine1 = trim(($cliente['address_street'] ?? '') . ($cliente['address_number'] ? ', ' . $cliente['address_number'] : '') . ($cliente['address_complement'] ? ' ' . $cliente['address_complement'] : ''));
+      $endLine2 = trim(($cliente['address_district'] ? $cliente['address_district'] . ' — ' : '') . ($cliente['address_city'] ?? '') . ($cliente['address_state'] ? '/' . $cliente['address_state'] : ''));
+    ?>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9;">
+      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Endereço</div>
+      <div style="font-size:14px;color:#0f172a;line-height:1.6;">
+        <?php if ($endLine1): ?><?php echo View::e($endLine1); ?><br><?php endif; ?>
+        <?php if ($endLine2): ?><?php echo View::e($endLine2); ?><br><?php endif; ?>
+        <?php if (!empty($cliente['address_zip'])): ?>CEP <?php echo View::e((string)$cliente['address_zip']); ?><?php endif; ?>
+      </div>
+    </div>
+    <?php endif; ?>
   </div>
 
   <!-- Assinar plano -->

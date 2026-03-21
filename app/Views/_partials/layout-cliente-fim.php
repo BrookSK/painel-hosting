@@ -1,0 +1,45 @@
+    </div><!-- /page-content -->
+  </div><!-- /app-main -->
+</div><!-- /app-shell -->
+
+<?php require __DIR__ . '/chat-widget.php'; ?>
+
+<script>
+(function(){
+  var s = document.getElementById('appShell');
+  if (s && localStorage.getItem('lrv_cli_sidebar_collapsed') === '1') {
+    s.classList.add('collapsed');
+  }
+})();
+
+function abrirSidebarCli() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sidebarOverlay');
+  if (sb) sb.classList.add('mobile-open');
+  if (ov) ov.classList.add('active');
+}
+function fecharSidebarCli() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sidebarOverlay');
+  if (sb) sb.classList.remove('mobile-open');
+  if (ov) ov.classList.remove('active');
+}
+function expandirSidebarCli() {
+  var s = document.getElementById('appShell');
+  if (s) {
+    s.classList.remove('collapsed');
+    localStorage.setItem('lrv_cli_sidebar_collapsed', '0');
+  }
+}
+function toggleAvatarDropdownCli() {
+  var d = document.getElementById('avatarDropdownCli');
+  if (d) d.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('avatarWrapCli');
+  var drop = document.getElementById('avatarDropdownCli');
+  if (drop && wrap && !wrap.contains(e.target)) drop.classList.remove('open');
+});
+</script>
+</body>
+</html>
