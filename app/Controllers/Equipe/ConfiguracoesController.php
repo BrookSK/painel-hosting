@@ -53,6 +53,13 @@ final class ConfiguracoesController
             'system_copyright_text' => (string) Settings::obter('system.copyright_text', ''),
             'legal_terms_html'      => SistemaConfig::termsHtml(),
             'legal_privacy_html'    => SistemaConfig::privacyHtml(),
+            'trial_enabled'         => (string) Settings::obter('trial.enabled', '0'),
+            'trial_dias'            => (string) Settings::obter('trial.dias', '7'),
+            'trial_vcpu'            => (string) Settings::obter('trial.vcpu', '1'),
+            'trial_ram_mb'          => (string) Settings::obter('trial.ram_mb', '1024'),
+            'trial_disco_gb'        => (string) Settings::obter('trial.disco_gb', '20'),
+            'trial_descricao'       => (string) Settings::obter('trial.descricao', ''),
+            'trial_label_cta'       => (string) Settings::obter('trial.label_cta', 'Testar grátis'),
         ]);
 
         return Resposta::html($html);
@@ -103,6 +110,14 @@ final class ConfiguracoesController
         $legalTermsHtml      = $in->postString('legal_terms_html', 65535, false);
         $legalPrivacyHtml    = $in->postString('legal_privacy_html', 65535, false);
 
+        $trialEnabled    = $in->postEnum('trial_enabled', ['0', '1', 'on', 'true'], '0');
+        $trialDias       = $in->postInt('trial_dias', 1, 365, false);
+        $trialVcpu       = $in->postInt('trial_vcpu', 1, 64, false);
+        $trialRamMb      = $in->postInt('trial_ram_mb', 128, 131072, false);
+        $trialDiscoGb    = $in->postInt('trial_disco_gb', 1, 10000, false);
+        $trialDescricao  = $in->postString('trial_descricao', 500, false);
+        $trialLabelCta   = $in->postString('trial_label_cta', 100, false);
+
         if ($in->temErros()) {
             $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
                 'salvo' => false,
@@ -141,6 +156,13 @@ final class ConfiguracoesController
                 'system_copyright_text' => $systemCopyrightText,
                 'legal_terms_html'      => $legalTermsHtml,
                 'legal_privacy_html'    => $legalPrivacyHtml,
+                'trial_enabled'         => (($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? '1' : '0'),
+                'trial_dias'            => $trialDias > 0 ? (string) $trialDias : '7',
+                'trial_vcpu'            => $trialVcpu > 0 ? (string) $trialVcpu : '1',
+                'trial_ram_mb'          => $trialRamMb > 0 ? (string) $trialRamMb : '1024',
+                'trial_disco_gb'        => $trialDiscoGb > 0 ? (string) $trialDiscoGb : '20',
+                'trial_descricao'       => $trialDescricao,
+                'trial_label_cta'       => $trialLabelCta,
             ]);
 
             return Resposta::html($html, 422);
@@ -185,6 +207,14 @@ final class ConfiguracoesController
         Settings::definir('system.copyright_text', $systemCopyrightText);
         Settings::definir('legal.terms_html', $legalTermsHtml);
         Settings::definir('legal.privacy_html', $legalPrivacyHtml);
+
+        Settings::definir('trial.enabled',   ($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? 1 : 0);
+        Settings::definir('trial.dias',      $trialDias > 0 ? $trialDias : 7);
+        Settings::definir('trial.vcpu',      $trialVcpu > 0 ? $trialVcpu : 1);
+        Settings::definir('trial.ram_mb',    $trialRamMb > 0 ? $trialRamMb : 1024);
+        Settings::definir('trial.disco_gb',  $trialDiscoGb > 0 ? $trialDiscoGb : 20);
+        Settings::definir('trial.descricao', $trialDescricao);
+        Settings::definir('trial.label_cta', $trialLabelCta !== '' ? $trialLabelCta : 'Testar grátis');
 
         $whatsLast4 = '';
         if ($whatsAdminNumero !== '') {
@@ -259,6 +289,13 @@ final class ConfiguracoesController
             'system_copyright_text' => $systemCopyrightText,
             'legal_terms_html'      => $legalTermsHtml,
             'legal_privacy_html'    => $legalPrivacyHtml,
+            'trial_enabled'         => (($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? '1' : '0'),
+            'trial_dias'            => (string) ($trialDias > 0 ? $trialDias : 7),
+            'trial_vcpu'            => (string) ($trialVcpu > 0 ? $trialVcpu : 1),
+            'trial_ram_mb'          => (string) ($trialRamMb > 0 ? $trialRamMb : 1024),
+            'trial_disco_gb'        => (string) ($trialDiscoGb > 0 ? $trialDiscoGb : 20),
+            'trial_descricao'       => $trialDescricao,
+            'trial_label_cta'       => $trialLabelCta !== '' ? $trialLabelCta : 'Testar grátis',
         ]);
 
         return Resposta::html($html);

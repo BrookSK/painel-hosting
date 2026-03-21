@@ -8,6 +8,7 @@ use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
+use LRV\Core\Settings;
 use LRV\Core\View;
 
 final class CriarContaController
@@ -86,6 +87,7 @@ final class CriarContaController
                 ]);
 
                 Auth::entrarCliente($email, $senha);
+                $this->criarTrialSeAtivo($pdo, (int) $pdo->lastInsertId());
                 return Resposta::redirecionar('/cliente/painel');
             } catch (\Throwable $e2) {
             }
@@ -102,6 +104,33 @@ final class CriarContaController
         }
 
         Auth::entrarCliente($email, $senha);
+        $this->criarTrialSeAtivo($pdo, (int) $pdo->lastInsertId());
         return Resposta::redirecionar('/cliente/painel');
+    }
+
+    private function criarTrialSeAtivo(\PDO $pdo, int $clientId): void
+    {
+        try {
+            if ((int) Settings::obter('trial.enabled', 0) !== 1) {
+                return;
+            }
+            $dias    = max(1, (int) Settings::obter('trial.dias', 7));
+            $vcpu    = max(1, (int) Settings::obter('trial.vcpu', 1));
+            $ramMb   = max(128, (int) Settings::obter('trial.ram_mb', 1024));
+            $discoGb = max(1, (int) Settings::obter('trial.disco_gb', 20));
+            $expires = date('Y-m-d H:i:s', strtotime("+{$dias} days"));
+
+            $stmt = $pdo->prepare(
+                'INSERT IGNORE INTO client_trials (client_id, expires_at, vcpu, ram_mb, disco_gb, status)
+                 VALUES (:cid, :exp, :vcpu, :ram, :disco, \'active\')'
+            );
+            $stmt->execute([
+                ':cid'   => $clientId,
+                ':exp'   => $expires,
+                ':vcpu'  => $vcpu,
+                ':ram'   => $ramMb,
+                ':disco' => $discoGb,
+            ]);
+        } catch (\Throwable) {}
     }
 }

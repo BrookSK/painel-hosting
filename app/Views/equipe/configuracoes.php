@@ -226,6 +226,42 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <textarea class="input" name="legal_privacy_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_privacy_html??'')); ?></textarea>
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Teste Grátis (Trial)</h2>
+    <p class="texto" style="font-size:13px;">Quando ativo, novos clientes recebem um servidor de teste ao criar conta.</p>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Trial ativo</label>
+        <select class="input" name="trial_enabled">
+          <option value="1" <?php echo ((string)($trial_enabled??'0'))==='1'?'selected':''; ?>>Sim — exibir CTA na home</option>
+          <option value="0" <?php echo ((string)($trial_enabled??'0'))==='0'?'selected':''; ?>>Não</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Duração (dias)</label>
+        <input class="input" type="number" name="trial_dias" value="<?php echo View::e((string)($trial_dias??'7')); ?>" min="1" max="365" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">vCPU do servidor trial</label>
+        <input class="input" type="number" name="trial_vcpu" value="<?php echo View::e((string)($trial_vcpu??'1')); ?>" min="1" max="64" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">RAM (MB)</label>
+        <input class="input" type="number" name="trial_ram_mb" value="<?php echo View::e((string)($trial_ram_mb??'1024')); ?>" min="128" step="128" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Disco (GB)</label>
+        <input class="input" type="number" name="trial_disco_gb" value="<?php echo View::e((string)($trial_disco_gb??'20')); ?>" min="1" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Label do botão CTA</label>
+        <input class="input" type="text" name="trial_label_cta" value="<?php echo View::e((string)($trial_label_cta??'Testar grátis')); ?>" placeholder="Testar grátis por 7 dias" />
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Descrição do trial (exibida na home)</label>
+      <input class="input" type="text" name="trial_descricao" value="<?php echo View::e((string)($trial_descricao??'')); ?>" placeholder="Experimente gratuitamente por 7 dias, sem cartão de crédito." />
+    </div>
+
     <div style="margin-top:20px;">
       <button class="botao" type="submit">Salvar</button>
     </div>

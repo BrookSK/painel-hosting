@@ -7,6 +7,10 @@ use LRV\Core\SistemaConfig;
 $_nome    = SistemaConfig::nome();
 $_logo    = SistemaConfig::logoUrl();
 $_empresa = SistemaConfig::empresaNome();
+$_trial_ativo = !empty($trial_ativo);
+$_trial_label = (string) ($trial_label ?? 'Testar grátis');
+$_trial_desc  = (string) ($trial_desc ?? '');
+$_trial_dias  = (int) ($trial_dias ?? 7);
 $_topo_hide_inicio = true;
 $_topo_links = [
     ['href' => '/status',    'label' => 'Status'],
@@ -176,14 +180,23 @@ $_topo_links = [
         Tudo automatizado, seguro e pronto para escalar.
       </p>
       <div class="hero-ctas">
+        <?php if ($_trial_ativo): ?>
+        <a href="/cliente/criar-conta" class="hero-btn primary">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M2 9h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <?php echo View::e($_trial_label); ?>
+        </a>
+        <a href="/cliente/entrar" class="hero-btn outline">Já tenho conta →</a>
+        <?php else: ?>
         <a href="/cliente/criar-conta" class="hero-btn primary">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M2 9h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Criar conta grátis
         </a>
-        <a href="/cliente/entrar" class="hero-btn outline">
-          Já tenho conta →
-        </a>
+        <a href="/cliente/entrar" class="hero-btn outline">Já tenho conta →</a>
+        <?php endif; ?>
       </div>
+      <?php if ($_trial_ativo && $_trial_desc !== ''): ?>
+      <p style="margin-top:16px;font-size:13px;opacity:.75;"><?php echo View::e($_trial_desc); ?></p>
+      <?php endif; ?>
       <div class="hero-badges">
         <span class="hero-badge">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M4 6.5l2 2 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -274,7 +287,7 @@ $_topo_links = [
           <div class="access-card-desc">Acesse suas VPS, aplicações, e-mails, backups, monitoramento e suporte.</div>
           <div class="access-card-actions">
             <a href="/cliente/entrar" class="botao sm">Entrar</a>
-            <a href="/cliente/criar-conta" class="botao ghost sm">Criar conta</a>
+            <a href="/cliente/criar-conta" class="botao ghost sm"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?></a>
           </div>
         </div>
         <div class="access-card">
@@ -307,10 +320,10 @@ $_topo_links = [
   <!-- CTA -->
   <section class="cta-section">
     <div class="cta-inner">
-      <h2 class="cta-title">Pronto para começar?</h2>
-      <p class="cta-sub">Crie sua conta agora e tenha sua infraestrutura funcionando em minutos.</p>
+      <h2 class="cta-title"><?php echo $_trial_ativo ? 'Comece seu teste grátis agora' : 'Pronto para começar?'; ?></h2>
+      <p class="cta-sub"><?php echo $_trial_ativo && $_trial_desc !== '' ? View::e($_trial_desc) : 'Crie sua conta agora e tenha sua infraestrutura funcionando em minutos.'; ?></p>
       <div class="cta-btns">
-        <a href="/cliente/criar-conta" class="hero-btn primary">Criar conta grátis</a>
+        <a href="/cliente/criar-conta" class="hero-btn primary"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta grátis'; ?></a>
         <a href="/contato" class="hero-btn outline">Falar com a equipe</a>
       </div>
     </div>

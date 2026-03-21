@@ -73,6 +73,36 @@ final class PainelController
             $assinatura = $stmtA->fetch() ?: null;
         } catch (\Throwable) {}
 
+        // Trial ativo
+        $trialInfo = null;
+        try {
+            $stmtTr = $pdo->prepare(
+                "SELECT expires_at, vcpu, ram_mb, disco_gb, status FROM client_trials
+                 WHERE client_id = :c AND status = 'active' LIMIT 1"
+            );
+            $stmtTr->execute([':c' => $id]);
+            $tr = $stmtTr->fetch();
+            if ($tr) {
+                $now     = new \DateTimeImmutable();
+                $expires = new \DateTimeImmutable((string) $tr['expires_at']);
+                $diff    = $now->diff($expires);
+                $diasRestantes = $diff->invert ? 0 : (int) $diff->days;
+                $trialInfo = [
+                    'expires_at'     => (string) $tr['expires_at'],
+                    'dias_restantes' => $diasRestantes,
+                    'vcpu'           => (int) $tr['vcpu'],
+                    'ram_mb'         => (int) $tr['ram_mb'],
+                    'disco_gb'       => (int) $tr['disco_gb'],
+                ];
+                // Expirar lazy se já passou
+                if ($diasRestantes === 0) {
+                    $pdo->prepare("UPDATE client_trials SET status='expired' WHERE client_id=:c AND status='active'")
+                        ->execute([':c' => $id]);
+                    $trialInfo = null;
+                }
+            }
+        } catch (\Throwable) {}
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/painel.php', [
             'cliente'        => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
             'notificacoes'   => $notifs,
@@ -81,6 +111,7 @@ final class PainelController
             'ticketsAbertos' => $ticketsAbertos,
             'assinatura'     => $assinatura,
             'onboardingDone' => $onboardingDone,
+            'trialInfo'      => $trialInfo,
         ]);
 
         return Resposta::html($html);

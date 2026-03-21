@@ -12,6 +12,7 @@ $vpsRunning     = (int) ($vpsRunning ?? 0);
 $ticketsAbertos = (int) ($ticketsAbertos ?? 0);
 $assinatura     = $assinatura ?? null;
 $onboardingDone = (bool) ($onboardingDone ?? true);
+$trialInfo      = $trialInfo ?? null;
 
 ?>
 <!doctype html>
@@ -41,6 +42,19 @@ $onboardingDone = (bool) ($onboardingDone ?? true);
     .modal-steps li { display:flex; align-items:center; gap:10px; font-size:14px; padding:6px 0; border-bottom:1px solid #f1f5f9; }
     .modal-steps li:last-child { border:none; }
     .step-num { width:26px; height:26px; border-radius:50%; background:#4F46E5; color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    /* Trial banner */
+    .trial-banner {
+      background: linear-gradient(135deg, #0B1C3D, #4F46E5);
+      color: #fff; border-radius: 14px; padding: 18px 20px;
+      margin-bottom: 20px; display: flex; align-items: center;
+      gap: 16px; flex-wrap: wrap;
+    }
+    .trial-banner-icon { font-size: 28px; flex-shrink: 0; }
+    .trial-banner-body { flex: 1; min-width: 180px; }
+    .trial-banner-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .trial-banner-sub   { font-size: 13px; opacity: .85; margin-bottom: 10px; }
+    .trial-progress { background: rgba(255,255,255,.2); border-radius: 999px; height: 6px; overflow: hidden; }
+    .trial-progress-bar { background: #a5b4fc; height: 100%; border-radius: 999px; transition: width .4s; }
   </style>
 </head>
 <body>
@@ -73,6 +87,35 @@ $onboardingDone = (bool) ($onboardingDone ?? true);
           </div>
         <?php endforeach; ?>
       </div>
+    <?php endif; ?>
+
+    <?php if ($trialInfo !== null): ?>
+    <?php
+      $diasRestantes = (int) $trialInfo['dias_restantes'];
+      $trialDiasTotal = max(1, $diasRestantes); // fallback
+      // Tentar calcular total de dias a partir do settings (não disponível aqui, usar 7 como padrão)
+      $trialDiasTotal = max($diasRestantes, 1);
+      $progressPct = $diasRestantes > 0 ? min(100, (int) round($diasRestantes / max(1, $diasRestantes) * 100)) : 0;
+      // Barra: quanto resta (dias restantes / dias totais configurados — usamos 7 como fallback)
+      $progressPct = min(100, (int) round($diasRestantes / 7 * 100));
+    ?>
+    <div class="trial-banner">
+      <div class="trial-banner-icon">🚀</div>
+      <div class="trial-banner-body">
+        <div class="trial-banner-title">
+          Período de teste ativo —
+          <?php echo $diasRestantes; ?> dia<?php echo $diasRestantes !== 1 ? 's' : ''; ?> restante<?php echo $diasRestantes !== 1 ? 's' : ''; ?>
+        </div>
+        <div class="trial-banner-sub">
+          Servidor: <?php echo (int)$trialInfo['vcpu']; ?> vCPU · <?php echo (int)$trialInfo['ram_mb']; ?> MB RAM · <?php echo (int)$trialInfo['disco_gb']; ?> GB disco
+          · Expira em <?php echo View::e(date('d/m/Y', strtotime((string)$trialInfo['expires_at']))); ?>
+        </div>
+        <div class="trial-progress">
+          <div class="trial-progress-bar" style="width:<?php echo $progressPct; ?>%;"></div>
+        </div>
+      </div>
+      <a href="/cliente/planos" class="botao sm" style="background:#fff;color:#4F46E5;flex-shrink:0;">Assinar plano</a>
+    </div>
     <?php endif; ?>
 
     <!-- Stat cards -->

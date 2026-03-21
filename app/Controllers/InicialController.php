@@ -14,8 +14,13 @@ final class InicialController
 {
     public function index(Requisicao $req): Resposta
     {
+        $trialAtivo = (int) Settings::obter('trial.enabled', 0) === 1;
         $html = View::renderizar(__DIR__ . '/../Views/inicial.php', [
             'equipe_logada' => \LRV\Core\Auth::equipeId() !== null,
+            'trial_ativo'   => $trialAtivo,
+            'trial_dias'    => (int) Settings::obter('trial.dias', 7),
+            'trial_label'   => (string) Settings::obter('trial.label_cta', 'Testar grátis'),
+            'trial_desc'    => (string) Settings::obter('trial.descricao', ''),
         ]);
         return Resposta::html($html);
     }
