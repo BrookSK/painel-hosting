@@ -103,6 +103,11 @@ function _nav_ativo(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>E-mails</span>
     </a>
+
+    <a href="/equipe/erros" class="nav-item<?php echo _nav_ativo('/equipe/erros', $_seg); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M10 7v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="13.5" r="1" fill="currentColor"/></svg>
+      <span>Erros</span>
+    </a>
   </nav>
 
   <div class="sidebar-footer">

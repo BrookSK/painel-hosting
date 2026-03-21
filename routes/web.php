@@ -52,6 +52,7 @@ use LRV\App\Controllers\Equipe\ChatController as EquipeChatController;
 use LRV\App\Controllers\Equipe\EmailsController as EquipeEmailsController;
 use LRV\App\Controllers\LegalController;
 use LRV\App\Controllers\ChangelogController;
+use LRV\App\Controllers\Equipe\ErrosController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -226,3 +227,10 @@ $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class,
 $roteador->get('/termos', [LegalController::class, 'termos']);
 $roteador->get('/privacidade', [LegalController::class, 'privacidade']);
 $roteador->get('/changelog', [ChangelogController::class, 'index']);
+
+// Erros do sistema (equipe)
+$roteador->get('/equipe/erros', [ErrosController::class, 'listar'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->get('/equipe/erros/ver', [ErrosController::class, 'ver'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/erros/resolver', [ErrosController::class, 'resolver'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/erros/excluir', [ErrosController::class, 'excluir'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/erros/limpar-resolvidos', [ErrosController::class, 'limparResolvidos'], [Middlewares::exigirPermissao('manage_servers')]);

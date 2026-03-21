@@ -89,9 +89,25 @@ final class Bootstrap
                 'line' => $e->getLine(),
                 'trace' => substr($e->getTraceAsString(), 0, 2000),
             ]);
+            $errorId = 0;
+            try {
+                $errorId = \LRV\App\Services\Errors\ErrorLogService::registrar(
+                    500,
+                    'uncaught_exception',
+                    $e->getMessage(),
+                    $e,
+                );
+            } catch (\Throwable) {}
             http_response_code(500);
             header('Content-Type: text/html; charset=utf-8');
-            echo I18n::t('geral.erro_interno');
+            try {
+                echo \LRV\Core\View::renderizar(__DIR__ . '/../app/Views/erros/erro.php', [
+                    'code'    => 500,
+                    'errorId' => $errorId > 0 ? $errorId : null,
+                ]);
+            } catch (\Throwable) {
+                echo I18n::t('geral.erro_interno');
+            }
         });
 
         try {

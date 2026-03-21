@@ -39,7 +39,12 @@ final class Roteador
         $rota = $this->rotas[$metodo][$caminho] ?? null;
 
         if ($rota === null) {
-            Resposta::texto(I18n::t('geral.rota_nao_encontrada'), 404)->enviar();
+            \LRV\App\Services\Errors\ErrorLogService::registrar(
+                404,
+                'not_found',
+                'Rota não encontrada: ' . $metodo . ' ' . $caminho,
+            );
+            $this->renderizarErro(404)->enviar();
             return;
         }
 
@@ -77,7 +82,13 @@ final class Roteador
 
             Resposta::html((string) $resultado)->enviar();
         } catch (\Throwable $e) {
-            Resposta::texto(I18n::t('geral.erro_interno'), 500)->enviar();
+            $errorId = \LRV\App\Services\Errors\ErrorLogService::registrar(
+                500,
+                'exception',
+                $e->getMessage(),
+                $e,
+            );
+            $this->renderizarErro(500, $errorId)->enviar();
         }
     }
 
@@ -118,6 +129,24 @@ final class Roteador
         if (str_contains($accept, 'application/json')) {
             return Resposta::json(['ok' => false, 'erro' => 'csrf_invalid'], 419);
         }
-        return Resposta::texto('CSRF inválido.', 419);
+        \LRV\App\Services\Errors\ErrorLogService::registrar(
+            419,
+            'csrf',
+            'CSRF inválido: ' . $req->metodo . ' ' . $req->caminho,
+        );
+        return $this->renderizarErro(419);
+    }
+
+    private function renderizarErro(int $code, int $errorId = 0): Resposta
+    {
+        try {
+            $html = \LRV\Core\View::renderizar(__DIR__ . '/../app/Views/erros/erro.php', [
+                'code'    => $code,
+                'errorId' => $errorId > 0 ? $errorId : null,
+            ]);
+            return Resposta::html($html, $code);
+        } catch (\Throwable) {
+            return Resposta::texto('Erro ' . $code, $code);
+        }
     }
 }
