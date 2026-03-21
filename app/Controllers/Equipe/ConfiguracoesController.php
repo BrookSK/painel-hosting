@@ -38,10 +38,14 @@ final class ConfiguracoesController
             'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
             'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
             'terminal_safe_mode' => ConfiguracoesSistema::terminalSafeModeHabilitado() ? '1' : '0',
-            'mailcow_url'    => (string) Settings::obter('email.mailcow_url', ''),
-            'mailcow_key'    => (string) Settings::obter('email.mailcow_key', ''),
-            'webmail_url'    => (string) Settings::obter('email.webmail_url', ''),
-            'chat_ws_port'   => (string) Settings::obter('chat.ws_port', '8082'),
+            'mailcow_url'          => (string) Settings::obter('email.mailcow_url', ''),
+            'mailcow_key'          => (string) Settings::obter('email.mailcow_key', ''),
+            'webmail_url'          => (string) Settings::obter('email.webmail_url', ''),
+            'email_default_domain' => (string) Settings::obter('email.default_domain', ''),
+            'email_webmail_mode'   => (string) Settings::obter('email.webmail_mode', 'global'),
+            'email_max_accounts'   => (string) Settings::obter('email.max_accounts_per_plan', '5'),
+            'email_dns_template'   => (string) Settings::obter('email.dns_instructions_template', ''),
+            'chat_ws_port'         => (string) Settings::obter('chat.ws_port', '8082'),
             'system_name'           => SistemaConfig::nome(),
             'system_logo_url'       => SistemaConfig::logoUrl(),
             'system_favicon_url'    => SistemaConfig::faviconUrl(),
@@ -82,10 +86,14 @@ final class ConfiguracoesController
         $terminalIdleTimeout = $in->postInt('terminal_idle_timeout_seconds', 60, 604800, false);
         $terminalSafeMode = $in->postEnum('terminal_safe_mode', ['0', '1', 'on', 'true'], '0');
 
-        $mailcowUrl    = $in->postUrl('mailcow_url', 255, false);
-        $mailcowKey    = $in->postString('mailcow_key', 255, false);
-        $webmailUrl    = $in->postUrl('webmail_url', 255, false);
-        $chatWsPort    = $in->postInt('chat_ws_port', 1, 65535, false);
+        $mailcowUrl          = $in->postUrl('mailcow_url', 255, false);
+        $mailcowKey          = $in->postString('mailcow_key', 255, false);
+        $webmailUrl          = $in->postUrl('webmail_url', 255, false);
+        $emailDefaultDomain  = $in->postString('email_default_domain', 253, false);
+        $emailWebmailMode    = $in->postEnum('email_webmail_mode', ['global', 'custom'], 'global');
+        $emailMaxAccounts    = $in->postInt('email_max_accounts', 1, 9999, false);
+        $emailDnsTemplate    = $in->postString('email_dns_template', 65535, false);
+        $chatWsPort          = $in->postInt('chat_ws_port', 1, 65535, false);
 
         $systemName          = $in->postString('system_name', 190, false);
         $systemLogoUrl       = $in->postString('system_logo_url', 500, false);
@@ -118,10 +126,14 @@ final class ConfiguracoesController
                 'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
                 'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
                 'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
-                'mailcow_url'  => $mailcowUrl,
-                'mailcow_key'  => $mailcowKey,
-                'webmail_url'  => $webmailUrl,
-                'chat_ws_port' => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
+                'mailcow_url'          => $mailcowUrl,
+                'mailcow_key'          => $mailcowKey,
+                'webmail_url'          => $webmailUrl,
+                'email_default_domain' => $emailDefaultDomain,
+                'email_webmail_mode'   => $emailWebmailMode,
+                'email_max_accounts'   => $emailMaxAccounts > 0 ? (string) $emailMaxAccounts : '5',
+                'email_dns_template'   => $emailDnsTemplate,
+                'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
                 'system_name'           => $systemName,
                 'system_logo_url'       => $systemLogoUrl,
                 'system_favicon_url'    => $systemFaviconUrl,
@@ -160,6 +172,10 @@ final class ConfiguracoesController
         Settings::definir('email.mailcow_url', $mailcowUrl);
         Settings::definir('email.mailcow_key', $mailcowKey);
         Settings::definir('email.webmail_url', $webmailUrl);
+        Settings::definir('email.default_domain', $emailDefaultDomain);
+        Settings::definir('email.webmail_mode', $emailWebmailMode);
+        Settings::definir('email.max_accounts_per_plan', $emailMaxAccounts > 0 ? $emailMaxAccounts : 5);
+        Settings::definir('email.dns_instructions_template', $emailDnsTemplate);
         Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
 
         Settings::definir('system.name', $systemName);
@@ -228,10 +244,14 @@ final class ConfiguracoesController
             'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
             'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),
             'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
-            'mailcow_url'  => $mailcowUrl,
-            'mailcow_key'  => $mailcowKey,
-            'webmail_url'  => $webmailUrl,
-            'chat_ws_port' => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
+            'mailcow_url'          => $mailcowUrl,
+            'mailcow_key'          => $mailcowKey,
+            'webmail_url'          => $webmailUrl,
+            'email_default_domain' => $emailDefaultDomain,
+            'email_webmail_mode'   => $emailWebmailMode,
+            'email_max_accounts'   => (string) ($emailMaxAccounts > 0 ? $emailMaxAccounts : 5),
+            'email_dns_template'   => $emailDnsTemplate,
+            'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
             'system_name'           => $systemName,
             'system_logo_url'       => $systemLogoUrl,
             'system_favicon_url'    => $systemFaviconUrl,

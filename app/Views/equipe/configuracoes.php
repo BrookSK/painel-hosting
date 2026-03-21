@@ -140,6 +140,28 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:6px;">URL do Webmail</label>
         <input class="input" type="text" name="webmail_url" value="<?php echo View::e((string)($webmail_url??'')); ?>" placeholder="https://webmail.seudominio.com" />
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Domínio padrão global</label>
+        <input class="input" type="text" name="email_default_domain" value="<?php echo View::e((string)($email_default_domain??'')); ?>" placeholder="lrvmail.com" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Usado quando o cliente não tem domínio próprio.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Modo de webmail</label>
+        <select class="input" name="email_webmail_mode">
+          <option value="global" <?php echo ((string)($email_webmail_mode??'global'))==='global'?'selected':''; ?>>Global (domínio do sistema)</option>
+          <option value="custom" <?php echo ((string)($email_webmail_mode??'global'))==='custom'?'selected':''; ?>>Custom (domínio do cliente)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Limite de contas por plano (padrão)</label>
+        <input class="input" type="number" name="email_max_accounts" value="<?php echo View::e((string)($email_max_accounts??'5')); ?>" min="1" max="9999" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Pode ser sobrescrito por plano via specs_json → email_accounts.</p>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Template de instruções DNS</label>
+      <textarea class="input" name="email_dns_template" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($email_dns_template??'')); ?></textarea>
+      <p class="texto" style="font-size:12px;margin-top:4px;">Use <code>{domain}</code> como placeholder. Exibido ao cliente ao configurar domínio próprio.</p>
     </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Chat ao vivo (WebSocket)</h2>

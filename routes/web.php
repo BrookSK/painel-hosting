@@ -47,6 +47,7 @@ use LRV\App\Controllers\Cliente\AssinaturasController as ClienteAssinaturasContr
 use LRV\App\Controllers\Cliente\AjudaController as ClienteAjudaController;
 use LRV\App\Controllers\Cliente\ChatController as ClienteChatController;
 use LRV\App\Controllers\Cliente\EmailController as ClienteEmailController;
+use LRV\App\Controllers\Cliente\DominiosEmailController as ClienteDominiosEmailController;
 use LRV\App\Controllers\Equipe\ChatController as EquipeChatController;
 use LRV\App\Controllers\LegalController;
 use LRV\App\Controllers\ChangelogController;
@@ -204,6 +205,13 @@ $roteador->get('/cliente/emails', [ClienteEmailController::class, 'listar'], [Mi
 $roteador->post('/cliente/emails/criar', [ClienteEmailController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('email_create', 5, 60)]);
 $roteador->post('/cliente/emails/remover', [ClienteEmailController::class, 'remover'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/emails/alterar-senha', [ClienteEmailController::class, 'alterarSenha'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('email_pw', 10, 60)]);
+
+// Domínios de email cliente
+$roteador->get('/cliente/emails/dominios', [ClienteDominiosEmailController::class, 'index'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/emails/dominios/adicionar', [ClienteDominiosEmailController::class, 'adicionar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_add', 5, 60)]);
+$roteador->post('/cliente/emails/dominios/verificar', [ClienteDominiosEmailController::class, 'verificar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
+$roteador->post('/cliente/emails/dominios/remover', [ClienteDominiosEmailController::class, 'remover'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/emails/dominios/instrucoes', [ClienteDominiosEmailController::class, 'instrucoes'], [Middlewares::exigirLoginCliente()]);
 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);

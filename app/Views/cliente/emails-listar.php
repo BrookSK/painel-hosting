@@ -6,7 +6,23 @@ use LRV\Core\View;
 use LRV\Core\I18n;
 use LRV\Core\Csrf;
 
-$webmailUrl = (string) ($webmail_url ?? '');
+$webmailUrl     = (string)($webmail_url ?? '');
+$webmailMode    = (string)($webmail_mode ?? 'global');
+$dominioPadrao  = (string)($dominio_padrao ?? '');
+$dominiosAtivos = is_array($dominios_ativos ?? null) ? $dominios_ativos : [];
+$limite         = (int)($limite ?? 5);
+$totalEmails    = count(is_array($emails ?? null) ? $emails : []);
+
+// Montar lista de domínios disponíveis para o select
+$dominiosSelect = [];
+if ($dominioPadrao !== '') {
+    $dominiosSelect[] = $dominioPadrao;
+}
+foreach ($dominiosAtivos as $d) {
+    if (!in_array($d, $dominiosSelect, true)) {
+        $dominiosSelect[] = $d;
+    }
+}
 
 ?>
 <!doctype html>
@@ -97,26 +113,60 @@ $webmailUrl = (string) ($webmail_url ?? '');
       </div>
 
       <div class="card">
-        <h2 class="titulo" style="margin-bottom:14px;">Criar novo e-mail</h2>
-        <form method="post" action="/cliente/emails/criar">
+        <h2 class="titulo" style="margin-bottom:6px;">Criar novo e-mail</h2>
+
+        <?php if ($totalEmails >= $limite): ?>
+          <div class="aviso" style="margin-bottom:12px;">
+            Seu plano permite até <strong><?php echo $limite; ?></strong> conta(s) de e-mail.
+            <a href="/cliente/planos">Fazer upgrade</a> para criar mais.
+          </div>
+        <?php else: ?>
+          <p class="texto" style="font-size:13px;margin-bottom:14px;">
+            <?php echo $totalEmails; ?>/<?php echo $limite; ?> contas usadas.
+          </p>
+        <?php endif; ?>
+
+        <form method="post" action="/cliente/emails/criar" <?php echo $totalEmails >= $limite ? 'style="opacity:.5;pointer-events:none;"' : ''; ?>>
           <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+
           <div style="margin-bottom:10px;">
-            <label style="display:block; font-size:13px; margin-bottom:5px;">Usuário</label>
+            <label style="display:block;font-size:13px;margin-bottom:5px;">Usuário</label>
             <input class="input" type="text" name="local_part" placeholder="usuario" required pattern="[a-z0-9._\-]+" />
           </div>
+
           <div style="margin-bottom:10px;">
-            <label style="display:block; font-size:13px; margin-bottom:5px;">Domínio</label>
-            <input class="input" type="text" name="domain" placeholder="seudominio.com" required />
+            <label style="display:block;font-size:13px;margin-bottom:5px;">Domínio</label>
+            <?php if (count($dominiosSelect) > 1): ?>
+              <select class="input" name="domain" required>
+                <?php foreach ($dominiosSelect as $d): ?>
+                  <option value="<?php echo View::e($d); ?>"><?php echo View::e($d); ?></option>
+                <?php endforeach; ?>
+              </select>
+            <?php elseif (count($dominiosSelect) === 1): ?>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input class="input" type="text" name="domain" value="<?php echo View::e($dominiosSelect[0]); ?>" readonly style="background:#f8fafc;flex:1;" />
+              </div>
+            <?php else: ?>
+              <input class="input" type="text" name="domain" placeholder="seudominio.com" required />
+              <p class="texto" style="font-size:12px;margin-top:4px;">
+                Nenhum domínio configurado. <a href="/cliente/emails/dominios">Adicione seu domínio</a> ou aguarde o administrador configurar o domínio padrão.
+              </p>
+            <?php endif; ?>
           </div>
+
           <div style="margin-bottom:10px;">
-            <label style="display:block; font-size:13px; margin-bottom:5px;">Senha</label>
+            <label style="display:block;font-size:13px;margin-bottom:5px;">Senha</label>
             <input class="input" type="password" name="password" required minlength="8" />
-          </div>          <div style="margin-bottom:14px;">
-            <label style="display:block; font-size:13px; margin-bottom:5px;">Quota (MB)</label>
-            <input class="input" type="number" name="quota_mb" value="1024" min="100" max="10240" />
           </div>
-          <button class="botao" type="submit">Criar e-mail</button>
+
+          <div style="margin-bottom:14px;">
+            <button class="botao" type="submit">Criar e-mail</button>
+          </div>
         </form>
+
+        <div style="border-top:1px solid #f1f5f9;padding-top:12px;margin-top:4px;">
+          <a href="/cliente/emails/dominios" class="botao ghost sm">🌐 Gerenciar domínios próprios</a>
+        </div>
       </div>
 
     </div>

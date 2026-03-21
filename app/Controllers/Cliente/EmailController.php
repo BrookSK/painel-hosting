@@ -24,10 +24,14 @@ final class EmailController
         $emails = $svc->listar($clienteId);
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/emails-listar.php', [
-            'emails'      => $emails,
-            'webmail_url' => $svc->webmailUrl(),
-            'erro'        => '',
-            'sucesso'     => '',
+            'emails'        => $emails,
+            'webmail_url'   => $svc->webmailUrl(),
+            'webmail_mode'  => $svc->webmailMode(),
+            'dominio_padrao' => $svc->dominioPadrao(),
+            'dominios_ativos' => $this->dominiosAtivos($clienteId),
+            'limite'        => $svc->limiteContasPorPlano($clienteId),
+            'erro'          => '',
+            'sucesso'       => '',
         ]);
 
         return Resposta::html($html);
@@ -110,12 +114,25 @@ final class EmailController
         $emails = $svc->listar($clienteId);
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/emails-listar.php', [
-            'emails'      => $emails,
-            'webmail_url' => $svc->webmailUrl(),
-            'erro'        => $erro,
-            'sucesso'     => '',
+            'emails'         => $emails,
+            'webmail_url'    => $svc->webmailUrl(),
+            'webmail_mode'   => $svc->webmailMode(),
+            'dominio_padrao' => $svc->dominioPadrao(),
+            'dominios_ativos' => $this->dominiosAtivos($clienteId),
+            'limite'         => $svc->limiteContasPorPlano($clienteId),
+            'erro'           => $erro,
+            'sucesso'        => '',
         ]);
 
         return Resposta::html($html, 422);
+    }
+
+    private function dominiosAtivos(int $clienteId): array
+    {
+        $pdo  = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT domain FROM client_domains WHERE client_id = :c AND status = 'active' ORDER BY domain");
+        $stmt->execute([':c' => $clienteId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return is_array($rows) ? $rows : [];
     }
 }
