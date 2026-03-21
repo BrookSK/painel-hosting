@@ -92,9 +92,9 @@ final class ClientesController
         if (!is_array($cliente)) return Resposta::texto('Cliente não encontrado.', 404);
 
         $vps = $pdo->prepare(
-            "SELECT v.id, v.hostname, v.status, v.ip_address, p.name AS plan_name
+            "SELECT v.id, v.container_id, v.status, v.cpu, v.ram, v.storage, p.name AS plan_name
              FROM vps v LEFT JOIN plans p ON p.id = v.plan_id
-             WHERE v.client_id = :id AND v.deleted_at IS NULL ORDER BY v.id DESC"
+             WHERE v.client_id = :id ORDER BY v.id DESC"
         );
         $vps->execute([':id' => $id]);
 

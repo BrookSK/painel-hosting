@@ -81,8 +81,8 @@ $vpsBadge = function(string $s): string {
     <thead>
       <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
         <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">#</th>
-        <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">Hostname</th>
-        <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">IP</th>
+        <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">Container</th>
+        <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">CPU / RAM / Disco</th>
         <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">Plano</th>
         <th style="padding:10px 16px;text-align:left;font-weight:600;color:#475569;">Status</th>
       </tr>
@@ -94,8 +94,8 @@ $vpsBadge = function(string $s): string {
         <?php foreach ($vps as $v): ?>
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td style="padding:10px 16px;color:#94a3b8;font-size:12px;">#<?php echo (int)$v['id']; ?></td>
-            <td style="padding:10px 16px;font-weight:500;color:#0f172a;"><?php echo View::e((string)($v['hostname'] ?? '')); ?></td>
-            <td style="padding:10px 16px;color:#475569;font-family:monospace;"><?php echo View::e((string)($v['ip_address'] ?? '—')); ?></td>
+            <td style="padding:10px 16px;font-weight:500;color:#0f172a;font-family:monospace;"><?php echo View::e((string)($v['container_id'] ?? '—')); ?></td>
+            <td style="padding:10px 16px;color:#475569;font-size:13px;"><?php echo (int)($v['cpu']??0); ?> vCPU / <?php echo round((int)($v['ram']??0)/1024,1); ?> GB / <?php echo round((int)($v['storage']??0)/1024,1); ?> GB</td>
             <td style="padding:10px 16px;color:#475569;"><?php echo View::e((string)($v['plan_name'] ?? '—')); ?></td>
             <td style="padding:10px 16px;"><?php echo $vpsBadge((string)($v['status'] ?? '')); ?></td>
           </tr>
