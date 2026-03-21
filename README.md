@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **1.6.0**
+> Versão atual: **1.7.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -46,6 +46,11 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0013_user_avatar.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0014_password_resets.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0024_client_address.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0025_client_totp.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0026_legal_defaults.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0026b_legal_force.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0026c_license_content.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0027_chat_files.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0028_app_templates.sql
 ```
 
 ### 3. Configuração do banco
@@ -70,6 +75,7 @@ Configurações principais:
 | `terminal.ws_internal_port` | Porta interna do WS do terminal (padrão: 8081) |
 | `terminal.token_ttl_seconds` | TTL dos tokens de terminal (padrão: 60s) |
 | `chat.ws_port` | Porta interna do WS do chat (padrão: 8082) |
+| `chat.ws_url` | URL pública do WebSocket do chat (ex: `wss://seudominio.com/ws/chat`) |
 | `email.mailcow_url` | URL base do Mailcow (ex: `https://mail.seudominio.com`) |
 | `email.mailcow_key` | API key do Mailcow |
 | `email.webmail_url` | URL do webmail (Roundcube/SOGo) — fallback global |
@@ -150,6 +156,18 @@ Ou via painel em `/equipe/inicializacao`.
 - Tokens de uso único (SHA-256, TTL 120s, replay protection)
 - Rate limit: 30 msgs/10s por IP no WS + 10 req/60s no endpoint HTTP
 - Isolamento por room: cliente só acessa a própria room
+- Emoji picker inline e upload de arquivos (imagens, PDF, DOC, TXT até 5 MB)
+- Polling HTTP fallback automático (tenta WS 2x, depois polling a cada 3s)
+- Nome do agente exibido nas respostas e separadores visuais de dia
+- Pesquisa de satisfação enviada por e-mail ao encerrar chat
+- Histórico de chats abertos e encerrados no painel da equipe
+
+### Aplicações pré-configuradas (One-Click Install)
+- Catálogo visual em `/cliente/aplicacoes/catalogo` com 7 templates prontos
+- Instalação automática: pull de imagem Docker, env vars, clone de repo, criação de container
+- Auto-assign de porta, labels Docker (`lrv.app_id`, `lrv.client_id`)
+- Job assíncrono `install_app_template` para provisionamento via fila
+- Templates: WordPress, Node.js, PHP Laravel, MySQL, Redis, Nginx, Site Estático
 
 ### E-mail (Mailcow)
 - Integração via API REST do Mailcow
@@ -182,6 +200,8 @@ Ou via painel em `/equipe/inicializacao`.
 - Bloqueio de IP após 10 tentativas de login falhas em 30 min
 - 2FA (TOTP RFC 6238) para usuários da equipe
 - 2FA (TOTP RFC 6238) para clientes (`/cliente/2fa/configurar`)
+- Chave SSH de fallback removida — `SshCrypto` exige `app.secret_key` configurado
+- `config/instalacao.php` removido do Git (credenciais não versionadas)
 - Tokens de terminal e chat de uso único com TTL curto
 - Validação de propriedade (IDOR) em todos os endpoints sensíveis — retorna 403
 - Prevenção de replay attack nos webhooks Stripe e Asaas

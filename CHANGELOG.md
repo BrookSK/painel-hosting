@@ -5,6 +5,47 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [1.7.0] — 2026-03-21
+
+### Adicionado
+- **Aplicações pré-configuradas (One-Click Install)** — catálogo visual em `/cliente/aplicacoes/catalogo` com 7 templates prontos (WordPress, Node.js, PHP Laravel, MySQL, Redis, Nginx, Site Estático)
+- Tabela `app_templates` com seed de templates padrão (migration `0028_app_templates.sql`)
+- Colunas `template_id`, `container_id`, `environment_json`, `logs` na tabela `applications`
+- `AppInstallService` — provisionamento automático: pull de imagem, configuração de env vars, clone de repo, criação de container com labels, auto-assign de porta
+- Job handler `install_app_template` para instalação assíncrona via fila
+- Modal de instalação com seleção de VPS, domínio, repositório e variáveis de ambiente
+- Status badges nas aplicações: `installing`, `running`, `stopped`, `error`
+- Link "Catálogo" como sub-item na sidebar do cliente
+- **Chat — emojis, upload de arquivos e polling fallback** em todos os 3 locais de chat (widget FAB, `/cliente/chat`, `/equipe/chat/ver`)
+- Emoji picker inline com categorias (smileys, gestos, corações, objetos, natureza)
+- Upload de arquivos no chat (imagens, PDF, DOC, TXT até 5 MB) com preview inline
+- Polling HTTP fallback: tenta WebSocket 2x, depois cai para polling a cada 3s
+- Endpoints de polling e envio HTTP para cliente e equipe (`/cliente/chat/poll`, `/cliente/chat/enviar`, `/equipe/chat/poll`, `/equipe/chat/enviar`)
+- Tabela `chat_files` (migration `0027_chat_files.sql`)
+- `ChatUploadController` para upload de arquivos no chat
+- **Pesquisa de satisfação ao encerrar chat** — ao fechar um chat, e-mail automático é enviado ao cliente com link para `/cliente/avaliar?type=chat&id=X`
+- **Nome do agente nas respostas do chat** — mensagens da equipe exibem "Nome · HH:MM" em vez de apenas "Equipe"
+- **Separadores de dia no chat** — linha visual com data dd/mm/aaaa entre mensagens de dias diferentes
+- **Histórico de chats da equipe** — `/equipe/chat` agora exibe chats abertos e encerrados em seções separadas; chats encerrados renderizam histórico completo server-side
+- **WebSocket URL configurável** — campo `chat.ws_url` nas configurações; fallback automático para `ws://host:porta`
+- **Auditoria de segurança (GitGuardian)** — correções aplicadas:
+  - `config/instalacao.php` removido do Git (`.gitignore` ativado, `git rm --cached`)
+  - `config/instalacao.exemplo.php` criado como template
+  - `SshCrypto` — fallback de chave hardcoded removido; agora lança exceção se `app.secret_key` não configurado
+  - `InicializacaoService` — `app.secret_key` gerado automaticamente na inicialização
+
+### Corrigido
+- Header do painel do cliente exibia "Cliente" genérico nas telas de aplicações — controllers `listar()` e `catalogo()` agora passam `$cliente` com `name`/`email`
+- SQL no `ChatRoomService` referenciava `hostname` inexistente — corrigido para `ip_address`
+- `aplicacoes-listar.php` referenciava `$cliente['name']` e `$cliente['email']` sem receber do controller
+
+### Alterado
+- `ChatRoomService` refatorado com `listarAbertas()` e `listarEncerradas()` usando método privado `listarPorStatus()`
+- `ChatMessageService::historico()` faz JOIN com `users` para retornar `sender_name`
+- `ChatWsApp::onMessage()` busca nome do admin no banco e inclui `sender_name` no broadcast
+
+---
+
 ## [1.6.0] — 2026-03-21
 
 ### Adicionado

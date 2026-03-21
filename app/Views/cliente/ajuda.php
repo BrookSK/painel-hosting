@@ -74,7 +74,12 @@ details ul{padding-left:18px;}
 
   <details>
     <summary>Como usar o chat ao vivo?</summary>
-    <p>Acesse <a href="/cliente/chat">Chat ao vivo</a>. Uma sala é criada automaticamente e nossa equipe será notificada. Use Enter para enviar mensagens.</p>
+    <p>Acesse <a href="/cliente/chat">Chat ao vivo</a>. Uma sala é criada automaticamente e nossa equipe será notificada. Use Enter para enviar mensagens. Você também pode enviar emojis e arquivos (imagens, PDF, DOC até 5 MB).</p>
+  </details>
+
+  <details>
+    <summary>O chat funciona sem WebSocket?</summary>
+    <p>Sim. Se o WebSocket não estiver disponível, o chat automaticamente usa polling HTTP (atualiza a cada 3 segundos). Você não precisa fazer nada — a troca é automática.</p>
   </details>
 
   <details>
@@ -88,6 +93,31 @@ details ul{padding-left:18px;}
   <details>
     <summary>Como cancelar minha assinatura?</summary>
     <p>Abra um <a href="/cliente/tickets/novo">ticket de suporte</a> com o assunto "Cancelamento". O cancelamento é processado em até 1 dia útil.</p>
+  </details>
+
+  <div class="faq-section">📦 Aplicações</div>
+
+  <details>
+    <summary>Como instalar uma aplicação com 1 clique?</summary>
+    <p>Acesse <a href="/cliente/aplicacoes/catalogo">Catálogo de Aplicações</a>, escolha o template desejado (WordPress, Node.js, MySQL, etc.), selecione a VPS, preencha domínio/repositório se necessário e clique em "Instalar". O sistema cria o container automaticamente.</p>
+  </details>
+
+  <details>
+    <summary>Quais aplicações estão disponíveis?</summary>
+    <ul>
+      <li><strong>WordPress</strong> — CMS para blog, site ou loja</li>
+      <li><strong>Node.js</strong> — APIs e apps web com npm</li>
+      <li><strong>PHP Laravel</strong> — API ou app PHP com Apache</li>
+      <li><strong>MySQL</strong> — Banco de dados relacional</li>
+      <li><strong>Redis</strong> — Cache em memória</li>
+      <li><strong>Nginx</strong> — Servidor web e proxy reverso</li>
+      <li><strong>Site Estático</strong> — HTML/CSS/JS com Nginx Alpine</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Como acompanhar o status da instalação?</summary>
+    <p>Após iniciar a instalação, acesse <a href="/cliente/aplicacoes">Minhas Aplicações</a>. O status será atualizado automaticamente: "Instalando" → "Rodando" (ou "Erro" se houver falha).</p>
   </details>
 
   <div class="faq-section">🔐 Conta</div>

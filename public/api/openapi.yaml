@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: LRV Cloud Manager API
-  version: "1.0.0"
+  version: "1.7.0"
   description: |
     API interna do LRV Cloud Manager.
     Autenticação via sessão PHP (cookie de sessão).
@@ -18,6 +18,10 @@ tags:
     description: Gerenciamento de VPS
   - name: Tickets
     description: Sistema de suporte
+  - name: Chat
+    description: Chat em tempo real
+  - name: Aplicacoes
+    description: Aplicações pré-configuradas (One-Click Install)
   - name: Assinaturas
     description: Billing e assinaturas
   - name: Terminal
@@ -478,6 +482,174 @@ paths:
               schema:
                 type: string
                 format: binary
+
+  /cliente/chat/poll:
+    get:
+      tags: [Chat]
+      summary: Polling de novas mensagens do chat (cliente)
+      security:
+        - sessionCliente: []
+      parameters:
+        - name: room_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: after_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mensagens novas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  mensagens:
+                    type: array
+
+  /cliente/chat/enviar:
+    post:
+      tags: [Chat]
+      summary: Enviar mensagem via HTTP (fallback polling)
+      security:
+        - sessionCliente: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, room_id, message]
+              properties:
+                _csrf:
+                  type: string
+                room_id:
+                  type: integer
+                message:
+                  type: string
+      responses:
+        "200":
+          description: Mensagem enviada
+
+  /chat/upload:
+    post:
+      tags: [Chat]
+      summary: Upload de arquivo no chat (cliente ou equipe)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [room_id, file]
+              properties:
+                room_id:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Arquivo enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  url:
+                    type: string
+                  nome:
+                    type: string
+
+  /cliente/aplicacoes/catalogo:
+    get:
+      tags: [Aplicacoes]
+      summary: Catálogo de aplicações pré-configuradas
+      security:
+        - sessionCliente: []
+      responses:
+        "200":
+          description: Página do catálogo com templates disponíveis
+
+  /cliente/aplicacoes/instalar:
+    post:
+      tags: [Aplicacoes]
+      summary: Instalar aplicação a partir de template
+      security:
+        - sessionCliente: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [_csrf, template_id, vps_id]
+              properties:
+                _csrf:
+                  type: string
+                template_id:
+                  type: integer
+                vps_id:
+                  type: integer
+                domain:
+                  type: string
+                repository:
+                  type: string
+                env_json:
+                  type: string
+      responses:
+        "200":
+          description: Instalação iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  application_id:
+                    type: integer
+        "422":
+          description: Dados inválidos
+        "403":
+          description: VPS não pertence ao cliente
+
+  /cliente/aplicacoes/status:
+    get:
+      tags: [Aplicacoes]
+      summary: Status de instalação de uma aplicação
+      security:
+        - sessionCliente: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Status da aplicação
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  status:
+                    type: string
+                    enum: [installing, running, stopped, error]
+                  logs:
+                    type: string
+                  container_id:
+                    type: string
 
   /status:
     get:

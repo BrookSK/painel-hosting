@@ -20,8 +20,14 @@ pre{white-space:pre-wrap;background:#0b1220;color:#e2e8f0;padding:12px 16px;bord
   <p style="margin-bottom:10px;color:#475569;font-size:14px;">Após importar <code>database/schema.sql</code>, execute as migrations em ordem:</p>
   <pre>mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_20_0001_*.sql
 ...
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0013_user_avatar.sql
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0014_password_resets.sql</pre>
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0014_password_resets.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0024_client_address.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0025_client_totp.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026_legal_defaults.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026b_legal_force.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026c_license_content.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0027_chat_files.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0028_app_templates.sql</pre>
   <p style="font-size:13px;color:#64748b;margin-top:8px;">Ou via painel: <a href="/equipe/inicializacao">/equipe/inicializacao</a> → "Aplicar migrations".</p>
 
   <div class="section-title">2. Worker (Jobs)</div>
@@ -93,7 +99,33 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
     Requer migration <span class="badge-cmd">0024_client_address.sql</span> (colunas <code>address_*</code> em <code>clients</code>).
   </p>
 
-  <div class="section-title">14. Segurança</div>
+  <div class="section-title">14. Chat — Recursos avançados</div>
+  <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
+    <li>Emoji picker e upload de arquivos (imagens, PDF, DOC, TXT até 5 MB) em todos os locais de chat</li>
+    <li>Polling HTTP fallback automático — tenta WebSocket 2x, depois cai para polling a cada 3s</li>
+    <li>Nome do agente exibido nas respostas da equipe (ex: "João · 16:21")</li>
+    <li>Separadores visuais de dia entre mensagens de datas diferentes</li>
+    <li>Pesquisa de satisfação enviada por e-mail ao encerrar um chat</li>
+    <li>Histórico de chats abertos e encerrados em <a href="/equipe/chat">/equipe/chat</a></li>
+    <li><span class="badge-cmd">chat.ws_url</span> — URL pública do WebSocket (ex: <code>wss://seudominio.com/ws/chat</code>)</li>
+  </ul>
+  <p style="font-size:13px;color:#64748b;">Requer migration <span class="badge-cmd">0027_chat_files.sql</span> (tabela <code>chat_files</code>).</p>
+
+  <div class="section-title">15. Aplicações pré-configuradas (One-Click Install)</div>
+  <p style="font-size:14px;color:#475569;">
+    Catálogo visual em <a href="/cliente/aplicacoes/catalogo">/cliente/aplicacoes/catalogo</a> com 7 templates prontos.<br>
+    O cliente seleciona VPS, domínio (se necessário), repositório (se necessário) e variáveis de ambiente.<br>
+    A instalação é feita via job assíncrono (<code>install_app_template</code>): pull de imagem, clone de repo, criação de container Docker com labels.
+  </p>
+  <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
+    <li>Templates: WordPress, Node.js, PHP Laravel, MySQL, Redis, Nginx, Site Estático</li>
+    <li>Auto-assign de porta (evita conflitos)</li>
+    <li>Labels Docker: <code>lrv.app_id</code>, <code>lrv.client_id</code></li>
+    <li>Status: <code>installing</code>, <code>running</code>, <code>stopped</code>, <code>error</code></li>
+  </ul>
+  <p style="font-size:13px;color:#64748b;">Requer migration <span class="badge-cmd">0028_app_templates.sql</span> (tabela <code>app_templates</code> + colunas extras em <code>applications</code>).</p>
+
+  <div class="section-title">16. Segurança</div>
   <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
     <li>CSRF em todos os formulários POST</li>
     <li>Rate limiting por IP, cliente e equipe</li>
