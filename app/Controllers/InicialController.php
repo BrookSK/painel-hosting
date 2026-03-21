@@ -14,8 +14,10 @@ final class InicialController
 {
     public function index(Requisicao $req): Resposta
     {
-        $html = file_get_contents(__DIR__ . '/../Views/inicial.php');
-        return Resposta::html((string) $html);
+        $html = View::renderizar(__DIR__ . '/../Views/inicial.php', [
+            'equipe_logada' => \LRV\Core\Auth::equipeId() !== null,
+        ]);
+        return Resposta::html($html);
     }
 
     public function contato(Requisicao $req): Resposta

@@ -287,6 +287,19 @@ $_topo_links = [
             <a href="/equipe/entrar" class="botao sm sec">Entrar como equipe</a>
           </div>
         </div>
+        <?php if (!empty($equipe_logada)): ?>
+        <div class="access-card" style="border-color:#e2e8f0;background:#f8fafc;">
+          <div class="access-card-icon" style="background:#f1f5f9;color:#475569;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 10h16M4 14h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="18" cy="17" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M18 15.5v1.5l1 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div class="access-card-title" style="color:#475569;">API interna</div>
+          <div class="access-card-desc">Endpoints internos visíveis apenas para a equipe autenticada.</div>
+          <div class="access-card-actions">
+            <a href="/api/saude" class="botao ghost sm" target="_blank">/api/saude</a>
+            <a href="/public/api/openapi.yaml" class="botao ghost sm" target="_blank">OpenAPI</a>
+          </div>
+        </div>
+        <?php endif; ?>
       </div>
     </div>
   </section>
