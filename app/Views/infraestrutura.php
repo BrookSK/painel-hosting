@@ -39,7 +39,20 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 .navbar-btn:hover { opacity: .88; transform: translateY(-1px); }
 .navbar-btn.ghost { color: rgba(255,255,255,.85); border: 1.5px solid rgba(255,255,255,.2); }
 .navbar-btn.solid { background: linear-gradient(135deg,#4F46E5,#7C3AED); color: #fff; }
-@media (max-width: 768px) { .navbar-links { display: none; } .navbar-btn.ghost { display: none; } }
+.navbar-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0}
+.navbar-hamburger span{display:block;height:2px;background:#fff;border-radius:2px;transition:transform .25s,opacity .25s}
+.navbar-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.navbar-hamburger.open span:nth-child(2){opacity:0}
+.navbar-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.navbar-drawer{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:rgba(6,13,31,.97);z-index:99;padding:24px 20px;flex-direction:column;gap:4px;overflow-y:auto}
+.navbar-drawer.open{display:flex}
+.navbar-drawer a{color:rgba(255,255,255,.8);font-size:16px;font-weight:500;padding:14px 16px;border-radius:10px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .15s,color .15s}
+.navbar-drawer a:hover{background:rgba(255,255,255,.08);color:#fff}
+.navbar-drawer .drawer-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
+.navbar-drawer .drawer-actions a{border-bottom:none;text-align:center;font-weight:700}
+.navbar-drawer .drawer-actions .ghost{border:1.5px solid rgba(255,255,255,.25)}
+.navbar-drawer .drawer-actions .solid{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff}
+@media (max-width: 768px) { .navbar-links { display: none; } .navbar-btn.ghost { display: none; } .navbar-hamburger{display:flex} }
 </style>
 </head>
 <body>
@@ -66,9 +79,25 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
       <a href="/cliente/criar-conta" class="navbar-btn solid">
         <?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?>
       </a>
+      <button class="navbar-hamburger" id="navHamburger" aria-label="Menu" onclick="toggleDrawer()">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 </nav>
+
+<!-- DRAWER MOBILE -->
+<div class="navbar-drawer" id="navDrawer">
+  <a href="#funcionalidades" onclick="closeDrawer()">Funcionalidades</a>
+  <a href="#planos" onclick="closeDrawer()">Planos</a>
+  <a href="#tecnologia" onclick="closeDrawer()">Tecnologia</a>
+  <a href="/status" onclick="closeDrawer()">Status</a>
+  <a href="/contato" onclick="closeDrawer()">Contato</a>
+  <div class="drawer-actions">
+    <a href="/cliente/entrar" class="ghost navbar-btn" onclick="closeDrawer()">Entrar</a>
+    <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?></a>
+  </div>
+</div>
 
 <style>
 .hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #060d1f 0%, #0B1C3D 30%, #1e3a8a 60%, #4F46E5 85%, #7C3AED 100%); color: #fff; padding: 100px 24px 110px; text-align: center; }
@@ -407,6 +436,18 @@ function toggleFaq(btn) {
   document.querySelectorAll('.faq-a.open').forEach(el => el.classList.remove('open'));
   document.querySelectorAll('.faq-q.open').forEach(el => el.classList.remove('open'));
   if (!open) { a.classList.add('open'); btn.classList.add('open'); }
+}
+function toggleDrawer(){
+  var h=document.getElementById('navHamburger');
+  var d=document.getElementById('navDrawer');
+  var open=d.classList.toggle('open');
+  h.classList.toggle('open',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+function closeDrawer(){
+  document.getElementById('navDrawer').classList.remove('open');
+  document.getElementById('navHamburger').classList.remove('open');
+  document.body.style.overflow='';
 }
 (function() {
   const sections = document.querySelectorAll('section[id]');
