@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function fmtGbPlano(int $mb): string {
     if ($mb<=0) return '0 GB';
@@ -31,7 +32,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <td><?php echo View::e((string)($p['cpu']??'')); ?></td>
             <td><?php echo View::e(fmtGbPlano((int)($p['ram']??0))); ?></td>
             <td><?php echo View::e(fmtGbPlano((int)($p['storage']??0))); ?></td>
-            <td>R$ <?php echo View::e((string)($p['price_monthly']??'0.00')); ?></td>
+            <td><?php echo View::e(I18n::preco((float)($p['price_monthly'] ?? 0))); ?></td>
             <td><?php echo ($p['status']??'')==='active'?'<span class="badge-new badge-green">Ativo</span>':'<span class="badge-new badge-gray">Inativo</span>'; ?></td>
             <td><a href="/equipe/planos/editar?id=<?php echo (int)($p['id']??0); ?>">Editar</a></td>
           </tr>

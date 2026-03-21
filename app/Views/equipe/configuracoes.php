@@ -55,6 +55,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Conversão de Moeda</h2>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Taxa de conversão BRL → USD</label>
+        <input class="input" type="text" name="taxa_conversao_usd" value="<?php echo View::e((string)($taxa_conversao_usd??'5.0')); ?>" placeholder="5.00" style="max-width:160px;" />
+        <p class="texto" style="font-size:12px;color:#64748b;margin-top:6px;">Ex: 5.00 = R$ 100 será exibido como $ 20.00 para clientes em EN/ES. Também usado na cobrança via Stripe.</p>
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.geral')); ?></h2>
     <div class="grid">
       <div>

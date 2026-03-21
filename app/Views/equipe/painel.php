@@ -99,7 +99,7 @@ if ($initials === '') $initials = 'U';
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </div>
           </div>
-          <div class="stat-card-value sm">R$&nbsp;<?php echo View::e($receitaMensal); ?></div>
+          <div class="stat-card-value sm"><?php echo View::e(I18n::moeda()); ?>&nbsp;<?php echo View::e($receitaMensal); ?></div>
           <div class="stat-card-sub"><?php echo View::e(I18n::t('eq_painel.assinaturas_ativas')); ?></div>
         </div>
       </div>

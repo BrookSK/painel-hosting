@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function badgeStatusAssinatura(string $st): string {
     $st = strtoupper(trim($st));
@@ -33,7 +34,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             </td>
             <td>
               <div><strong><?php echo View::e((string)($s['plan_name']??'')); ?></strong></div>
-              <div style="font-size:12px;opacity:.8;">R$ <?php echo View::e((string)($s['plan_price']??'')); ?>/mes</div>
+              <div style="font-size:12px;opacity:.8;"><?php echo View::e(I18n::preco((float)($s['plan_price'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></div>
             </td>
             <td>#<?php echo (int)($s['vps_id']??0); ?></td>
             <td><?php echo badgeStatusAssinatura((string)($s['status']??'')); ?></td>

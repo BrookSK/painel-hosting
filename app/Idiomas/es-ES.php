@@ -401,6 +401,7 @@ return [
     'assinaturas.motivo_placeholder' => 'Describe el motivo de la solicitud...',
     'assinaturas.enviar_solicitacao' => 'Enviar solicitud',
     'assinaturas.planos_cobrancas' => 'Planes, cobros y reembolsos',
+    'assinaturas.mes' => 'mes',
 
     // ── Ayuda (FAQ) ──
     'ajuda.perguntas_frequentes' => 'Preguntas frecuentes',

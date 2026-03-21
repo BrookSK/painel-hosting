@@ -401,6 +401,7 @@ return [
     'assinaturas.motivo_placeholder' => 'Describe the reason for your request...',
     'assinaturas.enviar_solicitacao' => 'Submit request',
     'assinaturas.planos_cobrancas' => 'Plans, charges and refunds',
+    'assinaturas.mes' => 'mo',
 
     // ── Help (FAQ) ──
     'ajuda.perguntas_frequentes' => 'Frequently asked questions',

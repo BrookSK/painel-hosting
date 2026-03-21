@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function gb(int $mb): string {
     if ($mb <= 0) return '0 GB';
@@ -37,7 +38,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </div>
 
       <p class="texto" style="font-size:18px; color:#0f172a; margin-bottom:12px;">
-        <strong>R$ <?php echo View::e((string) ($p['price_monthly'] ?? '0.00')); ?>/mês</strong>
+        <strong><?php echo View::e(I18n::preco((float)($p['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></strong>
       </p>
 
       <?php

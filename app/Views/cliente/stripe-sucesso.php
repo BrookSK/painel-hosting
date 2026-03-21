@@ -57,7 +57,7 @@ $erro       = (string) ($erro ?? '');
             </div>
             <div class="linha" style="justify-content:space-between; margin-bottom:8px;">
               <span style="color:#94a3b8; font-size:13px;">Valor</span>
-              <span>R$ <?php echo View::e(number_format((float) ($assinatura['price_monthly'] ?? 0), 2, ',', '.')); ?>/mês</span>
+              <span><?php echo View::e(I18n::preco((float)($assinatura['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></span>
             </div>
             <?php if (!empty($assinatura['next_due_date'])): ?>
               <div class="linha" style="justify-content:space-between; margin-bottom:8px;">

@@ -78,6 +78,7 @@ final class ConfiguracoesController
             'seo_descricao'         => SistemaConfig::seoDescricao(),
             'seo_palavras_chave'    => SistemaConfig::seoPalavrasChave(),
             'seo_og_image'          => SistemaConfig::seoOgImage(),
+            'taxa_conversao_usd'    => (string) ConfiguracoesSistema::taxaConversaoUsd(),
             'seo_robots'            => SistemaConfig::seoRobots(),
             'seo_google_analytics_id' => SistemaConfig::seoGoogleAnalyticsId(),
             'seo_canonical_base'    => SistemaConfig::seoCanonicalBase(),
@@ -96,6 +97,8 @@ final class ConfiguracoesController
         $asaasSegredo = $in->postString('asaas_webhook_segredo', 255, false);
         $stripeSecretKey = $in->postString('stripe_secret_key', 255, false);
         $stripeWebhookSecret = $in->postString('stripe_webhook_secret', 255, false);
+        $taxaConversaoUsd = (float) ($in->postString('taxa_conversao_usd', 20, false));
+        if ($taxaConversaoUsd <= 0) $taxaConversaoUsd = 5.0;
         $appUrlBase = $in->postUrl('app_url_base', 255, false);
 
         $tolerancia = $in->postInt('tolerancia_dias', 1, 365, false);
@@ -174,6 +177,7 @@ final class ConfiguracoesController
                 'asaas_webhook_segredo' => $asaasSegredo,
                 'stripe_secret_key' => $stripeSecretKey,
                 'stripe_webhook_secret' => $stripeWebhookSecret,
+                'taxa_conversao_usd' => (string) $taxaConversaoUsd,
                 'app_url_base' => $appUrlBase,
                 'tolerancia_dias' => $tolerancia > 0 ? (string) $tolerancia : '3',
                 'evolution_url_base' => $evoUrl,
@@ -247,6 +251,7 @@ final class ConfiguracoesController
         Settings::definir('asaas.webhook_segredo', $asaasSegredo);
         Settings::definir('stripe.secret_key', $stripeSecretKey);
         Settings::definir('stripe.webhook_secret', $stripeWebhookSecret);
+        Settings::definir('billing.taxa_conversao_usd', $taxaConversaoUsd);
         Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
         Settings::definir('cobranca.tolerancia_dias', $tolerancia > 0 ? $tolerancia : 3);
         Settings::definir('whatsapp.evolution.url_base', $evoUrl);
@@ -355,6 +360,7 @@ final class ConfiguracoesController
             'asaas_webhook_segredo' => $asaasSegredo,
             'stripe_secret_key' => $stripeSecretKey,
             'stripe_webhook_secret' => $stripeWebhookSecret,
+            'taxa_conversao_usd' => (string) $taxaConversaoUsd,
             'app_url_base' => rtrim($appUrlBase, '/'),
             'tolerancia_dias' => (string) ($tolerancia > 0 ? $tolerancia : 3),
             'evolution_url_base' => $evoUrl,

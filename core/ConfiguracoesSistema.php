@@ -153,4 +153,11 @@ final class ConfiguracoesSistema
         }
         return $p;
     }
+
+    public static function taxaConversaoUsd(): float
+    {
+        $v = Settings::obter('billing.taxa_conversao_usd', 5.0);
+        $taxa = is_float($v) ? $v : (float) $v;
+        return $taxa > 0 ? $taxa : 5.0;
+    }
 }

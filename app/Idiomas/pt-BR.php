@@ -525,6 +525,7 @@ return [
     'assinaturas.motivo_placeholder' => 'Descreva o motivo da solicitação...',
     'assinaturas.enviar_solicitacao' => 'Enviar solicitação',
     'assinaturas.planos_cobrancas' => 'Planos, cobranças e reembolsos',
+    'assinaturas.mes' => 'mês',
 
     // ── Ajuda (FAQ) ──
     'ajuda.perguntas_frequentes' => 'Perguntas frequentes',

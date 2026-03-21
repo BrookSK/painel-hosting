@@ -129,7 +129,7 @@ if (count($nomePartes) >= 2) {
         <option value="">Selecione...</option>
         <?php foreach ($planos as $pl): ?>
           <option value="<?php echo (int)$pl['id']; ?>">
-            <?php echo View::e((string)$pl['name']); ?> — R$ <?php echo number_format((float)$pl['price_monthly'], 2, ',', '.'); ?>/mês
+            <?php echo View::e((string)$pl['name']); ?> — <?php echo View::e(I18n::preco((float)$pl['price_monthly'])); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?>
           </option>
         <?php endforeach; ?>
       </select>
@@ -196,7 +196,7 @@ if (count($nomePartes) >= 2) {
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td style="padding:10px 16px;color:#94a3b8;font-size:12px;">#<?php echo (int)$sub['id']; ?></td>
             <td style="padding:10px 16px;font-weight:500;color:#0f172a;"><?php echo View::e((string)($sub['plan_name'] ?? '—')); ?></td>
-            <td style="padding:10px 16px;color:#475569;">R$ <?php echo number_format((float)($sub['price_monthly'] ?? 0), 2, ',', '.'); ?></td>
+            <td style="padding:10px 16px;color:#475569;"><?php echo View::e(I18n::preco((float)($sub['price_monthly'] ?? 0))); ?></td>
             <td style="padding:10px 16px;color:#475569;">
               <?php echo $sub['next_due_date'] ? View::e(date('d/m/Y', strtotime((string)$sub['next_due_date']))) : '—'; ?>
             </td>

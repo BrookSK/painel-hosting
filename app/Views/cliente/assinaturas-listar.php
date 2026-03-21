@@ -69,7 +69,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <tr>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;">#<?php echo (int)($a['id'] ?? 0); ?></td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><strong><?php echo View::e((string)($a['plan_name'] ?? '')); ?></strong></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;">R$ <?php echo View::e((string)($a['price_monthly'] ?? '0.00')); ?>/mês</td>
+              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::preco((float)($a['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['next_due_date'] ?? '—')); ?></td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAssinatura((string)($a['status'] ?? '')); ?></td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
@@ -103,7 +103,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <?php foreach ($cobrancas as $c): ?>
               <tr>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:12px;"><?php echo View::e((string)($c['id'] ?? '')); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;">R$ <?php echo View::e(number_format((float)($c['value'] ?? 0), 2, ',', '.')); ?></td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::preco((float)($c['value'] ?? 0))); ?></td>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($c['dueDate'] ?? '')); ?></td>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($c['billingType'] ?? '')); ?></td>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusCobranca((string)($c['status'] ?? '')); ?></td>

@@ -58,4 +58,49 @@ final class I18n
         }
         return $baseKey . '.' . $idioma;
     }
+
+    /**
+     * Formata um preço em BRL convertendo para USD quando o idioma não é pt-BR.
+     * Usa a taxa de conversão configurada pelo admin.
+     */
+    public static function preco(float $valorBrl): string
+    {
+        if (self::$idioma === 'pt-BR') {
+            return 'R$ ' . number_format($valorBrl, 2, ',', '.');
+        }
+        $taxa = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
+        $valorUsd = $valorBrl / $taxa;
+        return '$ ' . number_format($valorUsd, 2, '.', ',');
+    }
+
+    /**
+     * Retorna apenas o valor numérico convertido (sem símbolo de moeda).
+     */
+    public static function precoValor(float $valorBrl): float
+    {
+        if (self::$idioma === 'pt-BR') {
+            return $valorBrl;
+        }
+        $taxa = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
+        return round($valorBrl / $taxa, 2);
+    }
+
+    /**
+     * Retorna o símbolo da moeda atual.
+     */
+    public static function moeda(): string
+    {
+        return self::$idioma === 'pt-BR' ? 'R$' : '$';
+    }
+
+    /**
+     * Formata um número no padrão do idioma atual.
+     */
+    public static function numero(float $valor, int $decimais = 2): string
+    {
+        if (self::$idioma === 'pt-BR') {
+            return number_format($valor, $decimais, ',', '.');
+        }
+        return number_format($valor, $decimais, '.', ',');
+    }
 }

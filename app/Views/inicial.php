@@ -244,7 +244,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
         </div>
         <div class="server-price">
           <div class="server-price__label"><?php echo View::e(I18n::t('home.total_mensal')); ?></div>
-          <div class="server-price__value"><?php echo View::e(I18n::t('home.plans_moeda')); ?> <?php echo $_hero_plano ? number_format($_hprice, 0, ',', '.') : '1.497'; ?>+<span><?php echo View::e(I18n::t('home.hero_preco_mes')); ?></span></div>
+          <div class="server-price__value"><?php echo $_hero_plano ? View::e(I18n::preco($_hprice)) : View::e(I18n::moeda() . ' 1.497'); ?>+<span><?php echo View::e(I18n::t('home.hero_preco_mes')); ?></span></div>
         </div>
       </div>
       <div class="hero__floater hero__floater--1">
@@ -508,7 +508,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
             <?php if ($_badge !== ''): ?><div class="plan-badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
             <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
             <div class="plan-desc"><?php echo View::e((string)($_p['description'] ?? '')); ?></div>
-            <div class="plan-price"><small><?php echo View::e(I18n::t('home.plans_moeda')); ?></small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
+            <div class="plan-price"><small><?php echo View::e(I18n::moeda()); ?></small> <?php echo View::e(I18n::numero(I18n::precoValor($_price), 0)); ?></div>
             <div class="plan-period"><?php echo View::e(I18n::t('home.plans_por_mes')); ?></div>
             <ul class="plan-features">
               <?php if ($_vcpu > 0): ?><li><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
@@ -526,13 +526,13 @@ $_trial_dias  = (int)($trial_dias ?? 7);
                   <div class="addon-name"><?php echo View::e((string)$_a['name']); ?></div>
                   <?php if (!empty($_a['description'])): ?><div class="addon-desc"><?php echo View::e((string)$_a['description']); ?></div><?php endif; ?>
                 </div>
-                <div class="addon-price">+ <?php echo View::e(I18n::t('home.plans_moeda')); ?> <?php echo number_format($_aprice, 0, ',', '.'); ?></div>
+                <div class="addon-price">+ <?php echo View::e(I18n::preco($_aprice)); ?></div>
               </div>
               <?php endforeach; ?>
             </div>
             <div class="total-calc">
               <div class="total-label"><?php echo View::e(I18n::t('home.plans_total')); ?></div>
-              <div class="total-value"><?php echo View::e(I18n::t('home.plans_moeda')); ?> <span id="total-<?php echo $_pid; ?>"><?php echo number_format($_price, 0, ',', '.'); ?></span></div>
+              <div class="total-value"><?php echo View::e(I18n::moeda()); ?> <span id="total-<?php echo $_pid; ?>"><?php echo View::e(I18n::numero(I18n::precoValor($_price), 0)); ?></span></div>
             </div>
             <?php endif; ?>
             <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
@@ -637,7 +637,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
       <div class="compare-card <?php echo $_badge !== '' ? 'featured' : ''; ?>">
         <?php if ($_badge !== ''): ?><div class="compare-card__badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
         <div class="compare-card__name"><?php echo View::e((string)$_p['name']); ?></div>
-        <div class="compare-card__price"><small><?php echo View::e(I18n::t('home.plans_moeda')); ?></small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
+        <div class="compare-card__price"><small><?php echo View::e(I18n::moeda()); ?></small> <?php echo View::e(I18n::numero(I18n::precoValor($_price), 0)); ?></div>
         <div class="compare-card__period"><?php echo View::e(I18n::t('home.plans_por_mes')); ?></div>
         <ul class="compare-card__features">
           <?php if ($_vcpu > 0): ?><li><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
@@ -714,6 +714,8 @@ function goToSlide(idx){currentSlide=idx;updateCarousel(true);}
 window.addEventListener('resize',function(){updateCarousel(false);});
 setTimeout(function(){updateCarousel(false);},100);
 
+var _convRate=<?php echo json_encode(I18n::idioma() === 'pt-BR' ? 1.0 : (1.0 / \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd())); ?>;
+var _locale=<?php echo json_encode(I18n::idioma() === 'pt-BR' ? 'pt-BR' : 'en-US'); ?>;
 var planBase={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:<?php echo (float)$_p['price']; ?>,<?php endforeach; ?>};
 var planAddons={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:[],<?php endforeach; ?>};
 function toggleAddon(el,pid,price){
@@ -721,9 +723,9 @@ function toggleAddon(el,pid,price){
   var sel=el.classList.contains('selected');
   el.querySelector('.addon-check').innerHTML=sel?'✓':'';
   if(sel){planAddons[pid].push(price);}else{var i=planAddons[pid].indexOf(price);if(i>-1)planAddons[pid].splice(i,1);}
-  var total=(planBase[pid]||0)+planAddons[pid].reduce(function(s,p){return s+p;},0);
+  var total=((planBase[pid]||0)+planAddons[pid].reduce(function(s,p){return s+p;},0))*_convRate;
   var el2=document.getElementById('total-'+pid);
-  if(el2)el2.textContent=total.toLocaleString('pt-BR');
+  if(el2)el2.textContent=Math.round(total).toLocaleString(_locale);
 }
 function openCompareModal(){document.getElementById('compareModal').classList.add('active');document.body.style.overflow='hidden';}
 function closeCompareModal(){document.getElementById('compareModal').classList.remove('active');document.body.style.overflow='';}

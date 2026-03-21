@@ -315,7 +315,7 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
         <?php if ($_destaque): ?><div class="plan-badge"><?php echo View::e(I18n::t('infra.plans_popular')); ?></div><?php endif; ?>
         <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
         <?php if (!empty($_p['description'])): ?><div class="plan-desc"><?php echo View::e((string)$_p['description']); ?></div><?php endif; ?>
-        <div class="plan-price"><?php echo View::e(I18n::t('infra.plans_moeda')); ?> <?php echo number_format($_price, 2, ',', '.'); ?><span><?php echo View::e($_cycleLabel); ?></span></div>
+        <div class="plan-price"><?php echo View::e(I18n::preco($_price)); ?><span><?php echo View::e($_cycleLabel); ?></span></div>
         <div class="plan-cycle"><?php echo View::e($_cycleBillingLabel); ?></div>
         <ul class="plan-specs">
           <?php if ($_vcpu > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
