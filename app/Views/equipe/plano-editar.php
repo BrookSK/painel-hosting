@@ -61,15 +61,53 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:6px;">Stripe Price ID (opcional)</label>
         <input class="input" type="text" name="stripe_price_id" value="<?php echo View::e((string)($plano['stripe_price_id']??'')); ?>" />
       </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Specs extras (JSON opcional)</label>
-        <input class="input" type="text" name="specs_json" value="<?php echo View::e((string)($plano['specs_json']??'')); ?>" />
-      </div>
     </div>
 
-    <div style="margin-top:12px;">
-      <label style="display:block;font-size:13px;margin-bottom:6px;">Canais de suporte (JSON, ex: ["email","whatsapp","chat"])</label>
-      <input class="input" type="text" name="support_channels" value="<?php echo View::e((string)($plano['support_channels']??'')); ?>" placeholder='["email","whatsapp"]' />
+    <?php
+      // Canais de suporte
+      $chRaw = (string)($plano['support_channels'] ?? '');
+      $chAtivos = [];
+      if ($chRaw !== '') {
+          $chDec = json_decode($chRaw, true);
+          if (is_array($chDec)) $chAtivos = $chDec;
+      }
+      $chOpcoes = ['email' => 'E-mail', 'whatsapp' => 'WhatsApp', 'chat' => 'Chat', 'telefone' => 'Telefone', 'ticket' => 'Ticket'];
+    ?>
+    <div style="margin-top:16px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;">Canais de suporte</label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <?php foreach ($chOpcoes as $val => $label): ?>
+          <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid <?php echo in_array($val,$chAtivos,true)?'#4F46E5':'#e2e8f0'; ?>;border-radius:10px;cursor:pointer;font-size:13px;background:<?php echo in_array($val,$chAtivos,true)?'#f5f3ff':'#fff'; ?>;transition:all .15s;" class="canal-label">
+            <input type="checkbox" name="support_channels_check[]" value="<?php echo $val; ?>" <?php echo in_array($val,$chAtivos,true)?'checked':''; ?> style="accent-color:#4F46E5;width:15px;height:15px;" />
+            <?php echo $label; ?>
+          </label>
+        <?php endforeach; ?>
+      </div>
+      <input type="hidden" name="support_channels" id="support_channels_json" value="<?php echo View::e($chRaw); ?>" />
+    </div>
+
+    <?php
+      // Specs extras
+      $specsRaw = (string)($plano['specs_json'] ?? '');
+      $specsArr = [];
+      if ($specsRaw !== '') {
+          $specsDec = json_decode($specsRaw, true);
+          if (is_array($specsDec)) $specsArr = $specsDec;
+      }
+    ?>
+    <div style="margin-top:16px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;">Specs extras (opcional)</label>
+      <div id="specs-lista" style="display:flex;flex-direction:column;gap:8px;">
+        <?php foreach ($specsArr as $k => $v): ?>
+          <div class="specs-row" style="display:flex;gap:8px;align-items:center;">
+            <input class="input" type="text" placeholder="Chave (ex: bandwidth)" value="<?php echo View::e((string)$k); ?>" style="flex:1;" />
+            <input class="input" type="text" placeholder="Valor (ex: 1TB)" value="<?php echo View::e((string)$v); ?>" style="flex:1;" />
+            <button type="button" onclick="this.closest('.specs-row').remove();atualizarSpecsJson()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button>
+          </div>
+        <?php endforeach; ?>
+      </div>
+      <button type="button" id="btn-add-spec" style="margin-top:8px;background:none;border:1.5px dashed #e2e8f0;border-radius:10px;padding:7px 14px;font-size:13px;color:#64748b;cursor:pointer;width:100%;transition:border-color .15s,color .15s;">+ Adicionar spec</button>
+      <input type="hidden" name="specs_json" id="specs_json_hidden" value="<?php echo View::e($specsRaw); ?>" />
     </div>
 
     <div style="margin-top:14px;">
@@ -77,4 +115,65 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
   </form>
 </div>
+
+<script>
+(function () {
+  // Canais de suporte — atualiza hidden ao mudar checkbox
+  function atualizarCanaisJson() {
+    var checks = document.querySelectorAll('input[name="support_channels_check[]"]:checked');
+    var vals = Array.from(checks).map(function(c){ return c.value; });
+    document.getElementById('support_channels_json').value = vals.length ? JSON.stringify(vals) : '';
+    // Atualiza estilo dos labels
+    document.querySelectorAll('.canal-label').forEach(function(lbl) {
+      var cb = lbl.querySelector('input[type=checkbox]');
+      if (cb.checked) {
+        lbl.style.borderColor = '#4F46E5';
+        lbl.style.background = '#f5f3ff';
+      } else {
+        lbl.style.borderColor = '#e2e8f0';
+        lbl.style.background = '#fff';
+      }
+    });
+  }
+  document.querySelectorAll('input[name="support_channels_check[]"]').forEach(function(cb) {
+    cb.addEventListener('change', atualizarCanaisJson);
+  });
+
+  // Specs extras — atualiza hidden JSON
+  window.atualizarSpecsJson = function() {
+    var rows = document.querySelectorAll('#specs-lista .specs-row');
+    var obj = {};
+    rows.forEach(function(row) {
+      var inputs = row.querySelectorAll('input[type=text]');
+      var k = inputs[0] ? inputs[0].value.trim() : '';
+      var v = inputs[1] ? inputs[1].value.trim() : '';
+      if (k !== '') obj[k] = v;
+    });
+    var keys = Object.keys(obj);
+    document.getElementById('specs_json_hidden').value = keys.length ? JSON.stringify(obj) : '';
+  };
+
+  // Atualiza specs ao digitar
+  document.getElementById('specs-lista').addEventListener('input', window.atualizarSpecsJson);
+
+  // Adicionar nova linha de spec
+  document.getElementById('btn-add-spec').addEventListener('click', function() {
+    var div = document.createElement('div');
+    div.className = 'specs-row';
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    div.innerHTML = '<input class="input" type="text" placeholder="Chave (ex: bandwidth)" style="flex:1;" />'
+      + '<input class="input" type="text" placeholder="Valor (ex: 1TB)" style="flex:1;" />'
+      + '<button type="button" onclick="this.closest(\'.specs-row\').remove();atualizarSpecsJson()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button>';
+    document.getElementById('specs-lista').appendChild(div);
+    div.querySelector('input').focus();
+  });
+
+  // Garantir que o JSON está atualizado antes do submit
+  document.querySelector('form').addEventListener('submit', function() {
+    atualizarCanaisJson();
+    window.atualizarSpecsJson();
+  });
+})();
+</script>
+
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
