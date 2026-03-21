@@ -30,6 +30,9 @@ $_topo_links = [
     .legal-body p{color:#475569;line-height:1.75;margin:0 0 12px;font-size:14px;}
     .legal-body ul{color:#475569;line-height:1.75;padding-left:20px;margin:0 0 12px;font-size:14px;}
     .legal-body li{margin-bottom:4px;}
+    .legal-body .legal-meta{font-size:13px;color:#94a3b8;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;}
+    .legal-body .aviso{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin:20px 0;font-size:13px;color:#991b1b;font-weight:500;}
+    .legal-body .destaque{background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 16px;margin:20px 0;font-size:13px;color:#1e40af;}
   </style>
 </head>
 <body>
