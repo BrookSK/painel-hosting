@@ -21,8 +21,8 @@ final class InicialController
         try {
             $pdo   = BancoDeDados::pdo();
             $stmt  = $pdo->query(
-                "SELECT id, name, price, billing_cycle, specs_json, description
-                 FROM plans WHERE active = 1 ORDER BY price ASC LIMIT 6"
+                "SELECT id, name, price_monthly AS price, billing_cycle, badge, specs_json, description
+                 FROM plans WHERE status = 'active' ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
 
@@ -61,8 +61,8 @@ final class InicialController
         try {
             $pdo  = BancoDeDados::pdo();
             $stmt = $pdo->query(
-                "SELECT id, name, price, billing_cycle, specs_json, description
-                 FROM plans WHERE active = 1 ORDER BY price ASC LIMIT 6"
+                "SELECT id, name, price_monthly AS price, billing_cycle, badge, specs_json, description
+                 FROM plans WHERE status = 'active' ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
         } catch (\Throwable) {}
