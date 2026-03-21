@@ -28,7 +28,7 @@ use LRV\Core\I18n;
     <div class="conteudo linha" style="justify-content:space-between;">
       <div>
         <div style="font-size:18px;font-weight:700;">Central de ajuda</div>
-        <div style="opacity:.9; font-size:13px;">Dúvidas frequentes — v1.4.0</div>
+        <div style="opacity:.9; font-size:13px;">Dúvidas frequentes — v1.5.0</div>
       </div>
       <div class="linha">
         <?php require __DIR__ . '/../_partials/idioma.php'; ?>
@@ -112,7 +112,12 @@ use LRV\Core\I18n;
 
       <details>
         <summary>Não consigo fazer login. O que fazer?</summary>
-        <p>Verifique e-mail e senha. Após 10 tentativas incorretas, o IP é bloqueado por 30 minutos. Se esqueceu a senha, entre em contato pelo suporte para redefinição.</p>
+        <p>Verifique e-mail e senha. Após 10 tentativas incorretas, o IP é bloqueado por 30 minutos. Se esqueceu a senha, use o link <a href="/cliente/reset-senha">Esqueci minha senha</a> na tela de login para receber um e-mail de redefinição.</p>
+      </details>
+
+      <details>
+        <summary>Como redefinir minha senha?</summary>
+        <p>Na tela de login, clique em "Esqueci minha senha" ou acesse <a href="/cliente/reset-senha">/cliente/reset-senha</a>. Informe seu e-mail e você receberá um link válido por 1 hora para criar uma nova senha.</p>
       </details>
 
       <details>

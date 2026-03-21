@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **1.4.0**
+> Versão atual: **1.5.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -38,6 +38,12 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0005_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0006_*.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0007_chat_email.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0008_branding_legal.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_20_0009_seed_permissions.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0010_email_dominios.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0011_trial.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0012_system_errors.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0013_user_avatar.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0014_password_resets.sql
 ```
 
 ### 3. Configuração do banco
@@ -73,6 +79,7 @@ Configurações principais:
 | `system.copyright_text` | Texto de copyright no footer |
 | `legal.terms_html` | HTML dos Termos de Uso (`/termos`) |
 | `legal.privacy_html` | HTML da Política de Privacidade (`/privacidade`) |
+| `app_url` | URL base usada nos e-mails de reset de senha |
 
 ### 5. Diretórios de armazenamento
 
@@ -179,6 +186,7 @@ Ou via painel em `/equipe/inicializacao`.
 - Logs de aplicação em `storage/logs/app-YYYY-MM-DD.log`
 - Saída HTML sempre escapada com `View::e()`
 - Prepared statements em todas as queries
+- Reset de senha via token com expiração de 1 hora (equipe e cliente)
 
 ---
 

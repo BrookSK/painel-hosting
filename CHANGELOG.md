@@ -5,6 +5,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [1.5.0] — 2026-03-21
+
+### Adicionado
+- **Minha Conta** (`/equipe/minha-conta`): tela para cada membro da equipe editar nome, e-mail, senha e foto de perfil
+- Upload de avatar de perfil (PNG, JPG, WEBP, GIF · máx. 2 MB) salvo em `public/uploads/avatars/`
+- Coluna `avatar_url` na tabela `users` (migration `0013_user_avatar.sql`)
+- **Reset de senha** para equipe (`/equipe/reset-senha`) e cliente (`/cliente/reset-senha`) — fluxo em 2 etapas: solicitar e-mail → link com token → nova senha
+- Tabela `password_resets` com token único, tipo (equipe/cliente), expiração de 1 hora e controle de uso (migration `0014_password_resets.sql`)
+- Link "Esqueci minha senha" nas telas de login da equipe e do cliente
+- Link "Minha Conta" no dropdown do avatar do header e no footer da sidebar da equipe
+- Rate limit nas rotas de reset de senha (5 req/5min para solicitar, 10 req/5min para salvar)
+
+### Corrigido
+- Header da equipe não exibia nome, role e avatar em telas que não passavam `$usuario` pelo controller — agora busca diretamente do banco via `Auth::equipeId()`
+- Tela de permissões por role (`/equipe/permissoes`) com layout quebrado — reescrita com estilos inline consistentes com o restante do painel
+- View `minha-conta.php` usava classes CSS inexistentes (`form-group`, `form-label`, `btn btn-primary`) — corrigida para usar `.botao`, `.input`, `.sucesso`, `.erro` do design system
+
+### Alterado
+- `header-equipe.php` agora é autossuficiente: busca `name`, `email`, `role` e `avatar_url` do usuário logado diretamente do banco em uma única query junto com a contagem de notificações
+- Avatar no header exibe foto de perfil quando disponível, com fallback para iniciais
+
+---
+
 ## [1.4.0] — 2026-03-20
 
 ### Adicionado
