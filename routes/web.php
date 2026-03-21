@@ -269,6 +269,7 @@ $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class,
 // Páginas públicas legais e changelog
 $roteador->get('/termos', [LegalController::class, 'termos']);
 $roteador->get('/privacidade', [LegalController::class, 'privacidade']);
+$roteador->get('/licenca', [LegalController::class, 'licenca']);
 $roteador->get('/changelog', [ChangelogController::class, 'index']);
 
 // Erros do sistema (equipe)

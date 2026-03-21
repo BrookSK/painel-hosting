@@ -36,6 +36,7 @@ $_ft_empresa   = SistemaConfig::empresaNome();
         <ul class="pub-footer-links">
           <li><a href="/termos">Termos de uso</a></li>
           <li><a href="/privacidade">Privacidade</a></li>
+          <li><a href="/licenca">Licença de uso</a></li>
         </ul>
       </div>
     </div>

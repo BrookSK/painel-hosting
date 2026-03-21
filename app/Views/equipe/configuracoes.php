@@ -257,7 +257,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Paginas Legais</h2>
-    <p class="texto" style="font-size:13px;">HTML permitido. Acessivel em <a href="/termos" target="_blank">/termos</a> e <a href="/privacidade" target="_blank">/privacidade</a>.</p>
+    <p class="texto" style="font-size:13px;">HTML permitido. Acessivel em <a href="/termos" target="_blank">/termos</a>, <a href="/privacidade" target="_blank">/privacidade</a> e <a href="/licenca" target="_blank">/licenca</a>.</p>
     <div style="margin-top:12px;">
       <label style="display:block;font-size:13px;margin-bottom:6px;">Termos de Uso (HTML)</label>
       <textarea class="input" name="legal_terms_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_terms_html??'')); ?></textarea>
@@ -265,6 +265,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div style="margin-top:12px;">
       <label style="display:block;font-size:13px;margin-bottom:6px;">Politica de Privacidade (HTML)</label>
       <textarea class="input" name="legal_privacy_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_privacy_html??'')); ?></textarea>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Licença de Uso (HTML)</label>
+      <p class="texto" style="font-size:12px;margin-bottom:6px;">Se preenchido, substitui o texto padrão da licença em <a href="/licenca" target="_blank">/licenca</a>. Deixe em branco para usar o texto padrão do sistema.</p>
+      <textarea class="input" name="legal_license_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_license_html??'')); ?></textarea>
     </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Teste Grátis (Trial)</h2>

@@ -28,4 +28,11 @@ final class LegalController
         ]);
         return Resposta::html($html);
     }
+
+    public function licenca(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/licenca.php', [
+            'conteudo_customizado' => SistemaConfig::licenseHtml(),
+        ]));
+    }
 }

@@ -44,6 +44,11 @@ final class SistemaConfig
         return (string) Settings::obter('legal.privacy_html', '');
     }
 
+    public static function licenseHtml(): string
+    {
+        return (string) Settings::obter('legal.license_html', '');
+    }
+
     // ── SEO ─────────────────────────────────────────────────
 
     public static function seoTitulo(): string

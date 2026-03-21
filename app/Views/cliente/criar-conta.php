@@ -120,13 +120,18 @@ $_logo = SistemaConfig::logoUrl();
           <input class="input" type="text" name="mobile_phone" value="<?php echo View::e((string) ($mobile_phone ?? '')); ?>" autocomplete="tel" />
         </div>
       </div>
-      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:8px;">Criar minha conta</button>
+      <label style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;cursor:pointer;">
+        <input type="checkbox" name="aceite_licenca" value="1" required style="margin-top:2px;flex-shrink:0;accent-color:#4F46E5;" />
+        <span style="font-size:12px;color:#475569;line-height:1.6;">
+          Li e aceito os <a href="/termos" target="_blank" style="color:#4F46E5;font-weight:600;">Termos de Uso</a>,
+          a <a href="/privacidade" target="_blank" style="color:#4F46E5;font-weight:600;">Política de Privacidade</a>
+          e a <a href="/licenca" target="_blank" style="color:#4F46E5;font-weight:600;">Licença de Uso</a> do sistema.
+        </span>
+      </label>
+      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:12px;">Criar minha conta</button>
     </form>
     <div class="auth-footer-links">
       Já tem conta? <a href="/cliente/entrar">Entrar</a>
-    </div>
-    <div style="margin-top:10px;text-align:center;font-size:11px;color:#94a3b8;line-height:1.6;">
-      Ao criar uma conta você concorda com os <a href="/termos" style="color:#94a3b8;">Termos de Uso</a> e <a href="/privacidade" style="color:#94a3b8;">Política de Privacidade</a>.
     </div>
   </div>
 </div>

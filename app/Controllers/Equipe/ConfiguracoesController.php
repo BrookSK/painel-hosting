@@ -59,6 +59,7 @@ final class ConfiguracoesController
             'system_copyright_text' => (string) Settings::obter('system.copyright_text', ''),
             'legal_terms_html'      => SistemaConfig::termsHtml(),
             'legal_privacy_html'    => SistemaConfig::privacyHtml(),
+            'legal_license_html'    => SistemaConfig::licenseHtml(),
             'trial_enabled'         => (string) Settings::obter('trial.enabled', '0'),
             'trial_dias'            => (string) Settings::obter('trial.dias', '7'),
             'trial_vcpu'            => (string) Settings::obter('trial.vcpu', '1'),
@@ -131,6 +132,7 @@ final class ConfiguracoesController
         $systemCopyrightText = $in->postString('system_copyright_text', 255, false);
         $legalTermsHtml      = $in->postString('legal_terms_html', 65535, false);
         $legalPrivacyHtml    = $in->postString('legal_privacy_html', 65535, false);
+        $legalLicenseHtml    = $in->postString('legal_license_html', 65535, false);
 
         $trialEnabled    = $in->postEnum('trial_enabled', ['0', '1', 'on', 'true'], '0');
         $trialDias       = $in->postInt('trial_dias', 1, 365, false);
@@ -194,6 +196,7 @@ final class ConfiguracoesController
                 'system_copyright_text' => $systemCopyrightText,
                 'legal_terms_html'      => $legalTermsHtml,
                 'legal_privacy_html'    => $legalPrivacyHtml,
+                'legal_license_html'    => $legalLicenseHtml,
                 'trial_enabled'         => (($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? '1' : '0'),
                 'trial_dias'            => $trialDias > 0 ? (string) $trialDias : '7',
                 'trial_vcpu'            => $trialVcpu > 0 ? (string) $trialVcpu : '1',
@@ -261,6 +264,7 @@ final class ConfiguracoesController
         Settings::definir('system.copyright_text', $systemCopyrightText);
         Settings::definir('legal.terms_html', $legalTermsHtml);
         Settings::definir('legal.privacy_html', $legalPrivacyHtml);
+        Settings::definir('legal.license_html', $legalLicenseHtml);
 
         Settings::definir('trial.enabled',   ($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? 1 : 0);
         Settings::definir('trial.dias',      $trialDias > 0 ? $trialDias : 7);
@@ -359,6 +363,7 @@ final class ConfiguracoesController
             'system_copyright_text' => $systemCopyrightText,
             'legal_terms_html'      => $legalTermsHtml,
             'legal_privacy_html'    => $legalPrivacyHtml,
+            'legal_license_html'    => $legalLicenseHtml,
             'trial_enabled'         => (($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? '1' : '0'),
             'trial_dias'            => (string) ($trialDias > 0 ? $trialDias : 7),
             'trial_vcpu'            => (string) ($trialVcpu > 0 ? $trialVcpu : 1),
