@@ -80,12 +80,25 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
     <li><span class="badge-cmd">legal.privacy_html</span> — HTML da Política de Privacidade (<a href="/privacidade">/privacidade</a>)</li>
   </ul>
 
-  <div class="section-title">12. Segurança</div>
+  <div class="section-title">12. 2FA para clientes</div>
+  <p style="font-size:14px;color:#475569;">
+    Clientes podem ativar autenticação de dois fatores em <a href="/cliente/2fa/configurar">/cliente/2fa/configurar</a>.<br>
+    Requer migration <span class="badge-cmd">0025_client_totp.sql</span> (tabela <code>client_totp</code>).<br>
+    Quando ativo, o cliente é redirecionado para <a href="/cliente/2fa/verificar">/cliente/2fa/verificar</a> após o login.
+  </p>
+
+  <div class="section-title">13. Endereço do cliente</div>
+  <p style="font-size:14px;color:#475569;">
+    Campos de endereço disponíveis em <a href="/cliente/minha-conta">/cliente/minha-conta</a>.<br>
+    Requer migration <span class="badge-cmd">0024_client_address.sql</span> (colunas <code>address_*</code> em <code>clients</code>).
+  </p>
+
+  <div class="section-title">14. Segurança</div>
   <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
     <li>CSRF em todos os formulários POST</li>
     <li>Rate limiting por IP, cliente e equipe</li>
     <li>Bloqueio de IP após 10 tentativas de login falhas em 30 min</li>
-    <li>2FA (TOTP RFC 6238) para equipe</li>
+    <li>2FA (TOTP RFC 6238) para equipe e clientes</li>
     <li>Tokens de terminal e chat de uso único (SHA-256, TTL curto)</li>
     <li>Reset de senha via token único com expiração de 1 hora</li>
     <li>Validação de propriedade (IDOR) — retorna 403 em todos os endpoints sensíveis</li>

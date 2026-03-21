@@ -5,6 +5,33 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [1.6.0] — 2026-03-21
+
+### Adicionado
+- **2FA (TOTP) para clientes** — configuração em `/cliente/2fa/configurar` com QR code e chave manual; verificação em `/cliente/2fa/verificar` (tela standalone dark); desativação com confirmação de senha
+- Tabela `client_totp` (migration `0025_client_totp.sql`) com `secret`, `enabled`, `created_at`
+- Item "Segurança" na sidebar do cliente com link para `/cliente/2fa/configurar`
+- Card de segurança em `/cliente/minha-conta` com link para configurar 2FA
+- **Endereço do cliente** — campos `address_street`, `address_number`, `address_complement`, `address_city`, `address_state`, `address_zip`, `address_country` em `clients` (migration `0024_client_address.sql`)
+- Formulário de endereço em `/cliente/minha-conta`
+- **Migração completa do painel do cliente para o novo layout** — sidebar dark, header com avatar/dropdown, design system unificado com o painel da equipe
+- Todas as views do cliente migradas: `vps-listar`, `monitoramento-listar`, `monitoramento-ver`, `tickets-listar`, `ticket-novo`, `ticket-ver`, `chat`, `emails-listar`, `emails-dominios`, `emails-dominios-instrucoes`, `aplicacoes-listar`, `assinaturas-listar`, `ajuda`, `avaliar`, `assinatura-criada`, `status-listar`, `vps-terminal`, `planos`, `minha-conta`, `painel`
+- Partials `layout-cliente-inicio.php` e `layout-cliente-fim.php` com sidebar, header, avatar dropdown e scripts de toggle
+- `sidebar-cliente.php` com todos os itens de navegação e suporte a collapse
+
+### Corrigido
+- `AssinaturasController` (cliente) referenciava colunas inexistentes `s.billing_type`, `s.gateway`, `s.gateway_subscription_id` — query corrigida para usar apenas colunas reais da tabela `subscriptions`
+- `PlanosController` não passava `$cliente` para a view — adicionada busca de `name`/`email` do cliente logado
+- `a:hover` com `text-decoration:underline` removido do design system (CSP e consistência visual)
+- `overflow-x:hidden` movido de `body` para `html` no `estilo.php`
+- Google Fonts removido do CSP e substituído por `system-ui` em todo o design system
+
+### Alterado
+- Design system do cliente (`estilo.php`) unificado com o da equipe (`estilo-equipe.php`): `.card-new`, `.badge-new`, `.botao`, `.sucesso`, `.erro`, `.page-title`, `.page-subtitle`, `.page-header`
+- `layout-cliente-fim.php` já inclui `chat-widget.php` — removida inclusão duplicada das views individuais
+
+---
+
 ## [1.5.0] — 2026-03-21
 
 ### Adicionado

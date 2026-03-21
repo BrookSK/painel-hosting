@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **1.5.0**
+> Versão atual: **1.6.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -44,6 +44,8 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0011_trial.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0012_system_errors.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0013_user_avatar.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0014_password_resets.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0024_client_address.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0025_client_totp.sql
 ```
 
 ### 3. Configuração do banco
@@ -179,6 +181,7 @@ Ou via painel em `/equipe/inicializacao`.
 - Rate limiting por IP, cliente e equipe
 - Bloqueio de IP após 10 tentativas de login falhas em 30 min
 - 2FA (TOTP RFC 6238) para usuários da equipe
+- 2FA (TOTP RFC 6238) para clientes (`/cliente/2fa/configurar`)
 - Tokens de terminal e chat de uso único com TTL curto
 - Validação de propriedade (IDOR) em todos os endpoints sensíveis — retorna 403
 - Prevenção de replay attack nos webhooks Stripe e Asaas

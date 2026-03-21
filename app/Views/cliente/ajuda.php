@@ -103,6 +103,21 @@ details ul{padding-left:18px;}
   </details>
 
   <details>
+    <summary>Como ativar a verificação em dois fatores (2FA)?</summary>
+    <p>Acesse <a href="/cliente/2fa/configurar">Segurança → 2FA</a> na sidebar. Escaneie o QR code com um app autenticador (Google Authenticator, Authy, etc.) e confirme com o código gerado. Após ativar, você precisará informar o código a cada login.</p>
+  </details>
+
+  <details>
+    <summary>Como desativar o 2FA?</summary>
+    <p>Acesse <a href="/cliente/2fa/configurar">Segurança → 2FA</a> e clique em "Desativar". Será solicitada sua senha atual para confirmar.</p>
+  </details>
+
+  <details>
+    <summary>Como atualizar meu endereço?</summary>
+    <p>Acesse <a href="/cliente/minha-conta">Minha Conta</a>. Na seção "Endereço", preencha os campos e salve.</p>
+  </details>
+
+  <details>
     <summary>Como ver minhas assinaturas e cobranças?</summary>
     <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a> para ver o histórico de cobranças, status de pagamento e solicitar reembolso.</p>
   </details>
