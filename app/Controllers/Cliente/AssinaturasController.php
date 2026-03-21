@@ -25,7 +25,7 @@ final class AssinaturasController
         $pdo = BancoDeDados::pdo();
 
         $stmt = $pdo->prepare(
-            "SELECT s.id, s.status, s.gateway, s.gateway_subscription_id,
+            "SELECT s.id, s.status,
                     s.asaas_subscription_id, s.stripe_subscription_id,
                     s.next_due_date, s.created_at,
                     p.name AS plan_name, p.price_monthly
