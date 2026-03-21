@@ -127,6 +127,45 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">SMTP (envio de e-mails do sistema)</h2>
+    <p class="texto" style="font-size:13px;margin-bottom:12px;">Usado para reset de senha, alertas e notificações. Se não configurado, o sistema usa o <code>mail()</code> nativo do PHP.</p>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Host SMTP</label>
+        <input class="input" type="text" name="smtp_host" value="<?php echo View::e((string)($smtp_host??'')); ?>" placeholder="smtp.gmail.com" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Porta</label>
+        <input class="input" type="number" name="smtp_port" value="<?php echo View::e((string)($smtp_port??'587')); ?>" placeholder="587" min="1" max="65535" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">587 = TLS · 465 = SSL · 25 = sem criptografia</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário (e-mail de login)</label>
+        <input class="input" type="text" name="smtp_user" value="<?php echo View::e((string)($smtp_user??'')); ?>" placeholder="noreply@seudominio.com" autocomplete="off" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Senha</label>
+        <input class="input" type="password" name="smtp_pass" value="<?php echo View::e((string)($smtp_pass??'')); ?>" autocomplete="new-password" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Criptografia</label>
+        <select class="input" name="smtp_encryption">
+          <option value="tls" <?php echo ((string)($smtp_encryption??'tls'))==='tls'?'selected':''; ?>>TLS (STARTTLS) — porta 587</option>
+          <option value="ssl" <?php echo ((string)($smtp_encryption??'tls'))==='ssl'?'selected':''; ?>>SSL — porta 465</option>
+          <option value="none" <?php echo ((string)($smtp_encryption??'tls'))==='none'?'selected':''; ?>>Nenhuma — porta 25</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">E-mail remetente (From)</label>
+        <input class="input" type="email" name="smtp_from_email" value="<?php echo View::e((string)($smtp_from_email??'')); ?>" placeholder="noreply@seudominio.com" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Se vazio, usa o usuário acima.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Nome do remetente</label>
+        <input class="input" type="text" name="smtp_from_name" value="<?php echo View::e((string)($smtp_from_name??'')); ?>" placeholder="LRV Web" />
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">E-mail (Mailcow)</h2>
     <div class="grid">
       <div>

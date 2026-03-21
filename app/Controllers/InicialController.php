@@ -124,8 +124,12 @@ final class InicialController
         // Notificar admin
         try {
             $emailAdmin = trim((string) Settings::obter('alertas.email_admin', ''));
-            if ($emailAdmin !== '' && function_exists('mail')) {
-                @mail($emailAdmin, '[LRV] Contato: ' . $subject, "De: {$name} <{$email}>\n\n{$message}", 'MIME-Version: 1.0' . "\r\n" . 'Content-Type: text/plain; charset=utf-8');
+            if ($emailAdmin !== '') {
+                (new \LRV\App\Services\Email\SmtpMailer())->enviar(
+                    $emailAdmin,
+                    '[LRV] Contato: ' . $subject,
+                    "De: {$name} <{$email}>\n\n{$message}"
+                );
             }
         } catch (\Throwable $e) {
         }

@@ -38,6 +38,13 @@ final class ConfiguracoesController
             'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
             'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
             'terminal_safe_mode' => ConfiguracoesSistema::terminalSafeModeHabilitado() ? '1' : '0',
+            'smtp_host'          => (string) Settings::obter('smtp.host', ''),
+            'smtp_port'          => (string) Settings::obter('smtp.port', '587'),
+            'smtp_user'          => (string) Settings::obter('smtp.user', ''),
+            'smtp_pass'          => (string) Settings::obter('smtp.pass', ''),
+            'smtp_encryption'    => (string) Settings::obter('smtp.encryption', 'tls'),
+            'smtp_from_email'    => (string) Settings::obter('smtp.from_email', ''),
+            'smtp_from_name'     => (string) Settings::obter('smtp.from_name', ''),
             'mailcow_url'          => (string) Settings::obter('email.mailcow_url', ''),
             'mailcow_key'          => (string) Settings::obter('email.mailcow_key', ''),
             'webmail_url'          => (string) Settings::obter('email.webmail_url', ''),
@@ -46,8 +53,7 @@ final class ConfiguracoesController
             'email_max_accounts'   => (string) Settings::obter('email.max_accounts_per_plan', '5'),
             'email_dns_template'   => (string) Settings::obter('email.dns_instructions_template', ''),
             'chat_ws_port'         => (string) Settings::obter('chat.ws_port', '8082'),
-            'system_name'           => SistemaConfig::nome(),
-            'system_logo_url'       => SistemaConfig::logoUrl(),
+            'system_name'           => SistemaConfig::nome(),            'system_logo_url'       => SistemaConfig::logoUrl(),
             'system_favicon_url'    => SistemaConfig::faviconUrl(),
             'system_company_name'   => SistemaConfig::empresaNome(),
             'system_copyright_text' => (string) Settings::obter('system.copyright_text', ''),
@@ -110,6 +116,14 @@ final class ConfiguracoesController
         $emailDnsTemplate    = $in->postString('email_dns_template', 65535, false);
         $chatWsPort          = $in->postInt('chat_ws_port', 1, 65535, false);
 
+        $smtpHost       = $in->postString('smtp_host', 255, false);
+        $smtpPort       = $in->postInt('smtp_port', 1, 65535, false);
+        $smtpUser       = $in->postString('smtp_user', 255, false);
+        $smtpPass       = $in->postString('smtp_pass', 255, false);
+        $smtpEncryption = $in->postEnum('smtp_encryption', ['tls', 'ssl', 'none'], 'tls');
+        $smtpFromEmail  = $in->postEmail('smtp_from_email', 190, false);
+        $smtpFromName   = $in->postString('smtp_from_name', 190, false);
+
         $systemName          = $in->postString('system_name', 190, false);
         $systemLogoUrl       = $in->postString('system_logo_url', 500, false);
         $systemFaviconUrl    = $in->postString('system_favicon_url', 500, false);
@@ -158,6 +172,13 @@ final class ConfiguracoesController
                 'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
                 'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
                 'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
+                'smtp_host'          => $smtpHost,
+                'smtp_port'          => $smtpPort > 0 ? (string) $smtpPort : '587',
+                'smtp_user'          => $smtpUser,
+                'smtp_pass'          => $smtpPass,
+                'smtp_encryption'    => $smtpEncryption,
+                'smtp_from_email'    => $smtpFromEmail,
+                'smtp_from_name'     => $smtpFromName,
                 'mailcow_url'          => $mailcowUrl,
                 'mailcow_key'          => $mailcowKey,
                 'webmail_url'          => $webmailUrl,
@@ -224,6 +245,14 @@ final class ConfiguracoesController
         Settings::definir('email.max_accounts_per_plan', $emailMaxAccounts > 0 ? $emailMaxAccounts : 5);
         Settings::definir('email.dns_instructions_template', $emailDnsTemplate);
         Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
+
+        Settings::definir('smtp.host',       $smtpHost);
+        Settings::definir('smtp.port',       $smtpPort > 0 ? $smtpPort : 587);
+        Settings::definir('smtp.user',       $smtpUser);
+        Settings::definir('smtp.pass',       $smtpPass);
+        Settings::definir('smtp.encryption', $smtpEncryption);
+        Settings::definir('smtp.from_email', $smtpFromEmail);
+        Settings::definir('smtp.from_name',  $smtpFromName);
 
         Settings::definir('system.name', $systemName);
         Settings::definir('system.logo_url', $systemLogoUrl);
@@ -308,6 +337,13 @@ final class ConfiguracoesController
             'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
             'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),
             'terminal_safe_mode' => (($terminalSafeMode === '1' || $terminalSafeMode === 'on' || $terminalSafeMode === 'true') ? '1' : '0'),
+            'smtp_host'          => $smtpHost,
+            'smtp_port'          => $smtpPort > 0 ? (string) $smtpPort : '587',
+            'smtp_user'          => $smtpUser,
+            'smtp_pass'          => $smtpPass,
+            'smtp_encryption'    => $smtpEncryption,
+            'smtp_from_email'    => $smtpFromEmail,
+            'smtp_from_name'     => $smtpFromName,
             'mailcow_url'          => $mailcowUrl,
             'mailcow_key'          => $mailcowKey,
             'webmail_url'          => $webmailUrl,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Services\Errors;
 
+use LRV\App\Services\Email\SmtpMailer;
 use LRV\Core\AppLogger;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
@@ -127,15 +128,10 @@ final class ErrorLogService
 
             foreach ($membros as $m) {
                 $email = trim((string) ($m['email'] ?? ''));
-                if ($email === '' || !function_exists('mail')) {
-                    continue;
-                }
-                @mail(
-                    $email,
-                    '[LRV] ' . $titulo,
-                    $corpo,
-                    "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8"
-                );
+                if ($email === '') continue;
+                try {
+                    (new SmtpMailer())->enviar($email, '[LRV] ' . $titulo, $corpo);
+                } catch (\Throwable) {}
             }
 
             // Marcar como notificado

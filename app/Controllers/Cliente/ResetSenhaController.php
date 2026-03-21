@@ -112,8 +112,7 @@ final class ResetSenhaController
             $link    = $base . '/cliente/reset-senha/nova?token=' . $token;
             $assunto = 'Redefinição de senha';
             $corpo   = "Você solicitou a redefinição de senha.\n\nClique no link abaixo (válido por 1 hora):\n{$link}\n\nSe não foi você, ignore este e-mail.";
-            $headers = "From: noreply@{$_SERVER['HTTP_HOST']}\r\nContent-Type: text/plain; charset=utf-8";
-            @mail($email, $assunto, $corpo, $headers);
+            (new \LRV\App\Services\Email\SmtpMailer())->enviar($email, $assunto, $corpo);
         } catch (\Throwable) {}
     }
 

@@ -118,12 +118,11 @@ final class ResetSenhaController
     private function enviarEmail(string $email, string $token): void
     {
         try {
-            $base    = rtrim((string)Settings::obter('app_url', ''), '/');
+            $base    = rtrim((string)Settings::obter('app.url_base', ''), '/');
             $link    = $base . '/equipe/reset-senha/nova?token=' . $token;
             $assunto = 'Redefinição de senha — Painel da Equipe';
             $corpo   = "Você solicitou a redefinição de senha.\n\nClique no link abaixo (válido por 1 hora):\n{$link}\n\nSe não foi você, ignore este e-mail.";
-            $headers = "From: noreply@{$_SERVER['HTTP_HOST']}\r\nContent-Type: text/plain; charset=utf-8";
-            @mail($email, $assunto, $corpo, $headers);
+            (new \LRV\App\Services\Email\SmtpMailer())->enviar($email, $assunto, $corpo);
         } catch (\Throwable) {}
     }
 

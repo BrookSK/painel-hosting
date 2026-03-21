@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Services\Alertas;
 
+use LRV\App\Services\Email\SmtpMailer;
 use LRV\App\Services\Http\ClienteHttp;
 use LRV\Core\ConfiguracoesSistema;
 
@@ -27,17 +28,13 @@ final class NotificacoesService
             return false;
         }
 
-        if (!function_exists('mail')) {
+        try {
+            $assunto = '[LRV] ' . $titulo;
+            (new SmtpMailer())->enviar($email, $assunto, $mensagem);
+            return true;
+        } catch (\Throwable) {
             return false;
         }
-
-        $assunto = '[LRV] ' . $titulo;
-
-        $headers = [];
-        $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'Content-Type: text/plain; charset=utf-8';
-
-        return @mail($email, $assunto, $mensagem, implode("\r\n", $headers));
     }
 
     public function enviarWhatsAppAdmin(string $mensagem): bool
