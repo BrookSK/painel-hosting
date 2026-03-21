@@ -6,6 +6,7 @@ $_ft_copyright = SistemaConfig::copyrightText();
 $_ft_nome      = SistemaConfig::nome();
 $_ft_empresa   = SistemaConfig::empresaNome();
 ?>
+<?php require __DIR__ . '/chat-widget.php'; ?>
 <footer class="pub-footer">
   <div class="pub-footer-inner">
     <div class="pub-footer-grid">

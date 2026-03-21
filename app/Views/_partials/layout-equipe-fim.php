@@ -2,6 +2,7 @@
     </div><!-- /page-content -->
   </div><!-- /app-main -->
 </div><!-- /app-shell -->
+<?php require __DIR__ . '/chat-widget.php'; ?>
 <script>
 (function () {
   var shell    = document.getElementById('appShell');

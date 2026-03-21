@@ -126,7 +126,6 @@ function vpsStatusInfo(string $st): array
       </div>
     <?php endif; ?>
   </div>
-  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
   <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>
