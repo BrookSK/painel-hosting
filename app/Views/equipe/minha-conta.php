@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 use LRV\Core\View;
+
+$pageTitle = 'Minha Conta';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
 $_nome   = (string)($usuario['name'] ?? '');
@@ -14,116 +16,151 @@ foreach (explode(' ', trim($_nome)) as $w) {
 }
 if ($_initials === '') $_initials = 'U';
 ?>
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Minha Conta</h1>
-    <p class="page-subtitle">Gerencie suas informações pessoais e senha</p>
-  </div>
-</div>
 
-<?php if (!empty($ok)): ?>
-  <div class="alert alert-success"><?php echo View::e($ok); ?></div>
-<?php endif; ?>
-<?php if (!empty($erro)): ?>
-  <div class="alert alert-danger"><?php echo View::e($erro); ?></div>
-<?php endif; ?>
+<div class="page-title">Minha Conta</div>
+<div class="page-subtitle">Gerencie suas informações pessoais e senha</div>
 
-<div class="conta-grid">
-  <!-- Avatar -->
-  <div class="card conta-avatar-card">
-    <div class="conta-avatar-wrap">
+<?php if (!empty($ok)): ?><div class="sucesso"><?php echo View::e($ok); ?></div><?php endif; ?>
+<?php if (!empty($erro)): ?><div class="erro"><?php echo View::e($erro); ?></div><?php endif; ?>
+
+<div class="mc-layout">
+
+  <!-- Coluna esquerda: avatar -->
+  <div class="card-new mc-avatar-card">
+    <div class="mc-avatar-circle" id="avatarWrap">
       <?php if ($_avatar !== ''): ?>
-        <img src="<?php echo View::e($_avatar); ?>" alt="Avatar" class="conta-avatar-img" id="avatarPreview" />
+        <img src="<?php echo View::e($_avatar); ?>" alt="avatar" class="mc-avatar-img" />
       <?php else: ?>
-        <div class="conta-avatar-placeholder" id="avatarPreview"><?php echo View::e($_initials); ?></div>
+        <?php echo View::e($_initials); ?>
       <?php endif; ?>
     </div>
-    <div class="conta-avatar-info">
-      <strong><?php echo View::e($_nome); ?></strong>
-      <span class="badge-role"><?php echo View::e($_role); ?></span>
-    </div>
-    <p class="conta-avatar-hint">PNG, JPG, WEBP ou GIF · máx. 2 MB</p>
+    <div class="mc-avatar-name"><?php echo View::e($_nome); ?></div>
+    <span class="mc-role-badge"><?php echo View::e($_role); ?></span>
+    <p class="mc-avatar-hint">PNG, JPG, WEBP · máx. 2 MB</p>
   </div>
 
-  <!-- Formulário -->
-  <div class="card conta-form-card">
+  <!-- Coluna direita: formulário -->
+  <div class="card-new mc-form-card">
     <form method="POST" action="/equipe/minha-conta/salvar" enctype="multipart/form-data">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 
-      <div class="form-section-title">Informações pessoais</div>
+      <p class="mc-section-label">Informações pessoais</p>
 
-      <div class="form-group">
-        <label class="form-label">Foto de perfil</label>
-        <div class="avatar-upload-row">
-          <label class="btn btn-secondary btn-sm avatar-upload-btn" for="avatarInput">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2v8M4 5l3.5-3.5L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="mc-field">
+        <label class="mc-label" for="avatarInput">Foto de perfil</label>
+        <div class="mc-upload-row">
+          <label for="avatarInput" class="botao sm sec" style="cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v7M3.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             Escolher foto
           </label>
-          <span class="avatar-filename" id="avatarFilename">Nenhum arquivo</span>
-          <input type="file" name="avatar" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" />
+          <span class="mc-filename" id="avatarFilename">Nenhum arquivo selecionado</span>
+          <input type="file" name="avatar" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" />
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="name">Nome</label>
-          <input type="text" id="name" name="name" class="form-control" value="<?php echo View::e($_nome); ?>" required />
+      <div class="mc-row">
+        <div class="mc-field">
+          <label class="mc-label" for="name">Nome</label>
+          <input type="text" id="name" name="name" class="input mc-input" value="<?php echo View::e($_nome); ?>" required />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="email">E-mail</label>
-          <input type="email" id="email" name="email" class="form-control" value="<?php echo View::e($_email); ?>" required />
-        </div>
-      </div>
-
-      <div class="form-section-title" style="margin-top:24px;">Alterar senha <span style="font-weight:400;font-size:13px;color:#94a3b8;">(deixe em branco para não alterar)</span></div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="senha_atual">Senha atual</label>
-          <input type="password" id="senha_atual" name="senha_atual" class="form-control" autocomplete="current-password" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="nova_senha">Nova senha</label>
-          <input type="password" id="nova_senha" name="nova_senha" class="form-control" autocomplete="new-password" minlength="8" />
+        <div class="mc-field">
+          <label class="mc-label" for="email">E-mail</label>
+          <input type="email" id="email" name="email" class="input mc-input" value="<?php echo View::e($_email); ?>" required />
         </div>
       </div>
 
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      <div class="mc-divider"></div>
+      <p class="mc-section-label">Alterar senha <span class="mc-section-hint">(deixe em branco para não alterar)</span></p>
+
+      <div class="mc-row">
+        <div class="mc-field">
+          <label class="mc-label" for="senha_atual">Senha atual</label>
+          <input type="password" id="senha_atual" name="senha_atual" class="input mc-input" autocomplete="current-password" />
+        </div>
+        <div class="mc-field">
+          <label class="mc-label" for="nova_senha">Nova senha</label>
+          <input type="password" id="nova_senha" name="nova_senha" class="input mc-input" autocomplete="new-password" minlength="8" />
+        </div>
+      </div>
+
+      <div class="mc-actions">
+        <button type="submit" class="botao">Salvar alterações</button>
       </div>
     </form>
   </div>
+
 </div>
 
 <style>
-.conta-grid { display:grid; grid-template-columns:260px 1fr; gap:24px; align-items:start; }
-@media(max-width:768px){ .conta-grid { grid-template-columns:1fr; } }
+.mc-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.mc-avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px;
+  text-align: center;
+}
+.mc-avatar-circle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mc-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.mc-avatar-name { font-size: 14px; font-weight: 600; color: #0f172a; }
+.mc-role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: #f5f3ff;
+  color: #6d28d9;
+  font-size: 12px;
+  font-weight: 500;
+}
+.mc-avatar-hint { font-size: 11px; color: #94a3b8; margin: 0; }
 
-.conta-avatar-card { display:flex; flex-direction:column; align-items:center; gap:12px; padding:32px 24px; text-align:center; }
-.conta-avatar-wrap { width:96px; height:96px; border-radius:50%; overflow:hidden; background:linear-gradient(135deg,#4F46E5,#7C3AED); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:#fff; flex-shrink:0; }
-.conta-avatar-img { width:100%; height:100%; object-fit:cover; }
-.conta-avatar-placeholder { font-size:32px; font-weight:700; color:#fff; }
-.conta-avatar-info { display:flex; flex-direction:column; gap:4px; }
-.conta-avatar-info strong { font-size:15px; color:#f1f5f9; }
-.badge-role { display:inline-block; padding:2px 10px; border-radius:20px; background:rgba(79,70,229,.18); color:#818cf8; font-size:12px; font-weight:500; }
-.conta-avatar-hint { font-size:12px; color:#64748b; margin:0; }
+.mc-form-card { padding: 24px; }
+.mc-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+.mc-section-hint { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 12px; }
+.mc-divider { border: none; border-top: 1px solid #f1f5f9; margin: 20px 0 16px; }
+.mc-field { display: flex; flex-direction: column; gap: 6px; }
+.mc-label { font-size: 13px; font-weight: 500; color: #475569; }
+.mc-input { width: 100%; }
+.mc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.mc-upload-row { display: flex; align-items: center; gap: 10px; }
+.mc-filename { font-size: 13px; color: #94a3b8; }
+.mc-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
 
-.conta-form-card { padding:28px; }
-.form-section-title { font-size:13px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin-bottom:16px; }
-.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-@media(max-width:600px){ .form-row { grid-template-columns:1fr; } }
-.form-actions { margin-top:24px; display:flex; justify-content:flex-end; }
-
-.avatar-upload-row { display:flex; align-items:center; gap:12px; }
-.avatar-upload-btn { cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
-.avatar-filename { font-size:13px; color:#64748b; }
+@media (max-width: 860px) { .mc-layout { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .mc-row { grid-template-columns: 1fr; } }
 </style>
 
 <script>
 (function(){
   var input = document.getElementById('avatarInput');
   var label = document.getElementById('avatarFilename');
-  var preview = document.getElementById('avatarPreview');
+  var wrap  = document.getElementById('avatarWrap');
   if (!input) return;
   input.addEventListener('change', function(){
     var f = this.files[0];
@@ -131,15 +168,7 @@ if ($_initials === '') $_initials = 'U';
     label.textContent = f.name;
     var reader = new FileReader();
     reader.onload = function(e){
-      if (preview.tagName === 'IMG') {
-        preview.src = e.target.result;
-      } else {
-        var img = document.createElement('img');
-        img.src = e.target.result;
-        img.className = 'conta-avatar-img';
-        img.id = 'avatarPreview';
-        preview.replaceWith(img);
-      }
+      wrap.innerHTML = '<img src="'+e.target.result+'" class="mc-avatar-img" alt="avatar" />';
     };
     reader.readAsDataURL(f);
   });
