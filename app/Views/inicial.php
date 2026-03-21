@@ -44,8 +44,16 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 
 /* ── Hero split ── */
 .lp-hero { background: linear-gradient(135deg, #060d1f 0%, #0b1c3d 45%, #1e1b4b 75%, #312e81 100%); color: #fff; padding: 80px 24px 90px; position: relative; overflow: hidden; }
-.lp-hero::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 56px 56px; pointer-events: none; }
+.lp-hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 40%, transparent 100%); }
 .lp-hero-glow { position: absolute; top: -20%; right: -10%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,.35) 0%, transparent 70%); pointer-events: none; }
+/* floating badges */
+.lp-hero-floats { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.lp-hero-float { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(12px); border-radius: 12px; padding: 10px 16px; width: fit-content; }
+.lp-hero-float-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-hero-float-icon.green { background: rgba(34,197,94,.15); color: #22c55e; }
+.lp-hero-float-icon.blue { background: rgba(79,70,229,.2); color: #a5b4fc; }
+.lp-hero-float-label { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
+.lp-hero-float-sub { font-size: 11px; color: rgba(255,255,255,.5); }
 .lp-hero-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; position: relative; }
 @media (max-width: 900px) { .lp-hero-inner { grid-template-columns: 1fr; gap: 48px; } }
 .lp-hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(79,70,229,.2); border: 1px solid rgba(165,180,252,.3); color: #a5b4fc; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 999px; margin-bottom: 22px; letter-spacing: .04em; text-transform: uppercase; }
@@ -180,7 +188,7 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 
 /* ── CTA final ── */
 .lp-cta-final { background: #060d1f; padding: 96px 24px; text-align: center; position: relative; overflow: hidden; }
-.lp-cta-final::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 56px 56px; pointer-events: none; }
+.lp-cta-final::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%); }
 .lp-cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 700px; height: 400px; background: radial-gradient(ellipse, rgba(79,70,229,.3) 0%, transparent 70%); pointer-events: none; }
 .lp-cta-inner { max-width: 640px; margin: 0 auto; position: relative; }
 .lp-cta-title { font-size: clamp(26px, 4.5vw, 46px); font-weight: 900; color: #fff; margin-bottom: 14px; letter-spacing: -.03em; font-style: italic; line-height: 1.1; }
@@ -289,6 +297,16 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
         </div>
         <a href="/cliente/criar-conta" class="lp-server-cta">Contratar este plano →</a>
       </div>
+      <div class="lp-hero-floats">
+        <div class="lp-hero-float">
+          <div class="lp-hero-float-icon green"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l4.5 2.25v3.75c0 2.625-1.875 4.875-4.5 5.625C5.375 12.375 3.5 10.125 3.5 7.5V3.75L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+          <div><div class="lp-hero-float-label">DDoS Protection</div><div class="lp-hero-float-sub">Ativada por padrão</div></div>
+        </div>
+        <div class="lp-hero-float">
+          <div class="lp-hero-float-icon blue"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="lp-hero-float-label">99,9% Uptime</div><div class="lp-hero-float-sub">SLA garantido</div></div>
+        </div>
+      </div>
       <?php else: ?>
       <div class="lp-server-card">
         <div class="lp-server-card-header">
@@ -304,6 +322,16 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
           <div class="lp-spec"><div class="lp-spec-val">24/7</div><div class="lp-spec-lbl">Suporte</div></div>
         </div>
         <a href="/cliente/criar-conta" class="lp-server-cta">Ver planos disponíveis →</a>
+      </div>
+      <div class="lp-hero-floats">
+        <div class="lp-hero-float">
+          <div class="lp-hero-float-icon green"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l4.5 2.25v3.75c0 2.625-1.875 4.875-4.5 5.625C5.375 12.375 3.5 10.125 3.5 7.5V3.75L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+          <div><div class="lp-hero-float-label">DDoS Protection</div><div class="lp-hero-float-sub">Ativada por padrão</div></div>
+        </div>
+        <div class="lp-hero-float">
+          <div class="lp-hero-float-icon blue"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="lp-hero-float-label">99,9% Uptime</div><div class="lp-hero-float-sub">SLA garantido</div></div>
+        </div>
       </div>
       <?php endif; ?>
     </div>
