@@ -58,6 +58,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conexão</strong></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button class="botao" type="submit" form="form-servidor" formaction="/equipe/servidores/testar-conexao">Testar SSH/Docker</button>
+      <?php if (!empty($servidor['id'])): ?>
+        <?php
+          $setupSt = (string)($servidor['setup_status'] ?? 'pending');
+          $retomar = $setupSt === 'error' ? 'true' : 'false';
+          $btnLabel = $setupSt === 'error' ? 'Continuar setup' : ($setupSt === 'ready' ? 'Re-inicializar' : 'Inicializar servidor');
+          $btnStyle = $setupSt === 'error' ? 'background:#f59e0b;' : '';
+        ?>
+        <button class="botao" type="button" style="<?php echo $btnStyle; ?>"
+          onclick="abrirSetupEditar(<?php echo (int)$servidor['id']; ?>,<?php echo View::e(json_encode((string)($servidor['hostname']??''))); ?>,<?php echo $retomar; ?>)">
+          <?php echo View::e($btnLabel); ?>
+        </button>
+      <?php endif; ?>
       <span class="texto" style="margin:0;opacity:.85;">Executa <code>docker version</code> no node.</span>
     </div>
   </div>
@@ -149,5 +161,100 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
   </form>
 </div>
+
+<!-- Modal de inicialização -->
+<div id="modal-setup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:min(700px,96vw);max-height:92vh;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <strong id="modal-setup-titulo" style="font-size:16px;">Inicializar servidor</strong>
+      <button id="btn-fechar-x" onclick="fecharSetup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <p class="texto" style="margin:0;font-size:13px;">Conecta via SSH e prepara o servidor: Docker, rede <code>lrv-net</code> e usuário de terminal.</p>
+    <div style="background:#e2e8f0;border-radius:99px;height:8px;overflow:hidden;">
+      <div id="setup-progress-bar" style="height:100%;width:0%;background:#4F46E5;border-radius:99px;transition:width .4s ease;"></div>
+    </div>
+    <div id="setup-progress-txt" style="font-size:12px;color:#64748b;margin-top:-8px;">Aguardando início…</div>
+    <div id="setup-log" style="background:#0b1020;color:#e2e8f0;border-radius:12px;padding:14px;font-size:12px;font-family:monospace;min-height:200px;max-height:320px;overflow-y:auto;white-space:pre-wrap;flex:1;"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button id="btn-iniciar-setup" class="botao" onclick="executarSetup(false)">Inicializar agora</button>
+      <button id="btn-continuar-setup" class="botao" onclick="executarSetup(true)" style="display:none;background:#f59e0b;">Continuar de onde parou</button>
+      <button class="botao" onclick="fecharSetup()" style="background:#64748b;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _setupId = 0, _setupRunning = false;
+
+function abrirSetupEditar(id, hostname, retomar) {
+    _setupId = id; _setupRunning = false;
+    document.getElementById('modal-setup-titulo').textContent = 'Inicializar: ' + hostname;
+    document.getElementById('setup-log').textContent = retomar ? 'Modo: continuar de onde parou.\n' : 'Clique para iniciar.\n';
+    document.getElementById('setup-progress-bar').style.width = '0%';
+    document.getElementById('setup-progress-txt').textContent = 'Aguardando início…';
+    document.getElementById('btn-iniciar-setup').style.display = retomar ? 'none' : '';
+    document.getElementById('btn-continuar-setup').style.display = retomar ? '' : 'none';
+    document.getElementById('btn-fechar-x').style.display = '';
+    document.getElementById('modal-setup').style.display = 'flex';
+}
+
+function fecharSetup() {
+    if (_setupRunning) return;
+    document.getElementById('modal-setup').style.display = 'none';
+}
+
+function appendLog(msg) {
+    var el = document.getElementById('setup-log');
+    el.textContent += msg + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+function executarSetup(retomar) {
+    if (_setupRunning || !_setupId) return;
+    _setupRunning = true;
+    document.getElementById('btn-iniciar-setup').disabled = true;
+    document.getElementById('btn-continuar-setup').disabled = true;
+    document.getElementById('btn-fechar-x').style.display = 'none';
+    document.getElementById('setup-log').textContent = '';
+    appendLog('▶ ' + (retomar ? 'Retomando' : 'Iniciando') + ' setup #' + _setupId + '…\n');
+
+    var fd = new FormData();
+    fd.append('id', _setupId);
+    fd.append('_csrf', (document.querySelector('meta[name=csrf-token]') || {}).content || '');
+    if (retomar) fd.append('retomar', '1');
+
+    fetch('/equipe/servidores/inicializar', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            _setupRunning = false;
+            document.getElementById('btn-fechar-x').style.display = '';
+            var steps = data.steps || [], total = data.total || steps.length || 8, concluidos = data.concluidos || 0;
+            steps.forEach(function(s) {
+                appendLog((s.status === 'ok' ? '✔' : (s.status === 'error' ? '✘' : '…')) + ' ' + s.step);
+                if (s.output && s.output.trim()) appendLog('    ' + s.output.trim().replace(/\n/g, '\n    '));
+            });
+            var pct = total > 0 ? Math.round(concluidos / total * 100) : 0;
+            document.getElementById('setup-progress-bar').style.width = pct + '%';
+            document.getElementById('setup-progress-txt').textContent = concluidos + ' / ' + total + ' etapas (' + pct + '%)';
+            if (data.ok) {
+                appendLog('\n✔ Servidor pronto. Recarregue para ver o status atualizado.');
+                document.getElementById('btn-iniciar-setup').style.display = 'none';
+                document.getElementById('btn-continuar-setup').style.display = 'none';
+            } else {
+                appendLog('\n✘ Erros encontrados. Use "Continuar de onde parou".');
+                document.getElementById('btn-iniciar-setup').style.display = 'none';
+                document.getElementById('btn-continuar-setup').style.display = '';
+                document.getElementById('btn-continuar-setup').disabled = false;
+            }
+        })
+        .catch(function(e) {
+            _setupRunning = false;
+            document.getElementById('btn-fechar-x').style.display = '';
+            document.getElementById('btn-iniciar-setup').disabled = false;
+            document.getElementById('btn-continuar-setup').disabled = false;
+            appendLog('✘ Erro: ' + e.message);
+        });
+}
+</script>
 
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>

@@ -6,6 +6,7 @@ namespace LRV\App\Controllers\Equipe;
 
 use LRV\App\Services\Audit\AuditLogService;
 use LRV\App\Services\Provisioning\DockerCli;
+use LRV\App\Services\Provisioning\ServerSetupService;
 use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
@@ -20,7 +21,7 @@ final class ServidoresController
 
         try {
             try {
-                $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, terminal_ssh_user, terminal_ssh_key_id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, is_online, last_check_at, last_error FROM servers ORDER BY id DESC');
+                $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, terminal_ssh_user, terminal_ssh_key_id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error FROM servers ORDER BY id DESC');
                 $servidores = $stmt->fetchAll();
             } catch (\Throwable $e2) {
                 $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ram_total, ram_used, cpu_total, cpu_used, storage_total, storage_used, status, is_online, last_check_at, last_error FROM servers ORDER BY id DESC');
@@ -449,6 +450,42 @@ final class ServidoresController
         ]);
 
         return Resposta::html($html);
+    }
+
+    public function inicializar(Requisicao $req): Resposta
+    {
+        $id     = (int)($req->post['id'] ?? 0);
+        $retomar = !empty($req->post['retomar']);
+
+        if ($id <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'ID inválido.'], 400);
+        }
+
+        $svc       = new ServerSetupService();
+        $resultado = $svc->executar($id, $retomar);
+
+        (new AuditLogService())->registrar(
+            'team',
+            \LRV\Core\Auth::equipeId(),
+            'server.setup',
+            'server',
+            $id,
+            ['ok' => $resultado['ok'], 'retomar' => $retomar],
+            $req,
+        );
+
+        return Resposta::json($resultado);
+    }
+
+    public function logsInicializacao(Requisicao $req): Resposta
+    {
+        $id = (int)($req->query['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::json(['logs' => []]);
+        }
+
+        $svc = new ServerSetupService();
+        return Resposta::json(['logs' => $svc->obterLogs($id)]);
     }
 
     private function renderizarErro(int $id, string $hostname, string $ip, int $sshPort, string $sshUser, string $sshKeyId, string $terminalSshUser, string $terminalSshKeyId, int $ramTotal, int $cpuTotal, int $storageTotal, string $status, string $erro): Resposta
