@@ -72,7 +72,12 @@ final class ConfiguracoesSistema
 
     public static function sshKeyDir(): string
     {
-        return (string) Settings::obter('infra.ssh_key_dir', '');
+        $v = trim((string) Settings::obter('infra.ssh_key_dir', ''));
+        if ($v !== '') return $v;
+        // Default: storage/ssh-keys relativo à raiz do projeto
+        return defined('BASE_PATH')
+            ? BASE_PATH . '/storage/ssh-keys'
+            : dirname(__DIR__) . '/storage/ssh-keys';
     }
 
     public static function monitoringToken(): string

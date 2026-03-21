@@ -5,3 +5,13 @@
 # /config/instalacao.php
 .DS_Store
 Thumbs.db
+
+# storage — ignorar conteúdo, manter estrutura via .gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/ssh-keys/*
+!/storage/ssh-keys/.gitkeep
+/storage/uploads/imagens/*
+!/storage/uploads/imagens/.gitkeep
+/storage/backups/*
+!/storage/backups/.gitkeep

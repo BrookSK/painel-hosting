@@ -90,7 +90,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div class="grid">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Diretorio das chaves SSH (base)</label>
-        <input class="input" type="text" name="ssh_key_dir" value="<?php echo View::e((string)($ssh_key_dir??'')); ?>" />
+        <input class="input" type="text" name="ssh_key_dir" value="<?php echo View::e((string)($ssh_key_dir??'')); ?>" placeholder="<?php echo View::e(\LRV\Core\ConfiguracoesSistema::sshKeyDir()); ?>" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Padrão: <code><?php echo View::e(\LRV\Core\ConfiguracoesSistema::sshKeyDir()); ?></code></p>
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Limite maximo de utilizacao do node (%)</label>
