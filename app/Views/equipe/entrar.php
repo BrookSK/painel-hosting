@@ -96,7 +96,10 @@ $_logo = SistemaConfig::logoUrl();
       <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:4px;">Entrar no painel</button>
     </form>
     <div class="auth-footer-links">
-      <a href="/">← Voltar ao início</a>
+      <a href="/equipe/reset-senha">Esqueci minha senha</a>
+    </div>
+    <div style="margin-top:8px;text-align:center;">
+      <a href="/" style="font-size:13px;color:rgba(255,255,255,.35);">← Voltar ao início</a>
     </div>
   </div>
 </div>

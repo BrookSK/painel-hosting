@@ -113,6 +113,9 @@ $_logo = SistemaConfig::logoUrl();
     <div class="auth-footer-links">
       Não tem conta? <a href="/cliente/criar-conta">Criar conta grátis</a>
     </div>
+    <div style="margin-top:10px;text-align:center;font-size:13px;">
+      <a href="/cliente/reset-senha" style="color:#94a3b8;">Esqueci minha senha</a>
+    </div>
     <div style="margin-top:12px;text-align:center;font-size:12px;">
       <a href="/equipe/entrar" style="color:#94a3b8;">Acesso da equipe</a>
     </div>

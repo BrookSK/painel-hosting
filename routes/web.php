@@ -48,12 +48,14 @@ use LRV\App\Controllers\Cliente\AjudaController as ClienteAjudaController;
 use LRV\App\Controllers\Cliente\ChatController as ClienteChatController;
 use LRV\App\Controllers\Cliente\EmailController as ClienteEmailController;
 use LRV\App\Controllers\Cliente\DominiosEmailController as ClienteDominiosEmailController;
+use LRV\App\Controllers\Cliente\ResetSenhaController as ClienteResetSenhaController;
 use LRV\App\Controllers\Equipe\ChatController as EquipeChatController;
 use LRV\App\Controllers\Equipe\EmailsController as EquipeEmailsController;
 use LRV\App\Controllers\LegalController;
 use LRV\App\Controllers\ChangelogController;
 use LRV\App\Controllers\Equipe\ErrosController;
 use LRV\App\Controllers\Equipe\MinhaContaController;
+use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -142,6 +144,12 @@ $roteador->get('/equipe/sair', [EquipeSairController::class, 'sair'], [Middlewar
 $roteador->get('/equipe/minha-conta', [MinhaContaController::class, 'index'], [Middlewares::exigirLoginEquipe()]);
 $roteador->post('/equipe/minha-conta/salvar', [MinhaContaController::class, 'salvar'], [Middlewares::exigirLoginEquipe()]);
 
+// Reset de senha — equipe
+$roteador->get('/equipe/reset-senha', [EquipeResetSenhaController::class, 'formulario']);
+$roteador->post('/equipe/reset-senha/solicitar', [EquipeResetSenhaController::class, 'solicitar'], [Middlewares::rateLimitIp('reset_equipe', 5, 300)]);
+$roteador->get('/equipe/reset-senha/nova', [EquipeResetSenhaController::class, 'formularioNovaSenha']);
+$roteador->post('/equipe/reset-senha/salvar', [EquipeResetSenhaController::class, 'salvar'], [Middlewares::rateLimitIp('reset_equipe_save', 10, 300)]);
+
 $roteador->get('/cliente/entrar', [ClienteEntrarController::class, 'formulario']);
 $roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_client', 10, 60)]);
 $roteador->get('/cliente/criar-conta', [CriarContaController::class, 'formulario']);
@@ -224,6 +232,12 @@ $roteador->post('/cliente/emails/dominios/adicionar', [ClienteDominiosEmailContr
 $roteador->post('/cliente/emails/dominios/verificar', [ClienteDominiosEmailController::class, 'verificar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
 $roteador->post('/cliente/emails/dominios/remover', [ClienteDominiosEmailController::class, 'remover'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/emails/dominios/instrucoes', [ClienteDominiosEmailController::class, 'instrucoes'], [Middlewares::exigirLoginCliente()]);
+
+// Reset de senha — cliente
+$roteador->get('/cliente/reset-senha', [ClienteResetSenhaController::class, 'formulario']);
+$roteador->post('/cliente/reset-senha/solicitar', [ClienteResetSenhaController::class, 'solicitar'], [Middlewares::rateLimitIp('reset_cliente', 5, 300)]);
+$roteador->get('/cliente/reset-senha/nova', [ClienteResetSenhaController::class, 'formularioNovaSenha']);
+$roteador->post('/cliente/reset-senha/salvar', [ClienteResetSenhaController::class, 'salvar'], [Middlewares::rateLimitIp('reset_cliente_save', 10, 300)]);
 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
