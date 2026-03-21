@@ -4,693 +4,736 @@ use LRV\Core\I18n;
 use LRV\Core\View;
 use LRV\Core\SistemaConfig;
 
-$_nome    = SistemaConfig::nome();
-$_logo    = SistemaConfig::logoUrl();
-$_empresa = SistemaConfig::empresaNome();
-$_trial_ativo = !empty($trial_ativo);
-$_trial_label = (string) ($trial_label ?? 'Contratar agora');
-$_trial_desc  = (string) ($trial_desc ?? '');
-$_planos      = is_array($planos ?? null) ? $planos : [];
-$_topo_hide_inicio = true;
+$_nome   = SistemaConfig::nome();
+$_logo   = SistemaConfig::logoUrl();
+$_planos = is_array($planos ?? null) ? $planos : [];
+
+// Hero card: último plano (maior) ou fallback
+$_hero_plano = !empty($_planos) ? $_planos[count($_planos) - 1] : null;
+if ($_hero_plano) {
+    $_hs = json_decode((string)($_hero_plano['specs_json'] ?? ''), true) ?: [];
+    $_hram   = (int)($_hs['ram_gb'] ?? 0);
+    $_hvcpu  = (int)($_hs['vcpu'] ?? $_hs['cpu'] ?? 0);
+    $_hdisco = (int)($_hs['disco_gb'] ?? $_hs['storage_gb'] ?? 0);
+    $_hprice = (float)$_hero_plano['price'];
+}
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <?php require __DIR__ . '/_partials/seo.php'; ?>
-  <?php require __DIR__ . '/_partials/estilo.php'; ?>
-  <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-serif; background: #fff; color: #0f172a; overflow-x: hidden; }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<?php require __DIR__ . '/_partials/seo.php'; ?>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --az:#4F46E5;--azd:#4338CA;--azs:#6366F1;
+  --bg:#F7F9FC;--bd:#DDE5F0;--tx:#0C1A2E;--ts:#2E4057;
+  --wh:#fff;--li:#EEF2FF;--red:#7C3AED;--redhov:#6D28D9;--surf:#F0F4FB
+}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;color:var(--tx);background:var(--bg);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:1140px;margin:0 auto;padding:0 28px}
+.btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;border:none;transition:.2s}
+.btn-p{background:var(--red);color:var(--wh);box-shadow:0 6px 20px rgba(124,58,237,.4)}
+.btn-p:hover{background:var(--redhov);transform:translateY(-2px)}
+.btn-s{background:transparent;color:var(--wh);border:2px solid rgba(255,255,255,.35)}
+.btn-s:hover{background:rgba(255,255,255,.1)}
+.btn-b{background:var(--az);color:var(--wh)}
+.btn-b:hover{background:var(--azd);transform:translateY(-2px)}
 
-/* ── Navbar ── */
-.lp-nav { position: sticky; top: 0; z-index: 100; background: rgba(6,13,31,.96); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,.07); padding: 0 24px; }
-.lp-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 62px; gap: 16px; }
-.lp-nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; flex-shrink: 0; }
-.lp-nav-brand img { height: 32px; width: auto; }
-.lp-nav-brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
-.lp-nav-links { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: center; }
-.lp-nav-links a { color: rgba(255,255,255,.7); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 13px; border-radius: 8px; transition: color .15s, background .15s; }
-.lp-nav-links a:hover { color: #fff; background: rgba(255,255,255,.08); }
-.lp-nav-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.lp-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 700; text-decoration: none; transition: opacity .15s, transform .1s; white-space: nowrap; }
-.lp-btn:hover { opacity: .88; transform: translateY(-1px); }
-.lp-btn.ghost { color: rgba(255,255,255,.85); border: 1.5px solid rgba(255,255,255,.2); }
-.lp-btn.solid { background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; box-shadow: 0 4px 16px rgba(79,70,229,.4); }
-.lp-btn.solid:hover { box-shadow: 0 6px 24px rgba(79,70,229,.55); }
-@media (max-width: 768px) { .lp-nav-links { display: none; } .lp-btn.ghost { display: none; } }
+/* Header */
+.header{position:sticky;top:0;z-index:200;background:var(--az);border-bottom:1px solid rgba(255,255,255,.1)}
+.header__inner{display:flex;align-items:center;justify-content:space-between;height:62px;max-width:1140px;margin:0 auto;padding:0 28px}
+.header__logo{display:flex;align-items:center}
+.header__logo img{height:36px;width:auto}
+.header__logo-fallback{font-size:1.35rem;font-weight:900;color:var(--wh);letter-spacing:-.03em}
+.header__logo-fallback span{color:#c7d2fe}
+.header__nav{display:flex;align-items:center;gap:28px}
+.header__nav a{font-size:.85rem;font-weight:500;color:rgba(255,255,255,.7);transition:color .15s}
+.header__nav a:hover{color:var(--wh)}
+.header__cta{background:var(--red);color:var(--wh)!important;padding:9px 20px;border-radius:10px;font-weight:700!important;font-size:.83rem!important;transition:background .15s,transform .15s!important}
+.header__cta:hover{background:var(--redhov)!important;transform:translateY(-1px)}
 
-/* ── Hero split ── */
-.lp-hero { background: linear-gradient(135deg, #060d1f 0%, #0b1c3d 45%, #1e1b4b 75%, #312e81 100%); color: #fff; padding: 80px 24px 90px; position: relative; overflow: hidden; }
-.lp-hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 40%, transparent 100%); }
-.lp-hero-glow { position: absolute; top: -20%; right: -10%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,.35) 0%, transparent 70%); pointer-events: none; }
-/* floating badges */
-.lp-hero-floats { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.lp-hero-float { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(12px); border-radius: 12px; padding: 10px 16px; width: fit-content; }
-.lp-hero-float-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lp-hero-float-icon.green { background: rgba(34,197,94,.15); color: #22c55e; }
-.lp-hero-float-icon.blue { background: rgba(79,70,229,.2); color: #a5b4fc; }
-.lp-hero-float-label { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
-.lp-hero-float-sub { font-size: 11px; color: rgba(255,255,255,.5); }
-.lp-hero-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; position: relative; }
-@media (max-width: 900px) { .lp-hero-inner { grid-template-columns: 1fr; gap: 48px; } }
-.lp-hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(79,70,229,.2); border: 1px solid rgba(165,180,252,.3); color: #a5b4fc; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 999px; margin-bottom: 22px; letter-spacing: .04em; text-transform: uppercase; }
-.lp-hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: blink 2s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
-.lp-hero-title { font-size: clamp(30px, 4.5vw, 52px); font-weight: 900; line-height: 1.08; letter-spacing: -.03em; margin-bottom: 18px; }
-.lp-hero-title em { font-style: italic; background: linear-gradient(135deg, #a5b4fc, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.lp-hero-sub { font-size: 16px; color: rgba(255,255,255,.72); line-height: 1.75; margin-bottom: 36px; max-width: 480px; }
-.lp-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
-.lp-hero-trust { display: flex; gap: 16px; flex-wrap: wrap; }
-.lp-hero-trust-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.55); font-weight: 500; }
-.lp-hero-trust-item svg { color: #22c55e; flex-shrink: 0; }
+/* Hero */
+.hero{background:var(--az);position:relative;overflow:hidden;padding:80px 0}
+.hero__particles{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.15) 1px,transparent 1px),radial-gradient(circle,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px,96px 96px;background-position:0 0,24px 24px}
+.hero__glow{position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(99,102,241,.22) 0%,transparent 65%);top:-200px;right:-100px;pointer-events:none}
+.hero__glow2{position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,.15) 0%,transparent 65%);bottom:0;left:10%;pointer-events:none}
+.hero__inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;max-width:1140px;margin:0 auto;padding:0 28px 80px}
+.hero__badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:5px 14px;border-radius:99px;margin-bottom:24px}
+.hero__badge-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.25);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(74,222,128,.25)}50%{box-shadow:0 0 0 6px rgba(74,222,128,.1)}}
+.hero__badge span{font-size:.73rem;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:.06em;text-transform:uppercase}
+.hero__title{font-size:clamp(2.4rem,4vw,3.8rem);font-weight:400;line-height:1.08;letter-spacing:-.02em;color:var(--wh);margin-bottom:22px}
+.hero__title em{font-style:italic;color:#c7d2fe}
+.hero__subtitle{font-size:1rem;font-weight:300;color:rgba(255,255,255,.62);line-height:1.8;margin-bottom:36px;max-width:480px}
+.hero__actions{display:flex;gap:12px;flex-wrap:wrap}
+.hero__visual{position:relative}
+.hero__server-card{background:rgba(255,255,255,.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:28px;color:var(--wh)}
+.server-card__header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.server-card__icon{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}
+.server-card__label{font-size:.7rem;color:rgba(255,255,255,.5);margin-bottom:2px;letter-spacing:.06em;text-transform:uppercase}
+.server-card__name{font-weight:700;font-size:.95rem}
+.server-specs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.spec-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px}
+.spec-item__val{font-size:1.05rem;font-weight:800;color:var(--wh);line-height:1;margin-bottom:4px}
+.spec-item__key{font-size:.7rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.05em}
+.server-price{display:flex;align-items:center;justify-content:space-between;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
+.server-price__label{font-size:.8rem;color:rgba(255,255,255,.5)}
+.server-price__value{font-size:2rem;color:var(--wh)}
+.server-price__value span{font-size:.8rem;color:rgba(255,255,255,.45)}
+.hero__floater{position:absolute;background:var(--wh);border-radius:10px;padding:10px 16px;box-shadow:0 20px 60px rgba(79,70,229,.18);display:flex;align-items:center;gap:10px;animation:float 3s ease-in-out infinite}
+.hero__floater--1{bottom:-20px;left:-24px;animation-delay:0s}
+.hero__floater--2{top:20px;right:-20px;animation-delay:1.5s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.floater-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.floater-icon--green{background:#DCFCE7}
+.floater-icon--blue{background:var(--li)}
+.floater__text strong{display:block;font-size:.8rem;color:var(--tx);font-weight:700}
+.floater__text span{font-size:.7rem;color:var(--ts)}
+.hero__clients{max-width:1140px;margin:0 auto;padding:32px 28px 40px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1}
+.hero__clients p{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:center;margin-bottom:20px}
+.clients-logos{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.clients-logos span{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.04em;transition:color .2s;cursor:default}
+.clients-logos span:hover{color:rgba(255,255,255,.6)}
 
-/* Server card */
-.lp-server-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 28px; backdrop-filter: blur(12px); }
-.lp-server-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.lp-server-card-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .08em; }
-.lp-server-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #22c55e; font-weight: 600; }
-.lp-server-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; animation: blink 2s infinite; }
-.lp-server-name { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
-.lp-server-desc { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 22px; }
-.lp-server-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
-.lp-spec { background: rgba(255,255,255,.06); border-radius: 12px; padding: 12px 14px; }
-.lp-spec-val { font-size: 20px; font-weight: 800; color: #a5b4fc; line-height: 1; margin-bottom: 3px; }
-.lp-spec-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 500; }
-.lp-server-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 16px; }
-.lp-server-price-val { font-size: 32px; font-weight: 900; color: #fff; }
-.lp-server-price-cycle { font-size: 14px; color: rgba(255,255,255,.45); }
-.lp-server-cta { display: block; text-align: center; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; text-decoration: none; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700; transition: opacity .15s, transform .1s; }
-.lp-server-cta:hover { opacity: .9; transform: translateY(-1px); }
+/* Stats */
+.statsbar{background:var(--az);padding:40px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);text-align:center;max-width:1140px;margin:0 auto}
+.stat{padding:36px 28px;border-right:1px solid rgba(255,255,255,.1);transition:background .18s}
+.stat:last-child{border-right:none}
+.stat:hover{background:rgba(255,255,255,.05)}
+.stat h3{font-size:2.4rem;font-weight:900;color:var(--wh);line-height:1;margin-bottom:8px}
+.stat p{font-size:.82rem;color:rgba(255,255,255,.6);margin:0}
 
-/* ── Logos/clientes ── */
-.lp-logos { background: #f8fafc; padding: 40px 24px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-.lp-logos-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
-.lp-logos-label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 20px; }
-.lp-logos-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.lp-logo-tag { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 999px; padding: 8px 20px; font-size: 13px; font-weight: 600; color: #475569; transition: border-color .15s, color .15s; }
-.lp-logo-tag:hover { border-color: #7C3AED; color: #7C3AED; }
+section{padding:80px 0}
+.sec-alt{background:var(--surf)}
+h2{font-size:clamp(2rem,3.5vw,3rem);font-weight:600;line-height:1.12;margin-bottom:16px;letter-spacing:-.02em}
+h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+p{color:var(--ts);margin-bottom:10px}
+.eyebrow{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--azs);margin-bottom:14px}
+.lead{font-size:1.1rem;font-weight:300;color:var(--ts);line-height:1.75;max-width:600px}
 
-/* ── Stats ── */
-.lp-stats { background: #0f172a; padding: 36px 24px; }
-.lp-stats-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
-.lp-stat { text-align: center; padding: 12px 16px; border-right: 1px solid rgba(255,255,255,.07); }
-.lp-stat:last-child { border-right: none; }
-.lp-stat-num { font-size: 32px; font-weight: 900; color: #a5b4fc; line-height: 1; margin-bottom: 5px; }
-.lp-stat-lbl { font-size: 12px; color: rgba(255,255,255,.45); font-weight: 500; }
-@media (max-width: 640px) { .lp-stats-inner { grid-template-columns: 1fr 1fr; } .lp-stat:nth-child(2) { border-right: none; } }
+/* Features */
+.features-header{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-bottom:64px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--bd);border:1px solid var(--bd);border-radius:18px;overflow:hidden}
+.feat-item{background:var(--wh);padding:32px 28px;transition:background .2s}
+.feat-item:hover{background:var(--li)}
+.feat-item__icon{width:46px;height:46px;background:var(--li);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.feat-item__icon svg{width:24px;height:24px;stroke:var(--azs);stroke-width:2;fill:none}
+.feat-item__title{font-size:.95rem;font-weight:700;color:var(--tx);margin-bottom:8px}
+.feat-item__desc{font-size:.85rem;color:var(--ts);line-height:1.65}
 
-/* ── Section base ── */
-.lp-section { padding: 88px 24px; }
-.lp-section.alt { background: #f8fafc; }
-.lp-section.dark { background: #060d1f; color: #fff; }
-.lp-section-inner { max-width: 1160px; margin: 0 auto; }
-.lp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #7C3AED; margin-bottom: 10px; }
-.lp-label.light { color: #a78bfa; }
-.lp-title { font-size: clamp(22px, 3.5vw, 36px); font-weight: 900; color: #0f172a; margin-bottom: 12px; letter-spacing: -.025em; line-height: 1.15; }
-.lp-title.light { color: #fff; }
-.lp-sub { font-size: 15px; color: #64748b; line-height: 1.75; max-width: 520px; }
-.lp-sub.light { color: rgba(255,255,255,.6); }
+/* Plans Carousel */
+.plans-sec{background:var(--surf);padding:80px 0;overflow:hidden}
+.compare-btn-container{text-align:center;margin-bottom:32px}
+.compare-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--wh);border:2px solid var(--az);color:var(--az);border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:all .3s;text-transform:uppercase;letter-spacing:.05em}
+.compare-btn:hover{background:var(--az);color:var(--wh);transform:translateY(-2px);box-shadow:0 6px 20px rgba(79,70,229,.2)}
+.compare-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none}
+.carousel-container{position:relative;max-width:1200px;margin:0 auto;padding:0 80px}
+.carousel-wrapper{overflow:hidden;width:100%;padding-top:20px;margin-top:-20px}
+.carousel-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);gap:24px}
+.plan-card{background:var(--wh);border:2px solid var(--bd);border-radius:16px;padding:36px 28px;flex:0 0 calc(50% - 12px);min-width:0;position:relative;transition:all .3s;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,.06);overflow:visible}
+.plan-card:hover{transform:translateY(-8px);box-shadow:0 12px 32px rgba(79,70,229,.15);border-color:var(--azs)}
+.plan-badge{position:absolute;top:-10px;right:20px;background:var(--az);color:var(--wh);padding:6px 14px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;z-index:10;box-shadow:0 2px 8px rgba(79,70,229,.3)}
+.plan-name{font-size:26px;font-weight:900;color:var(--tx);margin-bottom:10px;line-height:1.1}
+.plan-desc{font-size:13px;color:var(--ts);margin-bottom:24px;line-height:1.5;min-height:40px}
+.plan-price{font-size:52px;font-weight:900;color:var(--az);line-height:1;margin-bottom:8px}
+.plan-price small{font-size:22px;font-weight:900}
+.plan-period{font-size:13px;color:var(--ts);margin-bottom:28px;padding-bottom:28px;border-bottom:2px solid var(--bd)}
+.plan-features{list-style:none;margin:0;flex-grow:1}
+.plan-features li{padding:12px 0;font-size:14px;display:flex;align-items:flex-start;gap:10px;color:var(--ts)}
+.plan-features li::before{content:'✓';color:var(--az);font-weight:900;flex-shrink:0;font-size:16px}
+.plan-cta{width:100%;padding:16px;background:var(--az);color:var(--wh);border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;transition:all .3s;margin-top:24px;text-transform:uppercase;letter-spacing:.05em;text-align:center;display:block;text-decoration:none}
+.plan-cta:hover{background:var(--azd);transform:translateY(-2px);box-shadow:0 8px 20px rgba(79,70,229,.3)}
+.carousel-btn{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;background:var(--wh);border:2px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.carousel-btn:hover{background:var(--az);border-color:var(--az);box-shadow:0 6px 20px rgba(79,70,229,.3)}
+.carousel-btn:hover svg{stroke:var(--wh)}
+.carousel-btn svg{width:24px;height:24px;stroke:var(--az);stroke-width:3;transition:.3s}
+.carousel-btn--prev{left:0}
+.carousel-btn--next{right:0}
+.carousel-dots{display:flex;justify-content:center;gap:10px;margin-top:40px}
+.carousel-dot{width:12px;height:12px;border-radius:50%;background:var(--bd);cursor:pointer;transition:all .3s}
+.carousel-dot.active{background:var(--az);width:32px;border-radius:6px}
+.carousel-dot:hover{background:var(--azs)}
 
-/* ── Por que nós — split ── */
-.lp-why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-@media (max-width: 900px) { .lp-why-grid { grid-template-columns: 1fr; gap: 40px; } }
-.lp-why-left { }
-.lp-why-left .lp-title { margin-bottom: 16px; }
-.lp-why-left .lp-sub { margin-bottom: 28px; }
-.lp-why-features { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 560px) { .lp-why-features { grid-template-columns: 1fr; } }
-.lp-why-feat { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; transition: border-color .2s, box-shadow .2s; }
-.lp-why-feat:hover { border-color: #c7d2fe; box-shadow: 0 4px 20px rgba(79,70,229,.08); }
-.lp-why-feat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-.lp-why-feat-name { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
-.lp-why-feat-desc { font-size: 12px; color: #64748b; line-height: 1.6; }
+/* Compare Modal */
+.compare-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:1000;overflow-y:auto;padding:40px 20px}
+.compare-modal.active{display:flex;align-items:flex-start;justify-content:center}
+.compare-modal__content{background:var(--wh);border-radius:20px;max-width:1400px;width:100%;position:relative;padding:40px;margin:auto}
+.compare-modal__header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid var(--bd)}
+.compare-modal__title{font-size:2rem;font-weight:900;color:var(--tx)}
+.compare-modal__close{width:40px;height:40px;border-radius:50%;background:var(--surf);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s}
+.compare-modal__close:hover{background:var(--az);transform:rotate(90deg)}
+.compare-modal__close svg{width:24px;height:24px;stroke:var(--tx);stroke-width:2}
+.compare-modal__close:hover svg{stroke:var(--wh)}
+.compare-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
+.compare-card{background:var(--surf);border:2px solid var(--bd);border-radius:12px;padding:24px 20px;position:relative}
+.compare-card.featured{border-color:var(--azs);background:var(--li)}
+.compare-card__badge{position:absolute;top:-10px;right:12px;background:var(--az);color:var(--wh);padding:4px 10px;border-radius:12px;font-size:9px;font-weight:800;text-transform:uppercase}
+.compare-card__name{font-size:18px;font-weight:900;color:var(--tx);margin-bottom:8px}
+.compare-card__price{font-size:32px;font-weight:900;color:var(--az);margin-bottom:4px}
+.compare-card__price small{font-size:16px}
+.compare-card__period{font-size:11px;color:var(--ts);margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--bd)}
+.compare-card__features{list-style:none;margin:0}
+.compare-card__features li{padding:8px 0;font-size:12px;color:var(--ts);display:flex;align-items:flex-start;gap:6px}
+.compare-card__features li::before{content:'✓';color:var(--az);font-weight:900;flex-shrink:0;font-size:14px}
 
-/* ── Diferenciais ── */
-.lp-diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-@media (max-width: 900px) { .lp-diff-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 560px) { .lp-diff-grid { grid-template-columns: 1fr; } }
-.lp-diff-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 32px 24px; text-align: center; transition: background .2s, border-color .2s; }
-.lp-diff-card:hover { background: rgba(255,255,255,.07); border-color: rgba(165,180,252,.25); }
-.lp-diff-icon { width: 60px; height: 60px; border-radius: 18px; background: rgba(79,70,229,.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #a5b4fc; }
-.lp-diff-name { font-size: 15px; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
-.lp-diff-desc { font-size: 13px; color: rgba(255,255,255,.45); line-height: 1.65; }
+/* Help Card */
+.help-card{background:linear-gradient(135deg,var(--az),var(--azd));border-radius:16px;padding:40px;margin-top:48px;display:flex;align-items:center;justify-content:space-between;gap:32px;box-shadow:0 12px 40px rgba(79,70,229,.2);position:relative;overflow:hidden}
+.help-card::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(255,255,255,.1),transparent);border-radius:50%}
+.help-content{flex:1;position:relative;z-index:1}
+.help-title{font-size:1.5rem;font-weight:700;color:var(--wh);margin-bottom:8px}
+.help-subtitle{font-size:1rem;color:rgba(255,255,255,.8);font-weight:400}
+.help-action{position:relative;z-index:1}
+.help-btn{background:var(--red);color:var(--wh);padding:16px 32px;border-radius:10px;font-weight:700;font-size:.95rem;border:none;cursor:pointer;transition:all .3s;box-shadow:0 6px 20px rgba(124,58,237,.4);white-space:nowrap;text-decoration:none;display:inline-block}
+.help-btn:hover{background:var(--redhov);transform:translateY(-2px)}
 
-/* ── Planos carrossel ── */
-.lp-plans-wrap { position: relative; }
-.lp-plans-scroll { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; scrollbar-width: none; }
-.lp-plans-scroll::-webkit-scrollbar { display: none; }
-.lp-plan-card { flex: 0 0 320px; scroll-snap-align: start; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; position: relative; transition: border-color .2s, box-shadow .2s; }
-.lp-plan-card:hover { border-color: #7C3AED; box-shadow: 0 8px 32px rgba(124,58,237,.12); }
-.lp-plan-card.destaque { border-color: #4F46E5; box-shadow: 0 8px 32px rgba(79,70,229,.18); }
-.lp-plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; white-space: nowrap; }
-.lp-plan-name { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
-.lp-plan-desc { font-size: 13px; color: #64748b; margin-bottom: 18px; line-height: 1.5; }
-.lp-plan-price-row { margin-bottom: 4px; }
-.lp-plan-price { font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; }
-.lp-plan-price span { font-size: 16px; font-weight: 500; color: #64748b; }
-.lp-plan-cycle { font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
-.lp-plan-specs { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 9px; }
-.lp-plan-specs li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: #334155; }
-.lp-plan-specs li svg { flex-shrink: 0; color: #7C3AED; }
-/* addons */
-.lp-plan-addons { border-top: 1px solid #f1f5f9; padding-top: 16px; margin-bottom: 20px; }
-.lp-plan-addons-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 10px; }
-.lp-addon-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f8fafc; cursor: pointer; }
-.lp-addon-row:last-child { border-bottom: none; }
-.lp-addon-check { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #cbd5e1; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s, border-color .15s; }
-.lp-addon-row.checked .lp-addon-check { background: #4F46E5; border-color: #4F46E5; }
-.lp-addon-row.checked .lp-addon-check::after { content: ''; display: block; width: 10px; height: 7px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px,-1px); }
-.lp-addon-info { flex: 1; }
-.lp-addon-name { font-size: 13px; font-weight: 600; color: #0f172a; }
-.lp-addon-desc { font-size: 11px; color: #94a3b8; }
-.lp-addon-price { font-size: 13px; font-weight: 700; color: #4F46E5; white-space: nowrap; }
-/* total dinâmico */
-.lp-plan-total { background: #f8fafc; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-.lp-plan-total-label { font-size: 12px; color: #64748b; font-weight: 600; }
-.lp-plan-total-val { font-size: 18px; font-weight: 900; color: #0f172a; }
-.lp-plan-cta { margin-top: auto; }
-.lp-plan-empty { text-align: center; padding: 48px 24px; color: #94a3b8; font-size: 14px; }
-.lp-plans-nav { display: flex; gap: 8px; justify-content: center; margin-top: 20px; }
-.lp-plans-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #e2e8f0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; transition: border-color .15s, color .15s; }
-.lp-plans-nav button:hover { border-color: #7C3AED; color: #7C3AED; }
+/* Addons */
+.addons-sec{margin-top:24px;padding-top:24px;border-top:2px solid var(--bd)}
+.addons-sec h3{font-size:16px;font-weight:800;color:var(--tx);margin-bottom:16px;line-height:1.2}
+.addon-item{background:var(--surf);border:2px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.2s}
+.addon-item:hover{border-color:var(--az)}
+.addon-item.selected{border-color:var(--az);background:var(--li)}
+.addon-check{width:20px;height:20px;border:2px solid var(--bd);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s;font-size:12px}
+.addon-item.selected .addon-check{background:var(--az);border-color:var(--az);color:var(--wh)}
+.addon-info{flex:1}
+.addon-name{font-weight:700;font-size:14px;color:var(--tx)}
+.addon-desc{font-size:12px;color:var(--ts);margin-top:2px}
+.addon-price{font-weight:700;font-size:16px;color:var(--az);flex-shrink:0}
+.total-calc{background:var(--az);color:var(--wh);padding:18px;border-radius:10px;margin-top:20px;text-align:center}
+.total-label{font-size:14px;opacity:.9;margin-bottom:6px}
+.total-value{font-size:36px;font-weight:900;line-height:1}
 
-/* ── CTA ajuda ── */
-.lp-help-banner { background: linear-gradient(135deg, #4F46E5, #7C3AED); border-radius: 20px; padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-.lp-help-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
-.lp-help-sub { font-size: 14px; color: rgba(255,255,255,.75); }
-.lp-help-btn { background: #fff; color: #4F46E5; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-size: 14px; font-weight: 700; white-space: nowrap; transition: opacity .15s; flex-shrink: 0; }
-.lp-help-btn:hover { opacity: .9; }
+/* Conditions */
+.conds-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.cond{display:flex;gap:14px;padding:16px 18px;border:1px solid var(--bd);border-radius:10px;background:var(--wh);transition:border-color .18s,box-shadow .18s}
+.cond:hover{border-color:#c7d2fe;box-shadow:0 3px 12px rgba(79,70,229,.09)}
+.cond__num{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--li);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:var(--az);margin-top:1px}
+.cond p{font-size:.875rem;color:var(--ts);line-height:1.6;margin:0}
+.cond strong{color:var(--tx)}
 
-/* ── Condições ── */
-.lp-cond-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 640px) { .lp-cond-grid { grid-template-columns: 1fr; } }
-.lp-cond-item { display: flex; gap: 14px; align-items: flex-start; padding: 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; }
-.lp-cond-num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lp-cond-text { font-size: 13px; color: #334155; line-height: 1.65; }
-.lp-cond-text strong { color: #0f172a; font-weight: 700; display: block; margin-bottom: 2px; }
+/* Testimonials */
+.test-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.test-card{background:var(--wh);border:1px solid var(--bd);border-radius:18px;padding:32px;box-shadow:0 1px 3px rgba(79,70,229,.07);position:relative;overflow:hidden;transition:box-shadow .2s}
+.test-card:hover{box-shadow:0 8px 32px rgba(79,70,229,.13)}
+.test-card::before{content:'\201C';font-family:Georgia,serif;font-size:6rem;line-height:0;color:var(--li);position:absolute;top:28px;left:24px;z-index:0}
+.test-card__text{font-size:.92rem;color:var(--ts);line-height:1.78;margin-bottom:24px;position:relative;z-index:1;padding-left:8px}
+.test-card__author{display:flex;align-items:center;gap:12px}
+.test-card__av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--az),var(--azs));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:var(--wh)}
+.test-card__name{font-size:.88rem;font-weight:700;color:var(--tx)}
+.test-card__role{font-size:.75rem;color:var(--ts)}
 
-/* ── Depoimentos ── */
-.lp-test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 640px) { .lp-test-grid { grid-template-columns: 1fr; } }
-.lp-test-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 26px; }
-.lp-test-stars { display: flex; gap: 3px; margin-bottom: 14px; color: #f59e0b; }
-.lp-test-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 18px; font-style: italic; }
-.lp-test-author { display: flex; align-items: center; gap: 12px; }
-.lp-test-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lp-test-name { font-size: 14px; font-weight: 700; color: #0f172a; }
-.lp-test-role { font-size: 12px; color: #94a3b8; }
+/* CTA */
+.cta-sec{background:var(--tx);padding:80px 0;text-align:center;position:relative;overflow:hidden}
+.cta-sec::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 800px 600px at 100% 100%,rgba(79,70,229,.5),transparent 60%),radial-gradient(ellipse 400px 400px at 0% 0%,rgba(99,102,241,.2),transparent 50%)}
+.cta-sec__inner{position:relative;z-index:1}
+.cta-sec h2{color:var(--wh);font-size:clamp(2.2rem,4vw,3.4rem);margin-bottom:20px}
+.cta-sec h2 em{font-style:italic;color:#c7d2fe}
+.cta-sec p{color:rgba(255,255,255,.5);font-size:16px;max-width:560px;margin:0 auto 28px}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:40px}
 
-/* ── CTA final ── */
-.lp-cta-final { background: #060d1f; padding: 96px 24px; text-align: center; position: relative; overflow: hidden; }
-.lp-cta-final::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%); }
-.lp-cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 700px; height: 400px; background: radial-gradient(ellipse, rgba(79,70,229,.3) 0%, transparent 70%); pointer-events: none; }
-.lp-cta-inner { max-width: 640px; margin: 0 auto; position: relative; }
-.lp-cta-title { font-size: clamp(26px, 4.5vw, 46px); font-weight: 900; color: #fff; margin-bottom: 14px; letter-spacing: -.03em; font-style: italic; line-height: 1.1; }
-.lp-cta-sub { font-size: 16px; color: rgba(255,255,255,.65); margin-bottom: 36px; line-height: 1.7; }
-.lp-cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.lp-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 15px 32px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; transition: transform .15s, box-shadow .15s; }
-.lp-cta-btn:hover { transform: translateY(-2px); }
-.lp-cta-btn.primary { background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; box-shadow: 0 4px 20px rgba(79,70,229,.5); }
-.lp-cta-btn.primary:hover { box-shadow: 0 8px 32px rgba(79,70,229,.65); }
-.lp-cta-btn.outline { background: rgba(255,255,255,.08); color: #fff; border: 1.5px solid rgba(255,255,255,.2); }
-.lp-cta-btn.outline:hover { background: rgba(255,255,255,.14); }
+/* Footer */
+.footer{background:var(--az);padding:24px 0}
+.footer__inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:1140px;margin:0 auto;padding:0 28px}
+.footer__brand{display:flex;align-items:center;gap:10px}
+.footer__brand img{height:28px}
+.footer__brand-name{font-weight:800;font-size:.95rem;color:var(--wh);letter-spacing:-.01em}
+.footer__copy{font-size:.75rem;color:rgba(255,255,255,.35)}
 
-/* ── Footer ── */
-.lp-footer { background: #030712; color: rgba(255,255,255,.45); padding: 56px 24px 32px; }
-.lp-footer-inner { max-width: 1160px; margin: 0 auto; }
-.lp-footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
-@media (max-width: 768px) { .lp-footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
-@media (max-width: 480px) { .lp-footer-grid { grid-template-columns: 1fr; } }
-.lp-footer-brand-name { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 10px; }
-.lp-footer-brand-desc { font-size: 13px; line-height: 1.7; max-width: 260px; }
-.lp-footer-col-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.3); margin-bottom: 14px; }
-.lp-footer-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
-.lp-footer-links a { color: rgba(255,255,255,.45); text-decoration: none; font-size: 13px; transition: color .15s; }
-.lp-footer-links a:hover { color: #fff; }
-.lp-footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; }
-.lp-footer-status { display: inline-flex; align-items: center; gap: 6px; }
-.lp-footer-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
+/* Diferenciais */
+.diff-sec{background:var(--wh);padding:80px 0;position:relative;overflow:hidden}
+.diff-sec::before{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:var(--az);z-index:0;clip-path:polygon(0 60%,100% 30%,100% 100%,0 100%)}
+.diff-header{text-align:center;margin-bottom:60px;position:relative;z-index:1}
+.diff-header h2{margin-bottom:8px}
+.diff-header::after{content:'';display:block;width:80px;height:3px;background:var(--azs);margin:20px auto 0}
+.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 28px}
+.diff-card{background:var(--wh);border-radius:16px;padding:32px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08);transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.diff-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--azs);transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
+.diff-card:hover{transform:translateY(-8px);box-shadow:0 12px 40px rgba(79,70,229,.15)}
+.diff-card:hover::before{transform:scaleX(1)}
+.diff-icon{width:80px;height:80px;margin:0 auto 20px;background:linear-gradient(135deg,var(--li),#c7d2fe);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s ease}
+.diff-icon svg{width:40px;height:40px;stroke:var(--azs);stroke-width:2;fill:none}
+.diff-card:hover .diff-icon{transform:scale(1.1) rotate(5deg);background:linear-gradient(135deg,var(--azs),var(--az))}
+.diff-card:hover .diff-icon svg{stroke:var(--wh)}
+.diff-title{font-size:1.15rem;font-weight:700;color:var(--tx);margin-bottom:12px}
+.diff-desc{font-size:.88rem;color:var(--ts);line-height:1.7;margin:0}
+.diff-card.animate{animation:fadeInUp .6s ease forwards;opacity:0}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.diff-card:nth-child(1){animation-delay:.1s}.diff-card:nth-child(2){animation-delay:.2s}.diff-card:nth-child(3){animation-delay:.3s}
+.diff-card:nth-child(4){animation-delay:.4s}.diff-card:nth-child(5){animation-delay:.5s}.diff-card:nth-child(6){animation-delay:.6s}
+
+@media(max-width:860px){
+  .diff-grid{grid-template-columns:1fr 1fr}
+  .hero__inner{grid-template-columns:1fr;padding-bottom:60px}
+  .hero__visual{display:none}
+  .features-header{grid-template-columns:1fr;gap:32px}
+  .features-grid{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .test-grid{grid-template-columns:1fr}
+  .conds-grid{grid-template-columns:1fr}
+  .carousel-container{padding:0 50px}
+  .plan-card{width:100%;min-width:280px}
+  .help-card{flex-direction:column;text-align:center;padding:32px 24px}
+  .compare-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:640px){
+  .features-grid{grid-template-columns:1fr}
+  .header__nav{display:none}
+  .hero{padding:56px 0 0}
+  section{padding:64px 0}
+  .diff-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr}
+  .clients-logos{gap:20px}
+  .carousel-container{padding:0 20px}
+  .carousel-btn{width:40px;height:40px}
+  .plan-card{width:100%;min-width:100%}
+  .compare-grid{grid-template-columns:1fr}
+  .compare-modal__content{padding:24px}
+}
 </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="lp-nav">
-  <div class="lp-nav-inner">
-    <a href="/" class="lp-nav-brand">
+<!-- HEADER -->
+<header class="header">
+  <div class="header__inner">
+    <a href="/" class="header__logo">
       <?php if ($_logo !== ''): ?>
-        <img src="<?php echo View::e($_logo); ?>" alt="logo" />
+        <img src="<?php echo View::e($_logo); ?>" alt="<?php echo View::e($_nome); ?>">
       <?php else: ?>
-        <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect width="30" height="30" rx="9" fill="#4F46E5"/><path d="M8 15h14M15 8v14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="header__logo-fallback"><?php echo View::e($_nome); ?></div>
       <?php endif; ?>
-      <span class="lp-nav-brand-name"><?php echo View::e($_nome); ?></span>
     </a>
-    <div class="lp-nav-links">
+    <nav class="header__nav">
       <a href="#sobre">Sobre</a>
       <a href="#planos">Planos</a>
       <a href="#condicoes">Condições</a>
-      <a href="/infraestrutura">Para devs</a>
-    </div>
-    <div class="lp-nav-actions">
-      <?php require __DIR__ . '/_partials/idioma.php'; ?>
-      <a href="/cliente/entrar" class="lp-btn ghost">Entrar</a>
-      <a href="/cliente/criar-conta" class="lp-btn solid">Contratar agora</a>
-    </div>
+      <a href="/cliente/criar-conta" class="header__cta">Contratar Agora</a>
+    </nav>
   </div>
-</nav>
+</header>
 
-<!-- Hero -->
-<section class="lp-hero">
-  <div class="lp-hero-glow"></div>
-  <div class="lp-hero-inner">
-    <div class="lp-hero-left">
-      <div class="lp-hero-badge">
-        <span class="lp-hero-badge-dot"></span>
-        Servidores disponíveis agora
+<!-- HERO -->
+<section class="hero">
+  <div class="hero__particles"></div>
+  <div class="hero__glow"></div>
+  <div class="hero__glow2"></div>
+  <div class="hero__inner">
+    <div class="hero__text">
+      <div class="hero__badge">
+        <div class="hero__badge-dot"></div>
+        <span>Servidores disponíveis agora</span>
       </div>
-      <h1 class="lp-hero-title">Servidores dedicados<br><em>para quem não pode parar.</em></h1>
-      <p class="lp-hero-sub">Infraestrutura cloud de alta performance com proteção DDoS, uptime garantido e suporte especializado. Ative seu servidor em minutos.</p>
-      <div class="lp-hero-ctas">
-        <a href="/cliente/criar-conta" class="lp-btn solid" style="font-size:15px;padding:13px 28px;">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Contratar agora
-        </a>
-        <a href="/contato" class="lp-btn ghost" style="font-size:15px;padding:13px 28px;">Falar com especialista</a>
-      </div>
-      <div class="lp-hero-trust">
-        <div class="lp-hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Proteção DDoS inclusa</div>
-        <div class="lp-hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>99,9% de uptime</div>
-        <div class="lp-hero-trust-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Suporte 24/7</div>
+      <h1 class="hero__title">Infraestrutura VPS para<br><em>escalar seu negócio</em></h1>
+      <p class="hero__subtitle">Servidores VPS com recursos dedicados, proteção DDoS nativa, uptime 99,9% e suporte técnico — ativação em até 6 dias úteis.</p>
+      <div class="hero__actions">
+        <a href="#planos" class="btn btn-p" style="padding:14px 26px;font-size:.9rem">Ver Planos e Preços</a>
+        <a href="#sobre" class="btn btn-s" style="padding:14px 26px;font-size:.9rem">Saiba mais</a>
       </div>
     </div>
-    <div class="lp-hero-right">
-      <?php if (!empty($_planos)):
-        $_fp = $_planos[0];
-        $_fspecs = json_decode((string)($_fp['specs_json'] ?? ''), true) ?: [];
-        $_fvcpu  = (int)($_fspecs['vcpu'] ?? $_fspecs['cpu'] ?? 0);
-        $_fram   = (int)($_fspecs['ram_gb'] ?? 0);
-        $_fdisco = (int)($_fspecs['disco_gb'] ?? $_fspecs['storage_gb'] ?? 0);
-        $_fprice = (float)$_fp['price'];
-      ?>
-      <div class="lp-server-card">
-        <div class="lp-server-card-header">
-          <div class="lp-server-card-title">Servidor em destaque</div>
-          <div class="lp-server-status">Online</div>
-        </div>
-        <div class="lp-server-name"><?php echo View::e((string)$_fp['name']); ?></div>
-        <div class="lp-server-desc"><?php echo View::e((string)($_fp['description'] ?? 'Servidor cloud de alta performance')); ?></div>
-        <div class="lp-server-specs">
-          <?php if ($_fvcpu > 0): ?><div class="lp-spec"><div class="lp-spec-val"><?php echo $_fvcpu; ?></div><div class="lp-spec-lbl">vCPU</div></div><?php endif; ?>
-          <?php if ($_fram > 0): ?><div class="lp-spec"><div class="lp-spec-val"><?php echo $_fram; ?>GB</div><div class="lp-spec-lbl">RAM</div></div><?php endif; ?>
-          <?php if ($_fdisco > 0): ?><div class="lp-spec"><div class="lp-spec-val"><?php echo $_fdisco; ?>GB</div><div class="lp-spec-lbl">SSD NVMe</div></div><?php endif; ?>
-          <div class="lp-spec"><div class="lp-spec-val">1Gbps</div><div class="lp-spec-lbl">Rede</div></div>
-        </div>
-        <div class="lp-server-price">
-          <div class="lp-server-price-val">R$ <?php echo number_format($_fprice, 2, ',', '.'); ?></div>
-          <div class="lp-server-price-cycle">/mês</div>
-        </div>
-        <a href="/cliente/criar-conta" class="lp-server-cta">Contratar este plano →</a>
-      </div>
-      <div class="lp-hero-floats">
-        <div class="lp-hero-float">
-          <div class="lp-hero-float-icon green"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l4.5 2.25v3.75c0 2.625-1.875 4.875-4.5 5.625C5.375 12.375 3.5 10.125 3.5 7.5V3.75L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
-          <div><div class="lp-hero-float-label">DDoS Protection</div><div class="lp-hero-float-sub">Ativada por padrão</div></div>
-        </div>
-        <div class="lp-hero-float">
-          <div class="lp-hero-float-icon blue"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div><div class="lp-hero-float-label">99,9% Uptime</div><div class="lp-hero-float-sub">SLA garantido</div></div>
-        </div>
-      </div>
-      <?php else: ?>
-      <div class="lp-server-card">
-        <div class="lp-server-card-header">
-          <div class="lp-server-card-title">Infraestrutura cloud</div>
-          <div class="lp-server-status">Online</div>
-        </div>
-        <div class="lp-server-name"><?php echo View::e($_nome); ?></div>
-        <div class="lp-server-desc">Servidores de alta performance com ativação imediata.</div>
-        <div class="lp-server-specs">
-          <div class="lp-spec"><div class="lp-spec-val">NVMe</div><div class="lp-spec-lbl">Armazenamento</div></div>
-          <div class="lp-spec"><div class="lp-spec-val">1Gbps</div><div class="lp-spec-lbl">Rede</div></div>
-          <div class="lp-spec"><div class="lp-spec-val">DDoS</div><div class="lp-spec-lbl">Proteção</div></div>
-          <div class="lp-spec"><div class="lp-spec-val">24/7</div><div class="lp-spec-lbl">Suporte</div></div>
-        </div>
-        <a href="/cliente/criar-conta" class="lp-server-cta">Ver planos disponíveis →</a>
-      </div>
-      <div class="lp-hero-floats">
-        <div class="lp-hero-float">
-          <div class="lp-hero-float-icon green"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l4.5 2.25v3.75c0 2.625-1.875 4.875-4.5 5.625C5.375 12.375 3.5 10.125 3.5 7.5V3.75L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
-          <div><div class="lp-hero-float-label">DDoS Protection</div><div class="lp-hero-float-sub">Ativada por padrão</div></div>
-        </div>
-        <div class="lp-hero-float">
-          <div class="lp-hero-float-icon blue"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div><div class="lp-hero-float-label">99,9% Uptime</div><div class="lp-hero-float-sub">SLA garantido</div></div>
-        </div>
-      </div>
-      <?php endif; ?>
-    </div>
-  </div>
-</section>
-
-<!-- Logos/clientes -->
-<div class="lp-logos">
-  <div class="lp-logos-inner">
-    <div class="lp-logos-label">Empresas que confiam na nossa infraestrutura</div>
-    <div class="lp-logos-tags">
-      <div class="lp-logo-tag">Startups</div>
-      <div class="lp-logo-tag">E-commerce</div>
-      <div class="lp-logo-tag">SaaS</div>
-      <div class="lp-logo-tag">Agências</div>
-      <div class="lp-logo-tag">Desenvolvedores</div>
-      <div class="lp-logo-tag">Fintechs</div>
-    </div>
-  </div>
-</div>
-
-<!-- Stats -->
-<div class="lp-stats">
-  <div class="lp-stats-inner">
-    <div class="lp-stat"><div class="lp-stat-num">+5 anos</div><div class="lp-stat-lbl">de experiência</div></div>
-    <div class="lp-stat"><div class="lp-stat-num">+200</div><div class="lp-stat-lbl">clientes ativos</div></div>
-    <div class="lp-stat"><div class="lp-stat-num">99,9%</div><div class="lp-stat-lbl">SLA garantido</div></div>
-    <div class="lp-stat"><div class="lp-stat-num">6 dias</div><div class="lp-stat-lbl">ativação média</div></div>
-  </div>
-</div>
-
-<!-- Por que nós -->
-<section class="lp-section" id="sobre">
-  <div class="lp-section-inner">
-    <div class="lp-why-grid">
-      <div class="lp-why-left">
-        <div class="lp-label">Por que escolher a <?php echo View::e($_nome); ?></div>
-        <h2 class="lp-title">Infraestrutura que acompanha o crescimento do seu negócio</h2>
-        <p class="lp-sub">Combinamos hardware de ponta, rede de alta capacidade e suporte especializado para entregar a melhor experiência em cloud hosting.</p>
-        <a href="/cliente/criar-conta" class="lp-btn solid" style="margin-top:24px;display:inline-flex;">Começar agora →</a>
-      </div>
-      <div class="lp-why-features">
-        <div class="lp-why-feat">
-          <div class="lp-why-feat-icon" style="background:#eef2ff;color:#4F46E5;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l2 5h5l-4 3 1.5 5L10 12l-4.5 3L7 10 3 7h5L10 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-          <div class="lp-why-feat-name">Alto Desempenho</div>
-          <div class="lp-why-feat-desc">Processadores de última geração e SSDs NVMe para máxima velocidade.</div>
-        </div>
-        <div class="lp-why-feat">
-          <div class="lp-why-feat-icon" style="background:#fff1f2;color:#e11d48;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l6 3v5c0 3.5-2.5 6.5-6 7.5C4.5 16.5 2 13.5 2 10V5l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-          <div class="lp-why-feat-name">Proteção DDoS</div>
-          <div class="lp-why-feat-desc">Mitigação automática de ataques DDoS inclusa em todos os planos.</div>
-        </div>
-        <div class="lp-why-feat">
-          <div class="lp-why-feat-icon" style="background:#f0fdf4;color:#16a34a;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 10h16M10 2v16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/></svg></div>
-          <div class="lp-why-feat-name">Hiperconectividade</div>
-          <div class="lp-why-feat-desc">Rede 1Gbps com múltiplos uplinks e baixa latência.</div>
-        </div>
-        <div class="lp-why-feat">
-          <div class="lp-why-feat-icon" style="background:#fff7ed;color:#ea580c;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2v4M10 14v4M2 10h4M14 10h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.6"/></svg></div>
-          <div class="lp-why-feat-name">Upgrades Fáceis</div>
-          <div class="lp-why-feat-desc">Escale recursos sem downtime. Upgrade com um clique no painel.</div>
-        </div>
-        <div class="lp-why-feat">
-          <div class="lp-why-feat-icon" style="background:#f5f3ff;color:#7C3AED;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="6" width="14" height="5" rx="2" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="13" width="14" height="4" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="14" cy="8.5" r="1" fill="currentColor"/><circle cx="14" cy="15" r="1" fill="currentColor"/></svg></div>
-          <div class="lp-why-feat-name">Hardware Dedicado</div>
-          <div class="lp-why-feat-desc">Recursos garantidos sem compartilhamento excessivo de CPU e RAM.</div>
-        </div>
-        <div class="lp-why-feat">
-          <div class="lp-why-feat-icon" style="background:#fefce8;color:#ca8a04;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l1.8 5.5H18l-4.9 3.5 1.8 5.5L10 13l-4.9 3.5 1.8-5.5L2 7.5h6.2L10 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-          <div class="lp-why-feat-name">Custos Previsíveis</div>
-          <div class="lp-why-feat-desc">Preços fixos mensais sem surpresas. Sem cobrança por tráfego.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Diferenciais -->
-<section class="lp-section dark">
-  <div class="lp-section-inner">
-    <div style="text-align:center;margin-bottom:48px;">
-      <div class="lp-label light">Diferenciais</div>
-      <h2 class="lp-title light" style="text-align:center;">O que nos torna diferentes</h2>
-    </div>
-    <div class="lp-diff-grid">
-      <div class="lp-diff-card">
-        <div class="lp-diff-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 14h20M14 4v20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="14" r="10" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="lp-diff-name">Conectividade Global</div>
-        <div class="lp-diff-desc">Rede de alta capacidade com múltiplos pontos de presença e baixa latência para seus usuários.</div>
-      </div>
-      <div class="lp-diff-card">
-        <div class="lp-diff-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="6" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/><path d="M8 10l4 3-4 3M16 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="lp-diff-name">Console / KVM</div>
-        <div class="lp-diff-desc">Acesso total ao servidor via terminal web integrado com auditoria completa de comandos.</div>
-      </div>
-      <div class="lp-diff-card">
-        <div class="lp-diff-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3l7 3.5v6c0 4-2.8 7.5-7 8.5C9.8 20 7 16.5 7 12.5v-6L14 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
-        <div class="lp-diff-name">Resiliência</div>
-        <div class="lp-diff-desc">Infraestrutura redundante com backups automáticos e monitoramento 24/7 para máxima disponibilidade.</div>
-      </div>
-      <div class="lp-diff-card">
-        <div class="lp-diff-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 22V10l8-7 8 7v12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="10" y="16" width="8" height="6" rx="1" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="lp-diff-name">Desempenho I/O</div>
-        <div class="lp-diff-desc">SSDs NVMe de última geração com IOPS elevado para aplicações que exigem alta velocidade de disco.</div>
-      </div>
-      <div class="lp-diff-card">
-        <div class="lp-diff-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="12" width="20" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 12V8a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div class="lp-diff-name">Segurança Avançada</div>
-        <div class="lp-diff-desc">Proteção DDoS, firewall gerenciado, 2FA e criptografia em repouso para seus dados.</div>
-      </div>
-      <div class="lp-diff-card">
-        <div class="lp-diff-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4v8M14 16v8M4 14h8M16 14h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="14" r="4" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="lp-diff-name">Backup Automático</div>
-        <div class="lp-diff-desc">Snapshots diários com retenção configurável. Restauração com um clique quando você precisar.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Planos -->
-<section class="lp-section alt" id="planos">
-  <div class="lp-section-inner">
-    <div style="text-align:center;margin-bottom:40px;">
-      <div class="lp-label">Planos</div>
-      <h2 class="lp-title" style="text-align:center;">Escolha o plano ideal para você</h2>
-      <p class="lp-sub" style="margin:10px auto 0;text-align:center;">Todos os planos incluem proteção DDoS, backups automáticos e suporte especializado.</p>
-    </div>
-    <?php if (!empty($_planos)): ?>
-    <div class="lp-plans-wrap">
-      <div class="lp-plans-scroll" id="plansScroll">
-        <?php foreach ($_planos as $_i => $_p):
-          $_specs  = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
-          $_vcpu   = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
-          $_ram    = (int)($_specs['ram_gb'] ?? 0);
-          $_ramMb  = (int)($_specs['ram_mb'] ?? 0);
-          $_disco  = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
-          $_bw     = (int)($_specs['bandwidth_gb'] ?? 0);
-          $_price  = (float)$_p['price'];
-          $_cycle  = (string)($_p['billing_cycle'] ?? 'monthly');
-          $_destaque = $_i === 1;
-          $_addons = is_array($_p['addons'] ?? null) ? $_p['addons'] : [];
-          $_pid    = (int)$_p['id'];
-        ?>
-        <div class="lp-plan-card <?php echo $_destaque ? 'destaque' : ''; ?>" id="plan-card-<?php echo $_pid; ?>">
-          <?php if ($_destaque): ?><div class="lp-plan-badge">Mais popular</div><?php endif; ?>
-          <div class="lp-plan-name"><?php echo View::e((string)$_p['name']); ?></div>
-          <?php if (!empty($_p['description'])): ?><div class="lp-plan-desc"><?php echo View::e((string)$_p['description']); ?></div><?php endif; ?>
-          <div class="lp-plan-price-row">
-            <div class="lp-plan-price">R$ <?php echo number_format($_price, 2, ',', '.'); ?><span><?php echo $_cycle === 'yearly' ? '/ano' : '/mês'; ?></span></div>
+    <div class="hero__visual">
+      <div class="hero__server-card">
+        <div class="server-card__header">
+          <div class="server-card__icon">
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
-          <div class="lp-plan-cycle"><?php echo $_cycle === 'yearly' ? 'Cobrado anualmente' : 'Cobrado mensalmente'; ?></div>
-          <ul class="lp-plan-specs">
-            <?php if ($_vcpu > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
-            <?php if ($_ram > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_ram; ?> GB RAM</li><?php elseif ($_ramMb > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_ramMb; ?> MB RAM</li><?php endif; ?>
-            <?php if ($_disco > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_disco; ?> GB SSD NVMe</li><?php endif; ?>
-            <?php if ($_bw > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_bw; ?> GB bandwidth</li><?php endif; ?>
-            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Proteção DDoS</li>
-            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Suporte especializado</li>
-          </ul>
-          <?php if (!empty($_addons)): ?>
-          <div class="lp-plan-addons">
-            <div class="lp-plan-addons-title">Serviços adicionais</div>
-            <?php foreach ($_addons as $_a): ?>
-            <div class="lp-addon-row" data-plan="<?php echo $_pid; ?>" data-price="<?php echo (float)$_a['price']; ?>" onclick="lpToggleAddon(this)">
-              <div class="lp-addon-check"></div>
-              <div class="lp-addon-info">
-                <div class="lp-addon-name"><?php echo View::e((string)$_a['name']); ?></div>
-                <?php if (!empty($_a['description'])): ?><div class="lp-addon-desc"><?php echo View::e((string)$_a['description']); ?></div><?php endif; ?>
+          <div>
+            <div class="server-card__label">Servidor em destaque</div>
+            <div class="server-card__name"><?php echo $_hero_plano ? View::e((string)$_hero_plano['name']) : 'VPS Enterprise'; ?></div>
+          </div>
+        </div>
+        <div class="server-specs">
+          <?php if ($_hero_plano && $_hram > 0): ?>
+          <div class="spec-item"><div class="spec-item__val"><?php echo $_hram; ?> GB</div><div class="spec-item__key">RAM</div></div>
+          <?php else: ?><div class="spec-item"><div class="spec-item__val">32 GB</div><div class="spec-item__key">RAM</div></div><?php endif; ?>
+          <?php if ($_hero_plano && $_hvcpu > 0): ?>
+          <div class="spec-item"><div class="spec-item__val"><?php echo $_hvcpu; ?> vCPU</div><div class="spec-item__key">Processamento</div></div>
+          <?php else: ?><div class="spec-item"><div class="spec-item__val">16 vCPU</div><div class="spec-item__key">Processamento</div></div><?php endif; ?>
+          <?php if ($_hero_plano && $_hdisco > 0): ?>
+          <div class="spec-item"><div class="spec-item__val"><?php echo $_hdisco; ?> GB</div><div class="spec-item__key">SSD</div></div>
+          <?php else: ?><div class="spec-item"><div class="spec-item__val">300 GB</div><div class="spec-item__key">SSD</div></div><?php endif; ?>
+          <div class="spec-item"><div class="spec-item__val">Infra</div><div class="spec-item__key">Dedicada</div></div>
+        </div>
+        <div class="server-price">
+          <div class="server-price__label">Total mensal (servidor + backup)</div>
+          <div class="server-price__value">R$ <?php echo $_hero_plano ? number_format($_hprice, 0, ',', '.') : '1.497'; ?>+<span>/mês</span></div>
+        </div>
+      </div>
+      <div class="hero__floater hero__floater--1">
+        <div class="floater-icon floater-icon--green">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#15803D;stroke-width:2;fill:none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="floater__text"><strong>DDoS Protection</strong><span>Ativada por padrão</span></div>
+      </div>
+      <div class="hero__floater hero__floater--2">
+        <div class="floater-icon floater-icon--blue">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--azs);stroke-width:2;fill:none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="floater__text"><strong>99,9% Uptime</strong><span>SLA garantido</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="hero__clients">
+    <p>Empresas que confiam na <?php echo View::e($_nome); ?></p>
+    <div class="clients-logos">
+      <span>Startups</span><span>E-commerce</span><span>SaaS</span><span>Agências</span><span>Desenvolvedores</span>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="statsbar">
+  <div class="stats">
+    <div class="stat"><h3>+5 anos</h3><p>Experiência no mercado de infraestrutura</p></div>
+    <div class="stat"><h3>+200</h3><p>Clientes ativos em todo o Brasil</p></div>
+    <div class="stat"><h3>99,9%</h3><p>SLA de uptime garantido em contrato</p></div>
+    <div class="stat"><h3>6 dias</h3><p>Ativação rápida dos servidores</p></div>
+  </div>
+</div>
+
+<!-- SOBRE -->
+<section id="sobre">
+  <div class="wrap">
+    <div class="features-header">
+      <div>
+        <span class="eyebrow">Por que a <?php echo View::e($_nome); ?>?</span>
+        <h2 style="margin-bottom:16px">A melhor infraestrutura<br>do Brasil</h2>
+        <p class="lead">A <strong><?php echo View::e($_nome); ?></strong> é especializada em servidores dedicados, hospedagem web e infraestrutura digital. Tecnologia de ponta com suporte humanizado, custos transparentes e escalabilidade real.</p>
+      </div>
+      <div>
+        <p class="lead" style="color:var(--ts);font-size:.95rem">Nossa infraestrutura é base para sistemas empresariais, bancos de dados, armazenamento de arquivos e soluções de continuidade de negócios em todo o Brasil.</p>
+        <p style="font-size:.88rem;color:#637080;margin-top:14px;line-height:1.7">Reajuste previsível baseado no IGPM · Ativação em até 6 dias úteis · Tráfego ilimitado incluído</p>
+      </div>
+    </div>
+    <div class="features-grid">
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="feat-item__title">Desempenho Superior</div><p class="feat-item__desc">Processadores Intel Xeon de última geração para máximo throughput e mínima latência.</p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="feat-item__title">Proteção DDoS Nativa</div><p class="feat-item__desc">Infraestrutura blindada contra ataques volumétricos. Incluída em todos os planos.</p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="feat-item__title">Hiperconectividade</div><p class="feat-item__desc">Portas de 1 a 10 Gbps com tráfego ilimitado. Dentro do hub de conectividade dos DCs.</p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="feat-item__title">Upgrades sem Burocracia</div><p class="feat-item__desc">Escale recursos com rapidez. Ajuste CPU, RAM e armazenamento sob demanda.</p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="feat-item__title">Hardware Exclusivo</div><p class="feat-item__desc">Controle total do servidor dedicado. Sem compartilhamento, sem vizinhos barulhentos.</p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="feat-item__title">Custos Transparentes</div><p class="feat-item__desc">Preços claros, sem taxas ocultas. Reajuste anual pelo IGPM, sempre previsível.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIFERENCIAIS -->
+<section class="diff-sec">
+  <div class="diff-header"><h2>Diferenciais dos Servidores Dedicados <?php echo View::e($_nome); ?></h2></div>
+  <div class="diff-grid">
+    <div class="diff-card animate">
+      <div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg></div>
+      <h3 class="diff-title">Conectividade</h3>
+      <p class="diff-desc">Conexão direta com grandes redes como Akamai, CloudFlare, Microsoft, Google, AWS e UPX. Capilaridade através dos maiores peerings nacionais do IX.br. Trânsito por múltiplas operadoras atuantes no Brasil e no mundo.</p>
+    </div>
+    <div class="diff-card animate">
+      <div class="diff-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      <h3 class="diff-title">Console/KVM</h3>
+      <p class="diff-desc">Painel intuitivo que fornece acesso externo ao servidor (display, teclado e mouse), possibilita a montagem de ISOs em drive virtual, permite ligar, desligar e reiniciar o servidor, entre outras opções.</p>
+    </div>
+    <div class="diff-card animate">
+      <div class="diff-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <h3 class="diff-title">Resiliência</h3>
+      <p class="diff-desc">Servidores com grande quantidade de recursos para altas demandas de utilização sustentada ou durante picos inesperados, sem alterações na velocidade de resposta.</p>
+    </div>
+    <div class="diff-card animate">
+      <div class="diff-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3 class="diff-title">Desempenho I/O</h3>
+      <p class="diff-desc">Baixíssima latência em operações de leitura e gravação, mesmo durante picos em cargas como bancos de dados complexos ou servidores de e-mail com grande fluxo de mensagens.</p>
+    </div>
+    <div class="diff-card animate">
+      <div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <h3 class="diff-title">Segurança a nível de rede</h3>
+      <p class="diff-desc">VLAN privada para tráfego interno, VPN para integração segura com seu escritório, firewall dedicado para regras de segurança adequadas e link ponto a ponto para interligar escritórios (serviços adicionais).</p>
+    </div>
+    <div class="diff-card animate">
+      <div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 4.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 .33 1.65 1.65 0 0 0 10 1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <h3 class="diff-title">Backup diário</h3>
+      <p class="diff-desc">Seus dados armazenados em ambiente externo e à prova de falhas. Segurança total em casos de remoção indevida, corrompimento de banco de dados, ransomware, entre outros (serviço adicional).</p>
+    </div>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section class="plans-sec" id="planos">
+  <div class="wrap">
+    <h2 style="text-align:center;margin-bottom:12px">Escolha o ideal para seu projeto</h2>
+    <p style="text-align:center;color:var(--ts);font-size:16px;max-width:640px;margin:0 auto 24px">Servidores VPS com recursos dedicados e escaláveis. Todos os planos incluem proteção DDoS e SSL gratuito.</p>
+    <div class="compare-btn-container">
+      <button class="compare-btn" onclick="openCompareModal()">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Comparar todos os planos
+      </button>
+    </div>
+    <div class="carousel-container">
+      <div class="carousel-wrapper">
+        <div class="carousel-track" id="carouselTrack">
+          <?php if (!empty($_planos)): ?>
+          <?php foreach ($_planos as $_i => $_p):
+            $_specs = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
+            $_vcpu  = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
+            $_ram   = (int)($_specs['ram_gb'] ?? 0);
+            $_disco = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
+            $_price = (float)$_p['price'];
+            $_pid   = (int)$_p['id'];
+            $_addons = is_array($_p['addons'] ?? null) ? $_p['addons'] : [];
+            $_badge = (string)($_p['badge'] ?? '');
+          ?>
+          <div class="plan-card" id="pcard-<?php echo $_pid; ?>">
+            <?php if ($_badge !== ''): ?><div class="plan-badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
+            <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
+            <div class="plan-desc"><?php echo View::e((string)($_p['description'] ?? '')); ?></div>
+            <div class="plan-price"><small>R$</small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
+            <div class="plan-period">por mês</div>
+            <ul class="plan-features">
+              <?php if ($_vcpu > 0): ?><li><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
+              <?php if ($_ram > 0): ?><li><?php echo $_ram; ?> GB RAM</li><?php endif; ?>
+              <?php if ($_disco > 0): ?><li><?php echo $_disco; ?> GB SSD</li><?php endif; ?>
+              <li>Proteção DDoS</li>
+              <li>SSL gratuito</li>
+              <li>Suporte especializado</li>
+            </ul>
+            <?php if (!empty($_addons)): ?>
+            <div class="addons-sec">
+              <h3>Serviços adicionais</h3>
+              <?php foreach ($_addons as $_ai => $_a):
+                $_aprice = (float)$_a['price'];
+              ?>
+              <div class="addon-item" onclick="toggleAddon(this,<?php echo $_pid; ?>,<?php echo $_aprice; ?>)">
+                <div class="addon-check"></div>
+                <div class="addon-info">
+                  <div class="addon-name"><?php echo View::e((string)$_a['name']); ?></div>
+                  <?php if (!empty($_a['description'])): ?><div class="addon-desc"><?php echo View::e((string)$_a['description']); ?></div><?php endif; ?>
+                </div>
+                <div class="addon-price">+ R$ <?php echo number_format($_aprice, 0, ',', '.'); ?></div>
               </div>
-              <div class="lp-addon-price">+ R$ <?php echo number_format((float)$_a['price'], 2, ',', '.'); ?></div>
+              <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
+            <div class="total-calc">
+              <div class="total-label">Valor total</div>
+              <div class="total-value">R$ <span id="total-<?php echo $_pid; ?>"><?php echo number_format($_price, 0, ',', '.'); ?></span></div>
+            </div>
+            <?php endif; ?>
+            <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="plan-cta">Contratar agora</a>
           </div>
-          <div class="lp-plan-total">
-            <span class="lp-plan-total-label">Total/mês</span>
-            <span class="lp-plan-total-val" id="plan-total-<?php echo $_pid; ?>">R$ <?php echo number_format($_price, 2, ',', '.'); ?></span>
-          </div>
+          <?php endforeach; ?>
+          <?php else: ?>
+          <div style="padding:48px;text-align:center;color:var(--ts);font-size:14px;width:100%">Planos em breve. <a href="/contato" style="color:var(--az)">Entre em contato</a> para saber mais.</div>
           <?php endif; ?>
-          <div class="lp-plan-cta">
-            <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="lp-btn solid" style="width:100%;justify-content:center;border-radius:12px;padding:13px 20px;">
-              Contratar agora
-            </a>
-          </div>
         </div>
-        <?php endforeach; ?>
       </div>
-      <?php if (count($_planos) > 2): ?>
-      <div class="lp-plans-nav">
-        <button onclick="document.getElementById('plansScroll').scrollBy({left:-340,behavior:'smooth'})" aria-label="Anterior">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button onclick="document.getElementById('plansScroll').scrollBy({left:340,behavior:'smooth'})" aria-label="Próximo">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
+      <div class="carousel-btn carousel-btn--prev" onclick="moveCarousel(-1)">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
+      <div class="carousel-btn carousel-btn--next" onclick="moveCarousel(1)">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="carousel-dots" id="carouselDots"></div>
+    </div>
+    <div class="help-card">
+      <div class="help-content">
+        <h3 class="help-title">Precisando de ajuda para decidir ou mais recursos?</h3>
+        <p class="help-subtitle">Fale conosco para um plano personalizado</p>
+      </div>
+      <div class="help-action">
+        <a href="/contato" class="help-btn">Falar com Especialista</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONDIÇÕES -->
+<section id="condicoes">
+  <div class="wrap">
+    <div style="margin-bottom:40px">
+      <span class="eyebrow">Transparência total</span>
+      <h2 style="margin-bottom:14px">Condições Gerais dos Serviços</h2>
+      <p class="lead">Tudo o que você precisa saber antes de contratar. Sem letras miúdas, sem surpresas na fatura.</p>
+    </div>
+    <div class="conds-grid">
+      <div class="cond"><div class="cond__num">01</div><p>Todos os valores incluem os devidos <strong>impostos conforme a legislação vigente</strong>.</p></div>
+      <div class="cond"><div class="cond__num">02</div><p>Serviços <strong>pré-pagos</strong>. Cobrança inicia após a ativação. Primeira fatura proporcional com vencimento em <strong>5 dias</strong>.</p></div>
+      <div class="cond"><div class="cond__num">03</div><p>Faturas mensais enviadas com <strong>15 dias de antecedência</strong>, pagamento exclusivamente por boleto bancário.</p></div>
+      <div class="cond"><div class="cond__num">04</div><p>Reajuste anual baseado no <strong>IGPM</strong> ao final de cada período de 12 meses de vigência.</p></div>
+      <div class="cond"><div class="cond__num">05</div><p><strong>Renovação automática</strong> por períodos iguais se não houver contestação com <strong>60 dias</strong> de antecedência.</p></div>
+      <div class="cond"><div class="cond__num">06</div><p>Rescisão antecipada: multa de <strong>50% do valor mensal × meses restantes</strong> acordados na proposta.</p></div>
+      <div class="cond"><div class="cond__num">07</div><p><strong>Prazo de ativação SP1</strong>: 1 servidor = 6 dias úteis. Regiões PR1/CE1: +5 dias úteis adicionais.</p></div>
+      <div class="cond"><div class="cond__num">08</div><p><strong>Backup BaaS</strong> ativado em até 4 dias úteis adicionais ao prazo do servidor contratado.</p></div>
+      <div class="cond"><div class="cond__num">09</div><p>Cancelamento ou downgrade deve ser <strong>comunicado com 60 dias</strong> de antecedência da suspensão.</p></div>
+      <div class="cond"><div class="cond__num">10</div><p>É estritamente proibida a <strong>hospedagem de jogos</strong> para garantia de performance de conectividade.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section class="sec-alt">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:52px">
+      <span class="eyebrow">Depoimentos</span>
+      <h2>O que nossos clientes dizem</h2>
+    </div>
+    <div class="test-grid">
+      <div class="test-card">
+        <p class="test-card__text">A <?php echo View::e($_nome); ?> nos deu todo o suporte quando enfrentamos um incidente crítico. Na época tínhamos todo o data center on-premise interno, e agora toda nossa infraestrutura está com eles. Nossa parceria já tem mais de 2 anos e a ideia é continuar por muito tempo. Estamos muito felizes com o atendimento prestado.</p>
+        <div class="test-card__author"><div class="test-card__av">ES</div><div><div class="test-card__name">Edson Souza</div><div class="test-card__role">Gerente de Tecnologia — Ipanema Queijos</div></div></div>
+      </div>
+      <div class="test-card">
+        <p class="test-card__text">A <?php echo View::e($_nome); ?> é a principal fornecedora de tecnologia da Akahosting. Fundamentamos uma parceria e em menos de um ano conseguimos ver o extremo sucesso em nossa operação. Graças a eles nossa empresa conseguiu alavancar muito os negócios. Somos gratos pelo suporte em todas as ocasiões.</p>
+        <div class="test-card__author"><div class="test-card__av">MP</div><div><div class="test-card__name">Marcio Polonio</div><div class="test-card__role">CEO — Akahosting</div></div></div>
+      </div>
+      <div class="test-card">
+        <p class="test-card__text">Trabalhávamos com provedores de servidor fora do Brasil, conhecemos a <?php echo View::e($_nome); ?> e trouxemos toda nossa infraestrutura para cá. Estamos com eles há alguns anos e nossa evolução conjunta é constante. Estamos muito satisfeitos e planejamos estender essa parceria cada vez mais.</p>
+        <div class="test-card__author"><div class="test-card__av">LB</div><div><div class="test-card__name">Leonardo Barros</div><div class="test-card__role">Diretor Executivo — Reposit</div></div></div>
+      </div>
+      <div class="test-card">
+        <p class="test-card__text">A migração para a <?php echo View::e($_nome); ?> foi decisiva para nossa operação. O processo foi transparente, o time técnico sempre disponível e o desempenho superou nossas expectativas. Com o servidor dedicado reduzimos latência e aumentamos capacidade sem aumentar os custos.</p>
+        <div class="test-card__author"><div class="test-card__av">RN</div><div><div class="test-card__name">Rafael Neves</div><div class="test-card__role">CTO — TechStream</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-sec" id="contato">
+  <div class="wrap">
+    <div class="cta-sec__inner">
+      <span class="eyebrow" style="color:#c7d2fe">Pronto para começar?</span>
+      <h2>Ative seu servidor em<br><em>até 6 dias úteis</em></h2>
+      <p>Entre em contato agora e receba uma proposta personalizada. Nossa equipe técnica está pronta para atender você.</p>
+      <div class="cta-btns">
+        <a href="/contato" class="btn btn-p" style="padding:14px 26px;font-size:.9rem">✉️ Solicitar Proposta por E-mail</a>
+        <a href="/contato" class="btn btn-s" style="padding:14px 26px;font-size:.9rem">💬 Falar com Consultor</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL DE COMPARAÇÃO -->
+<div class="compare-modal" id="compareModal">
+  <div class="compare-modal__content">
+    <div class="compare-modal__header">
+      <h2 class="compare-modal__title">Comparar todos os planos</h2>
+      <button class="compare-modal__close" onclick="closeCompareModal()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="compare-grid">
+      <?php foreach ($_planos as $_i => $_p):
+        $_specs = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
+        $_vcpu  = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
+        $_ram   = (int)($_specs['ram_gb'] ?? 0);
+        $_disco = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
+        $_price = (float)$_p['price'];
+        $_badge = (string)($_p['badge'] ?? '');
+        $_featured = $_badge !== '';
+      ?>
+      <div class="compare-card <?php echo $_featured ? 'featured' : ''; ?>">
+        <?php if ($_badge !== ''): ?><div class="compare-card__badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
+        <div class="compare-card__name"><?php echo View::e((string)$_p['name']); ?></div>
+        <div class="compare-card__price"><small>R$</small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
+        <div class="compare-card__period">por mês</div>
+        <ul class="compare-card__features">
+          <?php if ($_vcpu > 0): ?><li><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
+          <?php if ($_ram > 0): ?><li><?php echo $_ram; ?> GB RAM</li><?php endif; ?>
+          <?php if ($_disco > 0): ?><li><?php echo $_disco; ?> GB SSD</li><?php endif; ?>
+          <li>Proteção DDoS</li>
+          <li>SSL gratuito</li>
+          <li>Suporte especializado</li>
+        </ul>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <?php if ($_logo !== ''): ?>
+        <img src="<?php echo View::e($_logo); ?>" alt="<?php echo View::e($_nome); ?>">
+      <?php else: ?>
+        <span class="footer__brand-name"><?php echo View::e($_nome); ?></span>
       <?php endif; ?>
     </div>
-    <?php else: ?>
-    <div class="lp-plan-empty">Planos em breve. <a href="/contato">Entre em contato</a> para saber mais.</div>
-    <?php endif; ?>
-    <p style="text-align:center;margin-top:28px;font-size:13px;color:#94a3b8;">Precisa de algo personalizado? <a href="/contato" style="color:#7C3AED;">Fale com nossa equipe</a></p>
-  </div>
-</section>
-<script>
-// Preços base dos planos (PHP → JS)
-var _planBase = {<?php foreach ($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:<?php echo (float)$_p['price']; ?>,<?php endforeach; ?>};
-function lpToggleAddon(row) {
-  row.classList.toggle('checked');
-  var pid = row.dataset.plan;
-  var card = document.getElementById('plan-card-' + pid);
-  var total = _planBase[pid] || 0;
-  card.querySelectorAll('.lp-addon-row.checked').forEach(function(r){ total += parseFloat(r.dataset.price) || 0; });
-  var el = document.getElementById('plan-total-' + pid);
-  if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-</script>
-
-<!-- CTA ajuda -->
-<section class="lp-section" style="padding:48px 24px;">
-  <div class="lp-section-inner">
-    <div class="lp-help-banner">
-      <div>
-        <div class="lp-help-title">Precisando de ajuda para escolher?</div>
-        <div class="lp-help-sub">Nossa equipe está pronta para indicar o melhor plano para o seu projeto.</div>
-      </div>
-      <a href="/contato" class="lp-help-btn">Falar com especialista →</a>
-    </div>
-  </div>
-</section>
-
-<!-- Condições -->
-<section class="lp-section alt" id="condicoes">
-  <div class="lp-section-inner">
-    <div style="text-align:center;margin-bottom:40px;">
-      <div class="lp-label">Condições</div>
-      <h2 class="lp-title" style="text-align:center;">Transparência em tudo</h2>
-      <p class="lp-sub" style="margin:10px auto 0;text-align:center;">Saiba exatamente o que está contratando. Sem letras miúdas.</p>
-    </div>
-    <div class="lp-cond-grid">
-      <div class="lp-cond-item"><div class="lp-cond-num">1</div><div class="lp-cond-text"><strong>Ativação imediata</strong>Após confirmação do pagamento, seu servidor é provisionado automaticamente.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">2</div><div class="lp-cond-text"><strong>Cobrança mensal</strong>Planos mensais com renovação automática. Cancele quando quiser.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">3</div><div class="lp-cond-text"><strong>SLA 99,9%</strong>Garantia de disponibilidade com compensação em caso de indisponibilidade.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">4</div><div class="lp-cond-text"><strong>Backups inclusos</strong>Backups automáticos diários com retenção de 7 dias em todos os planos.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">5</div><div class="lp-cond-text"><strong>Proteção DDoS</strong>Mitigação automática de ataques sem custo adicional em todos os planos.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">6</div><div class="lp-cond-text"><strong>Suporte incluso</strong>Suporte via chat e tickets incluído. Sem cobranças extras por atendimento.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">7</div><div class="lp-cond-text"><strong>Upgrade sem downtime</strong>Aumente recursos do seu servidor sem interrupção do serviço.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">8</div><div class="lp-cond-text"><strong>Acesso root completo</strong>Controle total do servidor via terminal web ou SSH direto.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">9</div><div class="lp-cond-text"><strong>Sem fidelidade</strong>Não há contrato de fidelidade. Cancele a qualquer momento sem multa.</div></div>
-      <div class="lp-cond-item"><div class="lp-cond-num">10</div><div class="lp-cond-text"><strong>Dados no Brasil</strong>Infraestrutura localizada no Brasil, em conformidade com a LGPD.</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- Depoimentos -->
-<section class="lp-section">
-  <div class="lp-section-inner">
-    <div style="text-align:center;margin-bottom:40px;">
-      <div class="lp-label">Depoimentos</div>
-      <h2 class="lp-title" style="text-align:center;">O que nossos clientes dizem</h2>
-    </div>
-    <div class="lp-test-grid">
-      <div class="lp-test-card">
-        <div class="lp-test-stars">★★★★★</div>
-        <div class="lp-test-text">"Migramos nossa aplicação para a <?php echo View::e($_nome); ?> e a diferença de performance foi imediata. Uptime impecável e suporte sempre ágil."</div>
-        <div class="lp-test-author"><div class="lp-test-avatar">RS</div><div><div class="lp-test-name">Rafael S.</div><div class="lp-test-role">CTO · Startup SaaS</div></div></div>
-      </div>
-      <div class="lp-test-card">
-        <div class="lp-test-stars">★★★★★</div>
-        <div class="lp-test-text">"O painel é muito intuitivo. Consigo gerenciar todos os servidores dos meus clientes em um único lugar. Recomendo para qualquer agência."</div>
-        <div class="lp-test-author"><div class="lp-test-avatar">MC</div><div><div class="lp-test-name">Marina C.</div><div class="lp-test-role">Fundadora · Agência Digital</div></div></div>
-      </div>
-      <div class="lp-test-card">
-        <div class="lp-test-stars">★★★★★</div>
-        <div class="lp-test-text">"Proteção DDoS funcionando perfeitamente. Já sofremos ataques e o sistema mitigou tudo automaticamente sem afetar nossos clientes."</div>
-        <div class="lp-test-author"><div class="lp-test-avatar">PL</div><div><div class="lp-test-name">Pedro L.</div><div class="lp-test-role">Dev Lead · E-commerce</div></div></div>
-      </div>
-      <div class="lp-test-card">
-        <div class="lp-test-stars">★★★★★</div>
-        <div class="lp-test-text">"Preço justo, infraestrutura sólida e suporte que realmente resolve. Já indiquei para vários colegas desenvolvedores."</div>
-        <div class="lp-test-author"><div class="lp-test-avatar">AT</div><div><div class="lp-test-name">Ana T.</div><div class="lp-test-role">Desenvolvedora Freelancer</div></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA final -->
-<section class="lp-cta-final">
-  <div class="lp-cta-glow"></div>
-  <div class="lp-cta-inner">
-    <h2 class="lp-cta-title"><em>Sua infraestrutura pronta para o próximo nível.</em></h2>
-    <p class="lp-cta-sub">Ative seu servidor hoje e experimente a diferença de uma infraestrutura cloud de verdade.</p>
-    <div class="lp-cta-btns">
-      <a href="/cliente/criar-conta" class="lp-cta-btn primary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Contratar agora
-      </a>
-      <a href="/contato" class="lp-cta-btn outline">Falar com especialista</a>
-    </div>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="lp-footer">
-  <div class="lp-footer-inner">
-    <div class="lp-footer-grid">
-      <div>
-        <div class="lp-footer-brand-name"><?php echo View::e($_nome); ?></div>
-        <div class="lp-footer-brand-desc">Infraestrutura cloud de alta performance com proteção DDoS, backups automáticos e suporte especializado.</div>
-      </div>
-      <div>
-        <div class="lp-footer-col-title">Produto</div>
-        <ul class="lp-footer-links">
-          <li><a href="#sobre">Sobre</a></li>
-          <li><a href="#planos">Planos</a></li>
-          <li><a href="#condicoes">Condições</a></li>
-          <li><a href="/infraestrutura">Para devs</a></li>
-          <li><a href="/changelog">Changelog</a></li>
-        </ul>
-      </div>
-      <div>
-        <div class="lp-footer-col-title">Suporte</div>
-        <ul class="lp-footer-links">
-          <li><a href="/contato">Contato</a></li>
-          <li><a href="/status">Status</a></li>
-          <li><a href="/cliente/tickets">Tickets</a></li>
-          <li><a href="/cliente/ajuda">Central de ajuda</a></li>
-        </ul>
-      </div>
-      <div>
-        <div class="lp-footer-col-title">Legal</div>
-        <ul class="lp-footer-links">
-          <li><a href="/termos">Termos de uso</a></li>
-          <li><a href="/privacidade">Privacidade</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="lp-footer-bottom">
-      <span><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></span>
-      <span class="lp-footer-status">Todos os sistemas operacionais</span>
-    </div>
+    <div class="footer__copy"><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></div>
   </div>
 </footer>
 
+<script>
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();window.scrollTo({top:t.getBoundingClientRect().top+scrollY-68,behavior:'smooth'});}
+  });
+});
+
+// Animate diff cards on scroll
+var observerDiff=new IntersectionObserver(function(entries){
+  entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('animate');observerDiff.unobserve(entry.target);}});
+},{threshold:.1,rootMargin:'0px 0px -50px 0px'});
+document.querySelectorAll('.diff-card').forEach(function(c){observerDiff.observe(c);});
+
+// Carousel
+var currentSlide=0;
+var track=document.getElementById('carouselTrack');
+var originalCards=Array.from(document.querySelectorAll('.plan-card'));
+var totalSlides=originalCards.length;
+var dotsContainer=document.getElementById('carouselDots');
+
+originalCards.forEach(function(card){track.appendChild(card.cloneNode(true));});
+
+var totalDots=Math.ceil(totalSlides/2);
+for(var i=0;i<totalDots;i++){
+  var dot=document.createElement('div');
+  dot.className='carousel-dot'+(i===0?' active':'');
+  dot.onclick=(function(idx){return function(){goToSlide(idx*2);};})(i);
+  dotsContainer.appendChild(dot);
+}
+
+function updateCarousel(smooth){
+  var wrapper=document.querySelector('.carousel-wrapper');
+  var ww=wrapper.offsetWidth;
+  track.style.transition=smooth?'transform .5s cubic-bezier(.4,0,.2,1)':'none';
+  track.style.transform='translateX(-'+(currentSlide*(ww+24))+'px)';
+  var activeDot=Math.floor((currentSlide%totalSlides)/2);
+  document.querySelectorAll('.carousel-dot').forEach(function(d,idx){d.classList.toggle('active',idx===activeDot);});
+}
+function moveCarousel(dir){
+  currentSlide+=dir;
+  updateCarousel(true);
+  setTimeout(function(){
+    if(currentSlide>=totalSlides){currentSlide=0;updateCarousel(false);}
+    else if(currentSlide<0){currentSlide=totalSlides-1;updateCarousel(false);}
+  },500);
+}
+function goToSlide(idx){currentSlide=idx;updateCarousel(true);}
+window.addEventListener('resize',function(){updateCarousel(false);});
+setTimeout(function(){updateCarousel(false);},100);
+
+// Addons
+var planBase={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:<?php echo (float)$_p['price']; ?>,<?php endforeach; ?>};
+var planAddons={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:[],<?php endforeach; ?>};
+
+function toggleAddon(el,planId,addonPrice){
+  el.classList.toggle('selected');
+  var sel=el.classList.contains('selected');
+  el.querySelector('.addon-check').innerHTML=sel?'✓':'';
+  if(sel){planAddons[planId].push(addonPrice);}
+  else{var idx=planAddons[planId].indexOf(addonPrice);if(idx>-1)planAddons[planId].splice(idx,1);}
+  var total=(planBase[planId]||0)+planAddons[planId].reduce(function(s,p){return s+p;},0);
+  var el2=document.getElementById('total-'+planId);
+  if(el2)el2.textContent=total.toLocaleString('pt-BR');
+}
+
+// Modal
+function openCompareModal(){document.getElementById('compareModal').classList.add('active');document.body.style.overflow='hidden';}
+function closeCompareModal(){document.getElementById('compareModal').classList.remove('active');document.body.style.overflow='';}
+document.getElementById('compareModal').addEventListener('click',function(e){if(e.target===this)closeCompareModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCompareModal();});
+</script>
 </body>
 </html>
