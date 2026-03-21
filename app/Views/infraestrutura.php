@@ -465,5 +465,6 @@ function closeDrawer(){
   sections.forEach(s => obs.observe(s));
 })();
 </script>
+<?php require __DIR__ . '/_partials/chat-widget.php'; ?>
 </body>
 </html>

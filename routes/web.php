@@ -275,19 +275,3 @@ $roteador->post('/equipe/erros/limpar-resolvidos', [ErrosController::class, 'lim
 $roteador->get('/equipe/satisfacao', [SatisfacaoController::class, 'index'], [Middlewares::exigirPermissao('view_tickets')]);
 $roteador->get('/cliente/avaliar', [AvaliacaoController::class, 'formulario'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/avaliar', [AvaliacaoController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('avaliacao', 10, 60)]);
-
-// DIAGNÓSTICO TEMPORÁRIO — remover após confirmar deploy
-$roteador->get('/debug-widget', function(\LRV\Core\Http\Requisicao $req): \LRV\Core\Http\Resposta {
-    $widgetFile = __DIR__ . '/../app/Views/_partials/chat-widget.php';
-    $exists = file_exists($widgetFile);
-    $mtime  = $exists ? date('Y-m-d H:i:s', filemtime($widgetFile)) : 'N/A';
-    $size   = $exists ? filesize($widgetFile) : 0;
-    $first50 = $exists ? substr(file_get_contents($widgetFile), 0, 200) : '';
-    $html = '<pre style="font-family:monospace;padding:20px;background:#111;color:#0f0;">';
-    $html .= "chat-widget.php exists: " . ($exists ? 'YES' : 'NO') . "\n";
-    $html .= "Modified: $mtime\n";
-    $html .= "Size: $size bytes\n";
-    $html .= "First 200 chars:\n" . htmlspecialchars($first50) . "\n";
-    $html .= '</pre>';
-    return \LRV\Core\Http\Resposta::html($html);
-});

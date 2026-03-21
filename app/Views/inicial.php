@@ -27,7 +27,7 @@ if ($_hero_plano) {
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;overflow-x:hidden}
-body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a;overflow-x:hidden;max-width:100vw}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a;max-width:100vw}
 a{text-decoration:none;color:inherit}
 
 /* ── Navbar ── */
@@ -715,5 +715,6 @@ function closeDrawer(){
 }
 
 </script>
+<?php require __DIR__ . '/_partials/chat-widget.php'; ?>
 </body>
 </html>
