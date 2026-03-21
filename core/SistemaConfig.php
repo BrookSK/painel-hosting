@@ -31,7 +31,7 @@ final class SistemaConfig
     public static function copyrightText(): string
     {
         $v = trim((string) Settings::obter('system.copyright_text', ''));
-        return $v !== '' ? $v : '© ' . date('Y') . ' LRV Cloud';
+        return $v !== '' ? $v : '© ' . date('Y') . ' LRV Web';
     }
 
     public static function termsHtml(): string
