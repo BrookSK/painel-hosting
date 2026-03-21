@@ -230,6 +230,9 @@ $roteador->get('/cliente/chat', [ClienteChatController::class, 'index'], [Middle
 $roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
 $roteador->get('/cliente/chat/historico', [ClienteChatController::class, 'historico'], [Middlewares::exigirLoginCliente()]);
 
+// Upload de arquivo no chat (cliente ou equipe)
+$roteador->post('/chat/upload', [\LRV\App\Controllers\Api\ChatUploadController::class, 'upload']);
+
 // E-mails equipe (visão administrativa)
 $roteador->get('/equipe/emails', [EquipeEmailsController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/emails/remover-email', [EquipeEmailsController::class, 'removerEmail'], [Middlewares::exigirPermissao('manage_users')]);

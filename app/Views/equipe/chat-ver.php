@@ -6,19 +6,12 @@ use LRV\Core\Csrf;
 $roomId = (int)($room['id']??0);
 $status = (string)($room['status']??'open');
 $_wsUrl = '';
-try {
-    $_wsUrl = (string)\LRV\Core\Settings::obter('chat.ws_url', '');
-} catch (\Throwable $_e) {}
+try { $_wsUrl = (string)\LRV\Core\Settings::obter('chat.ws_url', ''); } catch (\Throwable $_e) {}
 if ($_wsUrl === '') {
-    try {
-        $_wsPort = (int)\LRV\Core\Settings::obter('chat.ws_port', 8082);
-    } catch (\Throwable $_e) {
-        $_wsPort = 8082;
-    }
+    try { $_wsPort = (int)\LRV\Core\Settings::obter('chat.ws_port', 8082); } catch (\Throwable $_e) { $_wsPort = 8082; }
     $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'wss' : 'ws';
     $_wsUrl = $proto . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ':' . $_wsPort;
 }
-
 $pageTitle = 'Chat #'.$roomId;
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
@@ -33,14 +26,17 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 @media(max-width:900px){.chat-layout{grid-template-columns:1fr;}}
 .chat-box{display:flex;flex-direction:column;height:480px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;}
 .chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#f8fafc;}
-.chat-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid #e2e8f0;background:#fff;}
-.chat-input-row input{flex:1;}
-.msg-bubble{max-width:72%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.4;}
+.chat-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid #e2e8f0;background:#fff;align-items:flex-end;}
+.chat-input-row input[type=text]{flex:1;}
+.msg-bubble{max-width:72%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.4;word-break:break-word;}
 .msg-admin{align-self:flex-end;background:#4F46E5;color:#fff;border-bottom-right-radius:4px;}
 .msg-client{align-self:flex-start;background:#e2e8f0;color:#1e293b;border-bottom-left-radius:4px;}
 .msg-meta{font-size:11px;opacity:.65;margin-top:3px;}
+.msg-img{max-width:220px;border-radius:8px;margin-top:4px;cursor:pointer;}
+.msg-file{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.15);border-radius:8px;font-size:13px;margin-top:4px;text-decoration:none;color:inherit;}
+.msg-admin .msg-file{border:1px solid rgba(255,255,255,.3);}
+.msg-client .msg-file{background:rgba(0,0,0,.05);border:1px solid #d1d5db;}
 </style>
-
 <style>
 .sidebar-info{display:flex;flex-direction:column;gap:16px;}
 .info-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;}
@@ -54,18 +50,37 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 .mini-table td{padding:4px 6px;border-bottom:1px solid #f1f5f9;}
 .mini-table tr:last-child td{border-bottom:none;}
 .empty-info{font-size:13px;color:#94a3b8;padding:4px 0;}
+.chat-toolbar{display:flex;gap:4px;align-items:center;}
+.chat-toolbar button{background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:6px;color:#64748b;line-height:1;}
+.chat-toolbar button:hover{background:#f1f5f9;color:#4F46E5;}
+.emoji-picker{position:absolute;bottom:60px;left:10px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,.12);display:none;z-index:10;width:280px;max-height:200px;overflow-y:auto;}
+.emoji-picker.open{display:flex;flex-wrap:wrap;gap:2px;}
+.emoji-picker span{cursor:pointer;font-size:20px;padding:4px;border-radius:6px;line-height:1;}
+.emoji-picker span:hover{background:#f1f5f9;}
+.chat-upload-preview{padding:6px 10px;border-top:1px solid #f1f5f9;background:#fefce8;font-size:12px;color:#854d0e;display:none;align-items:center;gap:8px;}
+.chat-upload-preview button{background:none;border:none;cursor:pointer;color:#dc2626;font-size:14px;}
 </style>
 
 <div class="chat-layout">
   <div>
-    <div class="card-new">
+    <div class="card-new" style="position:relative;">
       <?php if ($status==='open'): ?>
         <div class="chat-box">
           <div class="chat-msgs" id="chatMsgs"></div>
+          <div class="chat-upload-preview" id="uploadPreview">
+            <span id="uploadFileName"></span>
+            <button id="uploadCancel" title="Cancelar" aria-label="Cancelar arquivo">✕</button>
+          </div>
           <div class="chat-input-row">
+            <div class="chat-toolbar">
+              <button type="button" id="btnEmoji" title="Emojis" aria-label="Emojis">😊</button>
+              <button type="button" id="btnFile" title="Enviar arquivo" aria-label="Enviar arquivo">📎</button>
+              <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
+            </div>
             <input class="input" type="text" id="chatInput" placeholder="Digite sua mensagem..." autocomplete="off" />
             <button class="botao" id="chatEnviar">Enviar</button>
           </div>
+          <div class="emoji-picker" id="emojiPicker"></div>
         </div>
         <form method="post" action="/equipe/chat/fechar" style="margin-top:12px;">
           <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
@@ -73,89 +88,53 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <button class="botao danger sm" type="submit" onclick="return confirm('Encerrar este chat?')">Encerrar chat</button>
         </form>
       <?php else: ?>
-        <div class="chat-box">
-          <div class="chat-msgs" id="chatMsgs"></div>
-        </div>
+        <div class="chat-box"><div class="chat-msgs" id="chatMsgs"></div></div>
         <p class="texto" style="margin-top:10px;">Este chat foi encerrado.</p>
       <?php endif; ?>
     </div>
   </div>
 
   <div class="sidebar-info">
-    <!-- Info do cliente -->
     <div class="info-card">
       <h3>👤 Cliente</h3>
       <?php if (!empty($cliente)): ?>
         <div class="info-row"><span class="info-label">Nome</span><span class="info-value"><?php echo View::e((string)($cliente['name']??'')); ?></span></div>
         <div class="info-row"><span class="info-label">E-mail</span><span class="info-value"><?php echo View::e((string)($cliente['email']??'')); ?></span></div>
         <div class="info-row"><span class="info-label">Cadastro</span><span class="info-value"><?php echo View::e((string)($cliente['created_at']??'')); ?></span></div>
-        <div style="margin-top:8px;">
-          <a href="/equipe/clientes/ver?id=<?php echo (int)($cliente['id']??0); ?>" class="botao sm" style="font-size:12px;">Ver perfil completo</a>
-        </div>
+        <div style="margin-top:8px;"><a href="/equipe/clientes/ver?id=<?php echo (int)($cliente['id']??0); ?>" class="botao sm" style="font-size:12px;">Ver perfil completo</a></div>
       <?php else: ?>
         <p class="empty-info">Cliente não encontrado.</p>
       <?php endif; ?>
     </div>
-
-    <!-- Assinaturas -->
     <div class="info-card">
       <h3>💳 Assinaturas</h3>
       <?php if (!empty($assinaturas)): ?>
-        <table class="mini-table">
-          <thead><tr><th>Plano</th><th>Status</th></tr></thead>
-          <tbody>
-            <?php foreach ($assinaturas as $a): ?>
-              <tr>
-                <td><?php echo View::e((string)($a['plan_name']??'—')); ?></td>
-                <td><span class="badge-new <?php echo ($a['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($a['status']??'')); ?></span></td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <p class="empty-info">Nenhuma assinatura.</p>
-      <?php endif; ?>
+        <table class="mini-table"><thead><tr><th>Plano</th><th>Status</th></tr></thead><tbody>
+          <?php foreach ($assinaturas as $a): ?>
+            <tr><td><?php echo View::e((string)($a['plan_name']??'—')); ?></td><td><span class="badge-new <?php echo ($a['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($a['status']??'')); ?></span></td></tr>
+          <?php endforeach; ?>
+        </tbody></table>
+      <?php else: ?><p class="empty-info">Nenhuma assinatura.</p><?php endif; ?>
     </div>
-
-    <!-- VPS -->
     <div class="info-card">
       <h3>🖥️ VPS</h3>
       <?php if (!empty($vps)): ?>
-        <table class="mini-table">
-          <thead><tr><th>ID</th><th>CPU/RAM</th><th>Status</th></tr></thead>
-          <tbody>
-            <?php foreach ($vps as $v): ?>
-              <tr>
-                <td>#<?php echo (int)($v['id']??0); ?></td>
-                <td><?php echo (int)($v['cpu']??0); ?>vCPU / <?php echo round(((int)($v['ram']??0))/1024/1024/1024, 1); ?>GB</td>
-                <td><span class="badge-new <?php echo ($v['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($v['status']??'')); ?></span></td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <p class="empty-info">Nenhuma VPS.</p>
-      <?php endif; ?>
+        <table class="mini-table"><thead><tr><th>ID</th><th>CPU/RAM</th><th>Status</th></tr></thead><tbody>
+          <?php foreach ($vps as $v): ?>
+            <tr><td>#<?php echo (int)($v['id']??0); ?></td><td><?php echo (int)($v['cpu']??0); ?>vCPU / <?php echo round(((int)($v['ram']??0))/1024/1024/1024,1); ?>GB</td><td><span class="badge-new <?php echo ($v['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($v['status']??'')); ?></span></td></tr>
+          <?php endforeach; ?>
+        </tbody></table>
+      <?php else: ?><p class="empty-info">Nenhuma VPS.</p><?php endif; ?>
     </div>
-
-    <!-- Tickets recentes -->
     <div class="info-card">
       <h3>🎫 Tickets recentes</h3>
       <?php if (!empty($tickets)): ?>
-        <table class="mini-table">
-          <thead><tr><th>Assunto</th><th>Status</th></tr></thead>
-          <tbody>
-            <?php foreach ($tickets as $t): ?>
-              <tr>
-                <td><a href="/equipe/tickets/ver?id=<?php echo (int)($t['id']??0); ?>" style="color:#4F46E5;"><?php echo View::e((string)($t['subject']??'')); ?></a></td>
-                <td><span class="badge-new <?php echo ($t['status']??'')==='open'?'badge-green':(($t['status']??'')==='closed'?'badge-red':'badge-yellow'); ?>"><?php echo View::e((string)($t['status']??'')); ?></span></td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <p class="empty-info">Nenhum ticket.</p>
-      <?php endif; ?>
+        <table class="mini-table"><thead><tr><th>Assunto</th><th>Status</th></tr></thead><tbody>
+          <?php foreach ($tickets as $t): ?>
+            <tr><td><a href="/equipe/tickets/ver?id=<?php echo (int)($t['id']??0); ?>" style="color:#4F46E5;"><?php echo View::e((string)($t['subject']??'')); ?></a></td><td><span class="badge-new <?php echo ($t['status']??'')==='open'?'badge-green':(($t['status']??'')==='closed'?'badge-red':'badge-yellow'); ?>"><?php echo View::e((string)($t['status']??'')); ?></span></td></tr>
+          <?php endforeach; ?>
+        </tbody></table>
+      <?php else: ?><p class="empty-info">Nenhum ticket.</p><?php endif; ?>
     </div>
   </div>
 </div>
@@ -163,27 +142,70 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <?php if ($status==='open'): ?>
 <script>
 (function(){
-  var ROOM_ID=<?php echo $roomId; ?>,TOKEN_URL='/equipe/chat/token',CSRF=<?php echo json_encode(Csrf::token()); ?>,WS_URL=<?php echo json_encode($_wsUrl); ?>,ws,reconnectTimer;
-  function appendMsg(sender,text,ts){
-    var box=document.getElementById('chatMsgs'),div=document.createElement('div'),meta=document.createElement('div');
+  var ROOM_ID=<?php echo $roomId; ?>,CSRF=<?php echo json_encode(Csrf::token()); ?>,WS_URL=<?php echo json_encode($_wsUrl); ?>,ws;
+  var box=document.getElementById('chatMsgs'),inp=document.getElementById('chatInput');
+  var pendingFile=null;
+
+  var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
+  var picker=document.getElementById('emojiPicker');
+  EMOJIS.forEach(function(e){var s=document.createElement('span');s.textContent=e;s.addEventListener('click',function(){inp.value+=e;inp.focus();picker.classList.remove('open');});picker.appendChild(s);});
+  document.getElementById('btnEmoji').addEventListener('click',function(ev){ev.stopPropagation();picker.classList.toggle('open');});
+  document.addEventListener('click',function(ev){if(!picker.contains(ev.target))picker.classList.remove('open');});
+
+  var fileInput=document.getElementById('fileInput'),preview=document.getElementById('uploadPreview'),previewName=document.getElementById('uploadFileName');
+  document.getElementById('btnFile').addEventListener('click',function(){fileInput.click();});
+  fileInput.addEventListener('change',function(){
+    if(!this.files||!this.files[0])return;
+    pendingFile=this.files[0];
+    previewName.textContent='📎 '+pendingFile.name;
+    preview.style.display='flex';
+  });
+  document.getElementById('uploadCancel').addEventListener('click',function(){pendingFile=null;fileInput.value='';preview.style.display='none';});
+
+  function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function isImage(url){return /\.(png|jpe?g|gif|webp)$/i.test(url||'');}
+
+  function appendMsg(sender,text,ts,fileUrl,fileName){
+    var div=document.createElement('div'),meta=document.createElement('div');
     div.className='msg-bubble '+(sender==='admin'?'msg-admin':'msg-client');
     meta.className='msg-meta';meta.textContent=(sender==='admin'?'Você':'Cliente')+(ts?' · '+ts.substring(11,16):'');
-    div.textContent=text;div.appendChild(meta);box.appendChild(div);box.scrollTop=box.scrollHeight;
+    if(text)div.innerHTML=escHtml(text);
+    if(fileUrl){
+      if(isImage(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='msg-img';img.alt=fileName||'imagem';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});div.appendChild(img);}
+      else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fileName||'arquivo');div.appendChild(a);}
+    }
+    div.appendChild(meta);box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
+
+  function uploadAndSend(file,text){
+    var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
+    fetch('/chat/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
+      if(!d.ok){alert(d.erro||'Erro no upload');return;}
+      if(ws&&ws.readyState===1)ws.send(JSON.stringify({message:text,file_url:d.file_url,file_name:d.file_name}));
+    }).catch(function(){alert('Erro ao enviar arquivo.');});
+  }
+
+  function enviar(){
+    var txt=inp.value.trim();
+    if(!txt&&!pendingFile)return;
+    if(!ws||ws.readyState!==1)return;
+    if(pendingFile){uploadAndSend(pendingFile,txt);pendingFile=null;fileInput.value='';preview.style.display='none';inp.value='';return;}
+    ws.send(JSON.stringify({message:txt}));inp.value='';
+  }
+
   function connect(){
-    fetch(TOKEN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&room_id='+ROOM_ID})
+    fetch('/equipe/chat/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&room_id='+ROOM_ID})
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok){setTimeout(connect,5000);return;}
-      var proto=location.protocol==='https:'?'wss':'ws';
       ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
-      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){msg.messages.forEach(function(m){appendMsg(m.sender_type,m.message,m.created_at);});}else if(msg.type==='message'){appendMsg(msg.sender_type,msg.message,msg.created_at);}}catch(ex){}};
-      ws.onclose=function(){reconnectTimer=setTimeout(connect,4000);};
+      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';msg.messages.forEach(function(m){appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);});}else if(msg.type==='message'){appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}}catch(ex){}};
+      ws.onclose=function(){setTimeout(connect,4000);};
       ws.onerror=function(){ws.close();};
     }).catch(function(){setTimeout(connect,5000);});
   }
-  function enviar(){var inp=document.getElementById('chatInput'),txt=inp.value.trim();if(!txt||!ws||ws.readyState!==1)return;ws.send(JSON.stringify({type:'message',message:txt}));inp.value='';}
+
   document.getElementById('chatEnviar').addEventListener('click',enviar);
-  document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
   connect();
 })();
 </script>

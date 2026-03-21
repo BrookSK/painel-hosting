@@ -143,16 +143,28 @@ final class ChatWsApp implements MessageComponentInterface
             return;
         }
 
-        // Aceitar JSON {"message":"..."} ou texto puro
+        // Aceitar JSON {"message":"...", "file_url":"...", "file_name":"..."} ou texto puro
+        $fileUrl = null;
+        $fileName = null;
         if ($texto[0] === '{') {
             $decoded = json_decode($texto, true);
             if (is_array($decoded)) {
                 $texto = trim((string) ($decoded['message'] ?? ''));
+                $fileUrl = isset($decoded['file_url']) ? trim((string) $decoded['file_url']) : null;
+                $fileName = isset($decoded['file_name']) ? trim((string) $decoded['file_name']) : null;
             }
         }
 
-        if ($texto === '') {
+        if ($texto === '' && ($fileUrl === null || $fileUrl === '')) {
             return;
+        }
+
+        // Validar file_url se presente (deve ser path interno)
+        if ($fileUrl !== null && $fileUrl !== '') {
+            if (!str_starts_with($fileUrl, '/uploads/chat/')) {
+                $fileUrl = null;
+                $fileName = null;
+            }
         }
 
         $roomId     = (int) ($meta['room_id'] ?? 0);
@@ -160,7 +172,7 @@ final class ChatWsApp implements MessageComponentInterface
         $senderId   = (int) ($meta['sender_id'] ?? 0);
 
         try {
-            $saved = $this->messages->salvar($roomId, $senderType, $senderId, $texto);
+            $saved = $this->messages->salvar($roomId, $senderType, $senderId, $texto, $fileUrl, $fileName);
         } catch (\Throwable $e) {
             $from->send($this->err('Não foi possível enviar a mensagem.'));
             return;
@@ -171,6 +183,8 @@ final class ChatWsApp implements MessageComponentInterface
             'id'          => $saved['id'],
             'sender_type' => $senderType,
             'message'     => $texto,
+            'file_url'    => $saved['file_url'] ?? null,
+            'file_name'   => $saved['file_name'] ?? null,
             'created_at'  => $saved['created_at'],
         ]);
 

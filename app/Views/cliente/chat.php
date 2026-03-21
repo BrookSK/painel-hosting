@@ -10,7 +10,6 @@ if ($wsUrl === '') {
     $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'wss' : 'ws';
     $wsUrl = $proto . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ':' . $wsPort;
 }
-
 $pageTitle    = 'Chat de Suporte';
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
@@ -24,10 +23,25 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 .msg.admin{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;color:#0f172a;border-bottom-left-radius:4px;}
 .msg.system{align-self:center;background:#f1f5f9;color:#64748b;font-size:12px;padding:4px 10px;border-radius:999px;}
 .msg-time{font-size:11px;opacity:.6;margin-top:4px;}
+.msg-img{max-width:220px;border-radius:8px;margin-top:4px;cursor:pointer;}
+.msg-file{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:13px;margin-top:4px;text-decoration:none;color:inherit;}
+.msg.client .msg-file{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);}
+.msg.admin .msg-file{background:rgba(0,0,0,.05);border:1px solid #d1d5db;}
 #chat-status{font-size:13px;color:#64748b;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-#chat-input-area{display:flex;gap:8px;}
+#chat-input-area{display:flex;gap:8px;align-items:flex-end;}
 #chat-input-area textarea{flex:1;resize:none;height:44px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;font-family:inherit;}
 #chat-input-area textarea:focus{border-color:#7C3AED;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+.chat-toolbar{display:flex;gap:2px;align-items:center;}
+.chat-toolbar button{background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:6px;color:#64748b;line-height:1;}
+.chat-toolbar button:hover{background:#f1f5f9;color:#4F46E5;}
+</style>
+<style>
+.emoji-picker-c{position:absolute;bottom:60px;left:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,.12);display:none;z-index:10;width:280px;max-height:200px;overflow-y:auto;}
+.emoji-picker-c.open{display:flex;flex-wrap:wrap;gap:2px;}
+.emoji-picker-c span{cursor:pointer;font-size:20px;padding:4px;border-radius:6px;line-height:1;}
+.emoji-picker-c span:hover{background:#f1f5f9;}
+.chat-upload-preview-c{padding:6px 10px;background:#fefce8;font-size:12px;color:#854d0e;display:none;align-items:center;gap:8px;border-radius:8px;margin-bottom:8px;}
+.chat-upload-preview-c button{background:none;border:none;cursor:pointer;color:#dc2626;font-size:14px;}
 </style>
 
 <div style="margin-bottom:24px;">
@@ -35,7 +49,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div class="page-subtitle" style="margin-bottom:0;">Fale com nossa equipe em tempo real</div>
 </div>
 
-<div class="card-new" style="max-width:760px;">
+<div class="card-new" style="max-width:760px;position:relative;">
   <?php if ((string)($room['status'] ?? '') === 'closed'): ?>
     <div style="font-size:13px;color:#64748b;margin-bottom:16px;">Este chat foi encerrado.</div>
     <?php
@@ -60,88 +74,96 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php else: ?>
     <div id="chat-status"><span class="dot-pending"></span> Conectando...</div>
     <div id="chat-box"></div>
+    <div class="chat-upload-preview-c" id="uploadPreviewC">
+      <span id="uploadFileNameC"></span>
+      <button id="uploadCancelC" title="Cancelar" aria-label="Cancelar arquivo">✕</button>
+    </div>
     <div id="chat-input-area">
+      <div class="chat-toolbar">
+        <button type="button" id="btnEmojiC" title="Emojis" aria-label="Emojis">😊</button>
+        <button type="button" id="btnFileC" title="Enviar arquivo" aria-label="Enviar arquivo">📎</button>
+        <input type="file" id="fileInputC" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
+      </div>
       <textarea id="chat-input" placeholder="Digite sua mensagem..." disabled></textarea>
       <button class="botao" id="btn-enviar" disabled>Enviar</button>
     </div>
+    <div class="emoji-picker-c" id="emojiPickerC"></div>
   <?php endif; ?>
 </div>
 
 <script>
 <?php if ((string)($room['status'] ?? '') !== 'closed'): ?>
 (function(){
-  const roomId = <?php echo $roomId; ?>;
-  const WS_URL = <?php echo json_encode($wsUrl); ?>;
-  const CSRF   = <?php echo json_encode(\LRV\Core\Csrf::token()); ?>;
-  const box    = document.getElementById('chat-box');
-  const input  = document.getElementById('chat-input');
-  const btn    = document.getElementById('btn-enviar');
-  const status = document.getElementById('chat-status');
-  let ws = null;
+  var WS_URL=<?php echo json_encode($wsUrl); ?>,CSRF=<?php echo json_encode(\LRV\Core\Csrf::token()); ?>;
+  var box=document.getElementById('chat-box'),input=document.getElementById('chat-input'),btn=document.getElementById('btn-enviar'),statusEl=document.getElementById('chat-status');
+  var ws=null,pendingFile=null;
 
-  function setStatus(txt, dotClass){
-    status.innerHTML = '<span class="' + dotClass + '"></span> ' + txt;
+  var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
+  var picker=document.getElementById('emojiPickerC');
+  EMOJIS.forEach(function(e){var s=document.createElement('span');s.textContent=e;s.addEventListener('click',function(){input.value+=e;input.focus();picker.classList.remove('open');});picker.appendChild(s);});
+  document.getElementById('btnEmojiC').addEventListener('click',function(ev){ev.stopPropagation();picker.classList.toggle('open');});
+  document.addEventListener('click',function(ev){if(!picker.contains(ev.target))picker.classList.remove('open');});
+
+  var fileInput=document.getElementById('fileInputC'),preview=document.getElementById('uploadPreviewC'),previewName=document.getElementById('uploadFileNameC');
+  document.getElementById('btnFileC').addEventListener('click',function(){fileInput.click();});
+  fileInput.addEventListener('change',function(){if(!this.files||!this.files[0])return;pendingFile=this.files[0];previewName.textContent='📎 '+pendingFile.name;preview.style.display='flex';});
+  document.getElementById('uploadCancelC').addEventListener('click',function(){pendingFile=null;fileInput.value='';preview.style.display='none';});
+
+  function setStatus(t,c){statusEl.innerHTML='<span class="'+c+'"></span> '+t;}
+  function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function isImage(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
+
+  function addMsg(senderType,text,time,fileUrl,fileName){
+    var div=document.createElement('div');div.className='msg '+senderType;
+    var t=time?new Date(time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    if(text)div.innerHTML=escHtml(text);
+    if(fileUrl){
+      if(isImage(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='msg-img';img.alt=fileName||'imagem';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});div.appendChild(img);}
+      else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fileName||'arquivo');div.appendChild(a);}
+    }
+    if(t){var tm=document.createElement('div');tm.className='msg-time';tm.textContent=t;div.appendChild(tm);}
+    box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
+  function addSystem(text){var div=document.createElement('div');div.className='msg system';div.textContent=text;box.appendChild(div);box.scrollTop=box.scrollHeight;}
 
-  function addMsg(senderType, text, time){
-    const div = document.createElement('div');
-    div.className = 'msg ' + senderType;
-    const t = time ? new Date(time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
-    div.innerHTML = escHtml(text) + (t ? '<div class="msg-time">' + t + '</div>' : '');
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function addSystem(text){
-    const div = document.createElement('div');
-    div.className = 'msg system';
-    div.textContent = text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function escHtml(s){
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function connect(){
-    setStatus('Conectando...', 'dot-pending');
-    fetch('/cliente/chat/token', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: '_csrf=' + encodeURIComponent(CSRF)
-    })
-    .then(r => r.json())
-    .then(data => {
-      if(!data.ok){ setStatus('Erro ao obter token.', 'dot-offline'); setTimeout(connect, 5000); return; }
-      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(WS_URL + '/?token=' + encodeURIComponent(data.token));
-      ws.onopen = function(){ setStatus('Conectado', 'dot-online'); input.disabled = false; btn.disabled = false; input.focus(); };
-      ws.onmessage = function(e){
-        try {
-          const msg = JSON.parse(e.data);
-          if(msg.type === 'history'){ box.innerHTML = ''; (msg.messages||[]).forEach(m => addMsg(m.sender_type, m.message, m.created_at)); }
-          else if(msg.type === 'message'){ addMsg(msg.sender_type, msg.message, msg.created_at); }
-          else if(msg.type === 'system'){ addSystem(msg.message); }
-          else if(msg.type === 'error'){ addSystem('Erro: ' + msg.message); }
-        } catch(err){}
-      };
-      ws.onclose = function(){ setStatus('Desconectado. Reconectando...', 'dot-offline'); input.disabled = true; btn.disabled = true; setTimeout(connect, 3000); };
-      ws.onerror = function(){ ws.close(); };
-    })
-    .catch(function(){ setStatus('Erro de conexao.', 'dot-offline'); setTimeout(connect, 5000); });
+  function uploadAndSend(file,text){
+    var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
+    fetch('/chat/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
+      if(!d.ok){alert(d.erro||'Erro no upload');return;}
+      if(ws&&ws.readyState===1)ws.send(JSON.stringify({message:text,file_url:d.file_url,file_name:d.file_name}));
+    }).catch(function(){alert('Erro ao enviar arquivo.');});
   }
 
   function enviar(){
-    const txt = input.value.trim();
-    if(!txt || !ws || ws.readyState !== 1) return;
-    ws.send(JSON.stringify({message: txt}));
-    input.value = '';
-    input.focus();
+    var txt=input.value.trim();
+    if(!txt&&!pendingFile)return;
+    if(!ws||ws.readyState!==1)return;
+    if(pendingFile){uploadAndSend(pendingFile,txt);pendingFile=null;fileInput.value='';preview.style.display='none';input.value='';return;}
+    ws.send(JSON.stringify({message:txt}));input.value='';input.focus();
   }
 
-  btn.addEventListener('click', enviar);
-  input.addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); enviar(); } });
+  function connect(){
+    setStatus('Conectando...','dot-pending');
+    fetch('/cliente/chat/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d.ok){setStatus('Erro ao obter token.','dot-offline');setTimeout(connect,5000);return;}
+      ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
+      ws.onopen=function(){setStatus('Conectado','dot-online');input.disabled=false;btn.disabled=false;input.focus();};
+      ws.onmessage=function(e){
+        try{var msg=JSON.parse(e.data);
+          if(msg.type==='history'){box.innerHTML='';(msg.messages||[]).forEach(function(m){addMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);});}
+          else if(msg.type==='message'){addMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}
+          else if(msg.type==='system'){addSystem(msg.message);}
+          else if(msg.type==='error'){addSystem('Erro: '+msg.message);}
+        }catch(err){}
+      };
+      ws.onclose=function(){setStatus('Desconectado. Reconectando...','dot-offline');input.disabled=true;btn.disabled=true;setTimeout(connect,3000);};
+      ws.onerror=function(){ws.close();};
+    }).catch(function(){setStatus('Erro de conexao.','dot-offline');setTimeout(connect,5000);});
+  }
+
+  btn.addEventListener('click',enviar);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
   connect();
 })();
 <?php endif; ?>

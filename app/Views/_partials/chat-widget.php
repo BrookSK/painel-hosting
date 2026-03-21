@@ -79,10 +79,18 @@ if ($_cwWsUrl === '') {
   <!-- Tela: chat ao vivo -->
   <div id="cw-s-live" class="cw-screen">
     <div id="cw-live-msgs" class="cw-msglist"></div>
-    <div style="padding:8px 12px 12px;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-shrink:0;">
+    <div id="cw-live-upload-preview" style="padding:4px 12px;background:#fefce8;font-size:11px;color:#854d0e;display:none;align-items:center;gap:6px;">
+      <span id="cw-live-upload-name"></span>
+      <button id="cw-live-upload-cancel" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;">✕</button>
+    </div>
+    <div style="padding:8px 12px 12px;border-top:1px solid #f1f5f9;display:flex;gap:6px;flex-shrink:0;align-items:flex-end;">
+      <button id="cw-live-emoji" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px;line-height:1;" title="Emojis">😊</button>
+      <button id="cw-live-file-btn" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px;line-height:1;" title="Arquivo">📎</button>
+      <input type="file" id="cw-live-file" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
       <textarea id="cw-live-inp" class="cw-input" rows="1" placeholder="Digite..." style="resize:none;height:38px;"></textarea>
       <button id="cw-live-send" class="cw-sendbtn" aria-label="Enviar">➤</button>
     </div>
+    <div id="cw-live-emoji-picker" style="position:absolute;bottom:60px;left:8px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px;box-shadow:0 6px 24px rgba(0,0,0,.1);display:none;flex-wrap:wrap;gap:2px;z-index:10;width:240px;max-height:160px;overflow-y:auto;"></div>
     <div id="cw-live-status" style="font-size:11px;color:#64748b;padding:0 12px 8px;flex-shrink:0;"></div>
   </div>
 
@@ -146,8 +154,10 @@ if ($_cwWsUrl === '') {
   background:linear-gradient(135deg,#4F46E5,#7C3AED);
   color:#fff;border-radius:12px 12px 3px 12px;
   padding:10px 13px;font-size:13px;line-height:1.5;
-  max-width:88%;align-self:flex-end;
+  max-width:88%;align-self:flex-end;word-break:break-word;
 }
+.cw-msg-img{max-width:180px;border-radius:8px;margin-top:4px;cursor:pointer;}
+.cw-msg-file{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:12px;margin-top:4px;text-decoration:none;color:inherit;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);}
 .cw-opts{display:flex;flex-direction:column;gap:7px;padding:0 0 4px;}
 .cw-opt{
   background:#f8fafc;border:1.5px solid #e2e8f0;
@@ -437,19 +447,42 @@ var liveInp    = document.getElementById('cw-live-inp');
 var liveSend   = document.getElementById('cw-live-send');
 var liveStatus = document.getElementById('cw-live-status');
 var liveWs     = null;
+var livePendingFile = null;
 
-function addLiveMsg(type, txt, ts){
+// Emoji picker
+var EMOJIS_W=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
+var ePicker=document.getElementById('cw-live-emoji-picker');
+EMOJIS_W.forEach(function(e){var s=document.createElement('span');s.textContent=e;s.style.cssText='cursor:pointer;font-size:18px;padding:3px;border-radius:4px;line-height:1;';s.addEventListener('click',function(){liveInp.value+=e;liveInp.focus();ePicker.style.display='none';});ePicker.appendChild(s);});
+document.getElementById('cw-live-emoji').addEventListener('click',function(ev){ev.stopPropagation();ePicker.style.display=ePicker.style.display==='flex'?'none':'flex';});
+document.addEventListener('click',function(ev){if(!ePicker.contains(ev.target))ePicker.style.display='none';});
+
+// File upload
+var liveFileInput=document.getElementById('cw-live-file'),liveUpPreview=document.getElementById('cw-live-upload-preview'),liveUpName=document.getElementById('cw-live-upload-name');
+document.getElementById('cw-live-file-btn').addEventListener('click',function(){liveFileInput.click();});
+liveFileInput.addEventListener('change',function(){if(!this.files||!this.files[0])return;livePendingFile=this.files[0];liveUpName.textContent='📎 '+livePendingFile.name;liveUpPreview.style.display='flex';});
+document.getElementById('cw-live-upload-cancel').addEventListener('click',function(){livePendingFile=null;liveFileInput.value='';liveUpPreview.style.display='none';});
+
+function isImgUrl(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
+function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function addLiveMsg(type, txt, ts, fileUrl, fileName){
   var d=document.createElement('div');
   d.className = type==='client' ? 'cw-umsg' : 'cw-bmsg';
-  d.textContent=txt;
-  if(ts){
-    var t=document.createElement('div');
-    t.style.cssText='font-size:10px;opacity:.55;margin-top:3px;';
-    t.textContent=new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    d.appendChild(t);
+  if(txt) d.innerHTML=escH(txt);
+  if(fileUrl){
+    if(isImgUrl(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='cw-msg-img';img.alt=fileName||'';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});d.appendChild(img);}
+    else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='cw-msg-file';a.textContent='📄 '+(fileName||'arquivo');d.appendChild(a);}
   }
-  liveMsgs.appendChild(d);
-  liveMsgs.scrollTop=liveMsgs.scrollHeight;
+  if(ts){var t=document.createElement('div');t.style.cssText='font-size:10px;opacity:.55;margin-top:3px;';t.textContent=new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});d.appendChild(t);}
+  liveMsgs.appendChild(d);liveMsgs.scrollTop=liveMsgs.scrollHeight;
+}
+
+function liveUploadAndSend(file,text){
+  var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
+  fetch('/chat/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){liveStatus.textContent=d.erro||'Erro no upload';return;}
+    if(liveWs&&liveWs.readyState===1)liveWs.send(JSON.stringify({message:text,file_url:d.file_url,file_name:d.file_name}));
+  }).catch(function(){liveStatus.textContent='Erro ao enviar arquivo.';});
 }
 
 function connectLive(ctx){
@@ -462,7 +495,6 @@ function connectLive(ctx){
     body:'_csrf='+encodeURIComponent(CSRF)
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.ok){ liveStatus.textContent='Erro ao conectar.'; return; }
-    var proto=location.protocol==='https:'?'wss':'ws';
     liveWs=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
     liveWs.onopen=function(){
       liveStatus.textContent='● Online'; liveStatus.style.color='#22c55e';
@@ -472,8 +504,8 @@ function connectLive(ctx){
     liveWs.onmessage=function(e){
       try{
         var m=JSON.parse(e.data);
-        if(m.type==='history'){ liveMsgs.innerHTML=''; (m.messages||[]).forEach(function(x){ addLiveMsg(x.sender_type,x.message,x.created_at); }); }
-        else if(m.type==='message'||m.type==='system') addLiveMsg(m.sender_type||'system',m.message,m.created_at);
+        if(m.type==='history'){ liveMsgs.innerHTML=''; (m.messages||[]).forEach(function(x){ addLiveMsg(x.sender_type,x.message,x.created_at,x.file_url,x.file_name); }); }
+        else if(m.type==='message'||m.type==='system') addLiveMsg(m.sender_type||'system',m.message,m.created_at,m.file_url,m.file_name);
       }catch(err){}
     };
     liveWs.onclose=function(){ liveStatus.textContent='● Desconectado'; liveStatus.style.color='#ef4444'; liveInp.disabled=true; liveSend.disabled=true; };
@@ -483,7 +515,9 @@ function connectLive(ctx){
 
 function sendLive(){
   var t=liveInp.value.trim();
-  if(!t||!liveWs||liveWs.readyState!==1) return;
+  if(!t&&!livePendingFile) return;
+  if(!liveWs||liveWs.readyState!==1) return;
+  if(livePendingFile){liveUploadAndSend(livePendingFile,t);livePendingFile=null;liveFileInput.value='';liveUpPreview.style.display='none';liveInp.value='';liveInp.style.height='38px';return;}
   liveWs.send(JSON.stringify({message:t}));
   liveInp.value=''; liveInp.style.height='38px'; liveInp.focus();
 }
