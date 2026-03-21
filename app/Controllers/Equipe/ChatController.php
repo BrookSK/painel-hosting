@@ -108,4 +108,63 @@ final class ChatController
 
         return Resposta::redirecionar('/equipe/chat');
     }
+
+    /** Polling: retorna mensagens após um determinado ID */
+    public function poll(Requisicao $req): Resposta
+    {
+        $equipeId = Auth::equipeId();
+        if ($equipeId === null) {
+            return Resposta::json(['ok' => false], 401);
+        }
+
+        $roomId = (int) ($req->query['room_id'] ?? 0);
+        $afterId = (int) ($req->query['after'] ?? 0);
+        if ($roomId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Room inválida.']);
+        }
+
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, sender_type, sender_id, message, file_url, file_name, created_at FROM chat_messages WHERE room_id = :r AND id > :a ORDER BY id ASC LIMIT 50');
+        $stmt->execute([':r' => $roomId, ':a' => $afterId]);
+        $msgs = $stmt->fetchAll() ?: [];
+
+        return Resposta::json(['ok' => true, 'messages' => $msgs]);
+    }
+
+    /** Enviar mensagem via HTTP (fallback quando WS não funciona) */
+    public function enviar(Requisicao $req): Resposta
+    {
+        $equipeId = Auth::equipeId();
+        if ($equipeId === null) {
+            return Resposta::json(['ok' => false], 401);
+        }
+
+        $roomId = (int) ($req->post['room_id'] ?? 0);
+        if ($roomId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Room inválida.']);
+        }
+
+        $room = (new ChatRoomService())->buscarPorId($roomId);
+        if ($room === null || (string) ($room['status'] ?? '') !== 'open') {
+            return Resposta::json(['ok' => false, 'erro' => 'Chat encerrado.']);
+        }
+
+        // Atribuir agente se ainda não atribuído
+        if ((int) ($room['user_id'] ?? 0) === 0) {
+            (new ChatRoomService())->atribuir($roomId, $equipeId);
+        }
+
+        $message = trim((string) ($req->post['message'] ?? ''));
+        $fileUrl = trim((string) ($req->post['file_url'] ?? ''));
+        $fileName = trim((string) ($req->post['file_name'] ?? ''));
+
+        if ($message === '' && $fileUrl === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Mensagem vazia.']);
+        }
+
+        $svc = new \LRV\App\Services\Chat\ChatMessageService();
+        $saved = $svc->salvar($roomId, 'admin', $equipeId, $message, $fileUrl ?: null, $fileName ?: null);
+
+        return Resposta::json(['ok' => true, 'msg' => $saved]);
+    }
 }

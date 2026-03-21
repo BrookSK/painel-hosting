@@ -229,6 +229,8 @@ $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::
 $roteador->get('/cliente/chat', [ClienteChatController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
 $roteador->get('/cliente/chat/historico', [ClienteChatController::class, 'historico'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/chat/poll', [ClienteChatController::class, 'poll'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/chat/enviar', [ClienteChatController::class, 'enviar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_send', 30, 60)]);
 
 // Upload de arquivo no chat (cliente ou equipe)
 $roteador->post('/chat/upload', [\LRV\App\Controllers\Api\ChatUploadController::class, 'upload']);
@@ -243,6 +245,8 @@ $roteador->get('/equipe/chat', [EquipeChatController::class, 'listar'], [Middlew
 $roteador->get('/equipe/chat/ver', [EquipeChatController::class, 'ver'], [Middlewares::exigirPermissao('view_tickets')]);
 $roteador->post('/equipe/chat/token', [EquipeChatController::class, 'token'], [Middlewares::exigirPermissao('reply_tickets'), Middlewares::rateLimitEquipe('chat_token', 10, 60)]);
 $roteador->post('/equipe/chat/fechar', [EquipeChatController::class, 'fechar'], [Middlewares::exigirPermissao('close_tickets')]);
+$roteador->get('/equipe/chat/poll', [EquipeChatController::class, 'poll'], [Middlewares::exigirPermissao('view_tickets')]);
+$roteador->post('/equipe/chat/enviar', [EquipeChatController::class, 'enviar'], [Middlewares::exigirPermissao('reply_tickets'), Middlewares::rateLimitEquipe('chat_send', 30, 60)]);
 
 // Email cliente
 $roteador->get('/cliente/emails', [ClienteEmailController::class, 'listar'], [Middlewares::exigirLoginCliente()]);

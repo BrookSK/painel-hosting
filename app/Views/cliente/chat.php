@@ -34,8 +34,6 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 .chat-toolbar{display:flex;gap:2px;align-items:center;}
 .chat-toolbar button{background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:6px;color:#64748b;line-height:1;}
 .chat-toolbar button:hover{background:#f1f5f9;color:#4F46E5;}
-</style>
-<style>
 .emoji-picker-c{position:absolute;bottom:60px;left:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,.12);display:none;z-index:10;width:280px;max-height:200px;overflow-y:auto;}
 .emoji-picker-c.open{display:flex;flex-wrap:wrap;gap:2px;}
 .emoji-picker-c span{cursor:pointer;font-size:20px;padding:4px;border-radius:6px;line-height:1;}
@@ -76,12 +74,12 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div id="chat-box"></div>
     <div class="chat-upload-preview-c" id="uploadPreviewC">
       <span id="uploadFileNameC"></span>
-      <button id="uploadCancelC" title="Cancelar" aria-label="Cancelar arquivo">✕</button>
+      <button id="uploadCancelC" title="Cancelar">✕</button>
     </div>
     <div id="chat-input-area">
       <div class="chat-toolbar">
-        <button type="button" id="btnEmojiC" title="Emojis" aria-label="Emojis">😊</button>
-        <button type="button" id="btnFileC" title="Enviar arquivo" aria-label="Enviar arquivo">📎</button>
+        <button type="button" id="btnEmojiC" title="Emojis">😊</button>
+        <button type="button" id="btnFileC" title="Enviar arquivo">📎</button>
         <input type="file" id="fileInputC" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
       </div>
       <textarea id="chat-input" placeholder="Digite sua mensagem..." disabled></textarea>
@@ -91,82 +89,132 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php endif; ?>
 </div>
 
-<script>
 <?php if ((string)($room['status'] ?? '') !== 'closed'): ?>
+<script>
 (function(){
   var WS_URL=<?php echo json_encode($wsUrl); ?>,CSRF=<?php echo json_encode(\LRV\Core\Csrf::token()); ?>;
   var box=document.getElementById('chat-box'),input=document.getElementById('chat-input'),btn=document.getElementById('btn-enviar'),statusEl=document.getElementById('chat-status');
-  var ws=null,pendingFile=null;
+  var ws=null,pendingFile=null,mode='ws',wsFails=0,pollTimer=null,lastMsgId=0;
 
+  // Emoji
   var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
   var picker=document.getElementById('emojiPickerC');
   EMOJIS.forEach(function(e){var s=document.createElement('span');s.textContent=e;s.addEventListener('click',function(){input.value+=e;input.focus();picker.classList.remove('open');});picker.appendChild(s);});
   document.getElementById('btnEmojiC').addEventListener('click',function(ev){ev.stopPropagation();picker.classList.toggle('open');});
   document.addEventListener('click',function(ev){if(!picker.contains(ev.target))picker.classList.remove('open');});
 
+  // File
   var fileInput=document.getElementById('fileInputC'),preview=document.getElementById('uploadPreviewC'),previewName=document.getElementById('uploadFileNameC');
   document.getElementById('btnFileC').addEventListener('click',function(){fileInput.click();});
   fileInput.addEventListener('change',function(){if(!this.files||!this.files[0])return;pendingFile=this.files[0];previewName.textContent='📎 '+pendingFile.name;preview.style.display='flex';});
   document.getElementById('uploadCancelC').addEventListener('click',function(){pendingFile=null;fileInput.value='';preview.style.display='none';});
 
   function setStatus(t,c){statusEl.innerHTML='<span class="'+c+'"></span> '+t;}
-  function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function isImage(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
+  function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function isImg(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
 
-  function addMsg(senderType,text,time,fileUrl,fileName){
-    var div=document.createElement('div');div.className='msg '+senderType;
-    var t=time?new Date(time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+  function addMsg(st,text,time,fu,fn){
+    var div=document.createElement('div');div.className='msg '+st;
     if(text)div.innerHTML=escHtml(text);
-    if(fileUrl){
-      if(isImage(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='msg-img';img.alt=fileName||'imagem';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});div.appendChild(img);}
-      else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fileName||'arquivo');div.appendChild(a);}
+    if(fu){
+      if(isImg(fu)){var img=document.createElement('img');img.src=fu;img.className='msg-img';img.alt=fn||'';img.onclick=function(){window.open(fu,'_blank');};div.appendChild(img);}
+      else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fn||'arquivo');div.appendChild(a);}
     }
-    if(t){var tm=document.createElement('div');tm.className='msg-time';tm.textContent=t;div.appendChild(tm);}
+    if(time){var tm=document.createElement('div');tm.className='msg-time';tm.textContent=new Date(time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});div.appendChild(tm);}
     box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
-  function addSystem(text){var div=document.createElement('div');div.className='msg system';div.textContent=text;box.appendChild(div);box.scrollTop=box.scrollHeight;}
 
-  function uploadAndSend(file,text){
+  function loadMessages(msgs){
+    (msgs||[]).forEach(function(m){
+      var id=parseInt(m.id)||0;
+      if(id>lastMsgId)lastMsgId=id;
+      addMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);
+    });
+  }
+
+  // ── Upload helper ──
+  function doUpload(file,cb){
     var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
     fetch('/chat/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
       if(!d.ok){alert(d.erro||'Erro no upload');return;}
-      if(ws&&ws.readyState===1)ws.send(JSON.stringify({message:text,file_url:d.file_url,file_name:d.file_name}));
+      cb(d.file_url,d.file_name);
     }).catch(function(){alert('Erro ao enviar arquivo.');});
   }
 
+  // ── Send (works in both modes) ──
   function enviar(){
     var txt=input.value.trim();
     if(!txt&&!pendingFile)return;
-    if(!ws||ws.readyState!==1)return;
-    if(pendingFile){uploadAndSend(pendingFile,txt);pendingFile=null;fileInput.value='';preview.style.display='none';input.value='';return;}
-    ws.send(JSON.stringify({message:txt}));input.value='';input.focus();
+    if(pendingFile){
+      var f=pendingFile,t=txt;pendingFile=null;fileInput.value='';preview.style.display='none';input.value='';
+      doUpload(f,function(fu,fn){sendPayload(t,fu,fn);});
+      return;
+    }
+    sendPayload(txt,null,null);input.value='';input.focus();
   }
 
-  function connect(){
+  function sendPayload(text,fu,fn){
+    if(mode==='ws'&&ws&&ws.readyState===1){
+      var p={message:text||''};if(fu){p.file_url=fu;p.file_name=fn;}
+      ws.send(JSON.stringify(p));
+    } else {
+      // HTTP fallback
+      var body='_csrf='+encodeURIComponent(CSRF)+'&message='+encodeURIComponent(text||'');
+      if(fu)body+='&file_url='+encodeURIComponent(fu)+'&file_name='+encodeURIComponent(fn||'');
+      fetch('/cliente/chat/enviar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>lastMsgId)lastMsgId=id;addMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name);}
+      }).catch(function(){});
+    }
+  }
+
+  // ── WebSocket ──
+  function connectWs(){
     setStatus('Conectando...','dot-pending');
     fetch('/cliente/chat/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)})
     .then(function(r){return r.json();}).then(function(d){
-      if(!d.ok){setStatus('Erro ao obter token.','dot-offline');setTimeout(connect,5000);return;}
+      if(!d.ok){wsFails++;checkFallback();return;}
       ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
-      ws.onopen=function(){setStatus('Conectado','dot-online');input.disabled=false;btn.disabled=false;input.focus();};
+      ws.onopen=function(){mode='ws';wsFails=0;setStatus('Conectado','dot-online');input.disabled=false;btn.disabled=false;input.focus();if(pollTimer){clearInterval(pollTimer);pollTimer=null;}};
       ws.onmessage=function(e){
         try{var msg=JSON.parse(e.data);
-          if(msg.type==='history'){box.innerHTML='';(msg.messages||[]).forEach(function(m){addMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);});}
-          else if(msg.type==='message'){addMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}
-          else if(msg.type==='system'){addSystem(msg.message);}
-          else if(msg.type==='error'){addSystem('Erro: '+msg.message);}
-        }catch(err){}
+          if(msg.type==='history'){box.innerHTML='';lastMsgId=0;loadMessages(msg.messages);}
+          else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;addMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}
+          else if(msg.type==='error'){setStatus(msg.message,'dot-offline');}
+        }catch(ex){}
       };
-      ws.onclose=function(){setStatus('Desconectado. Reconectando...','dot-offline');input.disabled=true;btn.disabled=true;setTimeout(connect,3000);};
-      ws.onerror=function(){ws.close();};
-    }).catch(function(){setStatus('Erro de conexao.','dot-offline');setTimeout(connect,5000);});
+      ws.onclose=function(){wsFails++;checkFallback();};
+      ws.onerror=function(){try{ws.close();}catch(x){}};
+    }).catch(function(){wsFails++;checkFallback();});
+  }
+
+  function checkFallback(){
+    if(wsFails>=2){startPolling();}
+    else{setTimeout(connectWs,3000);}
+  }
+
+  // ── Polling fallback ──
+  function startPolling(){
+    mode='poll';
+    setStatus('Conectado (modo alternativo)','dot-online');
+    input.disabled=false;btn.disabled=false;input.focus();
+    // Load initial messages
+    doPoll();
+    if(!pollTimer)pollTimer=setInterval(doPoll,3000);
+  }
+
+  function doPoll(){
+    fetch('/cliente/chat/poll?after='+lastMsgId).then(function(r){return r.json();}).then(function(d){
+      if(!d.ok)return;
+      if(d.status==='closed'){setStatus('Chat encerrado','dot-offline');input.disabled=true;btn.disabled=true;if(pollTimer){clearInterval(pollTimer);pollTimer=null;}return;}
+      loadMessages(d.messages);
+    }).catch(function(){});
   }
 
   btn.addEventListener('click',enviar);
   input.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
-  connect();
+  connectWs();
 })();
-<?php endif; ?>
 </script>
-
+<?php endif; ?>
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

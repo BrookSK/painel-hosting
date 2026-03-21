@@ -142,9 +142,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <?php if ($status==='open'): ?>
 <script>
 (function(){
-  var ROOM_ID=<?php echo $roomId; ?>,CSRF=<?php echo json_encode(Csrf::token()); ?>,WS_URL=<?php echo json_encode($_wsUrl); ?>,ws;
+  var ROOM_ID=<?php echo $roomId; ?>,CSRF=<?php echo json_encode(Csrf::token()); ?>,WS_URL=<?php echo json_encode($_wsUrl); ?>;
   var box=document.getElementById('chatMsgs'),inp=document.getElementById('chatInput');
-  var pendingFile=null;
+  var ws=null,pendingFile=null,mode='ws',wsFails=0,pollTimer=null,lastMsgId=0;
 
   var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
   var picker=document.getElementById('emojiPicker');
@@ -154,59 +154,67 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
   var fileInput=document.getElementById('fileInput'),preview=document.getElementById('uploadPreview'),previewName=document.getElementById('uploadFileName');
   document.getElementById('btnFile').addEventListener('click',function(){fileInput.click();});
-  fileInput.addEventListener('change',function(){
-    if(!this.files||!this.files[0])return;
-    pendingFile=this.files[0];
-    previewName.textContent='📎 '+pendingFile.name;
-    preview.style.display='flex';
-  });
+  fileInput.addEventListener('change',function(){if(!this.files||!this.files[0])return;pendingFile=this.files[0];previewName.textContent='📎 '+pendingFile.name;preview.style.display='flex';});
   document.getElementById('uploadCancel').addEventListener('click',function(){pendingFile=null;fileInput.value='';preview.style.display='none';});
 
-  function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function isImage(url){return /\.(png|jpe?g|gif|webp)$/i.test(url||'');}
+  function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function isImage(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
 
-  function appendMsg(sender,text,ts,fileUrl,fileName){
+  function appendMsg(sender,text,ts,fu,fn){
     var div=document.createElement('div'),meta=document.createElement('div');
     div.className='msg-bubble '+(sender==='admin'?'msg-admin':'msg-client');
     meta.className='msg-meta';meta.textContent=(sender==='admin'?'Você':'Cliente')+(ts?' · '+ts.substring(11,16):'');
     if(text)div.innerHTML=escHtml(text);
-    if(fileUrl){
-      if(isImage(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='msg-img';img.alt=fileName||'imagem';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});div.appendChild(img);}
-      else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fileName||'arquivo');div.appendChild(a);}
+    if(fu){
+      if(isImage(fu)){var img=document.createElement('img');img.src=fu;img.className='msg-img';img.alt=fn||'';img.onclick=function(){window.open(fu,'_blank');};div.appendChild(img);}
+      else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fn||'arquivo');div.appendChild(a);}
     }
     div.appendChild(meta);box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
 
-  function uploadAndSend(file,text){
+  function loadMessages(msgs){(msgs||[]).forEach(function(m){var id=parseInt(m.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);});}
+
+  function doUpload(file,cb){
     var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
-    fetch('/chat/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
-      if(!d.ok){alert(d.erro||'Erro no upload');return;}
-      if(ws&&ws.readyState===1)ws.send(JSON.stringify({message:text,file_url:d.file_url,file_name:d.file_name}));
-    }).catch(function(){alert('Erro ao enviar arquivo.');});
+    fetch('/chat/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){if(!d.ok){alert(d.erro||'Erro');return;}cb(d.file_url,d.file_name);}).catch(function(){alert('Erro ao enviar arquivo.');});
   }
 
   function enviar(){
-    var txt=inp.value.trim();
-    if(!txt&&!pendingFile)return;
-    if(!ws||ws.readyState!==1)return;
-    if(pendingFile){uploadAndSend(pendingFile,txt);pendingFile=null;fileInput.value='';preview.style.display='none';inp.value='';return;}
-    ws.send(JSON.stringify({message:txt}));inp.value='';
+    var txt=inp.value.trim();if(!txt&&!pendingFile)return;
+    if(pendingFile){var f=pendingFile,t=txt;pendingFile=null;fileInput.value='';preview.style.display='none';inp.value='';doUpload(f,function(fu,fn){sendPayload(t,fu,fn);});return;}
+    sendPayload(txt,null,null);inp.value='';
   }
 
-  function connect(){
+  function sendPayload(text,fu,fn){
+    if(mode==='ws'&&ws&&ws.readyState===1){var p={message:text||''};if(fu){p.file_url=fu;p.file_name=fn;}ws.send(JSON.stringify(p));}
+    else{var body='_csrf='+encodeURIComponent(CSRF)+'&room_id='+ROOM_ID+'&message='+encodeURIComponent(text||'');if(fu)body+='&file_url='+encodeURIComponent(fu)+'&file_name='+encodeURIComponent(fn||'');
+      fetch('/equipe/chat/enviar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(function(r){return r.json();}).then(function(d){if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name);}}).catch(function(){});
+    }
+  }
+
+  function connectWs(){
     fetch('/equipe/chat/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&room_id='+ROOM_ID})
     .then(function(r){return r.json();}).then(function(d){
-      if(!d.ok){setTimeout(connect,5000);return;}
+      if(!d.ok){wsFails++;checkFallback();return;}
       ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
-      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';msg.messages.forEach(function(m){appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);});}else if(msg.type==='message'){appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}}catch(ex){}};
-      ws.onclose=function(){setTimeout(connect,4000);};
-      ws.onerror=function(){ws.close();};
-    }).catch(function(){setTimeout(connect,5000);});
+      ws.onopen=function(){mode='ws';wsFails=0;if(pollTimer){clearInterval(pollTimer);pollTimer=null;}};
+      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';lastMsgId=0;loadMessages(msg.messages);}else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}}catch(ex){}};
+      ws.onclose=function(){wsFails++;checkFallback();};
+      ws.onerror=function(){try{ws.close();}catch(x){}};
+    }).catch(function(){wsFails++;checkFallback();});
+  }
+
+  function checkFallback(){if(wsFails>=2){startPolling();}else{setTimeout(connectWs,3000);}}
+
+  function startPolling(){mode='poll';doPoll();if(!pollTimer)pollTimer=setInterval(doPoll,3000);}
+
+  function doPoll(){
+    fetch('/equipe/chat/poll?room_id='+ROOM_ID+'&after='+lastMsgId).then(function(r){return r.json();}).then(function(d){if(!d.ok)return;loadMessages(d.messages);}).catch(function(){});
   }
 
   document.getElementById('chatEnviar').addEventListener('click',enviar);
   inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
-  connect();
+  connectWs();
 })();
 </script>
 <?php endif; ?>
