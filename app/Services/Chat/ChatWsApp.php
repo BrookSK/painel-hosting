@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Services\Chat;
 
 use Ratchet\MessageComponentInterface;
+use LRV\Core\BancoDeDados;
 
 /**
  * WebSocket server para chat em tempo real.
@@ -178,10 +179,23 @@ final class ChatWsApp implements MessageComponentInterface
             return;
         }
 
+        // Resolve sender name for admin
+        $senderName = null;
+        if ($senderType === 'admin') {
+            try {
+                $pdo = BancoDeDados::pdo();
+                $ns = $pdo->prepare('SELECT name FROM users WHERE id = :id LIMIT 1');
+                $ns->execute([':id' => $senderId]);
+                $nr = $ns->fetch();
+                $senderName = is_array($nr) ? (string) ($nr['name'] ?? '') : null;
+            } catch (\Throwable) {}
+        }
+
         $payload = json_encode([
             'type'        => 'message',
             'id'          => $saved['id'],
             'sender_type' => $senderType,
+            'sender_name' => $senderName,
             'message'     => $texto,
             'file_url'    => $saved['file_url'] ?? null,
             'file_name'   => $saved['file_name'] ?? null,

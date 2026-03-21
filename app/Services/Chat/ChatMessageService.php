@@ -40,7 +40,13 @@ final class ChatMessageService
     public function historico(int $roomId, int $limite = 100): array
     {
         $pdo  = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, sender_type, sender_id, message, file_url, file_name, created_at FROM chat_messages WHERE room_id = :r ORDER BY id ASC LIMIT ' . min(200, $limite));
+        $stmt = $pdo->prepare(
+            'SELECT m.id, m.sender_type, m.sender_id, m.message, m.file_url, m.file_name, m.created_at,
+                    CASE WHEN m.sender_type = \'admin\' THEN u.name ELSE NULL END AS sender_name
+             FROM chat_messages m
+             LEFT JOIN users u ON m.sender_type = \'admin\' AND u.id = m.sender_id
+             WHERE m.room_id = :r ORDER BY m.id ASC LIMIT ' . min(200, $limite)
+        );
         $stmt->execute([':r' => $roomId]);
         $rows = $stmt->fetchAll();
         return is_array($rows) ? $rows : [];

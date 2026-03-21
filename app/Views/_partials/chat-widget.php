@@ -465,10 +465,25 @@ document.getElementById('cw-live-upload-cancel').addEventListener('click',functi
 function isImgUrl(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
 function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function addLiveMsg(type,txt,ts,fileUrl,fileName){
+var liveLastDate='';
+function liveDaySep(ts){
+  if(!ts)return;
+  var d=ts.substring(0,10);
+  if(d===liveLastDate)return;
+  liveLastDate=d;
+  var p=d.split('-');
+  var sep=document.createElement('div');
+  sep.style.cssText='text-align:center;font-size:10px;color:#94a3b8;padding:6px 0;display:flex;align-items:center;gap:8px;';
+  sep.innerHTML='<span style="flex:1;height:1px;background:#e2e8f0;"></span><span>'+p[2]+'/'+p[1]+'/'+p[0]+'</span><span style="flex:1;height:1px;background:#e2e8f0;"></span>';
+  liveMsgs.appendChild(sep);
+}
+
+function addLiveMsg(type,txt,ts,fileUrl,fileName,senderName){
+  liveDaySep(ts);
   var d=document.createElement('div');
   d.className=type==='client'?'cw-umsg':'cw-bmsg';
-  if(txt)d.innerHTML=escH(txt);
+  if(type==='admin'&&senderName){var nm=document.createElement('div');nm.style.cssText='font-size:10px;font-weight:600;opacity:.7;margin-bottom:2px;';nm.textContent=senderName;d.appendChild(nm);}
+  if(txt){var sp=document.createElement('span');sp.innerHTML=escH(txt);d.appendChild(sp);}
   if(fileUrl){
     if(isImgUrl(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='cw-msg-img';img.alt=fileName||'';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});d.appendChild(img);}
     else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='cw-msg-file';a.textContent='📄 '+(fileName||'arquivo');d.appendChild(a);}
@@ -481,7 +496,7 @@ function liveLoadMsgs(msgs){
   (msgs||[]).forEach(function(m){
     var id=parseInt(m.id)||0;
     if(id>liveLastId)liveLastId=id;
-    addLiveMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);
+    addLiveMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);
   });
 }
 
@@ -502,7 +517,7 @@ function liveSendPayload(text,fu,fn){
     if(fu)body+='&file_url='+encodeURIComponent(fu)+'&file_name='+encodeURIComponent(fn||'');
     fetch('/cliente/chat/enviar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>liveLastId)liveLastId=id;addLiveMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name);}
+      if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>liveLastId)liveLastId=id;addLiveMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name,d.msg.sender_name||null);}
     }).catch(function(){});
   }
 }
@@ -524,8 +539,8 @@ function tryWsLive(ctx){
     };
     liveWs.onmessage=function(e){
       try{var m=JSON.parse(e.data);
-        if(m.type==='history'){liveMsgs.innerHTML='';liveLastId=0;liveLoadMsgs(m.messages);}
-        else if(m.type==='message'||m.type==='system'){var id=parseInt(m.id)||0;if(id>liveLastId)liveLastId=id;addLiveMsg(m.sender_type||'system',m.message,m.created_at,m.file_url,m.file_name);}
+        if(m.type==='history'){liveMsgs.innerHTML='';liveLastId=0;liveLastDate='';liveLoadMsgs(m.messages);}
+        else if(m.type==='message'||m.type==='system'){var id=parseInt(m.id)||0;if(id>liveLastId)liveLastId=id;addLiveMsg(m.sender_type||'system',m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);}
       }catch(err){}
     };
     liveWs.onclose=function(){liveWsFails++;liveCheckFallback('');};

@@ -15,10 +15,13 @@ final class ChatController
 {
     public function listar(Requisicao $req): Resposta
     {
-        $rooms = (new ChatRoomService())->listarAbertas();
+        $svc = new ChatRoomService();
+        $abertas    = $svc->listarAbertas();
+        $encerradas = $svc->listarEncerradas();
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/chat-listar.php', [
-            'rooms' => $rooms,
+            'rooms'      => $abertas,
+            'encerradas' => $encerradas,
         ]);
 
         return Resposta::html($html);
@@ -64,12 +67,19 @@ final class ChatController
         $stmtV->execute([':c' => $clientId]);
         $vps = $stmtV->fetchAll() ?: [];
 
+        // Mensagens (para chats encerrados, carrega server-side)
+        $mensagens = [];
+        if ((string) ($room['status'] ?? '') === 'closed') {
+            $mensagens = (new \LRV\App\Services\Chat\ChatMessageService())->historico($roomId);
+        }
+
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/chat-ver.php', [
             'room'        => $room,
             'cliente'     => $cliente,
             'tickets'     => $tickets,
             'assinaturas' => $assinaturas,
             'vps'         => $vps,
+            'mensagens'   => $mensagens,
         ]);
 
         return Resposta::html($html);
@@ -104,9 +114,43 @@ final class ChatController
             return Resposta::texto('Room inválida.', 400);
         }
 
+        $room = (new ChatRoomService())->buscarPorId($roomId);
         (new ChatRoomService())->fechar($roomId);
 
+        // Enviar e-mail de pesquisa de satisfação ao cliente
+        if ($room !== null) {
+            $this->enviarPesquisaSatisfacao($room, $roomId);
+        }
+
         return Resposta::redirecionar('/equipe/chat');
+    }
+
+    private function enviarPesquisaSatisfacao(array $room, int $roomId): void
+    {
+        try {
+            $email = trim((string) ($room['client_email'] ?? ''));
+            if ($email === '') {
+                return;
+            }
+
+            $base = \LRV\Core\ConfiguracoesSistema::appUrlBase();
+            $link = $base . '/cliente/avaliar?type=chat&id=' . $roomId;
+            $nome = trim((string) ($room['client_name'] ?? ''));
+
+            $corpo  = "Olá" . ($nome !== '' ? " {$nome}" : '') . ",\n\n";
+            $corpo .= "Seu atendimento via chat foi encerrado.\n\n";
+            $corpo .= "Gostaríamos de saber como foi sua experiência. Sua avaliação nos ajuda a melhorar nosso suporte.\n\n";
+            $corpo .= "Avalie o atendimento: {$link}\n\n";
+            $corpo .= "Obrigado por utilizar nossos serviços!\n";
+
+            (new \LRV\App\Services\Email\SmtpMailer())->enviar(
+                $email,
+                'Avalie seu atendimento — Chat de Suporte',
+                $corpo
+            );
+        } catch (\Throwable) {
+            // Falha no envio não deve impedir o encerramento
+        }
     }
 
     /** Polling: retorna mensagens após um determinado ID */
@@ -124,7 +168,13 @@ final class ChatController
         }
 
         $pdo = \LRV\Core\BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, sender_type, sender_id, message, file_url, file_name, created_at FROM chat_messages WHERE room_id = :r AND id > :a ORDER BY id ASC LIMIT 50');
+        $stmt = $pdo->prepare(
+            'SELECT m.id, m.sender_type, m.sender_id, m.message, m.file_url, m.file_name, m.created_at,
+                    CASE WHEN m.sender_type = \'admin\' THEN u.name ELSE NULL END AS sender_name
+             FROM chat_messages m
+             LEFT JOIN users u ON m.sender_type = \'admin\' AND u.id = m.sender_id
+             WHERE m.room_id = :r AND m.id > :a ORDER BY m.id ASC LIMIT 50'
+        );
         $stmt->execute([':r' => $roomId, ':a' => $afterId]);
         $msgs = $stmt->fetchAll() ?: [];
 

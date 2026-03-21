@@ -46,18 +46,31 @@ final class ChatRoomService
 
     public function listarAbertas(): array
     {
+        return $this->listarPorStatus('open');
+    }
+
+    public function listarEncerradas(int $limite = 100): array
+    {
+        return $this->listarPorStatus('closed', $limite);
+    }
+
+    private function listarPorStatus(string $status, int $limite = 100): array
+    {
         $pdo  = BancoDeDados::pdo();
-        $stmt = $pdo->query("SELECT r.id, r.client_id, r.user_id, r.status, r.created_at, r.updated_at,
-                                    c.name AS client_name, c.email AS client_email,
-                                    u.name AS agent_name,
-                                    (SELECT COUNT(*) FROM chat_messages m WHERE m.room_id = r.id) AS total_messages
-                             FROM chat_rooms r
-                             INNER JOIN clients c ON c.id = r.client_id
-                             LEFT JOIN users u ON u.id = r.user_id
-                             WHERE r.status = 'open'
-                             ORDER BY r.updated_at DESC
-                             LIMIT 100");
-        $rows = $stmt ? $stmt->fetchAll() : [];
+        $stmt = $pdo->prepare(
+            "SELECT r.id, r.client_id, r.user_id, r.status, r.created_at, r.updated_at,
+                    c.name AS client_name, c.email AS client_email,
+                    u.name AS agent_name,
+                    (SELECT COUNT(*) FROM chat_messages m WHERE m.room_id = r.id) AS total_messages
+             FROM chat_rooms r
+             INNER JOIN clients c ON c.id = r.client_id
+             LEFT JOIN users u ON u.id = r.user_id
+             WHERE r.status = :s
+             ORDER BY r.updated_at DESC
+             LIMIT " . min(200, $limite)
+        );
+        $stmt->execute([':s' => $status]);
+        $rows = $stmt->fetchAll();
         return is_array($rows) ? $rows : [];
     }
 

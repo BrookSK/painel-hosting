@@ -76,7 +76,13 @@ final class ChatController
         $afterId = (int) ($req->query['after'] ?? 0);
 
         $pdo = \LRV\Core\BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, sender_type, sender_id, message, file_url, file_name, created_at FROM chat_messages WHERE room_id = :r AND id > :a ORDER BY id ASC LIMIT 50');
+        $stmt = $pdo->prepare(
+            'SELECT m.id, m.sender_type, m.sender_id, m.message, m.file_url, m.file_name, m.created_at,
+                    CASE WHEN m.sender_type = \'admin\' THEN u.name ELSE NULL END AS sender_name
+             FROM chat_messages m
+             LEFT JOIN users u ON m.sender_type = \'admin\' AND u.id = m.sender_id
+             WHERE m.room_id = :r AND m.id > :a ORDER BY m.id ASC LIMIT 50'
+        );
         $stmt->execute([':r' => $roomId, ':a' => $afterId]);
         $msgs = $stmt->fetchAll() ?: [];
 

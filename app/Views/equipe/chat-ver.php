@@ -88,7 +88,57 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <button class="botao danger sm" type="submit" onclick="return confirm('Encerrar este chat?')">Encerrar chat</button>
         </form>
       <?php else: ?>
-        <div class="chat-box"><div class="chat-msgs" id="chatMsgs"></div></div>
+        <div class="chat-box">
+          <div class="chat-msgs" id="chatMsgs">
+            <?php
+              $lastDay = '';
+              foreach ($mensagens as $m):
+                $ts = (string)($m['created_at']??'');
+                $day = substr($ts, 0, 10);
+                if ($day !== '' && $day !== $lastDay):
+                  $lastDay = $day;
+                  $parts = explode('-', $day);
+            ?>
+              <div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0;display:flex;align-items:center;gap:10px;">
+                <span style="flex:1;height:1px;background:#e2e8f0;"></span>
+                <span><?php echo $parts[2].'/'.$parts[1].'/'.$parts[0]; ?></span>
+                <span style="flex:1;height:1px;background:#e2e8f0;"></span>
+              </div>
+            <?php endif; ?>
+            <?php
+              $st = (string)($m['sender_type']??'');
+              $sn = (string)($m['sender_name']??'');
+            ?>
+              <div class="msg-bubble <?php echo $st==='admin'?'msg-admin':'msg-client'; ?>">
+                <?php if ($st==='admin' && $sn !== ''): ?>
+                  <div style="font-size:11px;font-weight:600;opacity:.7;margin-bottom:2px;"><?php echo View::e($sn); ?></div>
+                <?php endif; ?>
+                <?php if (($m['message']??'') !== ''): ?>
+                  <?php echo View::e((string)$m['message']); ?>
+                <?php endif; ?>
+                <?php
+                  $fu = (string)($m['file_url']??'');
+                  $fn = (string)($m['file_name']??'');
+                  if ($fu !== ''):
+                    if (preg_match('/\.(png|jpe?g|gif|webp)$/i', $fu)):
+                ?>
+                  <img src="<?php echo View::e($fu); ?>" class="msg-img" alt="<?php echo View::e($fn); ?>" />
+                <?php else: ?>
+                  <a href="<?php echo View::e($fu); ?>" target="_blank" class="msg-file">📄 <?php echo View::e($fn ?: 'arquivo'); ?></a>
+                <?php endif; endif; ?>
+                <div class="msg-meta">
+                  <?php
+                    $metaParts = [];
+                    if ($st === 'admin' && $sn !== '') $metaParts[] = $sn;
+                    elseif ($st === 'client') $metaParts[] = 'Cliente';
+                    if ($ts !== '') $metaParts[] = substr($ts, 11, 5);
+                    echo View::e(implode(' · ', $metaParts));
+                  ?>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
         <p class="texto" style="margin-top:10px;">Este chat foi encerrado.</p>
       <?php endif; ?>
     </div>
@@ -160,10 +210,30 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function isImage(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
 
-  function appendMsg(sender,text,ts,fu,fn){
+  var lastDateStr='';
+  function maybeDaySep(ts){
+    if(!ts)return;
+    var d=ts.substring(0,10);
+    if(d===lastDateStr)return;
+    lastDateStr=d;
+    var parts=d.split('-');
+    var label=parts[2]+'/'+parts[1]+'/'+parts[0];
+    var sep=document.createElement('div');
+    sep.style.cssText='text-align:center;font-size:11px;color:#94a3b8;padding:8px 0;display:flex;align-items:center;gap:10px;';
+    sep.innerHTML='<span style="flex:1;height:1px;background:#e2e8f0;"></span><span>'+label+'</span><span style="flex:1;height:1px;background:#e2e8f0;"></span>';
+    box.appendChild(sep);
+  }
+
+  function appendMsg(sender,text,ts,fu,fn,sn){
+    maybeDaySep(ts);
     var div=document.createElement('div'),meta=document.createElement('div');
     div.className='msg-bubble '+(sender==='admin'?'msg-admin':'msg-client');
-    meta.className='msg-meta';meta.textContent=(sender==='admin'?'Você':'Cliente')+(ts?' · '+ts.substring(11,16):'');
+    meta.className='msg-meta';
+    var parts=[];
+    if(sender==='admin')parts.push(sn||'Você');
+    else parts.push('Cliente');
+    if(ts)parts.push(ts.substring(11,16));
+    meta.textContent=parts.join(' · ');
     if(text)div.innerHTML=escHtml(text);
     if(fu){
       if(isImage(fu)){var img=document.createElement('img');img.src=fu;img.className='msg-img';img.alt=fn||'';img.onclick=function(){window.open(fu,'_blank');};div.appendChild(img);}
@@ -172,7 +242,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     div.appendChild(meta);box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
 
-  function loadMessages(msgs){(msgs||[]).forEach(function(m){var id=parseInt(m.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);});}
+  function loadMessages(msgs){(msgs||[]).forEach(function(m){var id=parseInt(m.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);});}
 
   function doUpload(file,cb){
     var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
@@ -188,7 +258,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   function sendPayload(text,fu,fn){
     if(mode==='ws'&&ws&&ws.readyState===1){var p={message:text||''};if(fu){p.file_url=fu;p.file_name=fn;}ws.send(JSON.stringify(p));}
     else{var body='_csrf='+encodeURIComponent(CSRF)+'&room_id='+ROOM_ID+'&message='+encodeURIComponent(text||'');if(fu)body+='&file_url='+encodeURIComponent(fu)+'&file_name='+encodeURIComponent(fn||'');
-      fetch('/equipe/chat/enviar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(function(r){return r.json();}).then(function(d){if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name);}}).catch(function(){});
+      fetch('/equipe/chat/enviar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(function(r){return r.json();}).then(function(d){if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name,d.msg.sender_name||null);}}).catch(function(){});
     }
   }
 
@@ -198,7 +268,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       if(!d.ok){wsFails++;checkFallback();return;}
       ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
       ws.onopen=function(){mode='ws';wsFails=0;if(pollTimer){clearInterval(pollTimer);pollTimer=null;}};
-      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';lastMsgId=0;loadMessages(msg.messages);}else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}}catch(ex){}};
+      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';lastMsgId=0;lastDateStr='';loadMessages(msg.messages);}else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name,msg.sender_name||null);}}catch(ex){}};
       ws.onclose=function(){wsFails++;checkFallback();};
       ws.onerror=function(){try{ws.close();}catch(x){}};
     }).catch(function(){wsFails++;checkFallback();});

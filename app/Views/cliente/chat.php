@@ -113,14 +113,34 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function isImg(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
 
-  function addMsg(st,text,time,fu,fn){
+  var lastDateStr='';
+  function maybeDaySep(ts){
+    if(!ts)return;
+    var d=ts.substring(0,10);
+    if(d===lastDateStr)return;
+    lastDateStr=d;
+    var parts=d.split('-');
+    var label=parts[2]+'/'+parts[1]+'/'+parts[0];
+    var sep=document.createElement('div');
+    sep.style.cssText='text-align:center;font-size:11px;color:#94a3b8;padding:8px 0;display:flex;align-items:center;gap:10px;';
+    sep.innerHTML='<span style="flex:1;height:1px;background:#e2e8f0;"></span><span>'+label+'</span><span style="flex:1;height:1px;background:#e2e8f0;"></span>';
+    box.appendChild(sep);
+  }
+
+  function addMsg(st,text,time,fu,fn,sn){
+    maybeDaySep(time);
     var div=document.createElement('div');div.className='msg '+st;
     if(text)div.innerHTML=escHtml(text);
     if(fu){
       if(isImg(fu)){var img=document.createElement('img');img.src=fu;img.className='msg-img';img.alt=fn||'';img.onclick=function(){window.open(fu,'_blank');};div.appendChild(img);}
       else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fn||'arquivo');div.appendChild(a);}
     }
-    if(time){var tm=document.createElement('div');tm.className='msg-time';tm.textContent=new Date(time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});div.appendChild(tm);}
+    if(time){var tm=document.createElement('div');tm.className='msg-time';
+      var parts=[];
+      if(st==='admin'&&sn)parts.push(sn);
+      parts.push(new Date(time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+      tm.textContent=parts.join(' · ');
+      div.appendChild(tm);}
     box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
 
@@ -128,7 +148,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     (msgs||[]).forEach(function(m){
       var id=parseInt(m.id)||0;
       if(id>lastMsgId)lastMsgId=id;
-      addMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name);
+      addMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);
     });
   }
 
@@ -163,7 +183,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       if(fu)body+='&file_url='+encodeURIComponent(fu)+'&file_name='+encodeURIComponent(fn||'');
       fetch('/cliente/chat/enviar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
       .then(function(r){return r.json();}).then(function(d){
-        if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>lastMsgId)lastMsgId=id;addMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name);}
+        if(d.ok&&d.msg){var id=parseInt(d.msg.id)||0;if(id>lastMsgId)lastMsgId=id;addMsg(d.msg.sender_type,d.msg.message,d.msg.created_at,d.msg.file_url,d.msg.file_name,d.msg.sender_name||null);}
       }).catch(function(){});
     }
   }
@@ -178,8 +198,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       ws.onopen=function(){mode='ws';wsFails=0;setStatus('Conectado','dot-online');input.disabled=false;btn.disabled=false;input.focus();if(pollTimer){clearInterval(pollTimer);pollTimer=null;}};
       ws.onmessage=function(e){
         try{var msg=JSON.parse(e.data);
-          if(msg.type==='history'){box.innerHTML='';lastMsgId=0;loadMessages(msg.messages);}
-          else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;addMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name);}
+          if(msg.type==='history'){box.innerHTML='';lastMsgId=0;lastDateStr='';loadMessages(msg.messages);}
+          else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;addMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name,msg.sender_name||null);}
           else if(msg.type==='error'){setStatus(msg.message,'dot-offline');}
         }catch(ex){}
       };
