@@ -15,6 +15,7 @@ $_lt_title = isset($pageTitle) ? $pageTitle . ' — ' . SistemaConfig::nome() : 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><?php echo View::e($_lt_title); ?></title>
+  <meta name="csrf-token" content="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
   <?php require __DIR__ . '/estilo-equipe.php'; ?>
 </head>
 <body>

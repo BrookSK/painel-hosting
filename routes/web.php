@@ -18,6 +18,7 @@ use LRV\App\Controllers\Cliente\TicketsController as ClienteTicketsController;
 use LRV\App\Controllers\Cliente\VpsController as ClienteVpsController;
 use LRV\App\Controllers\Cliente\StripeCheckoutController;
 use LRV\App\Controllers\Equipe\ConfiguracoesController;
+use LRV\App\Controllers\Equipe\ImagemUploadController;
 use LRV\App\Controllers\Equipe\EntrarController as EquipeEntrarController;
 use LRV\App\Controllers\Equipe\AssinaturasController;
 use LRV\App\Controllers\Equipe\AsaasEventosController;
@@ -80,6 +81,7 @@ $roteador->post('/equipe/inicializacao/terminal/parar-daemon', [InicializacaoCon
 
 $roteador->get('/equipe/configuracoes', [ConfiguracoesController::class, 'formulario'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes', [ConfiguracoesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/configuracoes/upload-imagem', [ImagemUploadController::class, 'upload'], [Middlewares::exigirPermissao('manage_billing'), Middlewares::rateLimitEquipe('img_upload', 20, 60)]);
 $roteador->get('/equipe/assinaturas', [AssinaturasController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->get('/equipe/asaas-eventos', [AsaasEventosController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->get('/equipe/planos', [EquipePlanosController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);

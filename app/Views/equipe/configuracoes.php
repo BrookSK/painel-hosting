@@ -163,11 +163,29 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">URL do logotipo</label>
-        <input class="input" type="text" name="system_logo_url" value="<?php echo View::e((string)($system_logo_url??'')); ?>" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="input" type="text" name="system_logo_url" id="system_logo_url" value="<?php echo View::e((string)($system_logo_url??'')); ?>" placeholder="https://... ou /uploads/imagens/..." style="flex:1;" />
+          <label class="botao sec" style="cursor:pointer;white-space:nowrap;padding:9px 14px;font-size:13px;" title="Fazer upload de imagem">
+            <input type="file" accept="image/*" style="display:none;" data-target="system_logo_url" class="img-upload-input" />
+            ↑ Upload
+          </label>
+        </div>
+        <?php if (!empty($system_logo_url)): ?>
+          <img src="<?php echo View::e((string)$system_logo_url); ?>" alt="preview logo" style="margin-top:8px;max-height:40px;max-width:200px;border-radius:6px;border:1px solid #e2e8f0;" />
+        <?php endif; ?>
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">URL do favicon</label>
-        <input class="input" type="text" name="system_favicon_url" value="<?php echo View::e((string)($system_favicon_url??'')); ?>" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="input" type="text" name="system_favicon_url" id="system_favicon_url" value="<?php echo View::e((string)($system_favicon_url??'')); ?>" placeholder="https://... ou /uploads/imagens/..." style="flex:1;" />
+          <label class="botao sec" style="cursor:pointer;white-space:nowrap;padding:9px 14px;font-size:13px;" title="Fazer upload de imagem">
+            <input type="file" accept="image/*,.ico" style="display:none;" data-target="system_favicon_url" class="img-upload-input" />
+            ↑ Upload
+          </label>
+        </div>
+        <?php if (!empty($system_favicon_url)): ?>
+          <img src="<?php echo View::e((string)$system_favicon_url); ?>" alt="preview favicon" style="margin-top:8px;max-height:32px;max-width:64px;border-radius:4px;border:1px solid #e2e8f0;" />
+        <?php endif; ?>
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Texto de copyright (footer)</label>
@@ -191,4 +209,68 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
   </form>
 </div>
+
+<script>
+(function () {
+  var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+  document.querySelectorAll('.img-upload-input').forEach(function (input) {
+    input.addEventListener('change', async function () {
+      var file = this.files[0];
+      if (!file) return;
+
+      var targetId = this.dataset.target;
+      var targetInput = document.getElementById(targetId);
+      if (!targetInput) return;
+
+      // Preview imediato
+      var label = this.closest('label');
+      var oldText = label.childNodes[label.childNodes.length - 1].textContent;
+      label.childNodes[label.childNodes.length - 1].textContent = ' Enviando...';
+
+      var fd = new FormData();
+      fd.append('imagem', file);
+
+      try {
+        var resp = await fetch('/equipe/configuracoes/upload-imagem', {
+          method: 'POST',
+          headers: { 'x-csrf-token': csrf },
+          body: fd
+        });
+        var json = await resp.json();
+
+        if (json.ok && json.url) {
+          targetInput.value = json.url;
+          // Atualizar preview
+          var container = targetInput.closest('div').parentElement;
+          var preview = container.querySelector('img');
+          if (preview) {
+            preview.src = json.url;
+          } else {
+            var img = document.createElement('img');
+            img.src = json.url;
+            img.alt = 'preview';
+            img.style.cssText = 'margin-top:8px;max-height:40px;max-width:200px;border-radius:6px;border:1px solid #e2e8f0;';
+            container.appendChild(img);
+          }
+          label.childNodes[label.childNodes.length - 1].textContent = ' ✓ Enviado';
+          setTimeout(function () {
+            label.childNodes[label.childNodes.length - 1].textContent = oldText;
+          }, 2000);
+        } else {
+          alert('Erro: ' + (json.erro || 'Falha no upload.'));
+          label.childNodes[label.childNodes.length - 1].textContent = oldText;
+        }
+      } catch (e) {
+        alert('Erro de rede ao fazer upload.');
+        label.childNodes[label.childNodes.length - 1].textContent = oldText;
+      }
+
+      // Limpar input para permitir re-upload do mesmo arquivo
+      this.value = '';
+    });
+  });
+})();
+</script>
+
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
