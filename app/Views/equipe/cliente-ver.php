@@ -16,66 +16,113 @@ $statusBadge = function(string $s): string {
         'active'    => '<span class="badge-new badge-green">Ativa</span>',
         'suspended' => '<span class="badge-new badge-yellow">Suspensa</span>',
         'cancelled' => '<span class="badge-new badge-red">Cancelada</span>',
-        default     => '<span class="badge-new badge-gray">' . htmlspecialchars($s) . '</span>',
+        default     => '<span class="badge-new badge-gray">' . View::e($s) . '</span>',
     };
 };
 
 $vpsBadge = function(string $s): string {
     return match($s) {
-        'running'    => '<span class="badge-new badge-green">Ativo</span>',
-        'stopped'    => '<span class="badge-new badge-yellow">Parado</span>',
-        'suspended'  => '<span class="badge-new badge-red">Suspenso</span>',
-        default      => '<span class="badge-new badge-gray">' . htmlspecialchars($s) . '</span>',
+        'running'   => '<span class="badge-new badge-green">Ativo</span>',
+        'stopped'   => '<span class="badge-new badge-yellow">Parado</span>',
+        'suspended' => '<span class="badge-new badge-red">Suspenso</span>',
+        default     => '<span class="badge-new badge-gray">' . View::e($s) . '</span>',
     };
 };
+
+$iniciais = strtoupper(substr((string)($cliente['name'] ?? 'C'), 0, 1));
+$nomePartes = explode(' ', trim((string)($cliente['name'] ?? '')));
+if (count($nomePartes) >= 2) {
+    $iniciais = strtoupper(substr($nomePartes[0], 0, 1) . substr(end($nomePartes), 0, 1));
+}
 ?>
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-  <a href="/equipe/clientes" style="color:#94a3b8;font-size:13px;">← Clientes</a>
+<!-- Breadcrumb -->
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;">
+  <a href="/equipe/clientes" style="color:#94a3b8;">← Clientes</a>
   <span style="color:#e2e8f0;">/</span>
-  <span style="font-size:13px;color:#475569;"><?php echo View::e((string)($cliente['name'] ?? '')); ?></span>
+  <span style="color:#475569;"><?php echo View::e((string)($cliente['name'] ?? '')); ?></span>
 </div>
 
 <?php if ($ok === 'assinatura_criada'): ?>
   <div class="sucesso" style="margin-bottom:16px;">Assinatura criada com sucesso.</div>
 <?php endif; ?>
-<?php if ($erro !== ''): ?><div class="erro" style="margin-bottom:16px;"><?php echo View::e($erro); ?></div><?php endif; ?>
+<?php if ($erro !== ''): ?>
+  <div class="erro" style="margin-bottom:16px;"><?php echo View::e($erro); ?></div>
+<?php endif; ?>
 
-<!-- Cabeçalho do cliente -->
-<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-  <div>
-    <div class="page-title"><?php echo View::e((string)($cliente['name'] ?? '')); ?></div>
-    <div class="page-subtitle"><?php echo View::e((string)($cliente['email'] ?? '')); ?></div>
+<!-- Header do cliente -->
+<div class="card-new" style="margin-bottom:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;">
+        <?php echo View::e($iniciais); ?>
+      </div>
+      <div>
+        <div style="font-size:18px;font-weight:700;color:#0f172a;line-height:1.2;"><?php echo View::e((string)($cliente['name'] ?? '')); ?></div>
+        <div style="font-size:13px;color:#64748b;margin-top:2px;"><?php echo View::e((string)($cliente['email'] ?? '')); ?></div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+          <span class="badge-new badge-blue"><?php echo count($vps); ?> VPS</span>
+          <span class="badge-new badge-<?php echo count(array_filter($assinaturas, fn($s) => ($s['status']??'') === 'active')) > 0 ? 'green' : 'gray'; ?>">
+            <?php echo count(array_filter($assinaturas, fn($s) => ($s['status']??'') === 'active')); ?> assinatura(s) ativa(s)
+          </span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/equipe/clientes/editar?id=<?php echo (int)$cliente['id']; ?>" class="botao sec sm">Editar dados</a>
+    </div>
   </div>
-  <a href="/equipe/clientes/editar?id=<?php echo (int)$cliente['id']; ?>" class="botao sm sec">Editar dados</a>
 </div>
 
-<!-- Dados do cliente -->
-<div class="card-new" style="margin-bottom:16px;">
-  <div class="card-new-title">Dados cadastrais</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:12px;">
-    <div>
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Telefone</div>
-      <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['phone'] ?? '—')); ?></div>
-    </div>
-    <div>
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">CPF / CNPJ</div>
-      <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['cpf_cnpj'] ?? '—')); ?></div>
-    </div>
-    <div>
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Cadastro</div>
-      <div style="font-size:14px;color:#0f172a;"><?php echo View::e(date('d/m/Y H:i', strtotime((string)($cliente['created_at'] ?? 'now')))); ?></div>
-    </div>
-    <div>
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">ID</div>
-      <div style="font-size:14px;color:#94a3b8;">#<?php echo (int)$cliente['id']; ?></div>
+<!-- Grid: dados cadastrais + ações -->
+<div class="grid" style="margin-bottom:16px;">
+  <div class="card-new">
+    <div class="card-new-title">Dados cadastrais</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;">
+      <div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Telefone</div>
+        <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['phone'] ?? '—')); ?></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">CPF / CNPJ</div>
+        <div style="font-size:14px;color:#0f172a;"><?php echo View::e((string)($cliente['cpf_cnpj'] ?? '—')); ?></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Cadastro</div>
+        <div style="font-size:14px;color:#0f172a;"><?php echo View::e(date('d/m/Y H:i', strtotime((string)($cliente['created_at'] ?? 'now')))); ?></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">ID</div>
+        <div style="font-size:14px;color:#94a3b8;">#<?php echo (int)$cliente['id']; ?></div>
+      </div>
     </div>
   </div>
+
+  <!-- Assinar plano -->
+  <?php if (!empty($planos)): ?>
+  <div class="card-new">
+    <div class="card-new-title">Assinar plano manualmente</div>
+    <form method="POST" action="/equipe/clientes/assinar-plano" style="margin-top:12px;">
+      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+      <input type="hidden" name="client_id" value="<?php echo (int)$cliente['id']; ?>" />
+      <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Plano</label>
+      <select name="plan_id" class="input" required style="margin-bottom:10px;">
+        <option value="">Selecione...</option>
+        <?php foreach ($planos as $pl): ?>
+          <option value="<?php echo (int)$pl['id']; ?>">
+            <?php echo View::e((string)$pl['name']); ?> — R$ <?php echo number_format((float)$pl['price_monthly'], 2, ',', '.'); ?>/mês
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <button type="submit" class="botao" style="width:100%;">Assinar plano</button>
+    </form>
+  </div>
+  <?php endif; ?>
 </div>
 
 <!-- VPS -->
 <div class="card-new" style="margin-bottom:16px;padding:0;overflow:auto;">
   <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;">
-    <div class="card-new-title" style="margin:0;">VPS (<?php echo count($vps); ?>)</div>
+    <div class="card-new-title" style="margin:0;">VPS <span style="font-weight:400;color:#94a3b8;font-size:13px;">(<?php echo count($vps); ?>)</span></div>
   </div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;">
     <thead>
@@ -89,13 +136,13 @@ $vpsBadge = function(string $s): string {
     </thead>
     <tbody>
       <?php if (empty($vps)): ?>
-        <tr><td colspan="5" style="padding:30px;text-align:center;color:#94a3b8;">Nenhum VPS.</td></tr>
+        <tr><td colspan="5" style="padding:30px;text-align:center;color:#94a3b8;">Nenhum VPS cadastrado.</td></tr>
       <?php else: ?>
         <?php foreach ($vps as $v): ?>
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td style="padding:10px 16px;color:#94a3b8;font-size:12px;">#<?php echo (int)$v['id']; ?></td>
-            <td style="padding:10px 16px;font-weight:500;color:#0f172a;font-family:monospace;"><?php echo View::e((string)($v['container_id'] ?? '—')); ?></td>
-            <td style="padding:10px 16px;color:#475569;font-size:13px;"><?php echo (int)($v['cpu']??0); ?> vCPU / <?php echo round((int)($v['ram']??0)/1024,1); ?> GB / <?php echo round((int)($v['storage']??0)/1024,1); ?> GB</td>
+            <td style="padding:10px 16px;font-weight:500;color:#0f172a;font-family:monospace;font-size:12px;"><?php echo View::e((string)($v['container_id'] ?? '—')); ?></td>
+            <td style="padding:10px 16px;color:#475569;"><?php echo (int)($v['cpu']??0); ?> vCPU / <?php echo round((int)($v['ram']??0)/1024,1); ?> GB / <?php echo round((int)($v['storage']??0)/1024,1); ?> GB</td>
             <td style="padding:10px 16px;color:#475569;"><?php echo View::e((string)($v['plan_name'] ?? '—')); ?></td>
             <td style="padding:10px 16px;"><?php echo $vpsBadge((string)($v['status'] ?? '')); ?></td>
           </tr>
@@ -106,9 +153,9 @@ $vpsBadge = function(string $s): string {
 </div>
 
 <!-- Assinaturas -->
-<div class="card-new" style="margin-bottom:16px;padding:0;overflow:auto;">
+<div class="card-new" style="padding:0;overflow:auto;">
   <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;">
-    <div class="card-new-title" style="margin:0;">Assinaturas (<?php echo count($assinaturas); ?>)</div>
+    <div class="card-new-title" style="margin:0;">Assinaturas <span style="font-weight:400;color:#94a3b8;font-size:13px;">(<?php echo count($assinaturas); ?>)</span></div>
   </div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;">
     <thead>
@@ -143,28 +190,5 @@ $vpsBadge = function(string $s): string {
     </tbody>
   </table>
 </div>
-
-<!-- Assinar plano manualmente -->
-<?php if (!empty($planos)): ?>
-<div class="card-new" style="max-width:480px;">
-  <div class="card-new-title">Assinar plano manualmente</div>
-  <form method="POST" action="/equipe/clientes/assinar-plano" style="margin-top:12px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-    <input type="hidden" name="client_id" value="<?php echo (int)$cliente['id']; ?>" />
-    <div style="flex:1;min-width:200px;">
-      <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Plano</label>
-      <select name="plan_id" class="input" required>
-        <option value="">Selecione...</option>
-        <?php foreach ($planos as $pl): ?>
-          <option value="<?php echo (int)$pl['id']; ?>">
-            <?php echo View::e((string)$pl['name']); ?> — R$ <?php echo number_format((float)$pl['price_monthly'], 2, ',', '.'); ?>/mês
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <button type="submit" class="botao">Assinar</button>
-  </form>
-</div>
-<?php endif; ?>
 
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
