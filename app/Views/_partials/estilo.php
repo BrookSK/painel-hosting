@@ -7,14 +7,11 @@ if ($_favicon !== ''):
 ?>
 <link rel="icon" href="<?php echo View::e($_favicon); ?>" />
 <?php endif; ?>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ── Reset & Base ─────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#f1f5f9;color:#0f172a;overflow-x:hidden;}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#f1f5f9;color:#0f172a;overflow-x:hidden;}
 a{color:#4F46E5;text-decoration:none;}
 a:hover{text-decoration:underline;}
 

@@ -21,7 +21,7 @@ function _nav_ativo(string $path, string $uri): string {
       </div>
     <?php endif; ?>
     <span class="sidebar-logo-text"><?php echo View::e(SistemaConfig::nome()); ?></span>
-    <button class="sidebar-toggle" id="sidebarToggle" title="Recolher menu" aria-label="Recolher menu">
+    <button class="sidebar-toggle" id="sidebarToggle" title="Recolher menu" aria-label="Recolher menu" onclick="(function(){var s=document.getElementById('appShell');if(s){s.classList.toggle('collapsed');localStorage.setItem('lrv_sidebar_collapsed',s.classList.contains('collapsed')?'1':'0');}})()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>

@@ -28,7 +28,7 @@ if ($_initials === '') $_initials = 'U';
 ?>
 <header class="app-header">
   <div class="header-left">
-    <button class="sidebar-expand-btn" id="sidebarExpandBtn" aria-label="Expandir menu" title="Expandir menu">
+    <button class="sidebar-expand-btn" id="sidebarExpandBtn" aria-label="Expandir menu" title="Expandir menu" onclick="(function(){var s=document.getElementById('appShell');if(s){s.classList.toggle('collapsed');localStorage.setItem('lrv_sidebar_collapsed',s.classList.contains('collapsed')?'1':'0');}})()">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <button class="header-menu-btn" id="mobileMenuBtn" aria-label="Menu">
