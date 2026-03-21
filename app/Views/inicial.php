@@ -19,8 +19,7 @@ $_topo_hide_inicio = true;
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><?php echo View::e($_nome); ?> — Infraestrutura Cloud</title>
-  <meta name="description" content="Gerencie VPS, aplicações, e-mails, backups e suporte em um único painel. Tudo automatizado, seguro e pronto para escalar." />
+  <?php require __DIR__ . '/_partials/seo.php'; ?>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>
 /* ── Reset & base ─────────────────────────────────────── */

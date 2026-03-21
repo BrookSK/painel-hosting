@@ -44,6 +44,54 @@ final class SistemaConfig
         return (string) Settings::obter('legal.privacy_html', '');
     }
 
+    // ── SEO ─────────────────────────────────────────────────
+
+    public static function seoTitulo(): string
+    {
+        return trim((string) Settings::obter('seo.titulo', ''));
+    }
+
+    public static function seoDescricao(): string
+    {
+        return trim((string) Settings::obter('seo.descricao', ''));
+    }
+
+    public static function seoPalavrasChave(): string
+    {
+        return trim((string) Settings::obter('seo.palavras_chave', ''));
+    }
+
+    public static function seoOgImage(): string
+    {
+        return trim((string) Settings::obter('seo.og_image', ''));
+    }
+
+    public static function seoRobots(): string
+    {
+        $v = trim((string) Settings::obter('seo.robots', 'index, follow'));
+        return $v !== '' ? $v : 'index, follow';
+    }
+
+    public static function seoGoogleAnalyticsId(): string
+    {
+        return trim((string) Settings::obter('seo.google_analytics_id', ''));
+    }
+
+    public static function seoCanonicalBase(): string
+    {
+        // Fallback para app.url_base se não configurado separadamente
+        $v = trim((string) Settings::obter('seo.canonical_base', ''));
+        if ($v !== '') return rtrim($v, '/');
+        $app = trim((string) Settings::obter('app.url_base', ''));
+        return rtrim($app, '/');
+    }
+
+    public static function seoSchemaType(): string
+    {
+        $v = trim((string) Settings::obter('seo.schema_type', 'Organization'));
+        return $v !== '' ? $v : 'Organization';
+    }
+
     public static function versao(): string
     {
         static $cache = null;

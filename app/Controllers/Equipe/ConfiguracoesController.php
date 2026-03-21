@@ -60,6 +60,14 @@ final class ConfiguracoesController
             'trial_disco_gb'        => (string) Settings::obter('trial.disco_gb', '20'),
             'trial_descricao'       => (string) Settings::obter('trial.descricao', ''),
             'trial_label_cta'       => (string) Settings::obter('trial.label_cta', 'Testar grátis'),
+            'seo_titulo'            => SistemaConfig::seoTitulo(),
+            'seo_descricao'         => SistemaConfig::seoDescricao(),
+            'seo_palavras_chave'    => SistemaConfig::seoPalavrasChave(),
+            'seo_og_image'          => SistemaConfig::seoOgImage(),
+            'seo_robots'            => SistemaConfig::seoRobots(),
+            'seo_google_analytics_id' => SistemaConfig::seoGoogleAnalyticsId(),
+            'seo_canonical_base'    => SistemaConfig::seoCanonicalBase(),
+            'seo_schema_type'       => SistemaConfig::seoSchemaType(),
         ]);
 
         return Resposta::html($html);
@@ -118,6 +126,15 @@ final class ConfiguracoesController
         $trialDescricao  = $in->postString('trial_descricao', 500, false);
         $trialLabelCta   = $in->postString('trial_label_cta', 100, false);
 
+        $seoTitulo          = $in->postString('seo_titulo', 255, false);
+        $seoDescricao       = $in->postString('seo_descricao', 500, false);
+        $seoPalavrasChave   = $in->postString('seo_palavras_chave', 500, false);
+        $seoOgImage         = $in->postString('seo_og_image', 500, false);
+        $seoRobots          = $in->postEnum('seo_robots', ['index, follow', 'noindex, nofollow', 'noindex, follow', 'index, nofollow'], 'index, follow');
+        $seoGaId            = $in->postString('seo_google_analytics_id', 50, false);
+        $seoCanonicalBase   = $in->postUrl('seo_canonical_base', 255, false);
+        $seoSchemaType      = $in->postEnum('seo_schema_type', ['Organization', 'LocalBusiness', 'SoftwareApplication', 'WebSite'], 'Organization');
+
         if ($in->temErros()) {
             $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
                 'salvo' => false,
@@ -163,6 +180,14 @@ final class ConfiguracoesController
                 'trial_disco_gb'        => $trialDiscoGb > 0 ? (string) $trialDiscoGb : '20',
                 'trial_descricao'       => $trialDescricao,
                 'trial_label_cta'       => $trialLabelCta,
+                'seo_titulo'            => $seoTitulo,
+                'seo_descricao'         => $seoDescricao,
+                'seo_palavras_chave'    => $seoPalavrasChave,
+                'seo_og_image'          => $seoOgImage,
+                'seo_robots'            => $seoRobots,
+                'seo_google_analytics_id' => $seoGaId,
+                'seo_canonical_base'    => $seoCanonicalBase,
+                'seo_schema_type'       => $seoSchemaType,
             ]);
 
             return Resposta::html($html, 422);
@@ -215,6 +240,15 @@ final class ConfiguracoesController
         Settings::definir('trial.disco_gb',  $trialDiscoGb > 0 ? $trialDiscoGb : 20);
         Settings::definir('trial.descricao', $trialDescricao);
         Settings::definir('trial.label_cta', $trialLabelCta !== '' ? $trialLabelCta : 'Testar grátis');
+
+        Settings::definir('seo.titulo',              $seoTitulo);
+        Settings::definir('seo.descricao',           $seoDescricao);
+        Settings::definir('seo.palavras_chave',      $seoPalavrasChave);
+        Settings::definir('seo.og_image',            $seoOgImage);
+        Settings::definir('seo.robots',              $seoRobots);
+        Settings::definir('seo.google_analytics_id', $seoGaId);
+        Settings::definir('seo.canonical_base',      rtrim($seoCanonicalBase, '/'));
+        Settings::definir('seo.schema_type',         $seoSchemaType);
 
         $whatsLast4 = '';
         if ($whatsAdminNumero !== '') {
@@ -296,6 +330,14 @@ final class ConfiguracoesController
             'trial_disco_gb'        => (string) ($trialDiscoGb > 0 ? $trialDiscoGb : 20),
             'trial_descricao'       => $trialDescricao,
             'trial_label_cta'       => $trialLabelCta !== '' ? $trialLabelCta : 'Testar grátis',
+            'seo_titulo'            => $seoTitulo,
+            'seo_descricao'         => $seoDescricao,
+            'seo_palavras_chave'    => $seoPalavrasChave,
+            'seo_og_image'          => $seoOgImage,
+            'seo_robots'            => $seoRobots,
+            'seo_google_analytics_id' => $seoGaId,
+            'seo_canonical_base'    => $seoCanonicalBase,
+            'seo_schema_type'       => $seoSchemaType,
         ]);
 
         return Resposta::html($html);

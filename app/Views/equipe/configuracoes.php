@@ -262,6 +262,69 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <input class="input" type="text" name="trial_descricao" value="<?php echo View::e((string)($trial_descricao??'')); ?>" placeholder="Experimente gratuitamente por 7 dias, sem cartão de crédito." />
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">SEO & Indexação</h2>
+    <p class="texto" style="font-size:13px;">Configurações para o Google e outros buscadores indexarem corretamente o site público.</p>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Título padrão (tag &lt;title&gt;)</label>
+        <input class="input" type="text" name="seo_titulo" value="<?php echo View::e((string)($seo_titulo??'')); ?>" placeholder="<?php echo View::e(SistemaConfig::nome()); ?> — Infraestrutura Cloud" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Recomendado: 50–60 caracteres.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">URL canônica base</label>
+        <input class="input" type="text" name="seo_canonical_base" value="<?php echo View::e((string)($seo_canonical_base??'')); ?>" placeholder="https://seudominio.com" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Sem barra no final. Usado para gerar &lt;link rel="canonical"&gt;.</p>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Meta description</label>
+      <textarea class="input" name="seo_descricao" rows="3" style="resize:vertical;"><?php echo View::e((string)($seo_descricao??'')); ?></textarea>
+      <p class="texto" style="font-size:12px;margin-top:4px;">Recomendado: 120–160 caracteres. Exibida nos resultados do Google.</p>
+    </div>
+    <div class="grid" style="margin-top:12px;">
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Palavras-chave (keywords)</label>
+        <input class="input" type="text" name="seo_palavras_chave" value="<?php echo View::e((string)($seo_palavras_chave??'')); ?>" placeholder="vps, cloud, hospedagem, servidor" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Separadas por vírgula. Pouco impacto no Google, mas útil para outros buscadores.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Imagem Open Graph (og:image)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="input" type="text" name="seo_og_image" id="seo_og_image" value="<?php echo View::e((string)($seo_og_image??'')); ?>" placeholder="https://seudominio.com/og.png" style="flex:1;" />
+          <label class="botao sec" style="cursor:pointer;white-space:nowrap;padding:9px 14px;font-size:13px;" title="Fazer upload de imagem">
+            <input type="file" accept="image/*" style="display:none;" data-target="seo_og_image" class="img-upload-input" />
+            ↑ Upload
+          </label>
+        </div>
+        <p class="texto" style="font-size:12px;margin-top:4px;">Tamanho ideal: 1200×630px. Exibida ao compartilhar no WhatsApp, Twitter, etc.</p>
+        <?php if (!empty($seo_og_image)): ?>
+          <img src="<?php echo View::e((string)$seo_og_image); ?>" alt="preview og" style="margin-top:8px;max-height:60px;max-width:200px;border-radius:6px;border:1px solid #e2e8f0;" />
+        <?php endif; ?>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Robots (indexação)</label>
+        <select class="input" name="seo_robots">
+          <?php foreach (['index, follow' => 'Indexar e seguir links (padrão)', 'noindex, nofollow' => 'Não indexar, não seguir', 'noindex, follow' => 'Não indexar, seguir links', 'index, nofollow' => 'Indexar, não seguir links'] as $_v => $_l): ?>
+            <option value="<?php echo View::e($_v); ?>" <?php echo ((string)($seo_robots??'index, follow'))===$_v?'selected':''; ?>><?php echo View::e($_l); ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Google Analytics ID</label>
+        <input class="input" type="text" name="seo_google_analytics_id" value="<?php echo View::e((string)($seo_google_analytics_id??'')); ?>" placeholder="G-XXXXXXXXXX ou UA-XXXXXXXX-X" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Deixe em branco para não incluir o script do GA.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Schema.org — tipo da organização</label>
+        <select class="input" name="seo_schema_type">
+          <?php foreach (['Organization' => 'Organization (padrão)', 'LocalBusiness' => 'LocalBusiness', 'SoftwareApplication' => 'SoftwareApplication', 'WebSite' => 'WebSite'] as $_v => $_l): ?>
+            <option value="<?php echo View::e($_v); ?>" <?php echo ((string)($seo_schema_type??'Organization'))===$_v?'selected':''; ?>><?php echo View::e($_l); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="texto" style="font-size:12px;margin-top:4px;">Usado no JSON-LD para rich results no Google.</p>
+      </div>
+    </div>
+
     <div style="margin-top:20px;">
       <button class="botao" type="submit">Salvar</button>
     </div>

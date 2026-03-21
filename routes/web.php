@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use LRV\App\Controllers\InicialController;
 use LRV\App\Controllers\StatusController;
+use LRV\App\Controllers\SeoController;
 use LRV\App\Controllers\Cliente\CriarContaController;
 use LRV\App\Controllers\Cliente\EntrarController as ClienteEntrarController;
 use LRV\App\Controllers\Cliente\AssinarPlanoController;
@@ -60,6 +61,9 @@ use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaControlle
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
+
+$roteador->get('/robots.txt', [SeoController::class, 'robots']);
+$roteador->get('/sitemap.xml', [SeoController::class, 'sitemap']);
 
 $roteador->get('/status', [StatusController::class, 'index']);
 

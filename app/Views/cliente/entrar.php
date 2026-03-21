@@ -11,7 +11,7 @@ $_logo = SistemaConfig::logoUrl();
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Entrar — <?php echo View::e($_nome); ?></title>
+  <?php $seo_titulo = 'Entrar — ' . $_nome; $seo_noindex = true; require __DIR__ . '/../_partials/seo.php'; ?>
   <?php require __DIR__ . '/../_partials/estilo.php'; ?>
   <style>
     body{background:#060d1f;display:flex;min-height:100vh;}
