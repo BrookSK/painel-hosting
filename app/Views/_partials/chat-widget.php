@@ -213,7 +213,7 @@ function showScreen(name){
 document.querySelectorAll('.cw-opt[data-go]').forEach(function(btn){
   btn.addEventListener('click', function(){
     var go = this.dataset.go;
-    if(go==='email'){ window.location.href='mailto:suporte@'+location.hostname; return; }
+    if(go==='email'){ window.location.href='/contato'; return; }
     if(go==='ticket'){
       if(!LOGADO){ window.location.href='/cliente/entrar?redirect=/cliente/tickets/novo'; return; }
       window.location.href='/cliente/tickets/novo'; return;
@@ -333,7 +333,7 @@ var FLOW = {
       ? [{l:'💬 Iniciar chat', a:function(){ showScreen('live'); connectLive(''); }},
          {l:'🎫 Abrir ticket', a:function(){ window.location.href='/cliente/tickets/novo'; }}]
       : [{l:'🔑 Fazer login', a:function(){ window.location.href='/cliente/entrar?redirect=/cliente/chat'; }},
-         {l:'📧 Enviar e-mail', a:function(){ window.location.href='mailto:suporte@'+location.hostname; }}]
+         {l:'📧 Enviar e-mail', a:function(){ window.location.href='/contato'; }}]
   }
 };
 
@@ -342,7 +342,7 @@ function escalateMsgLogin(){
   setTimeout(function(){
     addBotOpts([
       {l:'🔑 Fazer login', a:function(){ window.location.href='/cliente/entrar?redirect=/cliente/chat'; }},
-      {l:'📧 Enviar e-mail', a:function(){ window.location.href='mailto:suporte@'+location.hostname; }},
+      {l:'📧 Enviar e-mail', a:function(){ window.location.href='/contato'; }},
       {l:'← Voltar', n:'start'}
     ]);
   }, 400);
