@@ -61,6 +61,7 @@ use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaControlle
 use LRV\App\Controllers\Equipe\SatisfacaoController;
 use LRV\App\Controllers\Cliente\AvaliacaoController;
 use LRV\App\Controllers\Cliente\MinhaContaController as ClienteMinhaContaController;
+use LRV\App\Controllers\Cliente\DoisFatoresController as ClienteDoisFatoresController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -262,6 +263,13 @@ $roteador->post('/cliente/reset-senha/salvar', [ClienteResetSenhaController::cla
 // Minha conta — cliente
 $roteador->get('/cliente/minha-conta', [ClienteMinhaContaController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/minha-conta/salvar', [ClienteMinhaContaController::class, 'salvar'], [Middlewares::exigirLoginCliente()]);
+
+// 2FA cliente
+$roteador->get('/cliente/2fa/configurar', [ClienteDoisFatoresController::class, 'configurar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/2fa/ativar', [ClienteDoisFatoresController::class, 'ativar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/2fa/desativar', [ClienteDoisFatoresController::class, 'desativar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 'formularioVerificar']);
+$roteador->post('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 'verificar'], [Middlewares::rateLimitIp('2fa_verify_cli', 10, 60)]);
 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);

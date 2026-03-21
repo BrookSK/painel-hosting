@@ -71,6 +71,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>Minha Conta</span>
     </a>
+    <a href="/cliente/2fa/configurar" class="nav-item<?php echo _nav_ativo_cli('/cliente/2fa', $_seg); ?>" data-tooltip="Segurança 2FA">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2l6 2.5V10c0 3.5-2.5 6.5-6 8-3.5-1.5-6-4.5-6-8V4.5L10 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span>Segurança</span>
+    </a>
     <a href="/cliente/sair" class="nav-item nav-item-danger" data-tooltip="Sair">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M13 10H3M13 10l-3-3M13 10l-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5H6a2 2 0 00-2 2v6a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>Sair</span>

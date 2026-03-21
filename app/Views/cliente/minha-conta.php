@@ -108,6 +108,15 @@ if (count($partes) >= 2) {
     </div>
   </div>
 
+  <!-- Segurança -->
+  <div class="card-new" style="margin-bottom:16px;">
+    <div class="card-new-title" style="margin-bottom:8px;">Segurança</div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:14px;line-height:1.5;">
+      Ative a autenticação em dois fatores (2FA) para proteger sua conta com uma camada extra de segurança.
+    </p>
+    <a href="/cliente/2fa/configurar" class="botao">Configurar 2FA</a>
+  </div>
+
   <!-- Endereço -->
   <div class="card-new">
     <div class="card-new-title">Endereço</div>
