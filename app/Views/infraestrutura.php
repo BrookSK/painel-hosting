@@ -52,7 +52,7 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 .navbar-drawer .drawer-actions a{border-bottom:none;text-align:center;font-weight:700}
 .navbar-drawer .drawer-actions .ghost{border:1.5px solid rgba(255,255,255,.25)}
 .navbar-drawer .drawer-actions .solid{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff}
-@media (max-width: 768px) { .navbar-links { display: none; } .navbar-btn.ghost { display: none; } .navbar-hamburger{display:flex} }
+@media (max-width: 768px) { .navbar-links { display: none; } .navbar-btn.ghost { display: none; } .navbar-btn.solid{display:none} .navbar-hamburger{display:flex} .navbar-actions .lang-dropdown{display:none} }
 </style>
 </head>
 <body>

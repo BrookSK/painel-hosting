@@ -26,21 +26,21 @@ if ($_hero_plano) {
 <?php require __DIR__ . '/_partials/estilo.php'; ?>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a;overflow-x:hidden}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a;overflow-x:hidden;max-width:100vw}
 a{text-decoration:none;color:inherit}
 
-/* ── Navbar (idêntico ao infraestrutura.php) ── */
-.navbar{position:sticky;top:0;z-index:100;background:rgba(11,28,61,.92);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.08);padding:0 24px}
-.navbar-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
-.navbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;flex-shrink:0}
-.navbar-brand img{height:30px;width:auto}
-.navbar-brand-name{font-size:16px;font-weight:700;letter-spacing:-.01em}
+/* ── Navbar ── */
+.navbar{position:sticky;top:0;z-index:100;background:rgba(11,28,61,.92);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.08);padding:0 16px}
+.navbar-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;gap:8px}
+.navbar-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;flex-shrink:0;min-width:0}
+.navbar-brand img{height:28px;width:auto;flex-shrink:0}
+.navbar-brand-name{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .navbar-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
 .navbar-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13.5px;font-weight:500;padding:6px 12px;border-radius:8px;transition:color .15s,background .15s}
 .navbar-links a:hover{color:#fff;background:rgba(255,255,255,.1)}
 .navbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.navbar-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s,transform .1s}
+.navbar-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s,transform .1s;white-space:nowrap}
 .navbar-btn:hover{opacity:.88;transform:translateY(-1px)}
 .navbar-btn.ghost{color:rgba(255,255,255,.85);border:1.5px solid rgba(255,255,255,.2)}
 .navbar-btn.solid{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff}
@@ -54,21 +54,28 @@ a{text-decoration:none;color:inherit}
 .navbar-drawer a{color:rgba(255,255,255,.8);font-size:16px;font-weight:500;padding:14px 16px;border-radius:10px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .15s,color .15s}
 .navbar-drawer a:hover{background:rgba(255,255,255,.08);color:#fff}
 .navbar-drawer .drawer-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
-.navbar-drawer .drawer-actions a{border-bottom:none;text-align:center;font-weight:700}
-.navbar-drawer .drawer-actions .ghost{border:1.5px solid rgba(255,255,255,.25)}
+.navbar-drawer .drawer-actions a{border-bottom:none;text-align:center;font-weight:700;padding:14px 16px;border-radius:10px}
+.navbar-drawer .drawer-actions .ghost{border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.85)}
 .navbar-drawer .drawer-actions .solid{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff}
-@media(max-width:768px){.navbar-links{display:none}.navbar-btn.ghost{display:none}.navbar-hamburger{display:flex}}
+@media(max-width:768px){
+  .navbar{padding:0 12px}
+  .navbar-links{display:none}
+  .navbar-btn.ghost{display:none}
+  .navbar-btn.solid{display:none}
+  .navbar-hamburger{display:flex}
+  .navbar-actions .lang-dropdown{display:none}
+}
 
 /* ── Hero split ── */
 .hero{background:linear-gradient(135deg,#060d1f 0%,#0B1C3D 30%,#1e3a8a 60%,#4F46E5 85%,#7C3AED 100%);position:relative;overflow:hidden;padding:80px 0}
 .hero__particles{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.15) 1px,transparent 1px),radial-gradient(circle,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px,96px 96px;background-position:0 0,24px 24px}
-.hero__glow{position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(124,58,237,.3) 0%,transparent 65%);top:-200px;right:-100px;pointer-events:none}
+.hero__glow{position:absolute;width:min(700px,100vw);height:min(700px,100vw);background:radial-gradient(circle,rgba(124,58,237,.3) 0%,transparent 65%);top:-200px;right:-100px;pointer-events:none}
 .hero__inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;max-width:1160px;margin:0 auto;padding:0 28px 80px}
 .hero__badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:5px 14px;border-radius:99px;margin-bottom:24px}
 .hero__badge-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.25);animation:pulse 2s ease infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(74,222,128,.25)}50%{box-shadow:0 0 0 6px rgba(74,222,128,.1)}}
 .hero__badge span{font-size:.73rem;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:.06em;text-transform:uppercase}
-.hero__title{font-size:clamp(2.4rem,4vw,3.8rem);font-weight:400;line-height:1.08;letter-spacing:-.02em;color:#fff;margin-bottom:22px}
+.hero__title{font-size:clamp(1.7rem,5vw,3.8rem);font-weight:400;line-height:1.1;letter-spacing:-.02em;color:#fff;margin-bottom:22px}
 .hero__title em{font-style:italic;color:#c4b5fd}
 .hero__subtitle{font-size:1rem;font-weight:300;color:rgba(255,255,255,.62);line-height:1.8;margin-bottom:36px;max-width:480px}
 .hero__actions{display:flex;gap:12px;flex-wrap:wrap}
@@ -99,13 +106,13 @@ a{text-decoration:none;color:inherit}
 .floater-icon--blue{background:#eef2ff}
 .floater__text strong{display:block;font-size:.8rem;color:#0f172a;font-weight:700}
 .floater__text span{font-size:.7rem;color:#475569}
-.hero__clients{max-width:1160px;margin:0 auto;padding:32px 28px 40px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1}
+.hero__clients{max-width:1160px;margin:0 auto;padding:32px 20px 40px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1}
 .hero__clients p{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:center;margin-bottom:20px}
-.clients-logos{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.clients-logos{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
 .clients-logos span{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.04em;transition:color .2s;cursor:default}
 .clients-logos span:hover{color:rgba(255,255,255,.6)}
 @media(max-width:900px){.hero__inner{grid-template-columns:1fr;padding:0 20px 60px}.hero__visual{display:none}}
-@media(max-width:480px){.hero{padding:60px 0}.hero__title{font-size:clamp(1.8rem,8vw,2.4rem)}.hero__subtitle{font-size:.9rem}.hero__badge span{font-size:.65rem}}
+@media(max-width:480px){.hero{padding:48px 0 0}.hero__title{font-size:clamp(1.5rem,7vw,1.9rem)}.hero__subtitle{font-size:.875rem}.hero__badge span{font-size:.62rem}.hero__actions{gap:8px}.hero-btn-p,.hero-btn-s{padding:11px 18px;font-size:.82rem}.hero__clients{padding:24px 16px 32px}.clients-logos{gap:16px}}
 
 /* ── Stats ── */
 .statsbar{background:#0f172a;padding:40px 0}
@@ -183,7 +190,6 @@ a{text-decoration:none;color:inherit}
     <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()">Contratar Agora</a>
   </div>
 </div>
-
 <!-- HERO -->
 <section class="hero">
   <div class="hero__particles"></div>
@@ -316,6 +322,7 @@ a{text-decoration:none;color:inherit}
 .carousel-wrapper{overflow:hidden;width:100%;padding-top:20px;margin-top:-20px}
 .carousel-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);gap:24px}
 .plan-card{background:#fff;border:2px solid #e2e8f0;border-radius:16px;padding:36px 28px;flex:0 0 calc(50% - 12px);min-width:0;position:relative;transition:all .3s;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,.06);overflow:visible}
+@media(max-width:640px){.plan-card{flex:0 0 calc(100% - 0px);padding:28px 20px}}
 .plan-card:hover{transform:translateY(-8px);box-shadow:0 12px 32px rgba(79,70,229,.15);border-color:#6366f1}
 .plan-badge{position:absolute;top:-10px;right:20px;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;padding:6px 14px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;z-index:10;box-shadow:0 2px 8px rgba(79,70,229,.3)}
 .plan-name{font-size:26px;font-weight:900;color:#0f172a;margin-bottom:10px;line-height:1.1}
