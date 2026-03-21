@@ -28,29 +28,21 @@ $incidentes = is_array($incidentes ?? ($incidents ?? null)) ? ($incidentes ?? $i
 $pagina     = (int) ($pagina ?? 1);
 $totalPags  = (int) ($totalPaginas ?? 1);
 
+$_topo_links = [
+    ['href' => '/status', 'label' => 'Status atual'],
+];
+
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Histórico de incidentes</title>
+  <title>Histórico de incidentes — <?php echo View::e(\LRV\Core\SistemaConfig::nome()); ?></title>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
 </head>
 <body>
-  <div class="topo">
-    <div class="conteudo linha" style="justify-content:space-between;">
-      <div>
-        <div style="font-size:18px;font-weight:700;">Histórico de incidentes</div>
-        <div style="opacity:.9; font-size:13px;">Todos os incidentes registrados</div>
-      </div>
-      <div class="linha">
-        <?php require __DIR__ . '/_partials/idioma.php'; ?>
-        <a href="/status">Status atual</a>
-        <a href="/">Início</a>
-      </div>
-    </div>
-  </div>
+  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
 
   <div class="conteudo">
     <?php if (empty($incidentes)): ?>
@@ -98,5 +90,7 @@ $totalPags  = (int) ($totalPaginas ?? 1);
       <?php endif; ?>
     <?php endif; ?>
   </div>
+
+  <?php require __DIR__ . '/_partials/footer.php'; ?>
 </body>
 </html>

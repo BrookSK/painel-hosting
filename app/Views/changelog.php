@@ -1,13 +1,18 @@
 <?php declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
+use LRV\Core\SistemaConfig;
+$_topo_links = [
+    ['href' => '/status',  'label' => 'Status'],
+    ['href' => '/contato', 'label' => 'Contato'],
+];
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Changelog — <?php echo View::e($nome_sistema ?? 'LRV Cloud Manager'); ?></title>
+  <title>Changelog — <?php echo View::e($nome_sistema ?? SistemaConfig::nome()); ?></title>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>
     .changelog-body{max-width:780px;margin:0 auto;padding:32px 18px 48px;}
@@ -22,16 +27,7 @@ use LRV\Core\I18n;
   </style>
 </head>
 <body>
-  <div class="topo">
-    <div class="conteudo linha" style="justify-content:space-between;">
-      <div style="font-size:18px;font-weight:700;"><?php echo View::e($nome_sistema ?? 'LRV Cloud Manager'); ?></div>
-      <div class="linha">
-        <a href="/">Início</a>
-        <a href="/status">Status</a>
-        <a href="/contato">Contato</a>
-      </div>
-    </div>
-  </div>
+  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
 
   <div class="changelog-body">
     <?php echo $conteudo_html ?? ''; ?>

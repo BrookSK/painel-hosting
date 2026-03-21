@@ -4,34 +4,26 @@ declare(strict_types=1);
 
 use LRV\Core\View;
 use LRV\Core\I18n;
+use LRV\Core\SistemaConfig;
 
+$_topo_links = [
+    ['href' => '/status',         'label' => 'Status'],
+    ['href' => '/cliente/entrar', 'label' => 'Cliente'],
+];
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Contato</title>
+  <title>Contato — <?php echo View::e(SistemaConfig::nome()); ?></title>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
 </head>
 <body>
-  <div class="topo">
-    <div class="conteudo linha" style="justify-content:space-between;">
-      <div>
-        <div style="font-size:18px;font-weight:700;">Contato</div>
-        <div style="opacity:.9; font-size:13px;">Fale conosco</div>
-      </div>
-      <div class="linha">
-        <?php require __DIR__ . '/_partials/idioma.php'; ?>
-        <a href="/">Início</a>
-        <a href="/status">Status</a>
-        <a href="/cliente/entrar">Cliente</a>
-      </div>
-    </div>
-  </div>
+  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
 
   <div class="conteudo">
-    <div class="card" style="max-width:600px; margin:0 auto;">
+    <div class="card" style="max-width:600px;margin:40px auto 0;">
       <h1 class="titulo">Enviar mensagem</h1>
 
       <?php if (!empty($ok)): ?>
@@ -73,5 +65,7 @@ use LRV\Core\I18n;
       <?php endif; ?>
     </div>
   </div>
+
+  <?php require __DIR__ . '/_partials/footer.php'; ?>
 </body>
 </html>

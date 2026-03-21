@@ -79,13 +79,19 @@ foreach ($servicesArr as $s) {
     }
 }
 
+$_topo_links = [
+    ['href' => '/status/incidentes', 'label' => 'Histórico'],
+    ['href' => '/cliente/entrar',    'label' => 'Cliente'],
+    ['href' => '/equipe/entrar',     'label' => 'Equipe'],
+];
+
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Status</title>
+  <title>Status — <?php echo View::e(\LRV\Core\SistemaConfig::nome()); ?></title>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>
     .bar{display:flex; gap:4px; flex-wrap:nowrap;}
@@ -93,19 +99,7 @@ foreach ($servicesArr as $s) {
   </style>
 </head>
 <body>
-  <div class="topo">
-    <div class="conteudo linha" style="justify-content:space-between;">
-      <div>
-        <div style="font-size:18px;font-weight:700;">Status</div>
-        <div style="opacity:.9; font-size:13px;">Página pública de disponibilidade</div>
-      </div>
-      <div class="linha">
-        <?php require __DIR__ . '/_partials/idioma.php'; ?>
-        <a href="/cliente/entrar">Cliente</a>
-        <a href="/equipe/entrar">Equipe</a>
-      </div>
-    </div>
-  </div>
+  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
 
   <div class="conteudo">
     <div class="card" style="margin-bottom:14px;">
@@ -241,5 +235,7 @@ foreach ($servicesArr as $s) {
       try { window.location.reload(); } catch(e) {}
     }, 30000);
   </script>
+
+  <?php require __DIR__ . '/_partials/footer.php'; ?>
 </body>
 </html>
