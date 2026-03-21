@@ -49,6 +49,7 @@ use LRV\App\Controllers\Cliente\ChatController as ClienteChatController;
 use LRV\App\Controllers\Cliente\EmailController as ClienteEmailController;
 use LRV\App\Controllers\Cliente\DominiosEmailController as ClienteDominiosEmailController;
 use LRV\App\Controllers\Equipe\ChatController as EquipeChatController;
+use LRV\App\Controllers\Equipe\EmailsController as EquipeEmailsController;
 use LRV\App\Controllers\LegalController;
 use LRV\App\Controllers\ChangelogController;
 use LRV\Core\Middlewares;
@@ -193,6 +194,11 @@ $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::
 // Chat cliente
 $roteador->get('/cliente/chat', [ClienteChatController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
+
+// E-mails equipe (visão administrativa)
+$roteador->get('/equipe/emails', [EquipeEmailsController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/emails/remover-email', [EquipeEmailsController::class, 'removerEmail'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/emails/remover-dominio', [EquipeEmailsController::class, 'removerDominio'], [Middlewares::exigirPermissao('manage_users')]);
 
 // Chat equipe
 $roteador->get('/equipe/chat', [EquipeChatController::class, 'listar'], [Middlewares::exigirPermissao('view_tickets')]);
