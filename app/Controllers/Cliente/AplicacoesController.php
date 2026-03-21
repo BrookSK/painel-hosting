@@ -20,6 +20,10 @@ final class AplicacoesController
         }
 
         $pdo = BancoDeDados::pdo();
+        $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = :id LIMIT 1');
+        $cStmt->execute([':id' => $clienteId]);
+        $cliente = $cStmt->fetch() ?: ['name' => 'Cliente', 'email' => ''];
+
         $stmt = $pdo->prepare(
             'SELECT a.id, a.vps_id, a.type, a.domain, a.port, a.status, a.repository,
                     a.template_id, a.container_id, a.created_at,
@@ -35,7 +39,7 @@ final class AplicacoesController
 
         return Resposta::html(View::renderizar(
             __DIR__ . '/../../Views/cliente/aplicacoes-listar.php',
-            ['aplicacoes' => $aplicacoes]
+            ['aplicacoes' => $aplicacoes, 'cliente' => $cliente]
         ));
     }
 
@@ -54,9 +58,13 @@ final class AplicacoesController
         $vpsStmt->execute([':c' => $clienteId]);
         $vpsList = $vpsStmt->fetchAll() ?: [];
 
+        $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = :id LIMIT 1');
+        $cStmt->execute([':id' => $clienteId]);
+        $cliente = $cStmt->fetch() ?: ['name' => 'Cliente', 'email' => ''];
+
         return Resposta::html(View::renderizar(
             __DIR__ . '/../../Views/cliente/aplicacoes-catalogo.php',
-            ['templates' => $templates, 'vpsList' => $vpsList]
+            ['templates' => $templates, 'vpsList' => $vpsList, 'cliente' => $cliente]
         ));
     }
 
