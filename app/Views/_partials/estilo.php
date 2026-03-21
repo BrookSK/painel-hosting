@@ -127,9 +127,3 @@ tr:hover td{background:#fafafa;}
   .card-header{flex-direction:column;align-items:flex-start;}
 }
 </style>
-<?php
-// Widget de suporte flutuante — só em páginas do cliente logado
-if (\LRV\Core\Auth::clienteId() !== null) {
-    require __DIR__ . '/chat-widget.php';
-}
-?>

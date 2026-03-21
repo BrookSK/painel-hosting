@@ -192,6 +192,7 @@ if ($_initials === '') $_initials = 'U';
   </div>
 </div>
 
+<?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 <?php if (!$onboardingDone): ?>
 <div class="modal-overlay" id="onboardingModal" style="display:none;">
   <div class="modal-box">

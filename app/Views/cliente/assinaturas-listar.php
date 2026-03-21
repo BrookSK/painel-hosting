@@ -146,6 +146,8 @@ function badgeStatusCobranca(string $st): string
     <?php endif; ?>
   </div>
 
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
+
   <!-- Modais de reembolso -->
   <?php foreach (($assinaturas ?? []) as $a): ?>
     <div id="modal-reembolso-<?php echo (int) ($a['id'] ?? 0); ?>"

@@ -135,6 +135,7 @@ use LRV\Core\I18n;
       </div>
     </div>
   </div>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
   <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

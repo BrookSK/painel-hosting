@@ -207,5 +207,6 @@ $incidentServicesMap = is_array($incidentServices ?? null) ? $incidentServices :
       try { window.location.reload(); } catch(e) {}
     }, 30000);
   </script>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>

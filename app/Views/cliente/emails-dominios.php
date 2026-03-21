@@ -144,5 +144,6 @@ function badgeDominio(string $status): string
   </div>
 
   <?php require __DIR__ . '/../_partials/footer.php'; ?>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>

@@ -131,5 +131,6 @@ function badgePrioridadeTicket(string $p): string
       <?php endif; ?>
     </div>
   </div>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>

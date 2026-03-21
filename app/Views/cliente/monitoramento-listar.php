@@ -77,5 +77,6 @@ function fmtPctCli($v): string
       </div>
     </div>
   </div>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>

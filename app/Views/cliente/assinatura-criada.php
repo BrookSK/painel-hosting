@@ -68,5 +68,6 @@ if (is_array($primeira)) {
       <?php endif; ?>
     </div>
   </div>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>

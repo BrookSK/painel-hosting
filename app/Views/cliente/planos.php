@@ -115,5 +115,6 @@ function gb(int $mb): string {
       <?php endif; ?>
     </div>
   </div>
+  <?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>
