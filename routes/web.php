@@ -58,6 +58,8 @@ use LRV\App\Controllers\Equipe\ErrosController;
 use LRV\App\Controllers\Equipe\MinhaContaController;
 use LRV\App\Controllers\Equipe\ClientesController;
 use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaController;
+use LRV\App\Controllers\Equipe\SatisfacaoController;
+use LRV\App\Controllers\Cliente\AvaliacaoController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -267,3 +269,8 @@ $roteador->get('/equipe/erros/ver', [ErrosController::class, 'ver'], [Middleware
 $roteador->post('/equipe/erros/resolver', [ErrosController::class, 'resolver'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/erros/excluir', [ErrosController::class, 'excluir'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/erros/limpar-resolvidos', [ErrosController::class, 'limparResolvidos'], [Middlewares::exigirPermissao('manage_servers')]);
+
+// Satisfação / avaliações
+$roteador->get('/equipe/satisfacao', [SatisfacaoController::class, 'index'], [Middlewares::exigirPermissao('view_tickets')]);
+$roteador->get('/cliente/avaliar', [AvaliacaoController::class, 'formulario'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/avaliar', [AvaliacaoController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('avaliacao', 10, 60)]);

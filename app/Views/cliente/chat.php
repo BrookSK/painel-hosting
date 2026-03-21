@@ -43,16 +43,40 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
 
 <div class="conteudo">
   <div class="card">
+    <?php if ((string)($room['status'] ?? '') === 'closed'): ?>
+      <div class="texto" style="margin-bottom:16px;">Este chat foi encerrado.</div>
+      <?php
+        $_jaAvaliou = false;
+        try {
+            $_pdo = \LRV\Core\BancoDeDados::pdo();
+            $_s = $_pdo->prepare('SELECT id FROM satisfaction_surveys WHERE type = :t AND reference_id = :r LIMIT 1');
+            $_s->execute([':t' => 'chat', ':r' => $roomId]);
+            $_jaAvaliou = (bool)$_s->fetch();
+        } catch (\Throwable) {}
+      ?>
+      <?php if (!$_jaAvaliou): ?>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div style="font-weight:600;font-size:14px;color:#166534;margin-bottom:4px;">Como foi o atendimento?</div>
+          <p style="font-size:13px;color:#15803d;margin:0 0 12px;">Avalie este chat e nos ajude a melhorar.</p>
+          <a href="/cliente/avaliar?type=chat&id=<?php echo $roomId; ?>" class="botao" style="font-size:13px;padding:8px 18px;">Avaliar atendimento ★</a>
+        </div>
+      <?php else: ?>
+        <div style="font-size:13px;color:#16a34a;margin-bottom:16px;">✓ Você já avaliou este atendimento. Obrigado!</div>
+      <?php endif; ?>
+      <a href="/cliente/painel" class="botao sec">Voltar ao painel</a>
+    <?php else: ?>
     <div id="chat-status"><span class="dot-pending"></span> Conectando...</div>
     <div id="chat-box"></div>
     <div id="chat-input-area">
       <textarea id="chat-input" placeholder="Digite sua mensagem..." disabled></textarea>
       <button class="botao" id="btn-enviar" disabled>Enviar</button>
     </div>
+    <?php endif; ?>
   </div>
 </div>
 
 <script>
+<?php if ((string)($room['status'] ?? '') !== 'closed'): ?>
 (function(){
   const roomId  = <?php echo $roomId; ?>;
   const wsPort  = <?php echo $wsPort; ?>;
@@ -154,6 +178,7 @@ $wsPort = (int) Settings::obter('chat.ws_port', '8082');
 
   connect();
 })();
+<?php endif; ?>
 </script>
 <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>

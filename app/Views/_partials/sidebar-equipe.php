@@ -77,6 +77,11 @@ function _nav_ativo(string $path, string $uri): string {
       <span>Chat</span>
     </a>
 
+    <a href="/equipe/satisfacao" class="nav-item<?php echo _nav_ativo('/equipe/satisfacao', $_seg); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M7 11s1 2 3 2 3-2 3-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="7.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12.5" cy="8.5" r="1" fill="currentColor"/></svg>
+      <span>Satisfação</span>
+    </a>
+
     <div class="sidebar-section-label" style="margin-top:8px;">Operações</div>
 
     <a href="/equipe/jobs" class="nav-item<?php echo _nav_ativo('/equipe/jobs', $_seg); ?>">

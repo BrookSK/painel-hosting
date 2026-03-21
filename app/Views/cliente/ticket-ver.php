@@ -101,7 +101,26 @@ function badgePrioridadeTicket(string $p): string
       <?php endif; ?>
 
       <?php if ($st === 'closed'): ?>
-        <div class="texto" style="margin:0;">Este ticket está fechado.</div>
+        <div class="texto" style="margin:0 0 16px;">Este ticket está fechado.</div>
+        <?php
+          // Verificar se já avaliou
+          $_jaAvaliou = false;
+          try {
+              $_pdo = \LRV\Core\BancoDeDados::pdo();
+              $_s = $_pdo->prepare('SELECT id FROM satisfaction_surveys WHERE type = :t AND reference_id = :r LIMIT 1');
+              $_s->execute([':t' => 'ticket', ':r' => (int)($ticket['id']??0)]);
+              $_jaAvaliou = (bool)$_s->fetch();
+          } catch (\Throwable) {}
+        ?>
+        <?php if (!$_jaAvaliou): ?>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;">
+            <div style="font-weight:600;font-size:14px;color:#166534;margin-bottom:4px;">Como foi o atendimento?</div>
+            <p style="font-size:13px;color:#15803d;margin:0 0 12px;">Avalie este ticket e nos ajude a melhorar.</p>
+            <a href="/cliente/avaliar?type=ticket&id=<?php echo (int)($ticket['id']??0); ?>" class="botao" style="font-size:13px;padding:8px 18px;">Avaliar atendimento ★</a>
+          </div>
+        <?php else: ?>
+          <div style="font-size:13px;color:#16a34a;">✓ Você já avaliou este atendimento. Obrigado!</div>
+        <?php endif; ?>
       <?php else: ?>
         <form method="post" action="/cliente/tickets/responder">
           <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
