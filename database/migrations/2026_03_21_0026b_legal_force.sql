@@ -1,5 +1,5 @@
--- Migration: 0026 — Textos padrão para Termos de Uso e Política de Privacidade
--- Usa UPDATE condicional: só preenche se o campo estiver vazio ou NULL.
+-- Migration: 0026b — Força os textos completos de Termos e Privacidade
+-- Sobrescreve o placeholder gerado automaticamente pelo sistema de inicialização.
 
 UPDATE settings SET `value` = '<h1>Termos de Uso</h1>
 <p class="legal-meta">Versão 1.0 &nbsp;·&nbsp; Vigência: a partir de 21 de março de 2026 &nbsp;·&nbsp; LRV Web / LRV Cloud &nbsp;·&nbsp; São José do Rio Preto — SP, Brasil</p>
@@ -45,7 +45,7 @@ UPDATE settings SET `value` = '<h1>Termos de Uso</h1>
 <h2>11. Lei Aplicável e Foro</h2>
 <p>Estes Termos são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da Comarca de São José do Rio Preto — SP.</p>
 <div style="margin-top:36px;padding-top:24px;border-top:1px solid #f1f5f9;font-size:13px;color:#94a3b8;text-align:center;">Dúvidas? Entre em <a href="/contato">contato</a>.</div>'
-WHERE `key` = 'legal.terms_html' AND (TRIM(`value`) = '' OR `value` IS NULL);
+WHERE `key` = 'legal.terms_html';
 
 UPDATE settings SET `value` = '<h1>Política de Privacidade</h1>
 <p class="legal-meta">Versão 1.0 &nbsp;·&nbsp; Vigência: a partir de 21 de março de 2026 &nbsp;·&nbsp; LRV Web / LRV Cloud &nbsp;·&nbsp; São José do Rio Preto — SP, Brasil</p>
@@ -89,4 +89,4 @@ UPDATE settings SET `value` = '<h1>Política de Privacidade</h1>
 <h2>10. Alterações</h2>
 <p>Esta Política pode ser atualizada a qualquer momento. Versão vigente em <a href="/privacidade">/privacidade</a>.</p>
 <div style="margin-top:36px;padding-top:24px;border-top:1px solid #f1f5f9;font-size:13px;color:#94a3b8;text-align:center;">Dúvidas? Entre em <a href="/contato">contato</a>.</div>'
-WHERE `key` = 'legal.privacy_html' AND (TRIM(`value`) = '' OR `value` IS NULL);
+WHERE `key` = 'legal.privacy_html';

@@ -191,6 +191,12 @@ a{text-decoration:none;color:inherit}
   </div>
 </div>
 <!-- HERO -->
+<?php
+$_trial_ativo = !empty($trial_ativo);
+$_trial_label = (string)($trial_label ?? 'Testar grátis');
+$_trial_desc  = (string)($trial_desc ?? '');
+$_trial_dias  = (int)($trial_dias ?? 7);
+?>
 <section class="hero">
   <div class="hero__particles"></div>
   <div class="hero__glow"></div>
@@ -198,13 +204,25 @@ a{text-decoration:none;color:inherit}
     <div class="hero__text">
       <div class="hero__badge">
         <div class="hero__badge-dot"></div>
-        <span>Servidores disponíveis agora</span>
+        <?php if ($_trial_ativo): ?>
+          <span>Teste grátis por <?php echo $_trial_dias; ?> dias disponível</span>
+        <?php else: ?>
+          <span>Servidores disponíveis agora</span>
+        <?php endif; ?>
       </div>
       <h1 class="hero__title">Infraestrutura VPS para<br><em>escalar seu negócio</em></h1>
       <p class="hero__subtitle">Servidores VPS com recursos dedicados, proteção DDoS nativa, uptime 99,9% e suporte técnico — ativação em até 6 dias úteis.</p>
+      <?php if ($_trial_ativo && $_trial_desc !== ''): ?>
+        <p style="font-size:.85rem;color:#a5b4fc;margin-bottom:20px;margin-top:-8px;"><?php echo View::e($_trial_desc); ?></p>
+      <?php endif; ?>
       <div class="hero__actions">
-        <a href="#planos" class="hero-btn-p">Ver Planos e Preços</a>
-        <a href="#sobre" class="hero-btn-s">Saiba mais</a>
+        <?php if ($_trial_ativo): ?>
+          <a href="/cliente/criar-conta" class="hero-btn-p"><?php echo View::e($_trial_label); ?></a>
+          <a href="#planos" class="hero-btn-s">Ver planos</a>
+        <?php else: ?>
+          <a href="#planos" class="hero-btn-p">Ver Planos e Preços</a>
+          <a href="#sobre" class="hero-btn-s">Saiba mais</a>
+        <?php endif; ?>
       </div>
     </div>
     <div class="hero__visual">
@@ -580,12 +598,21 @@ a{text-decoration:none;color:inherit}
 <section class="cta-final" id="contato">
   <div class="cta-final-inner">
     <span style="display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c4b5fd;margin-bottom:14px">Pronto para começar?</span>
-    <h2 class="cta-title">Ative seu servidor em<br><em>até 6 dias úteis</em></h2>
-    <p class="cta-sub">Entre em contato agora e receba uma proposta personalizada. Nossa equipe técnica está pronta para atender você.</p>
-    <div class="cta-btns">
-      <a href="/contato" class="cta-btn-p">✉️ Solicitar Proposta por E-mail</a>
-      <a href="/contato" class="cta-btn-s">💬 Falar com Consultor</a>
-    </div>
+    <?php if ($_trial_ativo): ?>
+      <h2 class="cta-title">Comece seu teste grátis<br><em>agora mesmo</em></h2>
+      <p class="cta-sub"><?php echo $_trial_desc !== '' ? View::e($_trial_desc) : 'Crie sua conta e experimente a plataforma gratuitamente por ' . $_trial_dias . ' dias, sem cartão de crédito.'; ?></p>
+      <div class="cta-btns">
+        <a href="/cliente/criar-conta" class="cta-btn-p"><?php echo View::e($_trial_label); ?></a>
+        <a href="/contato" class="cta-btn-s">💬 Falar com a equipe</a>
+      </div>
+    <?php else: ?>
+      <h2 class="cta-title">Ative seu servidor em<br><em>até 6 dias úteis</em></h2>
+      <p class="cta-sub">Entre em contato agora e receba uma proposta personalizada. Nossa equipe técnica está pronta para atender você.</p>
+      <div class="cta-btns">
+        <a href="/contato" class="cta-btn-p">✉️ Solicitar Proposta por E-mail</a>
+        <a href="/contato" class="cta-btn-s">💬 Falar com Consultor</a>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
