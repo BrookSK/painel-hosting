@@ -41,4 +41,25 @@ final class ChatController
 
         return Resposta::json(['ok' => true, 'token' => $token, 'room_id' => (int) $room['id']]);
     }
+
+    public function historico(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+        }
+
+        $pdo  = \LRV\Core\BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            "SELECT r.id, r.status, r.created_at, r.updated_at,
+                    (SELECT COUNT(*) FROM chat_messages m WHERE m.room_id = r.id) AS total_messages
+             FROM chat_rooms r
+             WHERE r.client_id = :c
+             ORDER BY r.id DESC LIMIT 20"
+        );
+        $stmt->execute([':c' => $clienteId]);
+        $rooms = $stmt->fetchAll();
+
+        return Resposta::json(['ok' => true, 'rooms' => is_array($rooms) ? $rooms : []]);
+    }
 }

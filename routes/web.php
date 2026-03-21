@@ -224,6 +224,7 @@ $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::
 // Chat cliente
 $roteador->get('/cliente/chat', [ClienteChatController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
+$roteador->get('/cliente/chat/historico', [ClienteChatController::class, 'historico'], [Middlewares::exigirLoginCliente()]);
 
 // E-mails equipe (visão administrativa)
 $roteador->get('/equipe/emails', [EquipeEmailsController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);
