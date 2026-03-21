@@ -110,6 +110,26 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <input type="hidden" name="specs_json" id="specs_json_hidden" value="<?php echo View::e($specsRaw); ?>" />
     </div>
 
+    <div style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#0f172a;">Serviços adicionais</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Exibidos na landing page como opções extras ao contratar o plano (ex: Backup, Suporte WhatsApp)</div>
+        </div>
+        <button type="button" id="btn-add-addon" class="botao" style="font-size:12px;padding:6px 14px;">+ Adicionar</button>
+      </div>
+      <div id="addons-lista" style="display:flex;flex-direction:column;gap:10px;">
+        <?php foreach (($addons ?? []) as $_a): ?>
+        <div class="addon-row" style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+          <input class="input" type="text" name="addon_name[]" placeholder="Nome (ex: Backup)" value="<?php echo View::e((string)($_a['name']??'')); ?>" style="margin:0;" />
+          <input class="input" type="text" name="addon_desc[]" placeholder="Descrição curta" value="<?php echo View::e((string)($_a['description']??'')); ?>" style="margin:0;" />
+          <input class="input" type="number" name="addon_price[]" placeholder="Preço R$" value="<?php echo View::e((string)($_a['price']??'0')); ?>" step="0.01" min="0" style="margin:0;width:110px;" />
+          <button type="button" onclick="this.closest('.addon-row').remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:20px;line-height:1;padding:4px 6px;">×</button>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
     <div style="margin-top:14px;">
       <button class="botao" type="submit">Salvar</button>
     </div>
@@ -165,6 +185,19 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       + '<input class="input" type="text" placeholder="Valor (ex: 1TB)" style="flex:1;" />'
       + '<button type="button" onclick="this.closest(\'.specs-row\').remove();atualizarSpecsJson()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button>';
     document.getElementById('specs-lista').appendChild(div);
+    div.querySelector('input').focus();
+  });
+
+  // Adicionar addon
+  document.getElementById('btn-add-addon').addEventListener('click', function() {
+    var div = document.createElement('div');
+    div.className = 'addon-row';
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;';
+    div.innerHTML = '<input class="input" type="text" name="addon_name[]" placeholder="Nome (ex: Backup)" style="margin:0;" />'
+      + '<input class="input" type="text" name="addon_desc[]" placeholder="Descrição curta" style="margin:0;" />'
+      + '<input class="input" type="number" name="addon_price[]" placeholder="Preço R$" value="0" step="0.01" min="0" style="margin:0;width:110px;" />'
+      + '<button type="button" onclick="this.closest(\'.addon-row\').remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:20px;line-height:1;padding:4px 6px;">×</button>';
+    document.getElementById('addons-lista').appendChild(div);
     div.querySelector('input').focus();
   });
 

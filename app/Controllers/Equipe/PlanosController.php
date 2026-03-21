@@ -29,6 +29,7 @@ final class PlanosController
     {
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/plano-editar.php', [
             'erro' => '',
+            'addons' => [],
             'plano' => [
                 'id' => null,
                 'name' => '',
@@ -61,9 +62,12 @@ final class PlanosController
             return Resposta::texto('Plano não encontrado.', 404);
         }
 
+        $addons = $this->buscarAddons($pdo, $id);
+
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/plano-editar.php', [
             'erro' => '',
             'plano' => $plano,
+            'addons' => $addons,
         ]);
 
         return Resposta::html($html);
@@ -148,6 +152,22 @@ final class PlanosController
             }
         }
 
+        // Salvar addons
+        if ($auditId > 0) {
+            $addonsRaw = [];
+            $addonNames = (array)($req->post['addon_name'] ?? []);
+            $addonDescs = (array)($req->post['addon_desc'] ?? []);
+            $addonPrices = (array)($req->post['addon_price'] ?? []);
+            foreach ($addonNames as $i => $an) {
+                $addonsRaw[] = [
+                    'name'        => $an,
+                    'description' => $addonDescs[$i] ?? '',
+                    'price'       => $addonPrices[$i] ?? 0,
+                ];
+            }
+            $this->salvarAddons($pdo, $auditId, $addonsRaw);
+        }
+
         (new AuditLogService())->registrar(
             'team',
             \LRV\Core\Auth::equipeId(),
@@ -169,6 +189,36 @@ final class PlanosController
         );
 
         return Resposta::redirecionar('/equipe/planos');
+    }
+
+    private function buscarAddons(\PDO $pdo, int $planId): array
+    {
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM plan_addons WHERE plan_id = :pid ORDER BY sort_order ASC, id ASC');
+            $stmt->execute([':pid' => $planId]);
+            return $stmt->fetchAll() ?: [];
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function salvarAddons(\PDO $pdo, int $planId, array $addonsRaw): void
+    {
+        try {
+            $pdo->prepare('DELETE FROM plan_addons WHERE plan_id = :pid')->execute([':pid' => $planId]);
+            $ins = $pdo->prepare('INSERT INTO plan_addons (plan_id, name, description, price, sort_order, active) VALUES (:pid,:n,:d,:p,:s,1)');
+            foreach ($addonsRaw as $i => $a) {
+                $name = trim((string)($a['name'] ?? ''));
+                if ($name === '') continue;
+                $ins->execute([
+                    ':pid' => $planId,
+                    ':n'   => $name,
+                    ':d'   => trim((string)($a['description'] ?? '')) ?: null,
+                    ':p'   => (float)($a['price'] ?? 0),
+                    ':s'   => $i,
+                ]);
+            }
+        } catch (\Throwable) {}
     }
 
     private function renderizarErro(int $id, string $nome, string $desc, int $cpu, int $ram, int $storage, string $preco, string $specs, string $supportChannels, string $status, string $erro): Resposta

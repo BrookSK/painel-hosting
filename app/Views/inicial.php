@@ -142,18 +142,35 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 .lp-plans-wrap { position: relative; }
 .lp-plans-scroll { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; scrollbar-width: none; }
 .lp-plans-scroll::-webkit-scrollbar { display: none; }
-.lp-plan-card { flex: 0 0 300px; scroll-snap-align: start; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; position: relative; transition: border-color .2s, box-shadow .2s; }
+.lp-plan-card { flex: 0 0 320px; scroll-snap-align: start; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; position: relative; transition: border-color .2s, box-shadow .2s; }
 .lp-plan-card:hover { border-color: #7C3AED; box-shadow: 0 8px 32px rgba(124,58,237,.12); }
 .lp-plan-card.destaque { border-color: #4F46E5; box-shadow: 0 8px 32px rgba(79,70,229,.18); }
 .lp-plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; white-space: nowrap; }
 .lp-plan-name { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
 .lp-plan-desc { font-size: 13px; color: #64748b; margin-bottom: 18px; line-height: 1.5; }
-.lp-plan-price { font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; margin-bottom: 4px; }
+.lp-plan-price-row { margin-bottom: 4px; }
+.lp-plan-price { font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; }
 .lp-plan-price span { font-size: 16px; font-weight: 500; color: #64748b; }
 .lp-plan-cycle { font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
-.lp-plan-specs { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 9px; }
+.lp-plan-specs { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 9px; }
 .lp-plan-specs li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: #334155; }
 .lp-plan-specs li svg { flex-shrink: 0; color: #7C3AED; }
+/* addons */
+.lp-plan-addons { border-top: 1px solid #f1f5f9; padding-top: 16px; margin-bottom: 20px; }
+.lp-plan-addons-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 10px; }
+.lp-addon-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f8fafc; cursor: pointer; }
+.lp-addon-row:last-child { border-bottom: none; }
+.lp-addon-check { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #cbd5e1; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s, border-color .15s; }
+.lp-addon-row.checked .lp-addon-check { background: #4F46E5; border-color: #4F46E5; }
+.lp-addon-row.checked .lp-addon-check::after { content: ''; display: block; width: 10px; height: 7px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px,-1px); }
+.lp-addon-info { flex: 1; }
+.lp-addon-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+.lp-addon-desc { font-size: 11px; color: #94a3b8; }
+.lp-addon-price { font-size: 13px; font-weight: 700; color: #4F46E5; white-space: nowrap; }
+/* total dinâmico */
+.lp-plan-total { background: #f8fafc; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.lp-plan-total-label { font-size: 12px; color: #64748b; font-weight: 600; }
+.lp-plan-total-val { font-size: 18px; font-weight: 900; color: #0f172a; }
 .lp-plan-cta { margin-top: auto; }
 .lp-plan-empty { text-align: center; padding: 48px 24px; color: #94a3b8; font-size: 14px; }
 .lp-plans-nav { display: flex; gap: 8px; justify-content: center; margin-top: 20px; }
@@ -463,21 +480,25 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
     <div class="lp-plans-wrap">
       <div class="lp-plans-scroll" id="plansScroll">
         <?php foreach ($_planos as $_i => $_p):
-          $_specs = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
-          $_vcpu  = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
-          $_ram   = (int)($_specs['ram_gb'] ?? 0);
-          $_ramMb = (int)($_specs['ram_mb'] ?? 0);
-          $_disco = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
-          $_bw    = (int)($_specs['bandwidth_gb'] ?? 0);
-          $_price = (float)$_p['price'];
-          $_cycle = (string)($_p['billing_cycle'] ?? 'monthly');
+          $_specs  = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
+          $_vcpu   = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
+          $_ram    = (int)($_specs['ram_gb'] ?? 0);
+          $_ramMb  = (int)($_specs['ram_mb'] ?? 0);
+          $_disco  = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
+          $_bw     = (int)($_specs['bandwidth_gb'] ?? 0);
+          $_price  = (float)$_p['price'];
+          $_cycle  = (string)($_p['billing_cycle'] ?? 'monthly');
           $_destaque = $_i === 1;
+          $_addons = is_array($_p['addons'] ?? null) ? $_p['addons'] : [];
+          $_pid    = (int)$_p['id'];
         ?>
-        <div class="lp-plan-card <?php echo $_destaque ? 'destaque' : ''; ?>">
+        <div class="lp-plan-card <?php echo $_destaque ? 'destaque' : ''; ?>" id="plan-card-<?php echo $_pid; ?>">
           <?php if ($_destaque): ?><div class="lp-plan-badge">Mais popular</div><?php endif; ?>
           <div class="lp-plan-name"><?php echo View::e((string)$_p['name']); ?></div>
           <?php if (!empty($_p['description'])): ?><div class="lp-plan-desc"><?php echo View::e((string)$_p['description']); ?></div><?php endif; ?>
-          <div class="lp-plan-price">R$ <?php echo number_format($_price, 2, ',', '.'); ?><span><?php echo $_cycle === 'yearly' ? '/ano' : '/mês'; ?></span></div>
+          <div class="lp-plan-price-row">
+            <div class="lp-plan-price">R$ <?php echo number_format($_price, 2, ',', '.'); ?><span><?php echo $_cycle === 'yearly' ? '/ano' : '/mês'; ?></span></div>
+          </div>
           <div class="lp-plan-cycle"><?php echo $_cycle === 'yearly' ? 'Cobrado anualmente' : 'Cobrado mensalmente'; ?></div>
           <ul class="lp-plan-specs">
             <?php if ($_vcpu > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
@@ -485,19 +506,41 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
             <?php if ($_disco > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_disco; ?> GB SSD NVMe</li><?php endif; ?>
             <?php if ($_bw > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_bw; ?> GB bandwidth</li><?php endif; ?>
             <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Proteção DDoS</li>
-            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Backups automáticos</li>
             <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Suporte especializado</li>
           </ul>
-          <div class="lp-plan-cta"><a href="/cliente/criar-conta" class="botao" style="width:100%;justify-content:center;">Contratar agora</a></div>
+          <?php if (!empty($_addons)): ?>
+          <div class="lp-plan-addons">
+            <div class="lp-plan-addons-title">Serviços adicionais</div>
+            <?php foreach ($_addons as $_a): ?>
+            <div class="lp-addon-row" data-plan="<?php echo $_pid; ?>" data-price="<?php echo (float)$_a['price']; ?>" onclick="lpToggleAddon(this)">
+              <div class="lp-addon-check"></div>
+              <div class="lp-addon-info">
+                <div class="lp-addon-name"><?php echo View::e((string)$_a['name']); ?></div>
+                <?php if (!empty($_a['description'])): ?><div class="lp-addon-desc"><?php echo View::e((string)$_a['description']); ?></div><?php endif; ?>
+              </div>
+              <div class="lp-addon-price">+ R$ <?php echo number_format((float)$_a['price'], 2, ',', '.'); ?></div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <div class="lp-plan-total">
+            <span class="lp-plan-total-label">Total/mês</span>
+            <span class="lp-plan-total-val" id="plan-total-<?php echo $_pid; ?>">R$ <?php echo number_format($_price, 2, ',', '.'); ?></span>
+          </div>
+          <?php endif; ?>
+          <div class="lp-plan-cta">
+            <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="lp-btn solid" style="width:100%;justify-content:center;border-radius:12px;padding:13px 20px;">
+              Contratar agora
+            </a>
+          </div>
         </div>
         <?php endforeach; ?>
       </div>
       <?php if (count($_planos) > 2): ?>
       <div class="lp-plans-nav">
-        <button onclick="document.getElementById('plansScroll').scrollBy({left:-320,behavior:'smooth'})" aria-label="Anterior">
+        <button onclick="document.getElementById('plansScroll').scrollBy({left:-340,behavior:'smooth'})" aria-label="Anterior">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button onclick="document.getElementById('plansScroll').scrollBy({left:320,behavior:'smooth'})" aria-label="Próximo">
+        <button onclick="document.getElementById('plansScroll').scrollBy({left:340,behavior:'smooth'})" aria-label="Próximo">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
@@ -509,6 +552,19 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
     <p style="text-align:center;margin-top:28px;font-size:13px;color:#94a3b8;">Precisa de algo personalizado? <a href="/contato" style="color:#7C3AED;">Fale com nossa equipe</a></p>
   </div>
 </section>
+<script>
+// Preços base dos planos (PHP → JS)
+var _planBase = {<?php foreach ($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:<?php echo (float)$_p['price']; ?>,<?php endforeach; ?>};
+function lpToggleAddon(row) {
+  row.classList.toggle('checked');
+  var pid = row.dataset.plan;
+  var card = document.getElementById('plan-card-' + pid);
+  var total = _planBase[pid] || 0;
+  card.querySelectorAll('.lp-addon-row.checked').forEach(function(r){ total += parseFloat(r.dataset.price) || 0; });
+  var el = document.getElementById('plan-total-' + pid);
+  if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+</script>
 
 <!-- CTA ajuda -->
 <section class="lp-section" style="padding:48px 24px;">

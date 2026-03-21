@@ -25,6 +25,21 @@ final class InicialController
                  FROM plans WHERE active = 1 ORDER BY price ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
+
+            // Buscar addons para cada plano
+            if (!empty($planos)) {
+                $ids = implode(',', array_map('intval', array_column($planos, 'id')));
+                $stmtA = $pdo->query("SELECT * FROM plan_addons WHERE plan_id IN ($ids) AND active = 1 ORDER BY plan_id, sort_order ASC");
+                $allAddons = $stmtA ? ($stmtA->fetchAll() ?: []) : [];
+                $addonsByPlan = [];
+                foreach ($allAddons as $a) {
+                    $addonsByPlan[(int)$a['plan_id']][] = $a;
+                }
+                foreach ($planos as &$_p) {
+                    $_p['addons'] = $addonsByPlan[(int)$_p['id']] ?? [];
+                }
+                unset($_p);
+            }
         } catch (\Throwable) {}
 
         $html = View::renderizar(__DIR__ . '/../Views/inicial.php', [
