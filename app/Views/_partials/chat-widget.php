@@ -10,10 +10,24 @@ try {
         $_cwCsrf = \LRV\Core\Csrf::token();
     }
 } catch (\Throwable $_e) {}
+$_cwWsUrl = '';
+try {
+    $_cwWsUrl = (string)\LRV\Core\Settings::obter('chat.ws_url', '');
+} catch (\Throwable $_e) {}
+if ($_cwWsUrl === '') {
+    try {
+        $_cwWsPort = (int)\LRV\Core\Settings::obter('chat.ws_port', 8082);
+    } catch (\Throwable $_e) {
+        $_cwWsPort = 8082;
+    }
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'wss' : 'ws';
+    $_cwWsUrl = $proto . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ':' . $_cwWsPort;
+}
 ?>
 <div id="cw-fab"
      data-logado="<?php echo $_cwLogado ? '1' : '0'; ?>"
      data-csrf="<?php echo htmlspecialchars($_cwCsrf, ENT_QUOTES, 'UTF-8'); ?>"
+     data-wsurl="<?php echo htmlspecialchars($_cwWsUrl, ENT_QUOTES, 'UTF-8'); ?>"
      title="Suporte" aria-label="Abrir suporte" role="button" tabindex="0">
   <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
     <path d="M22 3H4a2 2 0 00-2 2v13a2 2 0 002 2h5l4 4 4-4h5a2 2 0 002-2V5a2 2 0 00-2-2z" fill="#fff" opacity=".95"/>
@@ -181,6 +195,7 @@ var backBar = document.getElementById('cw-back');
 
 var LOGADO  = fab.dataset.logado === '1';
 var CSRF    = fab.dataset.csrf   || '';
+var WS_URL  = fab.dataset.wsurl  || '';
 
 // ── open/close ────────────────────────────────────────
 var open = false;
@@ -448,7 +463,7 @@ function connectLive(ctx){
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.ok){ liveStatus.textContent='Erro ao conectar.'; return; }
     var proto=location.protocol==='https:'?'wss':'ws';
-    liveWs=new WebSocket(proto+'://'+location.hostname+'/ws/chat?token='+encodeURIComponent(d.token));
+    liveWs=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
     liveWs.onopen=function(){
       liveStatus.textContent='● Online'; liveStatus.style.color='#22c55e';
       liveInp.disabled=false; liveSend.disabled=false; liveInp.focus();

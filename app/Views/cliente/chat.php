@@ -4,7 +4,12 @@ use LRV\Core\View;
 use LRV\Core\Settings;
 
 $roomId = (int)($room['id'] ?? 0);
-$wsPort = (int)Settings::obter('chat.ws_port', '8082');
+$wsUrl = (string)Settings::obter('chat.ws_url', '');
+if ($wsUrl === '') {
+    $wsPort = (int)Settings::obter('chat.ws_port', '8082');
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'wss' : 'ws';
+    $wsUrl = $proto . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ':' . $wsPort;
+}
 
 $pageTitle    = 'Chat de Suporte';
 $clienteNome  = (string)($cliente['name'] ?? '');
@@ -66,7 +71,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <?php if ((string)($room['status'] ?? '') !== 'closed'): ?>
 (function(){
   const roomId = <?php echo $roomId; ?>;
-  const wsPort = <?php echo $wsPort; ?>;
+  const WS_URL = <?php echo json_encode($wsUrl); ?>;
   const CSRF   = <?php echo json_encode(\LRV\Core\Csrf::token()); ?>;
   const box    = document.getElementById('chat-box');
   const input  = document.getElementById('chat-input');
@@ -110,7 +115,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     .then(data => {
       if(!data.ok){ setStatus('Erro ao obter token.', 'dot-offline'); setTimeout(connect, 5000); return; }
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(proto + '://' + location.hostname + ':' + wsPort + '/?token=' + encodeURIComponent(data.token));
+      ws = new WebSocket(WS_URL + '/?token=' + encodeURIComponent(data.token));
       ws.onopen = function(){ setStatus('Conectado', 'dot-online'); input.disabled = false; btn.disabled = false; input.focus(); };
       ws.onmessage = function(e){
         try {

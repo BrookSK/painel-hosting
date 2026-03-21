@@ -1,11 +1,6 @@
 DirectoryIndex index.php
  
 RewriteEngine On
-
-# WebSocket proxy — /ws/chat → 127.0.0.1:8082
-RewriteCond %{HTTP:Upgrade} =websocket [NC]
-RewriteRule ^ws/chat(.*)$ ws://127.0.0.1:8082/$1 [P,L]
-RewriteRule ^ws/chat(.*)$ http://127.0.0.1:8082/$1 [P,L]
  
 # Entrada da aplicação na raiz
 RewriteRule ^$ index.php [L]

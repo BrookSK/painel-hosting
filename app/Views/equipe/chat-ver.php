@@ -5,6 +5,19 @@ use LRV\Core\Csrf;
 
 $roomId = (int)($room['id']??0);
 $status = (string)($room['status']??'open');
+$_wsUrl = '';
+try {
+    $_wsUrl = (string)\LRV\Core\Settings::obter('chat.ws_url', '');
+} catch (\Throwable $_e) {}
+if ($_wsUrl === '') {
+    try {
+        $_wsPort = (int)\LRV\Core\Settings::obter('chat.ws_port', 8082);
+    } catch (\Throwable $_e) {
+        $_wsPort = 8082;
+    }
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'wss' : 'ws';
+    $_wsUrl = $proto . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ':' . $_wsPort;
+}
 
 $pageTitle = 'Chat #'.$roomId;
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
@@ -109,11 +122,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <h3>🖥️ VPS</h3>
       <?php if (!empty($vps)): ?>
         <table class="mini-table">
-          <thead><tr><th>Hostname</th><th>Status</th></tr></thead>
+          <thead><tr><th>ID</th><th>CPU/RAM</th><th>Status</th></tr></thead>
           <tbody>
             <?php foreach ($vps as $v): ?>
               <tr>
-                <td><?php echo View::e((string)($v['hostname']??'')); ?></td>
+                <td>#<?php echo (int)($v['id']??0); ?></td>
+                <td><?php echo (int)($v['cpu']??0); ?>vCPU / <?php echo round(((int)($v['ram']??0))/1024/1024/1024, 1); ?>GB</td>
                 <td><span class="badge-new <?php echo ($v['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($v['status']??'')); ?></span></td>
               </tr>
             <?php endforeach; ?>
@@ -149,7 +163,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <?php if ($status==='open'): ?>
 <script>
 (function(){
-  var ROOM_ID=<?php echo $roomId; ?>,TOKEN_URL='/equipe/chat/token',CSRF=<?php echo json_encode(Csrf::token()); ?>,ws,reconnectTimer;
+  var ROOM_ID=<?php echo $roomId; ?>,TOKEN_URL='/equipe/chat/token',CSRF=<?php echo json_encode(Csrf::token()); ?>,WS_URL=<?php echo json_encode($_wsUrl); ?>,ws,reconnectTimer;
   function appendMsg(sender,text,ts){
     var box=document.getElementById('chatMsgs'),div=document.createElement('div'),meta=document.createElement('div');
     div.className='msg-bubble '+(sender==='admin'?'msg-admin':'msg-client');
@@ -161,7 +175,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok){setTimeout(connect,5000);return;}
       var proto=location.protocol==='https:'?'wss':'ws';
-      ws=new WebSocket(proto+'://'+location.hostname+'/ws/chat?token='+encodeURIComponent(d.token));
+      ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
       ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){msg.messages.forEach(function(m){appendMsg(m.sender_type,m.message,m.created_at);});}else if(msg.type==='message'){appendMsg(msg.sender_type,msg.message,msg.created_at);}}catch(ex){}};
       ws.onclose=function(){reconnectTimer=setTimeout(connect,4000);};
       ws.onerror=function(){ws.close();};

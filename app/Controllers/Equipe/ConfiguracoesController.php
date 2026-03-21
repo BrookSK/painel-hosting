@@ -53,6 +53,7 @@ final class ConfiguracoesController
             'email_max_accounts'   => (string) Settings::obter('email.max_accounts_per_plan', '5'),
             'email_dns_template'   => (string) Settings::obter('email.dns_instructions_template', ''),
             'chat_ws_port'         => (string) Settings::obter('chat.ws_port', '8082'),
+            'chat_ws_url'          => (string) Settings::obter('chat.ws_url', ''),
             'system_name'           => SistemaConfig::nome(),            'system_logo_url'       => SistemaConfig::logoUrl(),
             'system_favicon_url'    => SistemaConfig::faviconUrl(),
             'system_company_name'   => SistemaConfig::empresaNome(),
@@ -116,6 +117,7 @@ final class ConfiguracoesController
         $emailMaxAccounts    = $in->postInt('email_max_accounts', 1, 9999, false);
         $emailDnsTemplate    = $in->postString('email_dns_template', 65535, false);
         $chatWsPort          = $in->postInt('chat_ws_port', 1, 65535, false);
+        $chatWsUrl           = $in->postString('chat_ws_url', 500, false);
 
         $smtpHost       = $in->postString('smtp_host', 255, false);
         $smtpPort       = $in->postInt('smtp_port', 1, 65535, false);
@@ -189,6 +191,7 @@ final class ConfiguracoesController
                 'email_max_accounts'   => $emailMaxAccounts > 0 ? (string) $emailMaxAccounts : '5',
                 'email_dns_template'   => $emailDnsTemplate,
                 'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
+                'chat_ws_url'          => $chatWsUrl,
                 'system_name'           => $systemName,
                 'system_logo_url'       => $systemLogoUrl,
                 'system_favicon_url'    => $systemFaviconUrl,
@@ -248,6 +251,7 @@ final class ConfiguracoesController
         Settings::definir('email.max_accounts_per_plan', $emailMaxAccounts > 0 ? $emailMaxAccounts : 5);
         Settings::definir('email.dns_instructions_template', $emailDnsTemplate);
         Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
+        Settings::definir('chat.ws_url', trim($chatWsUrl));
 
         Settings::definir('smtp.host',       $smtpHost);
         Settings::definir('smtp.port',       $smtpPort > 0 ? $smtpPort : 587);
@@ -356,6 +360,7 @@ final class ConfiguracoesController
             'email_max_accounts'   => (string) ($emailMaxAccounts > 0 ? $emailMaxAccounts : 5),
             'email_dns_template'   => $emailDnsTemplate,
             'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
+            'chat_ws_url'          => $chatWsUrl,
             'system_name'           => $systemName,
             'system_logo_url'       => $systemLogoUrl,
             'system_favicon_url'    => $systemFaviconUrl,

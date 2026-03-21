@@ -210,7 +210,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Porta do WebSocket do chat</label>
         <input class="input" type="number" name="chat_ws_port" value="<?php echo View::e((string)($chat_ws_port??'8082')); ?>" min="1" max="65535" />
-        <p class="texto" style="font-size:13px;margin-top:8px;">Proxy reverso: <strong>/ws/chat</strong> &rarr; <strong>127.0.0.1:porta</strong>. Padrao: <strong>8082</strong>.</p>
+        <p class="texto" style="font-size:13px;margin-top:8px;">Porta interna do servidor WebSocket. Padrao: <strong>8082</strong>.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">URL pública do WebSocket</label>
+        <input class="input" type="text" name="chat_ws_url" value="<?php echo View::e((string)($chat_ws_url??'')); ?>" placeholder="wss://seudominio.com/ws/chat" />
+        <p class="texto" style="font-size:13px;margin-top:8px;">URL completa do proxy reverso para o WebSocket. Ex: <strong>wss://cloud.lrvweb.com.br/ws/chat</strong>. Se vazio, conecta direto na porta.</p>
       </div>
     </div>
 

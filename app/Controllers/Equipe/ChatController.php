@@ -60,7 +60,7 @@ final class ChatController
         $assinaturas = $stmtA->fetchAll() ?: [];
 
         // VPS
-        $stmtV = $pdo->prepare('SELECT id, hostname, status FROM vps WHERE client_id = :c ORDER BY id DESC LIMIT 10');
+        $stmtV = $pdo->prepare('SELECT id, cpu, ram, storage, status FROM vps WHERE client_id = :c ORDER BY id DESC LIMIT 10');
         $stmtV->execute([':c' => $clientId]);
         $vps = $stmtV->fetchAll() ?: [];
 
