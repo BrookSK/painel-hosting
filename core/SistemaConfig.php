@@ -43,4 +43,25 @@ final class SistemaConfig
     {
         return (string) Settings::obter('legal.privacy_html', '');
     }
+
+    public static function versao(): string
+    {
+        static $cache = null;
+        if ($cache !== null) return $cache;
+
+        $arquivo = defined('BASE_PATH')
+            ? BASE_PATH . '/CHANGELOG.md'
+            : dirname(__DIR__) . '/CHANGELOG.md';
+
+        if (is_file($arquivo)) {
+            $conteudo = file_get_contents($arquivo);
+            if ($conteudo !== false && preg_match('/##\s+\[(\d+\.\d+\.\d+)\]/', $conteudo, $m)) {
+                $cache = $m[1];
+                return $cache;
+            }
+        }
+
+        $cache = '1.0.0';
+        return $cache;
+    }
 }

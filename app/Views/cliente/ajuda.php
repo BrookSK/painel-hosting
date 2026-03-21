@@ -28,7 +28,7 @@ use LRV\Core\I18n;
     <div class="conteudo linha" style="justify-content:space-between;">
       <div>
         <div style="font-size:18px;font-weight:700;">Central de ajuda</div>
-        <div style="opacity:.9; font-size:13px;">Dúvidas frequentes — v1.5.0</div>
+        <div style="opacity:.9; font-size:13px;">Dúvidas frequentes — v<?php echo View::e(\LRV\Core\SistemaConfig::versao()); ?></div>
       </div>
       <div class="linha">
         <?php require __DIR__ . '/../_partials/idioma.php'; ?>

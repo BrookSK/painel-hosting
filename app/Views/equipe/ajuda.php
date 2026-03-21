@@ -6,7 +6,7 @@ $pageTitle = 'Ajuda';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
 <div class="page-title">Ajuda</div>
-<div class="page-subtitle">Configuração e operação — v1.5.0</div>
+<div class="page-subtitle">Configuração e operação — v<?php echo View::e(\LRV\Core\SistemaConfig::versao()); ?></div>
 
 <style>
 pre{white-space:pre-wrap;background:#0b1220;color:#e2e8f0;padding:12px 16px;border-radius:12px;overflow:auto;font-size:13px;line-height:1.6;}

@@ -777,7 +777,7 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
       </div>
     </div>
     <div class="footer-bottom">
-      <div><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v1.4.0</div>
+      <div><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></div>
       <div class="footer-status-dot">Sistema operacional</div>
     </div>
   </div>

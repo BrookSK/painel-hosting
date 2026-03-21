@@ -39,7 +39,7 @@ $_ft_empresa   = SistemaConfig::empresaNome();
       </div>
     </div>
     <div class="pub-footer-bottom">
-      <span><?php echo View::e($_ft_copyright); ?> · <?php echo View::e($_ft_nome); ?> v1.4.0</span>
+      <span><?php echo View::e($_ft_copyright); ?> · <?php echo View::e($_ft_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></span>
       <span class="pub-footer-status-dot">Todos os sistemas operacionais</span>
     </div>
   </div>
