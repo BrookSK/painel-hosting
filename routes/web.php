@@ -61,6 +61,7 @@ use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaControlle
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
+$roteador->get('/infraestrutura', [InicialController::class, 'infraestrutura']);
 
 $roteador->get('/robots.txt', [SeoController::class, 'robots']);
 $roteador->get('/sitemap.xml', [SeoController::class, 'sitemap']);

@@ -38,6 +38,31 @@ final class InicialController
         return Resposta::html($html);
     }
 
+    public function infraestrutura(Requisicao $req): Resposta
+    {
+        $trialAtivo = (int) Settings::obter('trial.enabled', 0) === 1;
+
+        $planos = [];
+        try {
+            $pdo  = BancoDeDados::pdo();
+            $stmt = $pdo->query(
+                "SELECT id, name, price, billing_cycle, specs_json, description
+                 FROM plans WHERE active = 1 ORDER BY price ASC LIMIT 6"
+            );
+            $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
+        } catch (\Throwable) {}
+
+        $html = View::renderizar(__DIR__ . '/../Views/infraestrutura.php', [
+            'equipe_logada' => \LRV\Core\Auth::equipeId() !== null,
+            'trial_ativo'   => $trialAtivo,
+            'trial_dias'    => (int) Settings::obter('trial.dias', 7),
+            'trial_label'   => (string) Settings::obter('trial.label_cta', 'Testar grátis'),
+            'trial_desc'    => (string) Settings::obter('trial.descricao', ''),
+            'planos'        => $planos,
+        ]);
+        return Resposta::html($html);
+    }
+
     public function contato(Requisicao $req): Resposta
     {
         $html = View::renderizar(__DIR__ . '/../Views/contato.php', [
