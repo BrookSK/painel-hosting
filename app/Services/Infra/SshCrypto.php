@@ -41,8 +41,7 @@ final class SshCrypto
     {
         $secret = (string)Settings::obter('app.secret_key', '');
         if ($secret === '') {
-            // Fallback: usa APP_KEY do ambiente ou string fixa
-            $secret = (string)(getenv('APP_KEY') ?: 'lrv-web-default-ssh-key-32chars!!');
+            throw new \RuntimeException('app.secret_key não configurado. Defina nas configurações do sistema.');
         }
         // Deriva 32 bytes para AES-256
         return substr(hash('sha256', $secret, true), 0, 32);

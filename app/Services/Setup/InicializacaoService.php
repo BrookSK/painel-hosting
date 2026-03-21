@@ -77,6 +77,12 @@ final class InicializacaoService
             'detalhe' => $workerToken !== '' ? 'OK' : 'Não configurado',
         ];
 
+        $appSecret = trim((string) Settings::obter('app.secret_key', ''));
+        $itens['app_secret_key'] = [
+            'ok' => $appSecret !== '',
+            'detalhe' => $appSecret !== '' ? 'OK' : 'Não configurado — necessário para criptografia SSH',
+        ];
+
         $sshOk = false;
         $scpOk = false;
         $detSsh = 'shell_exec indisponível';
@@ -230,6 +236,14 @@ final class InicializacaoService
 
     public function garantirDefaultsESecrets(callable $log): void
     {
+        $appSecret = trim((string) Settings::obter('app.secret_key', ''));
+        if ($appSecret === '') {
+            Settings::definir('app.secret_key', bin2hex(random_bytes(32)));
+            $log('app.secret_key gerado.');
+        } else {
+            $log('app.secret_key já configurado.');
+        }
+
         $monitoring = trim((string) Settings::obter('monitoring.token', ''));
         if ($monitoring === '') {
             Settings::definir('monitoring.token', bin2hex(random_bytes(16)));

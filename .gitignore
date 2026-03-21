@@ -2,7 +2,7 @@
 /data/
 /logs/
 /public/uploads/
-# /config/instalacao.php
+/config/instalacao.php
 .DS_Store
 Thumbs.db
 

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copie este arquivo para config/instalacao.php e preencha com suas credenciais.
+ * O arquivo instalacao.php é ignorado pelo Git e NUNCA deve ser commitado.
+ */
+
 return [
     'banco' => [
         'driver' => 'mysql',
@@ -7,7 +12,7 @@ return [
         'porta' => 3306,
         'database' => 'lrvcloud',
         'usuario' => 'lrvcloud',
-        'senha' => 'troque-esta-senha',
+        'senha' => '', // Preencha com a senha do banco
         'charset' => 'utf8mb4',
     ],
 ];
