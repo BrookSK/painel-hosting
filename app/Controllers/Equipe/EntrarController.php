@@ -13,10 +13,6 @@ final class EntrarController
 {
     public function formulario(Requisicao $req): Resposta
     {
-        if (!Auth::equipeExiste()) {
-            return Resposta::redirecionar('/equipe/primeiro-acesso');
-        }
-
         if (Auth::equipeId() !== null) {
             return Resposta::redirecionar('/equipe/painel');
         }
@@ -31,10 +27,6 @@ final class EntrarController
 
     public function entrar(Requisicao $req): Resposta
     {
-        if (!Auth::equipeExiste()) {
-            return Resposta::redirecionar('/equipe/primeiro-acesso');
-        }
-
         $in = $req->input();
         $email = $in->postEmail('email', 190, true);
         $senha = $in->postStringRaw('senha', 255, true);

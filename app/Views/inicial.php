@@ -28,7 +28,6 @@ $_topo_links = [
         <p class="texto">Administre nodes, cobranças, tickets e permissões.</p>
         <div class="linha" style="gap:8px;">
           <a class="botao sm" href="/equipe/entrar">Entrar como equipe</a>
-          <a class="botao ghost sm" href="/equipe/primeiro-acesso">Primeiro acesso</a>
         </div>
       </div>
 

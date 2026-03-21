@@ -15,7 +15,7 @@ final class PrimeiroAcessoController
     public function formulario(Requisicao $req): Resposta
     {
         if (Auth::equipeExiste()) {
-            return Resposta::redirecionar('/equipe/entrar');
+            return Resposta::texto('Não encontrado.', 404);
         }
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/primeiro-acesso.php', [
@@ -30,7 +30,7 @@ final class PrimeiroAcessoController
     public function criar(Requisicao $req): Resposta
     {
         if (Auth::equipeExiste()) {
-            return Resposta::redirecionar('/equipe/entrar');
+            return Resposta::texto('Não encontrado.', 404);
         }
 
         $nome = trim((string) ($req->post['nome'] ?? ''));
