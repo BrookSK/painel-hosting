@@ -28,6 +28,9 @@ if ($_initials === '') $_initials = 'U';
 ?>
 <header class="app-header">
   <div class="header-left">
+    <button class="sidebar-expand-btn" id="sidebarExpandBtn" aria-label="Expandir menu" title="Expandir menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <button class="header-menu-btn" id="mobileMenuBtn" aria-label="Menu">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>

@@ -7,14 +7,17 @@
 (function () {
   var shell = document.getElementById('appShell');
   var toggle = document.getElementById('sidebarToggle');
+  var expandBtn = document.getElementById('sidebarExpandBtn');
   var mobileBtn = document.getElementById('mobileMenuBtn');
   var overlay = document.getElementById('sidebarOverlay');
   var sidebar = document.getElementById('sidebar');
   if (localStorage.getItem('lrv_sidebar_collapsed') === '1') shell.classList.add('collapsed');
-  if (toggle) toggle.addEventListener('click', function () {
+  function toggleSidebar() {
     shell.classList.toggle('collapsed');
     localStorage.setItem('lrv_sidebar_collapsed', shell.classList.contains('collapsed') ? '1' : '0');
-  });
+  }
+  if (toggle) toggle.addEventListener('click', toggleSidebar);
+  if (expandBtn) expandBtn.addEventListener('click', toggleSidebar);
   function openMobile() { sidebar.classList.add('mobile-open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
   function closeMobile() { sidebar.classList.remove('mobile-open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
   if (mobileBtn) mobileBtn.addEventListener('click', openMobile);

@@ -87,6 +87,7 @@ a { color: inherit; text-decoration: none; }
 }
 .sidebar-toggle:hover { color: #fff; background: rgba(255,255,255,.08); }
 .app-shell.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+.app-shell.collapsed .sidebar-toggle { display: none; }
 
 /* Nav */
 .sidebar-nav {
@@ -532,7 +533,22 @@ a { color: inherit; text-decoration: none; }
   outline: none;
 }
 
-/* ── Responsive ───────────────────────────────────────────── */
+/* Sidebar toggle visível no header quando colapsado */
+.sidebar-expand-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, background .15s;
+}
+.sidebar-expand-btn:hover { color: #0f172a; background: #f1f5f9; }
+.app-shell.collapsed .sidebar-expand-btn { display: flex; }
+.app-shell:not(.collapsed) .sidebar-expand-btn { display: none; }
 @media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); transition: transform .25s ease, width .25s ease; }
   .sidebar.mobile-open { transform: translateX(0); }

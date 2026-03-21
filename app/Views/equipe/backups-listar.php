@@ -58,7 +58,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <td><?php echo View::e((string)($b['created_at']??'')); ?></td>
             <td>
               <?php if (!empty($b['job_id'])): ?><a href="/equipe/jobs/ver?id=<?php echo (int)($b['job_id']??0); ?>">Job</a> | <?php endif; ?>
-              <?php if (((string)($b['status']??'))==='completed'): ?><a href="/equipe/backups/baixar?id=<?php echo (int)($b['id']??0); ?>">Baixar</a> | <?php endif; ?>
+              <?php if ((string)($b['status']??'')==='completed'): ?><a href="/equipe/backups/baixar?id=<?php echo (int)($b['id']??0); ?>">Baixar</a> | <?php endif; ?>
               <form method="post" action="/equipe/backups/excluir" style="display:inline;" onsubmit="return confirm('Excluir este backup?');">
                 <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                 <input type="hidden" name="id" value="<?php echo (int)($b['id']??0); ?>" />
