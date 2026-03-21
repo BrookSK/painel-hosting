@@ -199,6 +199,20 @@ a { color: inherit; text-decoration: none; }
 .header-left { display: flex; align-items: center; gap: 12px; flex: 1; }
 .header-right { display: flex; align-items: center; gap: 8px; }
 
+/* Lang dropdown — variante clara para header branco */
+.app-header .lang-trigger {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+.app-header .lang-trigger:hover { background: #e2e8f0; border-color: #cbd5e1; }
+.app-header .lang-chevron { color: #64748b; opacity: 1; }
+.app-header .lang-menu { background: #fff; border-color: #e2e8f0; box-shadow: 0 8px 32px rgba(15,23,42,.12); }
+.app-header .lang-option { color: #475569; }
+.app-header .lang-option:hover { background: #f8fafc; color: #0f172a; }
+.app-header .lang-option-ativo { color: #4F46E5; }
+.app-header .lang-check { color: #4F46E5; }
+
 .header-menu-btn {
   display: none;
   background: none;

@@ -103,9 +103,7 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
     </div>
 
     <div class="navbar-actions">
-      <div class="navbar-idioma">
-        <?php require __DIR__ . '/_partials/idioma.php'; ?>
-      </div>
+      <?php require __DIR__ . '/_partials/idioma.php'; ?>
       <a href="/cliente/entrar" class="navbar-btn ghost">Entrar</a>
       <a href="/cliente/criar-conta" class="navbar-btn solid">
         <?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?>
