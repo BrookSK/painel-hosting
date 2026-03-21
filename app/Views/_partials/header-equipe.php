@@ -82,9 +82,6 @@ if ($_initials === '') $_initials = 'U';
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="7" width="9" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           Segurança / 2FA
         </a>
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.038 2.462-5.5 5.5-5.5S13 9.962 13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Permissões
-        </a>
         <div class="avatar-dropdown-divider"></div>
         <a href="/equipe/sair" class="avatar-dropdown-item avatar-dropdown-danger">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M10 7.5H3M10 7.5l-2.5-2.5M10 7.5l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 3H5a2 2 0 00-2 2v5a2 2 0 002 2h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>

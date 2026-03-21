@@ -55,6 +55,7 @@ use LRV\App\Controllers\LegalController;
 use LRV\App\Controllers\ChangelogController;
 use LRV\App\Controllers\Equipe\ErrosController;
 use LRV\App\Controllers\Equipe\MinhaContaController;
+use LRV\App\Controllers\Equipe\ClientesController;
 use LRV\App\Controllers\Equipe\ResetSenhaController as EquipeResetSenhaController;
 use LRV\Core\Middlewares;
 
@@ -139,6 +140,14 @@ $roteador->get('/equipe/terminal/auditoria/ver', [TerminalController::class, 'au
 $roteador->get('/equipe/jobs', [JobsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/jobs/ver', [JobsController::class, 'ver'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/sair', [EquipeSairController::class, 'sair'], [Middlewares::exigirLoginEquipe()]);
+
+// Clientes
+$roteador->get('/equipe/clientes', [ClientesController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->get('/equipe/clientes/novo', [ClientesController::class, 'novo'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->get('/equipe/clientes/editar', [ClientesController::class, 'editar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->get('/equipe/clientes/ver', [ClientesController::class, 'ver'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/salvar', [ClientesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/assinar-plano', [ClientesController::class, 'assinarPlano'], [Middlewares::exigirPermissao('manage_billing')]);
 
 // Minha conta
 $roteador->get('/equipe/minha-conta', [MinhaContaController::class, 'index'], [Middlewares::exigirLoginEquipe()]);

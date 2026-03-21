@@ -39,6 +39,11 @@ function _nav_ativo(string $path, string $uri): string {
       <span>Usuários</span>
     </a>
 
+    <a href="/equipe/clientes" class="nav-item<?php echo _nav_ativo('/equipe/clientes', $_seg); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M2 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16 11v6M13 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Clientes</span>
+    </a>
+
     <a href="/equipe/vps" class="nav-item<?php echo _nav_ativo('/equipe/vps', $_seg); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
       <span>VPS</span>
