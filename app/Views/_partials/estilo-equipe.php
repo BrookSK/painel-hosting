@@ -234,6 +234,7 @@ a { color: inherit; text-decoration: none; }
   padding: 7px 12px;
   max-width: 320px;
   width: 100%;
+  flex-shrink: 1;
 }
 .header-search-input {
   border: none;
@@ -559,6 +560,10 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: center;
   transition: color .15s, background .15s;
+  position: relative;
+  z-index: 10;
+  pointer-events: all;
+  flex-shrink: 0;
 }
 .sidebar-expand-btn:hover { color: #0f172a; background: #f1f5f9; }
 .app-shell.collapsed .sidebar-expand-btn { display: flex; }
