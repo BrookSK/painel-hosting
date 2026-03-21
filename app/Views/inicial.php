@@ -244,7 +244,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
         </div>
         <div class="server-price">
           <div class="server-price__label"><?php echo View::e(I18n::t('home.total_mensal')); ?></div>
-          <div class="server-price__value">R$ <?php echo $_hero_plano ? number_format($_hprice, 0, ',', '.') : '1.497'; ?>+<span>/mês</span></div>
+          <div class="server-price__value"><?php echo View::e(I18n::t('home.plans_moeda')); ?> <?php echo $_hero_plano ? number_format($_hprice, 0, ',', '.') : '1.497'; ?>+<span><?php echo View::e(I18n::t('home.hero_preco_mes')); ?></span></div>
         </div>
       </div>
       <div class="hero__floater hero__floater--1">
@@ -264,7 +264,9 @@ $_trial_dias  = (int)($trial_dias ?? 7);
   <div class="hero__clients">
     <p><?php echo View::e(I18n::tf('home.empresas_confiam', $_nome)); ?></p>
     <div class="clients-logos">
-      <span>Startups</span><span>E-commerce</span><span>SaaS</span><span>Agências</span><span>Desenvolvedores</span>
+      <?php foreach (explode(',', I18n::t('home.clients_logos')) as $_cl): ?>
+      <span><?php echo View::e(trim($_cl)); ?></span>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
@@ -272,10 +274,10 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 <!-- STATS -->
 <div class="statsbar">
   <div class="stats">
-    <div class="stat"><h3>+5 anos</h3><p><?php echo View::e(I18n::t('home.stats_experiencia')); ?></p></div>
-    <div class="stat"><h3>+200</h3><p><?php echo View::e(I18n::t('home.stats_clientes')); ?></p></div>
-    <div class="stat"><h3>99,9%</h3><p><?php echo View::e(I18n::t('home.stats_sla')); ?></p></div>
-    <div class="stat"><h3>6 dias</h3><p><?php echo View::e(I18n::t('home.stats_ativacao')); ?></p></div>
+    <div class="stat"><h3><?php echo View::e(I18n::t('home.stats_num_exp')); ?></h3><p><?php echo View::e(I18n::t('home.stats_experiencia')); ?></p></div>
+    <div class="stat"><h3><?php echo View::e(I18n::t('home.stats_num_clientes')); ?></h3><p><?php echo View::e(I18n::t('home.stats_clientes')); ?></p></div>
+    <div class="stat"><h3><?php echo View::e(I18n::t('home.stats_num_sla')); ?></h3><p><?php echo View::e(I18n::t('home.stats_sla')); ?></p></div>
+    <div class="stat"><h3><?php echo View::e(I18n::t('home.stats_num_ativacao')); ?></h3><p><?php echo View::e(I18n::t('home.stats_ativacao')); ?></p></div>
   </div>
 </div>
 
@@ -466,26 +468,26 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 
 <!-- DIFERENCIAIS -->
 <section class="diff-sec">
-  <div class="diff-header"><h2>Diferenciais dos Servidores Dedicados <?php echo View::e($_nome); ?></h2></div>
+  <div class="diff-header"><h2><?php echo View::e(I18n::tf('home.diff_titulo', $_nome)); ?></h2></div>
   <div class="diff-grid">
-    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg></div><h3 class="diff-title">Conectividade</h3><p class="diff-desc">Conexão direta com grandes redes como Akamai, CloudFlare, Microsoft, Google, AWS e UPX. Capilaridade através dos maiores peerings nacionais do IX.br. Trânsito por múltiplas operadoras atuantes no Brasil e no mundo.</p></div>
-    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><h3 class="diff-title">Console/KVM</h3><p class="diff-desc">Painel intuitivo que fornece acesso externo ao servidor (display, teclado e mouse), possibilita a montagem de ISOs em drive virtual, permite ligar, desligar e reiniciar o servidor, entre outras opções.</p></div>
-    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><h3 class="diff-title">Resiliência</h3><p class="diff-desc">Servidores com grande quantidade de recursos para altas demandas de utilização sustentada ou durante picos inesperados, sem alterações na velocidade de resposta.</p></div>
-    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div><h3 class="diff-title">Desempenho I/O</h3><p class="diff-desc">Baixíssima latência em operações de leitura e gravação, mesmo durante picos em cargas como bancos de dados complexos ou servidores de e-mail com grande fluxo de mensagens.</p></div>
-    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><h3 class="diff-title">Segurança a nível de rede</h3><p class="diff-desc">VLAN privada para tráfego interno, VPN para integração segura com seu escritório, firewall dedicado para regras de segurança adequadas e link ponto a ponto para interligar escritórios (serviços adicionais).</p></div>
-    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.18l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><h3 class="diff-title">Backup diário</h3><p class="diff-desc">Seus dados armazenados em ambiente externo e à prova de falhas. Segurança total em casos de remoção indevida, corrompimento de banco de dados, ransomware, entre outros (serviço adicional).</p></div>
+    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg></div><h3 class="diff-title"><?php echo View::e(I18n::t('home.diff_conectividade')); ?></h3><p class="diff-desc"><?php echo View::e(I18n::t('home.diff_conectividade_desc')); ?></p></div>
+    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><h3 class="diff-title"><?php echo View::e(I18n::t('home.diff_kvm')); ?></h3><p class="diff-desc"><?php echo View::e(I18n::t('home.diff_kvm_desc')); ?></p></div>
+    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><h3 class="diff-title"><?php echo View::e(I18n::t('home.diff_resiliencia')); ?></h3><p class="diff-desc"><?php echo View::e(I18n::t('home.diff_resiliencia_desc')); ?></p></div>
+    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div><h3 class="diff-title"><?php echo View::e(I18n::t('home.diff_io')); ?></h3><p class="diff-desc"><?php echo View::e(I18n::t('home.diff_io_desc')); ?></p></div>
+    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><h3 class="diff-title"><?php echo View::e(I18n::t('home.diff_rede')); ?></h3><p class="diff-desc"><?php echo View::e(I18n::t('home.diff_rede_desc')); ?></p></div>
+    <div class="diff-card animate"><div class="diff-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.18l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><h3 class="diff-title"><?php echo View::e(I18n::t('home.diff_backup')); ?></h3><p class="diff-desc"><?php echo View::e(I18n::t('home.diff_backup_desc')); ?></p></div>
   </div>
 </section>
 
 <!-- PLANOS -->
 <section class="plans-sec" id="planos">
   <div style="max-width:1100px;margin:0 auto;padding:0 28px">
-    <h2 style="text-align:center;margin-bottom:12px;font-size:clamp(2rem,3.5vw,3rem);font-weight:600;letter-spacing:-.02em;color:#0f172a">Escolha o ideal para seu projeto</h2>
-    <p style="text-align:center;color:#64748b;font-size:16px;max-width:640px;margin:0 auto 24px">Servidores VPS com recursos dedicados e escaláveis. Todos os planos incluem proteção DDoS e SSL gratuito.</p>
+    <h2 style="text-align:center;margin-bottom:12px;font-size:clamp(2rem,3.5vw,3rem);font-weight:600;letter-spacing:-.02em;color:#0f172a"><?php echo View::e(I18n::t('home.plans_titulo')); ?></h2>
+    <p style="text-align:center;color:#64748b;font-size:16px;max-width:640px;margin:0 auto 24px"><?php echo View::e(I18n::t('home.plans_sub')); ?></p>
     <div class="compare-btn-wrap">
       <button class="compare-btn" onclick="openCompareModal()">
         <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Comparar todos os planos
+        <?php echo View::e(I18n::t('home.plans_comparar')); ?>
       </button>
     </div>
     <div class="carousel-container">
@@ -506,17 +508,17 @@ $_trial_dias  = (int)($trial_dias ?? 7);
             <?php if ($_badge !== ''): ?><div class="plan-badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
             <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
             <div class="plan-desc"><?php echo View::e((string)($_p['description'] ?? '')); ?></div>
-            <div class="plan-price"><small>R$</small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
-            <div class="plan-period">por mês</div>
+            <div class="plan-price"><small><?php echo View::e(I18n::t('home.plans_moeda')); ?></small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
+            <div class="plan-period"><?php echo View::e(I18n::t('home.plans_por_mes')); ?></div>
             <ul class="plan-features">
               <?php if ($_vcpu > 0): ?><li><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
               <?php if ($_ram > 0): ?><li><?php echo $_ram; ?> GB RAM</li><?php endif; ?>
               <?php if ($_disco > 0): ?><li><?php echo $_disco; ?> GB SSD</li><?php endif; ?>
-              <li>Proteção DDoS</li><li>SSL gratuito</li><li>Suporte especializado</li>
+              <li><?php echo View::e(I18n::t('home.plans_ddos')); ?></li><li><?php echo View::e(I18n::t('home.plans_ssl')); ?></li><li><?php echo View::e(I18n::t('home.plans_suporte')); ?></li>
             </ul>
             <?php if (!empty($_addons)): ?>
             <div class="addons-sec">
-              <h3>Serviços adicionais</h3>
+              <h3><?php echo View::e(I18n::t('home.plans_addons')); ?></h3>
               <?php foreach ($_addons as $_a): $_aprice = (float)$_a['price']; ?>
               <div class="addon-item" onclick="toggleAddon(this,<?php echo $_pid; ?>,<?php echo $_aprice; ?>)">
                 <div class="addon-check"></div>
@@ -524,20 +526,20 @@ $_trial_dias  = (int)($trial_dias ?? 7);
                   <div class="addon-name"><?php echo View::e((string)$_a['name']); ?></div>
                   <?php if (!empty($_a['description'])): ?><div class="addon-desc"><?php echo View::e((string)$_a['description']); ?></div><?php endif; ?>
                 </div>
-                <div class="addon-price">+ R$ <?php echo number_format($_aprice, 0, ',', '.'); ?></div>
+                <div class="addon-price">+ <?php echo View::e(I18n::t('home.plans_moeda')); ?> <?php echo number_format($_aprice, 0, ',', '.'); ?></div>
               </div>
               <?php endforeach; ?>
             </div>
             <div class="total-calc">
-              <div class="total-label">Valor total</div>
-              <div class="total-value">R$ <span id="total-<?php echo $_pid; ?>"><?php echo number_format($_price, 0, ',', '.'); ?></span></div>
+              <div class="total-label"><?php echo View::e(I18n::t('home.plans_total')); ?></div>
+              <div class="total-value"><?php echo View::e(I18n::t('home.plans_moeda')); ?> <span id="total-<?php echo $_pid; ?>"><?php echo number_format($_price, 0, ',', '.'); ?></span></div>
             </div>
             <?php endif; ?>
             <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
           </div>
           <?php endforeach; ?>
           <?php else: ?>
-          <div style="padding:48px;text-align:center;color:#94a3b8;font-size:14px;width:100%">Planos em breve. <a href="/contato" style="color:#4F46E5">Entre em contato</a> para saber mais.</div>
+          <div style="padding:48px;text-align:center;color:#94a3b8;font-size:14px;width:100%"><?php echo View::e(I18n::t('home.plans_empty')); ?> <a href="/contato" style="color:#4F46E5"><?php echo View::e(I18n::t('home.plans_empty_contato')); ?></a> <?php echo View::e(I18n::t('home.plans_empty_saber')); ?></div>
           <?php endif; ?>
         </div>
       </div>
@@ -547,10 +549,10 @@ $_trial_dias  = (int)($trial_dias ?? 7);
     </div>
     <div class="help-card">
       <div class="help-content">
-        <h3 class="help-title">Precisando de ajuda para decidir ou mais recursos?</h3>
-        <p class="help-subtitle">Fale conosco para um plano personalizado</p>
+        <h3 class="help-title"><?php echo View::e(I18n::t('home.plans_help_titulo')); ?></h3>
+        <p class="help-subtitle"><?php echo View::e(I18n::t('home.plans_help_sub')); ?></p>
       </div>
-      <div class="help-action"><a href="/contato" class="help-btn">Falar com Especialista</a></div>
+      <div class="help-action"><a href="/contato" class="help-btn"><?php echo View::e(I18n::t('home.plans_help_btn')); ?></a></div>
     </div>
   </div>
 </section>
@@ -559,21 +561,21 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 <section class="lp-section" id="condicoes">
   <div class="lp-section-inner">
     <div style="margin-bottom:40px">
-      <span class="eyebrow">Transparência total</span>
-      <h2 style="font-size:clamp(2rem,3.5vw,3rem);font-weight:600;letter-spacing:-.02em;margin-bottom:14px">Condições Gerais dos Serviços</h2>
-      <p class="lead">Tudo o que você precisa saber antes de contratar. Sem letras miúdas, sem surpresas na fatura.</p>
+      <span class="eyebrow"><?php echo View::e(I18n::t('home.cond_eyebrow')); ?></span>
+      <h2 style="font-size:clamp(2rem,3.5vw,3rem);font-weight:600;letter-spacing:-.02em;margin-bottom:14px"><?php echo View::e(I18n::t('home.cond_titulo')); ?></h2>
+      <p class="lead"><?php echo View::e(I18n::t('home.cond_sub')); ?></p>
     </div>
     <div class="conds-grid">
-      <div class="cond"><div class="cond__num">01</div><p>Todos os valores incluem os devidos <strong>impostos conforme a legislação vigente</strong>.</p></div>
-      <div class="cond"><div class="cond__num">02</div><p>Serviços <strong>pré-pagos</strong>. Cobrança inicia após a ativação. Primeira fatura proporcional com vencimento em <strong>5 dias</strong>.</p></div>
-      <div class="cond"><div class="cond__num">03</div><p>Faturas mensais enviadas com <strong>15 dias de antecedência</strong>, pagamento exclusivamente por boleto bancário.</p></div>
-      <div class="cond"><div class="cond__num">04</div><p>Reajuste anual baseado no <strong>IGPM</strong> ao final de cada período de 12 meses de vigência.</p></div>
-      <div class="cond"><div class="cond__num">05</div><p><strong>Renovação automática</strong> por períodos iguais se não houver contestação com <strong>60 dias</strong> de antecedência.</p></div>
-      <div class="cond"><div class="cond__num">06</div><p>Rescisão antecipada: multa de <strong>50% do valor mensal × meses restantes</strong> acordados na proposta.</p></div>
-      <div class="cond"><div class="cond__num">07</div><p><strong>Prazo de ativação SP1</strong>: 1 servidor = 6 dias úteis. Regiões PR1/CE1: +5 dias úteis adicionais.</p></div>
-      <div class="cond"><div class="cond__num">08</div><p><strong>Backup BaaS</strong> ativado em até 4 dias úteis adicionais ao prazo do servidor contratado.</p></div>
-      <div class="cond"><div class="cond__num">09</div><p>Cancelamento ou downgrade deve ser <strong>comunicado com 60 dias</strong> de antecedência da suspensão.</p></div>
-      <div class="cond"><div class="cond__num">10</div><p>É estritamente proibida a <strong>hospedagem de jogos</strong> para garantia de performance de conectividade.</p></div>
+      <div class="cond"><div class="cond__num">01</div><p><?php echo I18n::t('home.cond_01'); ?></p></div>
+      <div class="cond"><div class="cond__num">02</div><p><?php echo I18n::t('home.cond_02'); ?></p></div>
+      <div class="cond"><div class="cond__num">03</div><p><?php echo I18n::t('home.cond_03'); ?></p></div>
+      <div class="cond"><div class="cond__num">04</div><p><?php echo I18n::t('home.cond_04'); ?></p></div>
+      <div class="cond"><div class="cond__num">05</div><p><?php echo I18n::t('home.cond_05'); ?></p></div>
+      <div class="cond"><div class="cond__num">06</div><p><?php echo I18n::t('home.cond_06'); ?></p></div>
+      <div class="cond"><div class="cond__num">07</div><p><?php echo I18n::t('home.cond_07'); ?></p></div>
+      <div class="cond"><div class="cond__num">08</div><p><?php echo I18n::t('home.cond_08'); ?></p></div>
+      <div class="cond"><div class="cond__num">09</div><p><?php echo I18n::t('home.cond_09'); ?></p></div>
+      <div class="cond"><div class="cond__num">10</div><p><?php echo I18n::t('home.cond_10'); ?></p></div>
     </div>
   </div>
 </section>
@@ -582,14 +584,14 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 <section class="lp-section alt">
   <div class="lp-section-inner">
     <div style="text-align:center;margin-bottom:52px">
-      <span class="eyebrow">Depoimentos</span>
-      <h2 style="font-size:clamp(2rem,3.5vw,3rem);font-weight:600;letter-spacing:-.02em;color:#0f172a">O que nossos clientes dizem</h2>
+      <span class="eyebrow"><?php echo View::e(I18n::t('home.dep_eyebrow')); ?></span>
+      <h2 style="font-size:clamp(2rem,3.5vw,3rem);font-weight:600;letter-spacing:-.02em;color:#0f172a"><?php echo View::e(I18n::t('home.dep_titulo')); ?></h2>
     </div>
     <div class="test-grid">
-      <div class="test-card"><p class="test-card__text">A <?php echo View::e($_nome); ?> nos deu todo o suporte quando enfrentamos um incidente crítico. Na época tínhamos todo o data center on-premise interno, e agora toda nossa infraestrutura está com eles. Nossa parceria já tem mais de 2 anos e a ideia é continuar por muito tempo. Estamos muito felizes com o atendimento prestado.</p><div class="test-card__author"><div class="test-card__av">ES</div><div><div class="test-card__name">Edson Souza</div><div class="test-card__role">CTO — Nexa Sistemas</div></div></div></div>
-      <div class="test-card"><p class="test-card__text">A <?php echo View::e($_nome); ?> é a principal fornecedora de tecnologia da Akahosting. Fundamentamos uma parceria e em menos de um ano conseguimos ver o extremo sucesso em nossa operação. Graças a eles nossa empresa conseguiu alavancar muito os negócios. Somos gratos pelo suporte em todas as ocasiões.</p><div class="test-card__author"><div class="test-card__av">MP</div><div><div class="test-card__name">Marcio Polonio</div><div class="test-card__role">Diretor — Agência Pixel</div></div></div></div>
-      <div class="test-card"><p class="test-card__text">Trabalhávamos com provedores de servidor fora do Brasil, conhecemos a <?php echo View::e($_nome); ?> e trouxemos toda nossa infraestrutura para cá. Estamos com eles há alguns anos e nossa evolução conjunta é constante. Estamos muito satisfeitos e planejamos estender essa parceria cada vez mais.</p><div class="test-card__author"><div class="test-card__av">LB</div><div><div class="test-card__name">Leonardo Barros</div><div class="test-card__role">CEO — CoreTech Solutions</div></div></div></div>
-      <div class="test-card"><p class="test-card__text">A migração para a <?php echo View::e($_nome); ?> foi decisiva para nossa operação. O processo foi transparente, o time técnico sempre disponível e o desempenho superou nossas expectativas. Com o servidor dedicado reduzimos latência e aumentamos capacidade sem aumentar os custos.</p><div class="test-card__author"><div class="test-card__av">RN</div><div><div class="test-card__name">Rafael Neves</div><div class="test-card__role">Gerente de TI — Grupo Vértice</div></div></div></div>
+      <div class="test-card"><p class="test-card__text"><?php echo View::e(I18n::tf('home.dep_1', $_nome)); ?></p><div class="test-card__author"><div class="test-card__av">ES</div><div><div class="test-card__name">Edson Souza</div><div class="test-card__role">CTO — Nexa Sistemas</div></div></div></div>
+      <div class="test-card"><p class="test-card__text"><?php echo View::e(I18n::tf('home.dep_2', $_nome)); ?></p><div class="test-card__author"><div class="test-card__av">MP</div><div><div class="test-card__name">Marcio Polonio</div><div class="test-card__role">Diretor — Agência Pixel</div></div></div></div>
+      <div class="test-card"><p class="test-card__text"><?php echo View::e(I18n::tf('home.dep_3', $_nome)); ?></p><div class="test-card__author"><div class="test-card__av">LB</div><div><div class="test-card__name">Leonardo Barros</div><div class="test-card__role">CEO — CoreTech Solutions</div></div></div></div>
+      <div class="test-card"><p class="test-card__text"><?php echo View::e(I18n::tf('home.dep_4', $_nome)); ?></p><div class="test-card__author"><div class="test-card__av">RN</div><div><div class="test-card__name">Rafael Neves</div><div class="test-card__role">Gerente de TI — Grupo Vértice</div></div></div></div>
     </div>
   </div>
 </section>
@@ -597,20 +599,20 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 <!-- CTA FINAL -->
 <section class="cta-final" id="contato">
   <div class="cta-final-inner">
-    <span style="display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c4b5fd;margin-bottom:14px">Pronto para começar?</span>
+    <span style="display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c4b5fd;margin-bottom:14px"><?php echo View::e(I18n::t('home.cta_pronto')); ?></span>
     <?php if ($_trial_ativo): ?>
-      <h2 class="cta-title">Comece seu teste grátis<br><em>agora mesmo</em></h2>
-      <p class="cta-sub"><?php echo $_trial_desc !== '' ? View::e($_trial_desc) : 'Crie sua conta e experimente a plataforma gratuitamente por ' . $_trial_dias . ' dias, sem cartão de crédito.'; ?></p>
+      <h2 class="cta-title"><?php echo View::e(I18n::t('home.cta_trial_titulo')); ?><br><em><?php echo View::e(I18n::t('home.cta_trial_titulo_em')); ?></em></h2>
+      <p class="cta-sub"><?php echo $_trial_desc !== '' ? View::e($_trial_desc) : View::e(I18n::tf('home.cta_trial_sub', $_trial_dias)); ?></p>
       <div class="cta-btns">
         <a href="/cliente/criar-conta" class="cta-btn-p"><?php echo View::e($_trial_label); ?></a>
-        <a href="/contato" class="cta-btn-s">💬 Falar com a equipe</a>
+        <a href="/contato" class="cta-btn-s">💬 <?php echo View::e(I18n::t('home.cta_falar_equipe')); ?></a>
       </div>
     <?php else: ?>
-      <h2 class="cta-title">Ative seu servidor em<br><em>até 6 dias úteis</em></h2>
-      <p class="cta-sub">Entre em contato agora e receba uma proposta personalizada. Nossa equipe técnica está pronta para atender você.</p>
+      <h2 class="cta-title"><?php echo View::e(I18n::t('home.cta_ative_titulo')); ?><br><em><?php echo View::e(I18n::t('home.cta_ative_titulo_em')); ?></em></h2>
+      <p class="cta-sub"><?php echo View::e(I18n::t('home.cta_ative_sub')); ?></p>
       <div class="cta-btns">
-        <a href="/contato" class="cta-btn-p">✉️ Solicitar Proposta por E-mail</a>
-        <a href="/contato" class="cta-btn-s">💬 Falar com Consultor</a>
+        <a href="/contato" class="cta-btn-p">✉️ <?php echo View::e(I18n::t('home.cta_proposta')); ?></a>
+        <a href="/contato" class="cta-btn-s">💬 <?php echo View::e(I18n::t('home.cta_consultor')); ?></a>
       </div>
     <?php endif; ?>
   </div>
@@ -620,7 +622,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 <div class="compare-modal" id="compareModal">
   <div class="compare-modal__content">
     <div class="compare-modal__header">
-      <h2 class="compare-modal__title">Comparar todos os planos</h2>
+      <h2 class="compare-modal__title"><?php echo View::e(I18n::t('home.plans_comparar')); ?></h2>
       <button class="compare-modal__close" onclick="closeCompareModal()"><svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="compare-grid">
@@ -635,13 +637,13 @@ $_trial_dias  = (int)($trial_dias ?? 7);
       <div class="compare-card <?php echo $_badge !== '' ? 'featured' : ''; ?>">
         <?php if ($_badge !== ''): ?><div class="compare-card__badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
         <div class="compare-card__name"><?php echo View::e((string)$_p['name']); ?></div>
-        <div class="compare-card__price"><small>R$</small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
-        <div class="compare-card__period">por mês</div>
+        <div class="compare-card__price"><small><?php echo View::e(I18n::t('home.plans_moeda')); ?></small> <?php echo number_format($_price, 0, ',', '.'); ?></div>
+        <div class="compare-card__period"><?php echo View::e(I18n::t('home.plans_por_mes')); ?></div>
         <ul class="compare-card__features">
           <?php if ($_vcpu > 0): ?><li><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
           <?php if ($_ram > 0): ?><li><?php echo $_ram; ?> GB RAM</li><?php endif; ?>
           <?php if ($_disco > 0): ?><li><?php echo $_disco; ?> GB SSD</li><?php endif; ?>
-          <li>Proteção DDoS</li><li>SSL gratuito</li><li>Suporte especializado</li>
+          <li><?php echo View::e(I18n::t('home.plans_ddos')); ?></li><li><?php echo View::e(I18n::t('home.plans_ssl')); ?></li><li><?php echo View::e(I18n::t('home.plans_suporte')); ?></li>
         </ul>
       </div>
       <?php endforeach; ?>
@@ -655,15 +657,15 @@ $_trial_dias  = (int)($trial_dias ?? 7);
     <div class="footer-grid">
       <div>
         <div class="footer-brand-name"><?php echo View::e($_nome); ?></div>
-        <div class="footer-brand-desc">Infraestrutura cloud de alta performance com proteção DDoS, backups automáticos e suporte especializado.</div>
+        <div class="footer-brand-desc"><?php echo View::e(I18n::t('home.footer_desc')); ?></div>
       </div>
-      <div><div class="footer-col-title">Produto</div><ul class="footer-links"><li><a href="#sobre">Sobre</a></li><li><a href="#planos">Planos</a></li><li><a href="#condicoes">Condições</a></li><li><a href="/infraestrutura">Para devs</a></li><li><a href="/changelog">Changelog</a></li></ul></div>
-      <div><div class="footer-col-title">Suporte</div><ul class="footer-links"><li><a href="/contato">Contato</a></li><li><a href="/status">Status do sistema</a></li><li><a href="/cliente/tickets">Tickets</a></li><li><a href="/cliente/ajuda">Central de ajuda</a></li></ul></div>
-      <div><div class="footer-col-title">Legal</div><ul class="footer-links"><li><a href="/termos">Termos de uso</a></li><li><a href="/privacidade">Privacidade</a></li></ul></div>
+      <div><div class="footer-col-title"><?php echo View::e(I18n::t('home.footer_produto')); ?></div><ul class="footer-links"><li><a href="#sobre"><?php echo View::e(I18n::t('home.footer_sobre')); ?></a></li><li><a href="#planos"><?php echo View::e(I18n::t('home.footer_planos')); ?></a></li><li><a href="#condicoes"><?php echo View::e(I18n::t('home.footer_condicoes')); ?></a></li><li><a href="/infraestrutura"><?php echo View::e(I18n::t('home.footer_devs')); ?></a></li><li><a href="/changelog">Changelog</a></li></ul></div>
+      <div><div class="footer-col-title"><?php echo View::e(I18n::t('home.footer_suporte')); ?></div><ul class="footer-links"><li><a href="/contato"><?php echo View::e(I18n::t('home.footer_contato')); ?></a></li><li><a href="/status"><?php echo View::e(I18n::t('home.footer_status')); ?></a></li><li><a href="/cliente/tickets"><?php echo View::e(I18n::t('home.footer_tickets')); ?></a></li><li><a href="/cliente/ajuda"><?php echo View::e(I18n::t('home.footer_ajuda')); ?></a></li></ul></div>
+      <div><div class="footer-col-title"><?php echo View::e(I18n::t('home.footer_legal')); ?></div><ul class="footer-links"><li><a href="/termos"><?php echo View::e(I18n::t('home.footer_termos')); ?></a></li><li><a href="/privacidade"><?php echo View::e(I18n::t('home.footer_privacidade')); ?></a></li></ul></div>
     </div>
     <div class="footer-bottom">
       <div><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></div>
-      <div class="footer-status-dot">Sistema operacional</div>
+      <div class="footer-status-dot"><?php echo View::e(I18n::t('home.footer_sistema_op')); ?></div>
     </div>
   </div>
 </footer>
