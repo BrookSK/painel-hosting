@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\SistemaConfig;
 
 $pageTitle = 'Configuracoes';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
