@@ -244,7 +244,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
         </div>
         <div class="server-price">
           <div class="server-price__label"><?php echo View::e(I18n::t('home.total_mensal')); ?></div>
-          <div class="server-price__value"><?php echo $_hero_plano ? View::e(I18n::preco($_hprice)) : View::e(I18n::moeda() . ' 1.497'); ?>+<span><?php echo View::e(I18n::t('home.hero_preco_mes')); ?></span></div>
+          <div class="server-price__value"><?php echo View::e(I18n::moeda()); ?> <?php echo $_hero_plano ? View::e(I18n::numero(I18n::precoValor($_hprice), 0)) : View::e(I18n::numero(I18n::precoValor(1497), 0)); ?>+<span><?php echo View::e(I18n::t('home.hero_preco_mes')); ?></span></div>
         </div>
       </div>
       <div class="hero__floater hero__floater--1">
