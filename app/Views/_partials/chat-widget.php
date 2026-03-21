@@ -1,19 +1,16 @@
 <?php
-// Chat widget — só renderiza se cliente estiver logado
 declare(strict_types=1);
-use LRV\Core\Auth;
 use LRV\Core\View;
 use LRV\Core\SistemaConfig;
-if (Auth::clienteId() === null) return;
 $_wNome = SistemaConfig::nome();
-$_wCsrf = \LRV\Core\Csrf::token();
+try { $_wCsrf = \LRV\Core\Csrf::token(); } catch (\Throwable $_e) { $_wCsrf = ''; }
 ?>
-<div id="cw-fab" title="Suporte" aria-label="Abrir suporte" role="button" tabindex="0">
+<div id="cw-fab" title="Suporte" aria-label="Abrir suporte" role="button" tabindex="0" style="position:fixed!important;bottom:24px;right:24px;z-index:99999!important;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#7C3AED);box-shadow:0 4px 20px rgba(79,70,229,.45);display:flex!important;align-items:center;justify-content:center;cursor:pointer;user-select:none;">
   <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M22 3H4a2 2 0 00-2 2v13a2 2 0 002 2h5l4 4 4-4h5a2 2 0 002-2V5a2 2 0 00-2-2z" fill="#fff" opacity=".95"/><circle cx="9" cy="12" r="1.5" fill="#4F46E5"/><circle cx="13" cy="12" r="1.5" fill="#4F46E5"/><circle cx="17" cy="12" r="1.5" fill="#4F46E5"/></svg>
   <span id="cw-badge" style="display:none;"></span>
 </div>
 
-<div id="cw-drawer" role="dialog" aria-modal="true" aria-label="Suporte">
+<div id="cw-drawer" role="dialog" aria-modal="true" aria-label="Suporte" style="position:fixed!important;bottom:90px;right:24px;z-index:99998!important;width:360px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;box-shadow:0 12px 48px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden;transform:scale(.92) translateY(16px);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s;max-height:520px;">
   <div id="cw-header">
     <div id="cw-header-info">
       <div id="cw-header-avatar">
@@ -75,10 +72,10 @@ $_wCsrf = \LRV\Core\Csrf::token();
 </div>
 
 <style>
-#cw-fab{position:fixed;bottom:24px;right:24px;z-index:9998;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#7C3AED);box-shadow:0 4px 20px rgba(79,70,229,.45);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,box-shadow .2s;user-select:none;}
+#cw-fab{position:fixed!important;bottom:24px;right:24px;z-index:99999!important;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#7C3AED);box-shadow:0 4px 20px rgba(79,70,229,.45);display:flex!important;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,box-shadow .2s;user-select:none;}
 #cw-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(79,70,229,.55);}
 #cw-badge{position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:999px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
-#cw-drawer{position:fixed;bottom:90px;right:24px;z-index:9999;width:360px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;box-shadow:0 12px 48px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden;transform:scale(.92) translateY(16px);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s;max-height:520px;}
+#cw-drawer{position:fixed!important;bottom:90px;right:24px;z-index:99998!important;width:360px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;box-shadow:0 12px 48px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden;transform:scale(.92) translateY(16px);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s;max-height:520px;}
 #cw-drawer.cw-open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
 #cw-header{background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 #cw-header-info{display:flex;align-items:center;gap:10px;}
@@ -129,7 +126,7 @@ $_wCsrf = \LRV\Core\Csrf::token();
 (function(){
 'use strict';
 var CSRF   = <?php echo json_encode($_wCsrf); ?>;
-var WS_PORT = <?php echo (int)\LRV\Core\Settings::obter('chat.ws_port', 8082); ?>;
+var WS_PORT = <?php try { echo (int)\LRV\Core\Settings::obter('chat.ws_port', 8082); } catch (\Throwable $_e) { echo 8082; } ?>;
 
 var fab     = document.getElementById('cw-fab');
 var drawer  = document.getElementById('cw-drawer');
