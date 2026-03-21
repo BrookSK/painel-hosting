@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LRV\Core;
 
+use LRV\Core\ConfiguracoesSistema;
+
 final class SistemaConfig
 {
     public static function nome(): string
@@ -84,11 +86,9 @@ final class SistemaConfig
 
     public static function seoCanonicalBase(): string
     {
-        // Fallback para app.url_base se não configurado separadamente
         $v = trim((string) Settings::obter('seo.canonical_base', ''));
         if ($v !== '') return rtrim($v, '/');
-        $app = trim((string) Settings::obter('app.url_base', ''));
-        return rtrim($app, '/');
+        return ConfiguracoesSistema::appUrlBase();
     }
 
     public static function seoSchemaType(): string

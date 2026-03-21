@@ -42,7 +42,14 @@ final class ConfiguracoesSistema
     public static function appUrlBase(): string
     {
         $url = trim((string) Settings::obter('app.url_base', ''));
-        return rtrim($url, '/');
+        if ($url !== '') {
+            return rtrim($url, '/');
+        }
+
+        // Fallback automático: deriva da requisição atual
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+        return $scheme . '://' . $host;
     }
 
     public static function evolutionUrlBase(): string

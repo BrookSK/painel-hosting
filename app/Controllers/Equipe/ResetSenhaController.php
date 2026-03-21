@@ -118,7 +118,7 @@ final class ResetSenhaController
     private function enviarEmail(string $email, string $token): void
     {
         try {
-            $base    = rtrim((string)Settings::obter('app.url_base', ''), '/');
+            $base    = \LRV\Core\ConfiguracoesSistema::appUrlBase();
             $link    = $base . '/equipe/reset-senha/nova?token=' . $token;
             $assunto = 'Redefinição de senha — Painel da Equipe';
             $corpo   = "Você solicitou a redefinição de senha.\n\nClique no link abaixo (válido por 1 hora):\n{$link}\n\nSe não foi você, ignore este e-mail.";

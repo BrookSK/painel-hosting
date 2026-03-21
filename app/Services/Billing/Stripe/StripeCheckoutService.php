@@ -18,9 +18,6 @@ final class StripeCheckoutService
         }
 
         $appUrl = ConfiguracoesSistema::appUrlBase();
-        if ($appUrl === '') {
-            throw new \RuntimeException('URL base pública da aplicação não configurada.');
-        }
 
         $pdo = BancoDeDados::pdo();
 
