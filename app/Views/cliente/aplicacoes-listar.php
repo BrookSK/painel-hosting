@@ -3,21 +3,25 @@ declare(strict_types=1);
 use LRV\Core\View;
 
 function badgeStatusAppCliente(string $st): string {
-    if ($st === 'inactive')  return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">Inativa</span>';
-    if ($st === 'deploying') return '<span class="badge-new" style="background:#e0e7ff;color:#1e3a8a;">Deploy</span>';
-    if ($st === 'error')     return '<span class="badge-new badge-red">Erro</span>';
+    if ($st === 'inactive')    return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">Inativa</span>';
+    if ($st === 'deploying')   return '<span class="badge-new" style="background:#e0e7ff;color:#1e3a8a;">Deploy</span>';
+    if ($st === 'installing')  return '<span class="badge-new" style="background:#fef3c7;color:#92400e;">Instalando</span>';
+    if ($st === 'running')     return '<span class="badge-new badge-green">Rodando</span>';
+    if ($st === 'stopped')     return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">Parada</span>';
+    if ($st === 'error')       return '<span class="badge-new badge-red">Erro</span>';
     return '<span class="badge-new badge-green">Ativa</span>';
 }
 
-$pageTitle    = 'Minhas Aplicações';
-$clienteNome  = (string)($cliente['name'] ?? '');
-$clienteEmail = (string)($cliente['email'] ?? '');
+$pageTitle = 'Minhas Aplicações';
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
-<div style="margin-bottom:24px;">
-  <div class="page-title">Minhas Aplicações</div>
-  <div class="page-subtitle" style="margin-bottom:0;">Apps e portas reservadas</div>
+<div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+  <div>
+    <div class="page-title">Minhas Aplicações</div>
+    <div class="page-subtitle" style="margin-bottom:0;">Apps instaladas nas suas VPS</div>
+  </div>
+  <a href="/cliente/aplicacoes/catalogo" class="botao sm">📦 Catálogo — Instalar nova</a>
 </div>
 
 <div class="card-new">

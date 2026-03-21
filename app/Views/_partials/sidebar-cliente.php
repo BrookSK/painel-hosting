@@ -56,6 +56,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 4l4 4-4 4M10 16h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Aplicações</span>
     </a>
+    <a href="/cliente/aplicacoes/catalogo" class="nav-item<?php echo _nav_ativo_cli('/cliente/aplicacoes/catalogo', $_seg); ?>" data-tooltip="Catálogo" style="padding-left:32px;font-size:13px;">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span>Catálogo</span>
+    </a>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="Assinaturas">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>Assinaturas</span>

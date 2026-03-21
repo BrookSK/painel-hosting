@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Jobs;
 
 use LRV\App\Services\Deploy\AplicacaoDeployService;
+use LRV\App\Services\Deploy\AppInstallService;
 use LRV\App\Services\Alertas\NotificacoesService;
 use LRV\App\Services\Backup\VpsBackupService;
 use LRV\App\Services\Provisioning\DockerCli;
@@ -122,6 +123,29 @@ final class RegistroHandlers
                     $up2->execute([':id' => $appId]);
                 } catch (\Throwable $e2) {
                 }
+                throw $e;
+            }
+        });
+
+        $p->registrar('install_app_template', static function (array $payload, ContextoJob $ctx): void {
+            $appId = (int) ($payload['application_id'] ?? 0);
+            if ($appId <= 0) {
+                throw new \InvalidArgumentException('application_id inválido.');
+            }
+
+            $pdo = BancoDeDados::pdo();
+            $pdo->prepare("UPDATE applications SET status = 'installing' WHERE id = :id")
+                ->execute([':id' => $appId]);
+
+            $svc = new AppInstallService(new DockerCli());
+
+            try {
+                $svc->instalar($appId, fn (string $m) => $ctx->log($m));
+            } catch (\Throwable $e) {
+                try {
+                    $pdo->prepare("UPDATE applications SET status = 'error', logs = :l WHERE id = :id")
+                        ->execute([':l' => $e->getMessage(), ':id' => $appId]);
+                } catch (\Throwable) {}
                 throw $e;
             }
         });
