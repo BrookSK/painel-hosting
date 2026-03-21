@@ -2,17 +2,13 @@
 use LRV\Core\View;
 use LRV\Core\I18n;
 use LRV\Core\SistemaConfig;
-$_topo_links = [
-    ['href' => '/termos',  'label' => 'Termos'],
-    ['href' => '/contato', 'label' => 'Contato'],
-];
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <?php $seo_titulo = 'Política de Privacidade — ' . ($nome_sistema ?? SistemaConfig::nome()); require __DIR__ . '/_partials/seo.php'; ?>
+  <?php $seo_titulo = I18n::t('privacidade.titulo') . ' — ' . ($nome_sistema ?? SistemaConfig::nome()); require __DIR__ . '/_partials/seo.php'; ?>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>
     body{background:#060d1f;}
@@ -33,16 +29,17 @@ $_topo_links = [
     .legal-body .legal-meta{font-size:13px;color:#94a3b8;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;}
     .legal-body .aviso{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin:20px 0;font-size:13px;color:#991b1b;font-weight:500;}
     .legal-body .destaque{background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 16px;margin:20px 0;font-size:13px;color:#1e40af;}
+    @media(max-width:600px){.legal-body{padding:24px 18px}.legal-wrap{padding:32px 16px 48px}}
   </style>
 </head>
 <body>
-  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
+  <?php require __DIR__ . '/_partials/navbar-publica.php'; ?>
 
   <div class="pub-page-hero">
     <div class="pub-page-hero-inner">
-      <div class="pub-page-label">Legal</div>
-      <h1 class="pub-page-title">Política de Privacidade</h1>
-      <p class="pub-page-sub">Saiba como coletamos, usamos e protegemos seus dados.</p>
+      <div class="pub-page-label"><?php echo View::e(I18n::t('privacidade.label')); ?></div>
+      <h1 class="pub-page-title"><?php echo View::e(I18n::t('privacidade.titulo')); ?></h1>
+      <p class="pub-page-sub"><?php echo View::e(I18n::t('privacidade.sub')); ?></p>
     </div>
   </div>
 
@@ -51,8 +48,8 @@ $_topo_links = [
       <?php if (!empty($conteudo)): ?>
         <?php echo $conteudo; ?>
       <?php else: ?>
-        <h1>Política de Privacidade</h1>
-        <p>A política de privacidade ainda não foi configurada. Entre em contato com o administrador.</p>
+        <h1><?php echo View::e(I18n::t('privacidade.titulo')); ?></h1>
+        <p><?php echo View::e(I18n::t('privacidade.vazio')); ?></p>
       <?php endif; ?>
     </div>
   </div>

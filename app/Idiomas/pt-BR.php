@@ -1,6 +1,43 @@
 <?php
 
 return [
+    // ── Navbar pública ──
+    'nav.inicio' => 'Início',
+    'nav.infraestrutura' => 'Infraestrutura',
+    'nav.planos' => 'Planos',
+    'nav.status' => 'Status',
+    'nav.recursos' => 'Recursos',
+    'nav.changelog' => 'Changelog',
+    'nav.contato' => 'Contato',
+    'nav.termos' => 'Termos de uso',
+    'nav.privacidade' => 'Privacidade',
+    'nav.licenca' => 'Licença',
+    'nav.entrar' => 'Entrar',
+    'nav.contratar' => 'Contratar Agora',
+
+    // ── Footer público ──
+    'footer.desc' => 'Infraestrutura cloud gerenciada. VPS, deploy, e-mails, backups e suporte em um único painel.',
+    'footer.produto' => 'Produto',
+    'footer.funcionalidades' => 'Funcionalidades',
+    'footer.planos' => 'Planos',
+    'footer.changelog' => 'Changelog',
+    'footer.status' => 'Status',
+    'footer.suporte' => 'Suporte',
+    'footer.contato' => 'Contato',
+    'footer.central_ajuda' => 'Central de ajuda',
+    'footer.tickets' => 'Tickets',
+    'footer.legal' => 'Legal',
+    'footer.termos' => 'Termos de uso',
+    'footer.privacidade' => 'Privacidade',
+    'footer.licenca' => 'Licença de uso',
+    'footer.sistemas_op' => 'Todos os sistemas operacionais',
+
+    // ── Status público ──
+    'status.todos_operacionais' => 'Todos os sistemas operacionais',
+    'status.degradacao' => 'Degradação parcial detectada',
+    'status.indisponivel' => 'Indisponibilidade em andamento',
+    'status.desconhecido' => 'Status desconhecido',
+
     // ── Geral ──
     'geral.erro_interno' => 'Erro interno.',
     'geral.rota_nao_encontrada' => 'Rota não encontrada.',
@@ -1206,4 +1243,92 @@ return [
     'licenca.nav_termos' => 'Termos',
     'licenca.nav_privacidade' => 'Privacidade',
     'licenca.nav_contato' => 'Contato',
+
+    // ── Changelog ──
+    'changelog.label' => 'Histórico de versões',
+    'changelog.titulo' => 'Changelog',
+    'changelog.sub' => 'Acompanhe todas as novidades, melhorias e correções do sistema.',
+
+    // ── Contato ──
+    'contato.label' => 'Fale conosco',
+    'contato.titulo' => 'Contato',
+    'contato.sub' => 'Tem alguma dúvida ou precisa de ajuda? Envie uma mensagem e retornaremos em breve.',
+    'contato.nome' => 'Nome',
+    'contato.email' => 'E-mail',
+    'contato.assunto' => 'Assunto',
+    'contato.mensagem' => 'Mensagem',
+    'contato.enviar' => 'Enviar mensagem',
+    'contato.ph_nome' => 'Seu nome',
+    'contato.ph_email' => 'seu@email.com',
+    'contato.ph_assunto' => 'Como podemos ajudar?',
+    'contato.ph_mensagem' => 'Descreva sua dúvida ou solicitação...',
+
+    // ── Status ──
+    'status_page.label' => 'Transparência operacional',
+    'status_page.titulo' => 'Status do sistema',
+    'status_page.servicos' => 'Serviços',
+    'status_page.auto_refresh' => 'Atualização automática a cada 30s',
+    'status_page.th_servico' => 'Serviço',
+    'status_page.th_status' => 'Status',
+    'status_page.th_uptime' => 'Uptime 24h',
+    'status_page.th_historico' => 'Histórico',
+    'status_page.th_checagem' => 'Última checagem',
+    'status_page.nenhum_servico' => 'Nenhum serviço configurado ainda.',
+    'status_page.incidentes' => 'Incidentes recentes',
+    'status_page.nenhum_incidente' => 'Nenhum incidente recente. Tudo operando normalmente.',
+    'status_page.inicio' => 'Início:',
+    'status_page.resolvido' => 'Resolvido:',
+    'status_page.operacional' => 'Operacional',
+    'status_page.degradado' => 'Degradado',
+    'status_page.indisponivel' => 'Indisponível',
+    'status_page.desconhecido' => 'Desconhecido',
+    'status_page.resolvido_badge' => 'Resolvido',
+    'status_page.monitorando' => 'Monitorando',
+    'status_page.identificado' => 'Identificado',
+    'status_page.investigando' => 'Investigando',
+    'status_page.critico' => 'Crítico',
+    'status_page.alto' => 'Alto',
+    'status_page.baixo' => 'Baixo',
+
+    // ── Status Incidentes ──
+    'status_inc.nenhum' => 'Nenhum incidente registrado.',
+    'status_inc.anterior' => '← Anterior',
+    'status_inc.proxima' => 'Próxima →',
+    'status_inc.pagina' => 'Página %d de %d',
+    'status_inc.titulo' => 'Histórico de incidentes',
+    'status_inc.sub' => 'Veja o histórico completo de incidentes e manutenções.',
+
+    // ── Termos ──
+    'termos.label' => 'Legal',
+    'termos.titulo' => 'Termos de Uso',
+    'termos.sub' => 'Leia com atenção os termos que regem o uso da plataforma.',
+    'termos.vazio' => 'Os termos de uso ainda não foram configurados. Entre em contato com o administrador.',
+
+    // ── Privacidade ──
+    'privacidade.label' => 'Legal',
+    'privacidade.titulo' => 'Política de Privacidade',
+    'privacidade.sub' => 'Saiba como coletamos, usamos e protegemos seus dados.',
+    'privacidade.vazio' => 'A política de privacidade ainda não foi configurada. Entre em contato com o administrador.',
+
+    // ── Stripe Checkout ──
+    'stripe.sucesso_titulo' => 'Pagamento confirmado',
+    'stripe.sucesso_sub' => 'Sua assinatura foi ativada com sucesso.',
+    'stripe.erro_tentar' => 'Tentar novamente',
+    'stripe.detalhes' => 'Detalhes da assinatura',
+    'stripe.plano' => 'Plano',
+    'stripe.valor' => 'Valor',
+    'stripe.prox_cobranca' => 'Próx. cobrança',
+    'stripe.status' => 'Status',
+    'stripe.ativa' => 'Ativa',
+    'stripe.vps_vinculada' => 'VPS vinculada',
+    'stripe.proximos_passos' => 'Próximos passos:',
+    'stripe.passo_1' => 'Sua VPS será provisionada automaticamente em alguns minutos.',
+    'stripe.passo_2' => 'Você receberá as credenciais de acesso no painel.',
+    'stripe.passo_3' => 'Em caso de dúvidas, abra um ticket de suporte.',
+    'stripe.ver_vps' => 'Ver minhas VPS',
+    'stripe.ver_assinaturas' => 'Ver assinaturas',
+    'stripe.cancelado_titulo' => 'Checkout cancelado',
+    'stripe.cancelado_sub' => 'Você cancelou o checkout. Nenhuma cobrança foi gerada.',
+    'stripe.escolher_plano' => 'Escolher outro plano',
+    'stripe.voltar_planos' => 'Ver planos',
 ];

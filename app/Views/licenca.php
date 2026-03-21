@@ -3,11 +3,6 @@ use LRV\Core\View;
 use LRV\Core\I18n;
 use LRV\Core\SistemaConfig;
 $conteudoCustomizado = (string)($conteudo_customizado ?? '');
-$_topo_links = [
-    ['href' => '/termos',     'label' => I18n::t('licenca.nav_termos')],
-    ['href' => '/privacidade','label' => I18n::t('licenca.nav_privacidade')],
-    ['href' => '/contato',    'label' => I18n::t('licenca.nav_contato')],
-];
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
@@ -39,7 +34,7 @@ $_topo_links = [
   </style>
 </head>
 <body>
-  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
+  <?php require __DIR__ . '/_partials/navbar-publica.php'; ?>
 
   <div class="pub-page-hero">
     <div class="pub-page-hero-inner">

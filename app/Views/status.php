@@ -8,40 +8,40 @@ use LRV\Core\View;
 function badgeStatusPublic(string $st): string
 {
     if ($st === 'operational') {
-        return '<span class="badge" style="background:#dcfce7;color:#166534;">Operacional</span>';
+        return '<span class="badge" style="background:#dcfce7;color:#166534;">' . View::e(I18n::t('status_page.operacional')) . '</span>';
     }
     if ($st === 'degraded') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Degradado</span>';
+        return '<span class="badge" style="background:#fef3c7;color:#92400e;">' . View::e(I18n::t('status_page.degradado')) . '</span>';
     }
     if ($st === 'major_outage') {
-        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Indisponível</span>';
+        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">' . View::e(I18n::t('status_page.indisponivel')) . '</span>';
     }
-    return '<span class="badge" style="background:#f1f5f9;color:#334155;">Desconhecido</span>';
+    return '<span class="badge" style="background:#f1f5f9;color:#334155;">' . View::e(I18n::t('status_page.desconhecido')) . '</span>';
 }
 
 function badgeIncidentStatusPublic(string $st): string
 {
     if ($st === 'resolved') {
-        return '<span class="badge" style="background:#dcfce7;color:#166534;">Resolvido</span>';
+        return '<span class="badge" style="background:#dcfce7;color:#166534;">' . View::e(I18n::t('status_page.resolvido_badge')) . '</span>';
     }
     if ($st === 'monitoring') {
-        return '<span class="badge" style="background:#e0f2fe;color:#075985;">Monitorando</span>';
+        return '<span class="badge" style="background:#e0f2fe;color:#075985;">' . View::e(I18n::t('status_page.monitorando')) . '</span>';
     }
     if ($st === 'identified') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Identificado</span>';
+        return '<span class="badge" style="background:#fef3c7;color:#92400e;">' . View::e(I18n::t('status_page.identificado')) . '</span>';
     }
-    return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Investigando</span>';
+    return '<span class="badge" style="background:#fee2e2;color:#991b1b;">' . View::e(I18n::t('status_page.investigando')) . '</span>';
 }
 
 function badgeImpactPublic(string $impact): string
 {
     if ($impact === 'critical') {
-        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">Crítico</span>';
+        return '<span class="badge" style="background:#fee2e2;color:#991b1b;">' . View::e(I18n::t('status_page.critico')) . '</span>';
     }
     if ($impact === 'major') {
-        return '<span class="badge" style="background:#fef3c7;color:#92400e;">Alto</span>';
+        return '<span class="badge" style="background:#fef3c7;color:#92400e;">' . View::e(I18n::t('status_page.alto')) . '</span>';
     }
-    return '<span class="badge" style="background:#f1f5f9;color:#334155;">Baixo</span>';
+    return '<span class="badge" style="background:#f1f5f9;color:#334155;">' . View::e(I18n::t('status_page.baixo')) . '</span>';
 }
 
 function corBar(string $st): string
@@ -79,22 +79,17 @@ foreach ($servicesArr as $s) {
     }
 }
 
-$_topo_links = [
-    ['href' => '/status/incidentes', 'label' => 'Histórico'],
-    ['href' => '/cliente/entrar',    'label' => 'Entrar'],
-];
-
-$_geral_label = match($geral) {
-    'operational' => 'Todos os sistemas operacionais',
-    'degraded'    => 'Degradação parcial detectada',
-    'major_outage'=> 'Indisponibilidade em andamento',
-    default       => 'Status desconhecido',
-};
 $_geral_color = match($geral) {
     'operational' => '#22c55e',
     'degraded'    => '#f59e0b',
     'major_outage'=> '#ef4444',
     default       => '#94a3b8',
+};
+$_geral_label = match($geral) {
+    'operational' => I18n::t('status.todos_operacionais'),
+    'degraded'    => I18n::t('status.degradacao'),
+    'major_outage'=> I18n::t('status.indisponivel'),
+    default       => I18n::t('status.desconhecido'),
 };
 ?>
 <!doctype html>
@@ -121,15 +116,16 @@ $_geral_color = match($geral) {
     .incident-item{border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:12px;}
     .incident-item:last-child{margin-bottom:0;}
     .incident-update{border-left:3px solid #e2e8f0;padding-left:12px;margin-top:8px;}
+    @media(max-width:640px){.status-content{padding:24px 16px 48px}.status-card{padding:18px}.status-card-title{flex-wrap:wrap;gap:6px}.status-card-title span{margin-left:0;width:100%}}
   </style>
 </head>
 <body>
-  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
+  <?php require __DIR__ . '/_partials/navbar-publica.php'; ?>
 
   <div class="pub-page-hero">
     <div class="pub-page-hero-inner">
-      <div class="pub-page-label">Transparência operacional</div>
-      <h1 class="pub-page-title">Status do sistema</h1>
+      <div class="pub-page-label"><?php echo View::e(I18n::t('status_page.label')); ?></div>
+      <h1 class="pub-page-title"><?php echo View::e(I18n::t('status_page.titulo')); ?></h1>
       <div class="status-overall">
         <span class="status-overall-dot" style="background:<?php echo View::e($_geral_color); ?>;box-shadow:0 0 0 3px <?php echo View::e($_geral_color); ?>33;"></span>
         <?php echo View::e($_geral_label); ?>
@@ -141,18 +137,18 @@ $_geral_color = match($geral) {
     <div class="status-card">
       <div class="status-card-title">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="4" rx="1.5" stroke="#4F46E5" stroke-width="1.4"/><rect x="1" y="10" width="14" height="4" rx="1.5" stroke="#4F46E5" stroke-width="1.4"/><circle cx="12" cy="6" r="1" fill="#4F46E5"/><circle cx="12" cy="12" r="1" fill="#4F46E5"/></svg>
-        Serviços
-        <span style="margin-left:auto;font-size:12px;font-weight:400;color:#94a3b8;">Atualização automática a cada 30s</span>
+        <?php echo View::e(I18n::t('status_page.servicos')); ?>
+        <span style="margin-left:auto;font-size:12px;font-weight:400;color:#94a3b8;"><?php echo View::e(I18n::t('status_page.auto_refresh')); ?></span>
       </div>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
-              <th>Serviço</th>
-              <th>Status</th>
-              <th>Uptime 24h</th>
-              <th>Histórico</th>
-              <th>Última checagem</th>
+              <th><?php echo View::e(I18n::t('status_page.th_servico')); ?></th>
+              <th><?php echo View::e(I18n::t('status_page.th_status')); ?></th>
+              <th><?php echo View::e(I18n::t('status_page.th_uptime')); ?></th>
+              <th><?php echo View::e(I18n::t('status_page.th_historico')); ?></th>
+              <th><?php echo View::e(I18n::t('status_page.th_checagem')); ?></th>
             </tr>
           </thead>
           <tbody>
@@ -182,7 +178,7 @@ $_geral_color = match($geral) {
               </tr>
             <?php endforeach; ?>
             <?php if (empty($servicesArr)): ?>
-              <tr><td colspan="5" style="color:#94a3b8;text-align:center;padding:24px;">Nenhum serviço configurado ainda.</td></tr>
+              <tr><td colspan="5" style="color:#94a3b8;text-align:center;padding:24px;"><?php echo View::e(I18n::t('status_page.nenhum_servico')); ?></td></tr>
             <?php endif; ?>
           </tbody>
         </table>
@@ -192,12 +188,12 @@ $_geral_color = match($geral) {
     <div class="status-card">
       <div class="status-card-title">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#4F46E5" stroke-width="1.4"/><path d="M8 5v4" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.5" r=".8" fill="#4F46E5"/></svg>
-        Incidentes recentes
+        <?php echo View::e(I18n::t('status_page.incidentes')); ?>
       </div>
       <?php if (empty($incidents)): ?>
         <div style="text-align:center;padding:24px;color:#94a3b8;font-size:14px;">
           <div style="font-size:28px;margin-bottom:8px;">✅</div>
-          Nenhum incidente recente. Tudo operando normalmente.
+          <?php echo View::e(I18n::t('status_page.nenhum_incidente')); ?>
         </div>
       <?php else: ?>
         <?php foreach (($incidents ?? []) as $inc): ?>
@@ -209,8 +205,8 @@ $_geral_color = match($geral) {
               <div>
                 <div style="font-weight:700;font-size:14px;color:#0f172a;"><?php echo View::e((string) ($inc['title'] ?? '')); ?></div>
                 <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
-                  Início: <?php echo View::e((string) ($inc['started_at'] ?? '')); ?>
-                  <?php if (trim((string) ($inc['resolved_at'] ?? '')) !== ''): ?> · Resolvido: <?php echo View::e((string) ($inc['resolved_at'] ?? '')); ?><?php endif; ?>
+                  <?php echo View::e(I18n::t('status_page.inicio')); ?> <?php echo View::e((string) ($inc['started_at'] ?? '')); ?>
+                  <?php if (trim((string) ($inc['resolved_at'] ?? '')) !== ''): ?> · <?php echo View::e(I18n::t('status_page.resolvido')); ?> <?php echo View::e((string) ($inc['resolved_at'] ?? '')); ?><?php endif; ?>
                 </div>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">

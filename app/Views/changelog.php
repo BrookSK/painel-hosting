@@ -2,17 +2,13 @@
 use LRV\Core\View;
 use LRV\Core\I18n;
 use LRV\Core\SistemaConfig;
-$_topo_links = [
-    ['href' => '/status',  'label' => 'Status'],
-    ['href' => '/contato', 'label' => 'Contato'],
-];
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <?php $seo_titulo = 'Changelog — ' . ($nome_sistema ?? SistemaConfig::nome()); require __DIR__ . '/_partials/seo.php'; ?>
+  <?php $seo_titulo = I18n::t('changelog.titulo') . ' — ' . ($nome_sistema ?? SistemaConfig::nome()); require __DIR__ . '/_partials/seo.php'; ?>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>
     body{background:#060d1f;}
@@ -32,16 +28,17 @@ $_topo_links = [
     .changelog-body li{margin-bottom:4px;}
     .changelog-body code{background:#f1f5f9;padding:2px 6px;border-radius:5px;font-size:12px;color:#0f172a;}
     .changelog-body strong{color:#0f172a;}
+    @media(max-width:600px){.changelog-body{padding:24px 18px}.changelog-wrap{padding:32px 16px 48px}}
   </style>
 </head>
 <body>
-  <?php require __DIR__ . '/_partials/topo-publico.php'; ?>
+  <?php require __DIR__ . '/_partials/navbar-publica.php'; ?>
 
   <div class="pub-page-hero">
     <div class="pub-page-hero-inner">
-      <div class="pub-page-label">Histórico de versões</div>
-      <h1 class="pub-page-title">Changelog</h1>
-      <p class="pub-page-sub">Acompanhe todas as novidades, melhorias e correções do sistema.</p>
+      <div class="pub-page-label"><?php echo View::e(I18n::t('changelog.label')); ?></div>
+      <h1 class="pub-page-title"><?php echo View::e(I18n::t('changelog.titulo')); ?></h1>
+      <p class="pub-page-sub"><?php echo View::e(I18n::t('changelog.sub')); ?></p>
     </div>
   </div>
 

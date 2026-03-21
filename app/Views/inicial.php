@@ -30,42 +30,6 @@ html{scroll-behavior:smooth;overflow-x:hidden}
 body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a;max-width:100vw}
 a{text-decoration:none;color:inherit}
 
-/* ── Navbar ── */
-.navbar{position:sticky;top:0;z-index:100;background:rgba(11,28,61,.92);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.08);padding:0 16px}
-.navbar-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;gap:8px}
-.navbar-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;flex-shrink:0;min-width:0}
-.navbar-brand img{height:28px;width:auto;flex-shrink:0}
-.navbar-brand-name{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.navbar-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
-.navbar-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13.5px;font-weight:500;padding:6px 12px;border-radius:8px;transition:color .15s,background .15s}
-.navbar-links a:hover{color:#fff;background:rgba(255,255,255,.1)}
-.navbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.navbar-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s,transform .1s;white-space:nowrap}
-.navbar-btn:hover{opacity:.88;transform:translateY(-1px)}
-.navbar-btn.ghost{color:rgba(255,255,255,.85);border:1.5px solid rgba(255,255,255,.2)}
-.navbar-btn.solid{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff}
-.navbar-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0}
-.navbar-hamburger span{display:block;height:2px;background:#fff;border-radius:2px;transition:transform .25s,opacity .25s}
-.navbar-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
-.navbar-hamburger.open span:nth-child(2){opacity:0}
-.navbar-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.navbar-drawer{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:rgba(6,13,31,.97);z-index:99;padding:24px 20px;flex-direction:column;gap:4px;overflow-y:auto}
-.navbar-drawer.open{display:flex}
-.navbar-drawer a{color:rgba(255,255,255,.8);font-size:16px;font-weight:500;padding:14px 16px;border-radius:10px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .15s,color .15s}
-.navbar-drawer a:hover{background:rgba(255,255,255,.08);color:#fff}
-.navbar-drawer .drawer-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
-.navbar-drawer .drawer-actions a{border-bottom:none;text-align:center;font-weight:700;padding:14px 16px;border-radius:10px}
-.navbar-drawer .drawer-actions .ghost{border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.85)}
-.navbar-drawer .drawer-actions .solid{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff}
-@media(max-width:768px){
-  .navbar{padding:0 12px}
-  .navbar-links{display:none}
-  .navbar-btn.ghost{display:none}
-  .navbar-btn.solid{display:none}
-  .navbar-hamburger{display:flex}
-  .navbar-actions .lang-dropdown{display:none}
-}
-
 /* ── Hero split ── */
 .hero{background:linear-gradient(135deg,#060d1f 0%,#0B1C3D 30%,#1e3a8a 60%,#4F46E5 85%,#7C3AED 100%);position:relative;overflow:hidden;padding:80px 0}
 .hero__particles{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.15) 1px,transparent 1px),radial-gradient(circle,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px,96px 96px;background-position:0 0,24px 24px}
@@ -151,45 +115,8 @@ a{text-decoration:none;color:inherit}
 </head>
 <body>
 
-<!-- NAVBAR (idêntico ao infraestrutura.php) -->
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="/" class="navbar-brand">
-      <?php if ($_logo !== ''): ?>
-        <img src="<?php echo View::e($_logo); ?>" alt="<?php echo View::e($_nome); ?>"/>
-      <?php else: ?>
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="#4F46E5"/><path d="M7 14h14M14 7v14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
-      <?php endif; ?>
-      <span class="navbar-brand-name"><?php echo View::e($_nome); ?></span>
-    </a>
-    <div class="navbar-links">
-      <a href="#sobre"><?php echo View::e(I18n::t('home.nav_sobre')); ?></a>
-      <a href="#planos"><?php echo View::e(I18n::t('home.nav_planos')); ?></a>
-      <a href="#condicoes"><?php echo View::e(I18n::t('home.nav_condicoes')); ?></a>
-      <a href="/infraestrutura"><?php echo View::e(I18n::t('home.nav_devs')); ?></a>
-    </div>
-    <div class="navbar-actions">
-      <?php require __DIR__ . '/_partials/idioma.php'; ?>
-      <a href="/cliente/entrar" class="navbar-btn ghost"><?php echo View::e(I18n::t('home.nav_entrar')); ?></a>
-      <a href="/cliente/criar-conta" class="navbar-btn solid"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
-      <button class="navbar-hamburger" id="navHamburger" aria-label="Menu" onclick="toggleDrawer()">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </div>
-</nav>
+<?php require __DIR__ . '/_partials/navbar-publica.php'; ?>
 
-<!-- DRAWER MOBILE -->
-<div class="navbar-drawer" id="navDrawer">
-  <a href="#sobre" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_sobre')); ?></a>
-  <a href="#planos" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_planos')); ?></a>
-  <a href="#condicoes" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_condicoes')); ?></a>
-  <a href="/infraestrutura" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_devs')); ?></a>
-  <div class="drawer-actions">
-    <a href="/cliente/entrar" class="ghost navbar-btn" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_entrar')); ?></a>
-    <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
-  </div>
-</div>
 <!-- HERO -->
 <?php
 $_trial_ativo = !empty($trial_ativo);
@@ -449,21 +376,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 .cta-btn-s{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:12px;font-size:.9rem;font-weight:700;background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);transition:background .15s;text-decoration:none}
 .cta-btn-s:hover{background:rgba(255,255,255,.18)}
 
-/* ── Footer (idêntico ao infraestrutura.php) ── */
-.footer{background:#060d1f;color:rgba(255,255,255,.5);padding:56px 24px 32px}
-.footer-inner{max-width:1100px;margin:0 auto}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
-@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:28px}}
-@media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
-.footer-brand-name{font-size:16px;font-weight:700;color:#fff;margin-bottom:10px}
-.footer-brand-desc{font-size:13px;line-height:1.7;max-width:260px}
-.footer-col-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35);margin-bottom:14px}
-.footer-links{list-style:none;display:flex;flex-direction:column;gap:9px}
-.footer-links a{color:rgba(255,255,255,.5);text-decoration:none;font-size:13px;transition:color .15s}
-.footer-links a:hover{color:#fff}
-.footer-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px}
-.footer-status-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4)}
-.footer-status-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
+
 </style>
 
 <!-- DIFERENCIAIS -->
@@ -651,24 +564,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
   </div>
 </div>
 
-<!-- FOOTER (idêntico ao infraestrutura.php) -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand-name"><?php echo View::e($_nome); ?></div>
-        <div class="footer-brand-desc"><?php echo View::e(I18n::t('home.footer_desc')); ?></div>
-      </div>
-      <div><div class="footer-col-title"><?php echo View::e(I18n::t('home.footer_produto')); ?></div><ul class="footer-links"><li><a href="#sobre"><?php echo View::e(I18n::t('home.footer_sobre')); ?></a></li><li><a href="#planos"><?php echo View::e(I18n::t('home.footer_planos')); ?></a></li><li><a href="#condicoes"><?php echo View::e(I18n::t('home.footer_condicoes')); ?></a></li><li><a href="/infraestrutura"><?php echo View::e(I18n::t('home.footer_devs')); ?></a></li><li><a href="/changelog">Changelog</a></li></ul></div>
-      <div><div class="footer-col-title"><?php echo View::e(I18n::t('home.footer_suporte')); ?></div><ul class="footer-links"><li><a href="/contato"><?php echo View::e(I18n::t('home.footer_contato')); ?></a></li><li><a href="/status"><?php echo View::e(I18n::t('home.footer_status')); ?></a></li><li><a href="/cliente/tickets"><?php echo View::e(I18n::t('home.footer_tickets')); ?></a></li><li><a href="/cliente/ajuda"><?php echo View::e(I18n::t('home.footer_ajuda')); ?></a></li></ul></div>
-      <div><div class="footer-col-title"><?php echo View::e(I18n::t('home.footer_legal')); ?></div><ul class="footer-links"><li><a href="/termos"><?php echo View::e(I18n::t('home.footer_termos')); ?></a></li><li><a href="/privacidade"><?php echo View::e(I18n::t('home.footer_privacidade')); ?></a></li></ul></div>
-    </div>
-    <div class="footer-bottom">
-      <div><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></div>
-      <div class="footer-status-dot"><?php echo View::e(I18n::t('home.footer_sistema_op')); ?></div>
-    </div>
-  </div>
-</footer>
+<?php require __DIR__ . '/_partials/footer.php'; ?>
 
 <script>
 document.querySelectorAll('a[href^="#"]').forEach(function(a){
@@ -732,20 +628,6 @@ function closeCompareModal(){document.getElementById('compareModal').classList.r
 document.getElementById('compareModal').addEventListener('click',function(e){if(e.target===this)closeCompareModal();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCompareModal();});
 
-function toggleDrawer(){
-  var h=document.getElementById('navHamburger');
-  var d=document.getElementById('navDrawer');
-  var open=d.classList.toggle('open');
-  h.classList.toggle('open',open);
-  document.body.style.overflow=open?'hidden':'';
-}
-function closeDrawer(){
-  document.getElementById('navDrawer').classList.remove('open');
-  document.getElementById('navHamburger').classList.remove('open');
-  document.body.style.overflow='';
-}
-
 </script>
-<?php require __DIR__ . '/_partials/chat-widget.php'; ?>
 </body>
 </html>

@@ -1,6 +1,43 @@
 <?php
 
 return [
+    // ── Public Navbar ──
+    'nav.inicio' => 'Home',
+    'nav.infraestrutura' => 'Infrastructure',
+    'nav.planos' => 'Plans',
+    'nav.status' => 'Status',
+    'nav.recursos' => 'Resources',
+    'nav.changelog' => 'Changelog',
+    'nav.contato' => 'Contact',
+    'nav.termos' => 'Terms of Use',
+    'nav.privacidade' => 'Privacy',
+    'nav.licenca' => 'License',
+    'nav.entrar' => 'Sign In',
+    'nav.contratar' => 'Get Started',
+
+    // ── Public Footer ──
+    'footer.desc' => 'Managed cloud infrastructure. VPS, deploy, email, backups and support in a single panel.',
+    'footer.produto' => 'Product',
+    'footer.funcionalidades' => 'Features',
+    'footer.planos' => 'Plans',
+    'footer.changelog' => 'Changelog',
+    'footer.status' => 'Status',
+    'footer.suporte' => 'Support',
+    'footer.contato' => 'Contact',
+    'footer.central_ajuda' => 'Help Center',
+    'footer.tickets' => 'Tickets',
+    'footer.legal' => 'Legal',
+    'footer.termos' => 'Terms of Use',
+    'footer.privacidade' => 'Privacy',
+    'footer.licenca' => 'License',
+    'footer.sistemas_op' => 'All systems operational',
+
+    // ── Public Status ──
+    'status.todos_operacionais' => 'All systems operational',
+    'status.degradacao' => 'Partial degradation detected',
+    'status.indisponivel' => 'Outage in progress',
+    'status.desconhecido' => 'Status unknown',
+
     // ── General ──
     'geral.erro_interno' => 'Internal error.',
     'geral.rota_nao_encontrada' => 'Route not found.',
@@ -1206,4 +1243,92 @@ return [
     'licenca.nav_termos' => 'Terms',
     'licenca.nav_privacidade' => 'Privacy',
     'licenca.nav_contato' => 'Contact',
+
+    // ── Changelog ──
+    'changelog.label' => 'Version history',
+    'changelog.titulo' => 'Changelog',
+    'changelog.sub' => 'Follow all the news, improvements and fixes of the system.',
+
+    // ── Contact ──
+    'contato.label' => 'Get in touch',
+    'contato.titulo' => 'Contact',
+    'contato.sub' => 'Have a question or need help? Send us a message and we will get back to you shortly.',
+    'contato.nome' => 'Name',
+    'contato.email' => 'Email',
+    'contato.assunto' => 'Subject',
+    'contato.mensagem' => 'Message',
+    'contato.enviar' => 'Send message',
+    'contato.ph_nome' => 'Your name',
+    'contato.ph_email' => 'you@email.com',
+    'contato.ph_assunto' => 'How can we help?',
+    'contato.ph_mensagem' => 'Describe your question or request...',
+
+    // ── Status ──
+    'status_page.label' => 'Operational transparency',
+    'status_page.titulo' => 'System status',
+    'status_page.servicos' => 'Services',
+    'status_page.auto_refresh' => 'Auto-refresh every 30s',
+    'status_page.th_servico' => 'Service',
+    'status_page.th_status' => 'Status',
+    'status_page.th_uptime' => 'Uptime 24h',
+    'status_page.th_historico' => 'History',
+    'status_page.th_checagem' => 'Last check',
+    'status_page.nenhum_servico' => 'No services configured yet.',
+    'status_page.incidentes' => 'Recent incidents',
+    'status_page.nenhum_incidente' => 'No recent incidents. Everything is running normally.',
+    'status_page.inicio' => 'Started:',
+    'status_page.resolvido' => 'Resolved:',
+    'status_page.operacional' => 'Operational',
+    'status_page.degradado' => 'Degraded',
+    'status_page.indisponivel' => 'Unavailable',
+    'status_page.desconhecido' => 'Unknown',
+    'status_page.resolvido_badge' => 'Resolved',
+    'status_page.monitorando' => 'Monitoring',
+    'status_page.identificado' => 'Identified',
+    'status_page.investigando' => 'Investigating',
+    'status_page.critico' => 'Critical',
+    'status_page.alto' => 'Major',
+    'status_page.baixo' => 'Minor',
+
+    // ── Status Incidentes ──
+    'status_inc.nenhum' => 'No incidents recorded.',
+    'status_inc.anterior' => '← Previous',
+    'status_inc.proxima' => 'Next →',
+    'status_inc.pagina' => 'Page %d of %d',
+    'status_inc.titulo' => 'Incident history',
+    'status_inc.sub' => 'View the complete history of incidents and maintenance.',
+
+    // ── Terms ──
+    'termos.label' => 'Legal',
+    'termos.titulo' => 'Terms of Use',
+    'termos.sub' => 'Please read carefully the terms governing the use of the platform.',
+    'termos.vazio' => 'The terms of use have not been configured yet. Please contact the administrator.',
+
+    // ── Privacy ──
+    'privacidade.label' => 'Legal',
+    'privacidade.titulo' => 'Privacy Policy',
+    'privacidade.sub' => 'Learn how we collect, use and protect your data.',
+    'privacidade.vazio' => 'The privacy policy has not been configured yet. Please contact the administrator.',
+
+    // ── Stripe Checkout ──
+    'stripe.sucesso_titulo' => 'Payment confirmed',
+    'stripe.sucesso_sub' => 'Your subscription has been activated successfully.',
+    'stripe.erro_tentar' => 'Try again',
+    'stripe.detalhes' => 'Subscription details',
+    'stripe.plano' => 'Plan',
+    'stripe.valor' => 'Amount',
+    'stripe.prox_cobranca' => 'Next billing',
+    'stripe.status' => 'Status',
+    'stripe.ativa' => 'Active',
+    'stripe.vps_vinculada' => 'Linked VPS',
+    'stripe.proximos_passos' => 'Next steps:',
+    'stripe.passo_1' => 'Your VPS will be provisioned automatically in a few minutes.',
+    'stripe.passo_2' => 'You will receive access credentials in the dashboard.',
+    'stripe.passo_3' => 'If you have questions, open a support ticket.',
+    'stripe.ver_vps' => 'View my VPS',
+    'stripe.ver_assinaturas' => 'View subscriptions',
+    'stripe.cancelado_titulo' => 'Checkout cancelled',
+    'stripe.cancelado_sub' => 'You cancelled the checkout. No charges were made.',
+    'stripe.escolher_plano' => 'Choose another plan',
+    'stripe.voltar_planos' => 'View plans',
 ];
