@@ -1,8 +1,7 @@
 <?php
-declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\SistemaConfig;
-$_wNome = SistemaConfig::nome();
+try { $_wNome = SistemaConfig::nome(); } catch (\Throwable $_e) { $_wNome = 'Suporte'; }
 try { $_wCsrf = \LRV\Core\Csrf::token(); } catch (\Throwable $_e) { $_wCsrf = ''; }
 ?>
 <div id="cw-fab" title="Suporte" aria-label="Abrir suporte" role="button" tabindex="0" style="position:fixed!important;bottom:24px;right:24px;z-index:99999!important;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#7C3AED);box-shadow:0 4px 20px rgba(79,70,229,.45);display:flex!important;align-items:center;justify-content:center;cursor:pointer;user-select:none;">
