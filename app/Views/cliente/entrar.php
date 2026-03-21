@@ -91,30 +91,30 @@ $_logo = SistemaConfig::logoUrl();
   <div class="auth-right">
     <div class="auth-right-top">
       <?php require __DIR__ . '/../_partials/idioma.php'; ?>
-      <a href="/cliente/criar-conta">Criar conta &rarr;</a>
+      <a href="/cliente/criar-conta"><?php echo View::e(I18n::t('auth.criar_conta')); ?> &rarr;</a>
     </div>
-    <div class="auth-form-title">Bem-vindo de volta</div>
-    <div class="auth-form-sub">Entre com seu e-mail e senha para acessar o painel.</div>
+    <div class="auth-form-title"><?php echo View::e(I18n::t('auth.entrar')); ?></div>
+    <div class="auth-form-sub"><?php echo View::e(I18n::t('auth.entrar')); ?></div>
     <?php if (!empty($erro)): ?>
       <div class="erro"><?php echo View::e((string) $erro); ?></div>
     <?php endif; ?>
     <form method="post" action="/cliente/entrar">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
       <div class="auth-field">
-        <label class="auth-label">E-mail</label>
+        <label class="auth-label"><?php echo View::e(I18n::t('auth.email')); ?></label>
         <input class="input" type="email" name="email" value="<?php echo View::e((string) ($email ?? '')); ?>" autocomplete="email" placeholder="seu@email.com" />
       </div>
       <div class="auth-field">
-        <label class="auth-label">Senha</label>
+        <label class="auth-label"><?php echo View::e(I18n::t('auth.senha')); ?></label>
         <input class="input" type="password" name="senha" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
       </div>
-      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:4px;">Entrar na conta</button>
+      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:4px;"><?php echo View::e(I18n::t('auth.entrar')); ?></button>
     </form>
     <div class="auth-footer-links">
-      Não tem conta? <a href="/cliente/criar-conta">Criar conta grátis</a>
+      <?php echo View::e(I18n::t('auth.nao_tem_conta')); ?> <a href="/cliente/criar-conta"><?php echo View::e(I18n::t('auth.criar_conta')); ?></a>
     </div>
     <div style="margin-top:10px;text-align:center;font-size:13px;">
-      <a href="/cliente/reset-senha" style="color:#94a3b8;">Esqueci minha senha</a>
+      <a href="/cliente/reset-senha" style="color:#94a3b8;"><?php echo View::e(I18n::t('auth.esqueci_senha')); ?></a>
     </div>
     <div style="margin-top:12px;text-align:center;font-size:12px;">
       <a href="/equipe/entrar" style="color:#94a3b8;">Acesso da equipe</a>

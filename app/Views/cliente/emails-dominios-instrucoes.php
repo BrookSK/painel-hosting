@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $dominio     = is_array($dominio ?? null) ? $dominio : [];
 $dkim        = (string)($dkim ?? '');
@@ -18,7 +19,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="page-title">Instruções DNS</div>
     <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e($domain); ?></div>
   </div>
-  <a href="/cliente/emails/dominios" class="botao ghost sm">← Domínios</a>
+  <a href="/cliente/emails/dominios" class="botao ghost sm">← <?php echo View::e(I18n::t('emails.dominios')); ?></a>
 </div>
 
 <div class="card-new" style="max-width:780px;">
@@ -112,11 +113,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php endif; ?>
 
   <div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <a href="/cliente/emails/dominios" class="botao ghost">← Voltar</a>
+    <a href="/cliente/emails/dominios" class="botao ghost">← <?php echo View::e(I18n::t('geral.voltar')); ?></a>
     <form method="post" action="/cliente/emails/dominios/verificar" style="display:inline;">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
       <input type="hidden" name="dominio_id" value="<?php echo (int)($dominio['id'] ?? 0); ?>" />
-      <button class="botao" type="submit">Verificar DNS agora</button>
+      <button class="botao" type="submit"><?php echo View::e(I18n::t('emails.verificar_dns')); ?></button>
     </form>
   </div>
 </div>

@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
-$pageTitle    = 'Ajuda';
+$pageTitle    = I18n::t('ajuda.titulo');
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -19,14 +20,14 @@ details ul{padding-left:18px;}
 </style>
 
 <div style="margin-bottom:24px;">
-  <div class="page-title">Central de Ajuda</div>
-  <div class="page-subtitle" style="margin-bottom:0;">Dúvidas frequentes — v<?php echo View::e(\LRV\Core\SistemaConfig::versao()); ?></div>
+  <div class="page-title"><?php echo View::e(I18n::t('ajuda.titulo')); ?></div>
+  <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::tf('ajuda.versao', \LRV\Core\SistemaConfig::versao())); ?></div>
 </div>
 
 <div class="card-new" style="max-width:760px;">
-  <div class="card-new-title" style="margin-bottom:16px;">Perguntas frequentes</div>
+  <div class="card-new-title" style="margin-bottom:16px;"><?php echo View::e(I18n::t('ajuda.perguntas_frequentes')); ?></div>
 
-  <div class="faq-section">🖥️ VPS</div>
+  <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_vps')); ?></div>
 
   <details>
     <summary>Como provisionar minha VPS?</summary>
@@ -53,7 +54,7 @@ details ul{padding-left:18px;}
     <p>Backups são gerenciados pela equipe. Abra um <a href="/cliente/tickets/novo">ticket de suporte</a> solicitando um backup manual e informe o ID da VPS.</p>
   </details>
 
-  <div class="faq-section">📧 E-mail</div>
+  <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_email')); ?></div>
 
   <details>
     <summary>Como criar um e-mail com meu domínio?</summary>
@@ -70,7 +71,7 @@ details ul{padding-left:18px;}
     <p>Em <a href="/cliente/emails">Meus E-mails</a>, clique em "Alterar senha" ao lado do endereço. A alteração é aplicada imediatamente no servidor.</p>
   </details>
 
-  <div class="faq-section">💬 Chat e Suporte</div>
+  <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_chat')); ?></div>
 
   <details>
     <summary>Como usar o chat ao vivo?</summary>
@@ -95,7 +96,7 @@ details ul{padding-left:18px;}
     <p>Abra um <a href="/cliente/tickets/novo">ticket de suporte</a> com o assunto "Cancelamento". O cancelamento é processado em até 1 dia útil.</p>
   </details>
 
-  <div class="faq-section">📦 Aplicações</div>
+  <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_apps')); ?></div>
 
   <details>
     <summary>Como instalar uma aplicação com 1 clique?</summary>
@@ -120,7 +121,7 @@ details ul{padding-left:18px;}
     <p>Após iniciar a instalação, acesse <a href="/cliente/aplicacoes">Minhas Aplicações</a>. O status será atualizado automaticamente: "Instalando" → "Rodando" (ou "Erro" se houver falha).</p>
   </details>
 
-  <div class="faq-section">🔐 Conta</div>
+  <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_conta')); ?></div>
 
   <details>
     <summary>Não consigo fazer login. O que fazer?</summary>
@@ -153,11 +154,11 @@ details ul{padding-left:18px;}
   </details>
 
   <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">
-    <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Não encontrou o que procurava?</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:12px;"><?php echo View::e(I18n::t('ajuda.nao_encontrou')); ?></p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <a class="botao" href="/cliente/chat">Chat ao vivo</a>
-      <a class="botao" href="/cliente/tickets/novo">Abrir ticket</a>
-      <a class="botao ghost" href="/contato">Fale conosco</a>
+      <a class="botao" href="/cliente/chat"><?php echo View::e(I18n::t('ajuda.chat_vivo')); ?></a>
+      <a class="botao" href="/cliente/tickets/novo"><?php echo View::e(I18n::t('ajuda.abrir_ticket')); ?></a>
+      <a class="botao ghost" href="/contato"><?php echo View::e(I18n::t('ajuda.fale_conosco')); ?></a>
     </div>
   </div>
 </div>

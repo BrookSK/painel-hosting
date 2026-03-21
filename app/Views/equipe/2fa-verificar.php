@@ -54,12 +54,12 @@ $erro  = (string)($erro ?? '');
         <?php endif; ?>
         <span class="auth-brand-name"><?php echo View::e($_nome); ?></span>
       </a>
-      <h1>Verificação em dois fatores</h1>
-      <p>Sua conta está protegida com autenticação em dois fatores. Insira o código gerado pelo seu aplicativo autenticador para continuar.</p>
+      <h1><?php echo View::e(I18n::t('eq_2fa_verificar.titulo')); ?></h1>
+      <p><?php echo View::e(I18n::t('eq_2fa_verificar.desc')); ?></p>
       <div class="auth-security-items">
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Código válido por 30 segundos</div>
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Use Google Authenticator, Authy ou similar</div>
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Nunca compartilhe seu código com ninguém</div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_2fa_verificar.validade_30s')); ?></div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_2fa_verificar.use_app')); ?></div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_2fa_verificar.nao_compartilhe')); ?></div>
       </div>
     </div>
   </div>
@@ -68,8 +68,8 @@ $erro  = (string)($erro ?? '');
     <!-- Ícone de escudo -->
     <div style="width:52px;height:52px;border-radius:14px;background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:24px;">🔐</div>
 
-    <div class="auth-form-title">Código de verificação</div>
-    <div class="auth-form-sub">Abra seu aplicativo autenticador e insira o código de 6 dígitos exibido para esta conta.</div>
+    <div class="auth-form-title"><?php echo View::e(I18n::t('eq_2fa_verificar.codigo_verificacao')); ?></div>
+    <div class="auth-form-sub"><?php echo View::e(I18n::t('eq_2fa_verificar.desc_codigo')); ?></div>
 
     <?php if ($erro !== ''): ?>
       <div class="erro" style="margin-bottom:16px;"><?php echo View::e($erro); ?></div>
@@ -77,13 +77,13 @@ $erro  = (string)($erro ?? '');
 
     <form method="post" action="/equipe/2fa/verificar">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-      <label class="auth-label">Código do autenticador</label>
+      <label class="auth-label"><?php echo View::e(I18n::t('eq_2fa.codigo_autenticador')); ?></label>
       <input class="input" type="text" name="codigo" maxlength="6" pattern="\d{6}" autocomplete="one-time-code" placeholder="000000" required autofocus inputmode="numeric" />
-      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:16px;">Verificar e entrar</button>
+      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:16px;"><?php echo View::e(I18n::t('eq_2fa_verificar.verificar_entrar')); ?></button>
     </form>
 
     <div style="margin-top:20px;text-align:center;">
-      <a href="/equipe/entrar" style="font-size:13px;color:rgba(255,255,255,.35);">← Voltar ao login</a>
+      <a href="/equipe/entrar" style="font-size:13px;color:rgba(255,255,255,.35);"><?php echo View::e(I18n::t('eq_2fa_verificar.voltar_login')); ?></a>
     </div>
   </div>
 </div>

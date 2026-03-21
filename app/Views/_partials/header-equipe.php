@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\Auth;
+use LRV\Core\I18n;
 use LRV\Core\BancoDeDados;
 
 $_notif_count = 0;
@@ -37,7 +38,7 @@ if ($_initials === '') $_initials = 'U';
 ?>
 <header class="app-header">
   <div class="header-left">
-    <button class="sidebar-expand-btn" id="sidebarExpandBtn" aria-label="Expandir menu" title="Expandir menu" onclick="(function(){var s=document.getElementById('appShell');if(s){s.classList.toggle('collapsed');localStorage.setItem('lrv_sidebar_collapsed',s.classList.contains('collapsed')?'1':'0');}})()">
+    <button class="sidebar-expand-btn" id="sidebarExpandBtn" aria-label="<?php echo View::e(I18n::t('geral.expandir_menu')); ?>" title="<?php echo View::e(I18n::t('geral.expandir_menu')); ?>" onclick="(function(){var s=document.getElementById('appShell');if(s){s.classList.toggle('collapsed');localStorage.setItem('lrv_sidebar_collapsed',s.classList.contains('collapsed')?'1':'0');}})()">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <button class="header-menu-btn" id="mobileMenuBtn" aria-label="Menu">
@@ -45,12 +46,12 @@ if ($_initials === '') $_initials = 'U';
     </button>
     <div class="header-search">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="#94a3b8" stroke-width="1.5"/><path d="M10.5 10.5l3 3" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <input type="text" placeholder="Buscar..." class="header-search-input" />
+      <input type="text" placeholder="<?php echo View::e(I18n::t('header.buscar')); ?>" class="header-search-input" />
     </div>
   </div>
   <div class="header-right">
     <?php require __DIR__ . '/idioma.php'; ?>
-    <a href="/equipe/notificacoes" class="header-icon-btn" title="Notificações">
+    <a href="/equipe/notificacoes" class="header-icon-btn" title="<?php echo View::e(I18n::t('header.notificacoes')); ?>">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 00-6-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 16a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.6"/></svg>
       <?php if ($_notif_count > 0): ?>
         <span class="header-badge"><?php echo $_notif_count > 9 ? '9+' : $_notif_count; ?></span>
@@ -76,16 +77,16 @@ if ($_initials === '') $_initials = 'U';
         </div>
         <a href="/equipe/minha-conta" class="avatar-dropdown-item">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.038 2.462-5.5 5.5-5.5S13 9.962 13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Minha Conta
+          <?php echo View::e(I18n::t('geral.minha_conta')); ?>
         </a>
         <a href="/equipe/2fa/configurar" class="avatar-dropdown-item">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="7" width="9" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Segurança / 2FA
+          <?php echo View::e(I18n::t('header.seguranca_2fa')); ?>
         </a>
         <div class="avatar-dropdown-divider"></div>
         <a href="/equipe/sair" class="avatar-dropdown-item avatar-dropdown-danger">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M10 7.5H3M10 7.5l-2.5-2.5M10 7.5l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 3H5a2 2 0 00-2 2v5a2 2 0 002 2h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Sair
+          <?php echo View::e(I18n::t('geral.sair')); ?>
         </a>
       </div>
     </div>

@@ -163,15 +163,15 @@ a{text-decoration:none;color:inherit}
       <span class="navbar-brand-name"><?php echo View::e($_nome); ?></span>
     </a>
     <div class="navbar-links">
-      <a href="#sobre">Sobre</a>
-      <a href="#planos">Planos</a>
-      <a href="#condicoes">Condições</a>
-      <a href="/infraestrutura">Para devs</a>
+      <a href="#sobre"><?php echo View::e(I18n::t('home.nav_sobre')); ?></a>
+      <a href="#planos"><?php echo View::e(I18n::t('home.nav_planos')); ?></a>
+      <a href="#condicoes"><?php echo View::e(I18n::t('home.nav_condicoes')); ?></a>
+      <a href="/infraestrutura"><?php echo View::e(I18n::t('home.nav_devs')); ?></a>
     </div>
     <div class="navbar-actions">
       <?php require __DIR__ . '/_partials/idioma.php'; ?>
-      <a href="/cliente/entrar" class="navbar-btn ghost">Entrar</a>
-      <a href="/cliente/criar-conta" class="navbar-btn solid">Contratar Agora</a>
+      <a href="/cliente/entrar" class="navbar-btn ghost"><?php echo View::e(I18n::t('home.nav_entrar')); ?></a>
+      <a href="/cliente/criar-conta" class="navbar-btn solid"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
       <button class="navbar-hamburger" id="navHamburger" aria-label="Menu" onclick="toggleDrawer()">
         <span></span><span></span><span></span>
       </button>
@@ -181,13 +181,13 @@ a{text-decoration:none;color:inherit}
 
 <!-- DRAWER MOBILE -->
 <div class="navbar-drawer" id="navDrawer">
-  <a href="#sobre" onclick="closeDrawer()">Sobre</a>
-  <a href="#planos" onclick="closeDrawer()">Planos</a>
-  <a href="#condicoes" onclick="closeDrawer()">Condições</a>
-  <a href="/infraestrutura" onclick="closeDrawer()">Para devs</a>
+  <a href="#sobre" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_sobre')); ?></a>
+  <a href="#planos" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_planos')); ?></a>
+  <a href="#condicoes" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_condicoes')); ?></a>
+  <a href="/infraestrutura" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_devs')); ?></a>
   <div class="drawer-actions">
-    <a href="/cliente/entrar" class="ghost navbar-btn" onclick="closeDrawer()">Entrar</a>
-    <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()">Contratar Agora</a>
+    <a href="/cliente/entrar" class="ghost navbar-btn" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_entrar')); ?></a>
+    <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
   </div>
 </div>
 <!-- HERO -->
@@ -205,23 +205,23 @@ $_trial_dias  = (int)($trial_dias ?? 7);
       <div class="hero__badge">
         <div class="hero__badge-dot"></div>
         <?php if ($_trial_ativo): ?>
-          <span>Teste grátis por <?php echo $_trial_dias; ?> dias disponível</span>
+          <span><?php echo View::e(I18n::tf('home.badge_trial', $_trial_dias)); ?></span>
         <?php else: ?>
-          <span>Servidores disponíveis agora</span>
+          <span><?php echo View::e(I18n::t('home.badge_servidores')); ?></span>
         <?php endif; ?>
       </div>
-      <h1 class="hero__title">Infraestrutura VPS para<br><em>escalar seu negócio</em></h1>
-      <p class="hero__subtitle">Servidores VPS com recursos dedicados, proteção DDoS nativa, uptime 99,9% e suporte técnico — ativação em até 6 dias úteis.</p>
+      <h1 class="hero__title"><?php echo View::e(I18n::t('home.hero_titulo')); ?><br><em><?php echo View::e(I18n::t('home.hero_titulo_em')); ?></em></h1>
+      <p class="hero__subtitle"><?php echo View::e(I18n::t('home.hero_subtitulo')); ?></p>
       <?php if ($_trial_ativo && $_trial_desc !== ''): ?>
         <p style="font-size:.85rem;color:#a5b4fc;margin-bottom:20px;margin-top:-8px;"><?php echo View::e($_trial_desc); ?></p>
       <?php endif; ?>
       <div class="hero__actions">
         <?php if ($_trial_ativo): ?>
           <a href="/cliente/criar-conta" class="hero-btn-p"><?php echo View::e($_trial_label); ?></a>
-          <a href="#planos" class="hero-btn-s">Ver planos</a>
+          <a href="#planos" class="hero-btn-s"><?php echo View::e(I18n::t('home.ver_planos')); ?></a>
         <?php else: ?>
-          <a href="#planos" class="hero-btn-p">Ver Planos e Preços</a>
-          <a href="#sobre" class="hero-btn-s">Saiba mais</a>
+          <a href="#planos" class="hero-btn-p"><?php echo View::e(I18n::t('home.ver_planos_precos')); ?></a>
+          <a href="#sobre" class="hero-btn-s"><?php echo View::e(I18n::t('home.saiba_mais')); ?></a>
         <?php endif; ?>
       </div>
     </div>
@@ -232,18 +232,18 @@ $_trial_dias  = (int)($trial_dias ?? 7);
             <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
           <div>
-            <div class="server-card__label">Servidor em destaque</div>
+            <div class="server-card__label"><?php echo View::e(I18n::t('home.servidor_destaque')); ?></div>
             <div class="server-card__name"><?php echo $_hero_plano ? View::e((string)$_hero_plano['name']) : 'VPS Enterprise'; ?></div>
           </div>
         </div>
         <div class="server-specs">
           <div class="spec-item"><div class="spec-item__val"><?php echo ($_hero_plano && $_hram > 0) ? $_hram.' GB' : '32 GB'; ?></div><div class="spec-item__key">RAM</div></div>
-          <div class="spec-item"><div class="spec-item__val"><?php echo ($_hero_plano && $_hvcpu > 0) ? $_hvcpu.' vCPU' : '16 vCPU'; ?></div><div class="spec-item__key">Processamento</div></div>
+          <div class="spec-item"><div class="spec-item__val"><?php echo ($_hero_plano && $_hvcpu > 0) ? $_hvcpu.' vCPU' : '16 vCPU'; ?></div><div class="spec-item__key"><?php echo View::e(I18n::t('home.processamento')); ?></div></div>
           <div class="spec-item"><div class="spec-item__val"><?php echo ($_hero_plano && $_hdisco > 0) ? $_hdisco.' GB' : '300 GB'; ?></div><div class="spec-item__key">SSD</div></div>
-          <div class="spec-item"><div class="spec-item__val">Infra</div><div class="spec-item__key">Dedicada</div></div>
+          <div class="spec-item"><div class="spec-item__val">Infra</div><div class="spec-item__key"><?php echo View::e(I18n::t('home.infra_dedicada')); ?></div></div>
         </div>
         <div class="server-price">
-          <div class="server-price__label">Total mensal (servidor + backup)</div>
+          <div class="server-price__label"><?php echo View::e(I18n::t('home.total_mensal')); ?></div>
           <div class="server-price__value">R$ <?php echo $_hero_plano ? number_format($_hprice, 0, ',', '.') : '1.497'; ?>+<span>/mês</span></div>
         </div>
       </div>
@@ -251,18 +251,18 @@ $_trial_dias  = (int)($trial_dias ?? 7);
         <div class="floater-icon floater-icon--green">
           <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#15803D;stroke-width:2;fill:none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div class="floater__text"><strong>DDoS Protection</strong><span>Ativada por padrão</span></div>
+        <div class="floater__text"><strong><?php echo View::e(I18n::t('home.ddos_protection')); ?></strong><span><?php echo View::e(I18n::t('home.ddos_ativada')); ?></span></div>
       </div>
       <div class="hero__floater hero__floater--2">
         <div class="floater-icon floater-icon--blue">
           <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#4F46E5;stroke-width:2;fill:none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
-        <div class="floater__text"><strong>99,9% Uptime</strong><span>SLA garantido</span></div>
+        <div class="floater__text"><strong>99,9% Uptime</strong><span><?php echo View::e(I18n::t('home.uptime_sla')); ?></span></div>
       </div>
     </div>
   </div>
   <div class="hero__clients">
-    <p>Empresas que confiam na <?php echo View::e($_nome); ?></p>
+    <p><?php echo View::e(I18n::tf('home.empresas_confiam', $_nome)); ?></p>
     <div class="clients-logos">
       <span>Startups</span><span>E-commerce</span><span>SaaS</span><span>Agências</span><span>Desenvolvedores</span>
     </div>
@@ -272,10 +272,10 @@ $_trial_dias  = (int)($trial_dias ?? 7);
 <!-- STATS -->
 <div class="statsbar">
   <div class="stats">
-    <div class="stat"><h3>+5 anos</h3><p>Experiência no mercado de infraestrutura</p></div>
-    <div class="stat"><h3>+200</h3><p>Clientes ativos em todo o Brasil</p></div>
-    <div class="stat"><h3>99,9%</h3><p>SLA de uptime garantido em contrato</p></div>
-    <div class="stat"><h3>6 dias</h3><p>Ativação rápida dos servidores</p></div>
+    <div class="stat"><h3>+5 anos</h3><p><?php echo View::e(I18n::t('home.stats_experiencia')); ?></p></div>
+    <div class="stat"><h3>+200</h3><p><?php echo View::e(I18n::t('home.stats_clientes')); ?></p></div>
+    <div class="stat"><h3>99,9%</h3><p><?php echo View::e(I18n::t('home.stats_sla')); ?></p></div>
+    <div class="stat"><h3>6 dias</h3><p><?php echo View::e(I18n::t('home.stats_ativacao')); ?></p></div>
   </div>
 </div>
 
@@ -284,22 +284,22 @@ $_trial_dias  = (int)($trial_dias ?? 7);
   <div class="lp-section-inner">
     <div class="features-header">
       <div>
-        <span class="eyebrow">Por que a <?php echo View::e($_nome); ?>?</span>
-        <h2 class="lp-title" style="font-size:clamp(2rem,3.5vw,3rem);font-weight:600;margin-bottom:16px">A melhor infraestrutura<br>do Brasil</h2>
-        <p class="lead">A <strong><?php echo View::e($_nome); ?></strong> é especializada em servidores dedicados, hospedagem web e infraestrutura digital. Tecnologia de ponta com suporte humanizado, custos transparentes e escalabilidade real.</p>
+        <span class="eyebrow"><?php echo View::e(I18n::tf('home.porque', $_nome)); ?></span>
+        <h2 class="lp-title" style="font-size:clamp(2rem,3.5vw,3rem);font-weight:600;margin-bottom:16px"><?php echo View::e(I18n::t('home.melhor_infra')); ?></h2>
+        <p class="lead"><?php echo View::e(I18n::tf('home.sobre_desc', $_nome)); ?></p>
       </div>
       <div>
-        <p class="lead" style="font-size:.95rem">Nossa infraestrutura é base para sistemas empresariais, bancos de dados, armazenamento de arquivos e soluções de continuidade de negócios em todo o Brasil.</p>
-        <p style="font-size:.88rem;color:#94a3b8;margin-top:14px;line-height:1.7">Reajuste previsível baseado no IGPM · Ativação em até 6 dias úteis · Tráfego ilimitado incluído</p>
+        <p class="lead" style="font-size:.95rem"><?php echo View::e(I18n::t('home.sobre_desc2')); ?></p>
+        <p style="font-size:.88rem;color:#94a3b8;margin-top:14px;line-height:1.7"><?php echo View::e(I18n::t('home.sobre_desc3')); ?></p>
       </div>
     </div>
     <div class="features-grid">
-      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="feat-item__title">Desempenho Superior</div><p class="feat-item__desc">Processadores Intel Xeon de última geração para máximo throughput e mínima latência.</p></div>
-      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="feat-item__title">Proteção DDoS Nativa</div><p class="feat-item__desc">Infraestrutura blindada contra ataques volumétricos. Incluída em todos os planos.</p></div>
-      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="feat-item__title">Hiperconectividade</div><p class="feat-item__desc">Portas de 1 a 10 Gbps com tráfego ilimitado. Dentro do hub de conectividade dos DCs.</p></div>
-      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="feat-item__title">Upgrades sem Burocracia</div><p class="feat-item__desc">Escale recursos com rapidez. Ajuste CPU, RAM e armazenamento sob demanda.</p></div>
-      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="feat-item__title">Hardware Exclusivo</div><p class="feat-item__desc">Controle total do servidor dedicado. Sem compartilhamento, sem vizinhos barulhentos.</p></div>
-      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="feat-item__title">Custos Transparentes</div><p class="feat-item__desc">Preços claros, sem taxas ocultas. Reajuste anual pelo IGPM, sempre previsível.</p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="feat-item__title"><?php echo View::e(I18n::t('home.feat_desempenho')); ?></div><p class="feat-item__desc"><?php echo View::e(I18n::t('home.feat_desempenho_desc')); ?></p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="feat-item__title"><?php echo View::e(I18n::t('home.feat_ddos')); ?></div><p class="feat-item__desc"><?php echo View::e(I18n::t('home.feat_ddos_desc')); ?></p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="feat-item__title"><?php echo View::e(I18n::t('home.feat_conectividade')); ?></div><p class="feat-item__desc"><?php echo View::e(I18n::t('home.feat_conectividade_desc')); ?></p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="feat-item__title"><?php echo View::e(I18n::t('home.feat_upgrades')); ?></div><p class="feat-item__desc"><?php echo View::e(I18n::t('home.feat_upgrades_desc')); ?></p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="feat-item__title"><?php echo View::e(I18n::t('home.feat_hardware')); ?></div><p class="feat-item__desc"><?php echo View::e(I18n::t('home.feat_hardware_desc')); ?></p></div>
+      <div class="feat-item"><div class="feat-item__icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="feat-item__title"><?php echo View::e(I18n::t('home.feat_custos')); ?></div><p class="feat-item__desc"><?php echo View::e(I18n::t('home.feat_custos_desc')); ?></p></div>
     </div>
   </div>
 </section>
@@ -533,7 +533,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
               <div class="total-value">R$ <span id="total-<?php echo $_pid; ?>"><?php echo number_format($_price, 0, ',', '.'); ?></span></div>
             </div>
             <?php endif; ?>
-            <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="plan-cta">Contratar agora</a>
+            <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
           </div>
           <?php endforeach; ?>
           <?php else: ?>

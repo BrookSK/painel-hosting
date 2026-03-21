@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\Csrf;
+use LRV\Core\I18n;
 
 $dominios   = is_array($dominios ?? null) ? $dominios : [];
 $verificado = isset($_GET['verificado']);
@@ -12,7 +13,7 @@ function badgeDominio(string $status): string {
     return '<span class="badge-new badge-red">Erro</span>';
 }
 
-$pageTitle    = 'Domínios de E-mail';
+$pageTitle    = I18n::t('emails.dominios');
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -20,10 +21,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
   <div>
-    <div class="page-title">Domínios de E-mail</div>
+    <div class="page-title"><?php echo View::e(I18n::t('emails.dominios')); ?></div>
     <div class="page-subtitle" style="margin-bottom:0;">Use seu próprio domínio para criar e-mails profissionais</div>
   </div>
-  <a href="/cliente/emails" class="botao ghost sm">← E-mails</a>
+  <a href="/cliente/emails" class="botao ghost sm">← <?php echo View::e(I18n::t('emails.titulo')); ?></a>
 </div>
 
 <?php if (!empty($erro)): ?>
@@ -64,19 +65,19 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               <div style="font-size:12px;color:#ef4444;background:#fef2f2;padding:6px 10px;border-radius:8px;margin-bottom:8px;"><?php echo View::e((string)$d['error_msg']); ?></div>
             <?php endif; ?>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <a href="/cliente/emails/dominios/instrucoes?id=<?php echo $did; ?>" class="botao sm ghost">Ver instruções DNS</a>
+              <a href="/cliente/emails/dominios/instrucoes?id=<?php echo $did; ?>" class="botao sm ghost"><?php echo View::e(I18n::t('emails.instrucoes_dns')); ?></a>
               <?php if (($d['status'] ?? '') !== 'active'): ?>
                 <form method="post" action="/cliente/emails/dominios/verificar" style="display:inline;">
                   <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                   <input type="hidden" name="dominio_id" value="<?php echo $did; ?>" />
-                  <button class="botao sm" type="submit">Verificar DNS</button>
+                  <button class="botao sm" type="submit"><?php echo View::e(I18n::t('emails.verificar_dns')); ?></button>
                 </form>
               <?php endif; ?>
               <form method="post" action="/cliente/emails/dominios/remover" style="display:inline;"
                     onsubmit="return confirm('Remover o domínio <?php echo View::e((string)($d['domain'] ?? '')); ?>?')">
                 <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                 <input type="hidden" name="dominio_id" value="<?php echo $did; ?>" />
-                <button class="botao danger sm" type="submit">Remover</button>
+                <button class="botao danger sm" type="submit"><?php echo View::e(I18n::t('emails.remover')); ?></button>
               </form>
             </div>
           </div>
@@ -87,16 +88,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
   <div>
     <div class="card-new">
-      <div class="card-new-title" style="margin-bottom:6px;">Adicionar domínio</div>
+      <div class="card-new-title" style="margin-bottom:6px;"><?php echo View::e(I18n::t('emails.adicionar_dominio')); ?></div>
       <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Informe o domínio que você controla. Após adicionar, você receberá as instruções DNS.</p>
       <form method="post" action="/cliente/emails/dominios/adicionar">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <div style="margin-bottom:10px;">
-          <label style="display:block;font-size:13px;margin-bottom:5px;">Domínio</label>
+          <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('emails.dominio')); ?></label>
           <input class="input" type="text" name="domain" placeholder="meudominio.com.br" required
                  pattern="[a-z0-9][a-z0-9\-\.]*\.[a-z]{2,}" title="Ex: meudominio.com" />
         </div>
-        <button class="botao" type="submit">Adicionar domínio</button>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('emails.adicionar_dominio')); ?></button>
       </form>
     </div>
 

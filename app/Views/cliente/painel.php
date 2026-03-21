@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $nome           = (string)($cliente['name'] ?? '');
 $email          = (string)($cliente['email'] ?? '');
@@ -13,20 +14,20 @@ $trialInfo      = $trialInfo ?? null;
 
 $clienteNome  = $nome;
 $clienteEmail = $email;
-$pageTitle    = 'Painel';
+$pageTitle    = I18n::t('painel.titulo');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
 <!-- Saudação -->
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
   <div>
-    <div class="page-title">Olá, <?php echo View::e(explode(' ', $nome)[0]); ?> 👋</div>
+    <div class="page-title"><?php echo View::e(I18n::tf('painel.bem_vindo', explode(' ', $nome)[0])); ?> 👋</div>
     <div class="page-subtitle" style="margin-bottom:0;">Bem-vindo ao seu painel de controle</div>
   </div>
   <?php if ($assinatura !== null): ?>
     <span class="badge-new badge-green" style="font-size:12px;padding:5px 12px;"><?php echo View::e((string)($assinatura['plan_name'] ?? 'Plano ativo')); ?></span>
   <?php else: ?>
-    <a href="/cliente/planos" class="botao sm">Ver planos</a>
+    <a href="/cliente/planos" class="botao sm"><?php echo View::e(I18n::t('home.ver_planos')); ?></a>
   <?php endif; ?>
 </div>
 
@@ -61,7 +62,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;">
   <div class="stat-card-new">
     <div class="stat-card-header">
-      <span class="stat-card-label">VPS Total</span>
+      <span class="stat-card-label"><?php echo View::e(I18n::t('painel.total_vps')); ?></span>
       <div class="stat-card-icon blue">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>
       </div>
@@ -70,7 +71,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
   <div class="stat-card-new">
     <div class="stat-card-header">
-      <span class="stat-card-label">Em execução</span>
+      <span class="stat-card-label"><?php echo View::e(I18n::t('vps.status_running')); ?></span>
       <div class="stat-card-icon green">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M8 7l5 3-5 3V7z" fill="currentColor"/></svg>
       </div>
@@ -79,7 +80,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
   <div class="stat-card-new">
     <div class="stat-card-header">
-      <span class="stat-card-label">Tickets abertos</span>
+      <span class="stat-card-label"><?php echo View::e(I18n::t('painel.tickets_abertos')); ?></span>
       <div class="stat-card-icon <?php echo $ticketsAbertos > 0 ? 'orange' : 'green'; ?>">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       </div>
@@ -88,7 +89,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
   <div class="stat-card-new">
     <div class="stat-card-header">
-      <span class="stat-card-label">Plano</span>
+      <span class="stat-card-label"><?php echo View::e(I18n::t('assinaturas.plano')); ?></span>
       <div class="stat-card-icon purple">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/></svg>
       </div>
@@ -98,7 +99,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <div class="stat-card-sub"><?php echo View::e((string)($assinatura['plan_name'] ?? '')); ?></div>
     <?php else: ?>
       <div class="stat-card-value sm" style="color:#94a3b8;">—</div>
-      <div class="stat-card-sub">Sem plano ativo</div>
+      <div class="stat-card-sub"><?php echo View::e(I18n::t('painel.nenhum_plano')); ?></div>
     <?php endif; ?>
   </div>
 </div>

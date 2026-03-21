@@ -61,6 +61,12 @@ final class ConfiguracoesController
             'legal_terms_html'      => SistemaConfig::termsHtml(),
             'legal_privacy_html'    => SistemaConfig::privacyHtml(),
             'legal_license_html'    => SistemaConfig::licenseHtml(),
+            'legal_terms_html_en'   => (string) Settings::obter('legal.terms_html.en-US', ''),
+            'legal_terms_html_es'   => (string) Settings::obter('legal.terms_html.es-ES', ''),
+            'legal_privacy_html_en' => (string) Settings::obter('legal.privacy_html.en-US', ''),
+            'legal_privacy_html_es' => (string) Settings::obter('legal.privacy_html.es-ES', ''),
+            'legal_license_html_en' => (string) Settings::obter('legal.license_html.en-US', ''),
+            'legal_license_html_es' => (string) Settings::obter('legal.license_html.es-ES', ''),
             'trial_enabled'         => (string) Settings::obter('trial.enabled', '0'),
             'trial_dias'            => (string) Settings::obter('trial.dias', '7'),
             'trial_vcpu'            => (string) Settings::obter('trial.vcpu', '1'),
@@ -135,6 +141,12 @@ final class ConfiguracoesController
         $legalTermsHtml      = $in->postString('legal_terms_html', 65535, false);
         $legalPrivacyHtml    = $in->postString('legal_privacy_html', 65535, false);
         $legalLicenseHtml    = $in->postString('legal_license_html', 65535, false);
+        $legalTermsHtmlEn    = $in->postString('legal_terms_html_en', 65535, false);
+        $legalTermsHtmlEs    = $in->postString('legal_terms_html_es', 65535, false);
+        $legalPrivacyHtmlEn  = $in->postString('legal_privacy_html_en', 65535, false);
+        $legalPrivacyHtmlEs  = $in->postString('legal_privacy_html_es', 65535, false);
+        $legalLicenseHtmlEn  = $in->postString('legal_license_html_en', 65535, false);
+        $legalLicenseHtmlEs  = $in->postString('legal_license_html_es', 65535, false);
 
         $trialEnabled    = $in->postEnum('trial_enabled', ['0', '1', 'on', 'true'], '0');
         $trialDias       = $in->postInt('trial_dias', 1, 365, false);
@@ -200,6 +212,12 @@ final class ConfiguracoesController
                 'legal_terms_html'      => $legalTermsHtml,
                 'legal_privacy_html'    => $legalPrivacyHtml,
                 'legal_license_html'    => $legalLicenseHtml,
+                'legal_terms_html_en'   => $legalTermsHtmlEn,
+                'legal_terms_html_es'   => $legalTermsHtmlEs,
+                'legal_privacy_html_en' => $legalPrivacyHtmlEn,
+                'legal_privacy_html_es' => $legalPrivacyHtmlEs,
+                'legal_license_html_en' => $legalLicenseHtmlEn,
+                'legal_license_html_es' => $legalLicenseHtmlEs,
                 'trial_enabled'         => (($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? '1' : '0'),
                 'trial_dias'            => $trialDias > 0 ? (string) $trialDias : '7',
                 'trial_vcpu'            => $trialVcpu > 0 ? (string) $trialVcpu : '1',
@@ -269,6 +287,12 @@ final class ConfiguracoesController
         Settings::definir('legal.terms_html', $legalTermsHtml);
         Settings::definir('legal.privacy_html', $legalPrivacyHtml);
         Settings::definir('legal.license_html', $legalLicenseHtml);
+        Settings::definir('legal.terms_html.en-US', $legalTermsHtmlEn);
+        Settings::definir('legal.terms_html.es-ES', $legalTermsHtmlEs);
+        Settings::definir('legal.privacy_html.en-US', $legalPrivacyHtmlEn);
+        Settings::definir('legal.privacy_html.es-ES', $legalPrivacyHtmlEs);
+        Settings::definir('legal.license_html.en-US', $legalLicenseHtmlEn);
+        Settings::definir('legal.license_html.es-ES', $legalLicenseHtmlEs);
 
         Settings::definir('trial.enabled',   ($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? 1 : 0);
         Settings::definir('trial.dias',      $trialDias > 0 ? $trialDias : 7);
@@ -369,6 +393,12 @@ final class ConfiguracoesController
             'legal_terms_html'      => $legalTermsHtml,
             'legal_privacy_html'    => $legalPrivacyHtml,
             'legal_license_html'    => $legalLicenseHtml,
+            'legal_terms_html_en'   => $legalTermsHtmlEn,
+            'legal_terms_html_es'   => $legalTermsHtmlEs,
+            'legal_privacy_html_en' => $legalPrivacyHtmlEn,
+            'legal_privacy_html_es' => $legalPrivacyHtmlEs,
+            'legal_license_html_en' => $legalLicenseHtmlEn,
+            'legal_license_html_es' => $legalLicenseHtmlEs,
             'trial_enabled'         => (($trialEnabled === '1' || $trialEnabled === 'on' || $trialEnabled === 'true') ? '1' : '0'),
             'trial_dias'            => (string) ($trialDias > 0 ? $trialDias : 7),
             'trial_vcpu'            => (string) ($trialVcpu > 0 ? $trialVcpu : 1),

@@ -59,13 +59,13 @@ $_logo = SistemaConfig::logoUrl();
         <?php endif; ?>
         <span class="auth-brand-name"><?php echo View::e($_nome); ?></span>
       </a>
-      <h1>Painel administrativo da equipe</h1>
-      <p>Acesso restrito. Use suas credenciais de membro da equipe para entrar no painel de controle.</p>
+      <h1><?php echo View::e(I18n::t('eq_entrar.titulo_painel')); ?></h1>
+      <p><?php echo View::e(I18n::t('eq_entrar.desc_painel')); ?></p>
       <div class="auth-security-items">
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Autenticação em dois fatores (2FA) disponível</div>
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Controle de acesso por roles e permissões</div>
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Auditoria completa de ações</div>
-        <div class="auth-security-item"><div class="auth-security-dot"></div>Sessão com expiração automática</div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_entrar.2fa_disponivel')); ?></div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_entrar.controle_acesso')); ?></div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_entrar.auditoria')); ?></div>
+        <div class="auth-security-item"><div class="auth-security-dot"></div><?php echo View::e(I18n::t('eq_entrar.sessao_expira')); ?></div>
       </div>
     </div>
   </div>
@@ -73,33 +73,33 @@ $_logo = SistemaConfig::logoUrl();
   <div class="auth-right">
     <div class="auth-right-top">
       <?php require __DIR__ . '/../_partials/idioma.php'; ?>
-      <a href="/cliente/entrar">Área do cliente →</a>
+      <a href="/cliente/entrar"><?php echo View::e(I18n::t('eq_entrar.area_cliente')); ?></a>
     </div>
-    <div class="auth-form-title">Acesso da equipe</div>
-    <div class="auth-form-sub">Use seu e-mail e senha para acessar o painel administrativo.</div>
+    <div class="auth-form-title"><?php echo View::e(I18n::t('eq_entrar.acesso_equipe')); ?></div>
+    <div class="auth-form-sub"><?php echo View::e(I18n::t('eq_entrar.desc_acesso')); ?></div>
     <?php if (!empty($erro)): ?>
       <div class="erro"><?php echo View::e((string) $erro); ?></div>
     <?php endif; ?>
     <?php if (isset($_GET['sessao']) && $_GET['sessao'] === 'expirada'): ?>
-      <div class="erro">Sua sessão expirou por inatividade. Faça login novamente.</div>
+      <div class="erro"><?php echo View::e(I18n::t('eq_entrar.sessao_expirada')); ?></div>
     <?php endif; ?>
     <form method="post" action="/equipe/entrar">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
       <div class="auth-field">
-        <label class="auth-label">E-mail</label>
+        <label class="auth-label"><?php echo View::e(I18n::t('auth.email')); ?></label>
         <input class="input" type="email" name="email" value="<?php echo View::e((string) ($email ?? '')); ?>" autocomplete="email" placeholder="equipe@empresa.com" />
       </div>
       <div class="auth-field">
-        <label class="auth-label">Senha</label>
+        <label class="auth-label"><?php echo View::e(I18n::t('auth.senha')); ?></label>
         <input class="input" type="password" name="senha" autocomplete="current-password" placeholder="••••••••" />
       </div>
-      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:4px;">Entrar no painel</button>
+      <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:4px;"><?php echo View::e(I18n::t('eq_entrar.entrar_painel')); ?></button>
     </form>
     <div class="auth-footer-links">
-      <a href="/equipe/reset-senha">Esqueci minha senha</a>
+      <a href="/equipe/reset-senha"><?php echo View::e(I18n::t('auth.esqueci_senha')); ?></a>
     </div>
     <div style="margin-top:8px;text-align:center;">
-      <a href="/" style="font-size:13px;color:rgba(255,255,255,.35);">← Voltar ao início</a>
+      <a href="/" style="font-size:13px;color:rgba(255,255,255,.35);"><?php echo View::e(I18n::t('eq_entrar.voltar_inicio')); ?></a>
     </div>
   </div>
 </div>

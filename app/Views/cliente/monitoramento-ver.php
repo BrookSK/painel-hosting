@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $metricasArr = is_array($metricas ?? null) ? $metricas : [];
 $vpsId       = (int)($vps['id'] ?? 0);
@@ -25,7 +26,7 @@ function pctColor(float $v): string {
     return '#10b981';
 }
 
-$pageTitle    = 'Monitoramento — VPS #' . $vpsId;
+$pageTitle    = I18n::tf('monitoramento.titulo_vps', $vpsId);
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -33,25 +34,25 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
   <div>
-    <div class="page-title">Monitoramento</div>
+    <div class="page-title"><?php echo View::e(I18n::t('monitoramento.titulo')); ?></div>
     <div class="page-subtitle" style="margin-bottom:0;">VPS #<?php echo $vpsId; ?></div>
   </div>
-  <a href="/cliente/monitoramento" class="botao ghost sm">← Voltar</a>
+  <a href="/cliente/monitoramento" class="botao ghost sm">← <?php echo View::e(I18n::t('geral.voltar')); ?></a>
 </div>
 
 <?php if (empty($servidor)): ?>
-  <div class="card-new"><p style="margin:0;color:#64748b;">Esta VPS ainda não possui node associado para monitoramento.</p></div>
+  <div class="card-new"><p style="margin:0;color:#64748b;"><?php echo View::e(I18n::t('monitoramento.sem_node')); ?></p></div>
 <?php else: ?>
 
   <div class="card-new" style="margin-bottom:14px;">
     <div class="grid">
       <div>
-        <div style="font-size:13px;margin-bottom:4px;"><strong>Servidor:</strong> <?php echo View::e((string)($servidor['hostname'] ?? '')); ?></div>
-        <div style="font-size:13px;"><strong>IP:</strong> <?php echo View::e((string)($servidor['ip_address'] ?? '')); ?></div>
+        <div style="font-size:13px;margin-bottom:4px;"><strong><?php echo View::e(I18n::t('monitoramento.servidor')); ?>:</strong> <?php echo View::e((string)($servidor['hostname'] ?? '')); ?></div>
+        <div style="font-size:13px;"><strong><?php echo View::e(I18n::t('monitoramento.ip')); ?>:</strong> <?php echo View::e((string)($servidor['ip_address'] ?? '')); ?></div>
       </div>
       <div>
-        <div style="font-size:13px;margin-bottom:4px;"><strong>Status:</strong> <?php echo View::e((string)($servidor['status'] ?? '')); ?></div>
-        <div style="font-size:13px;"><strong>Coletas:</strong> <?php echo count($metricasArr); ?></div>
+        <div style="font-size:13px;margin-bottom:4px;"><strong><?php echo View::e(I18n::t('geral.status')); ?>:</strong> <?php echo View::e((string)($servidor['status'] ?? '')); ?></div>
+        <div style="font-size:13px;"><strong><?php echo View::e(I18n::t('monitoramento.coletas')); ?>:</strong> <?php echo count($metricasArr); ?></div>
       </div>
     </div>
   </div>
@@ -62,21 +63,21 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     $dv = (float)($ultima['disk_usage'] ?? 0);
   ?>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;">
-      <?php foreach ([['CPU agora', $cv], ['RAM agora', $rv], ['Disco agora', $dv]] as [$lbl, $val]): ?>
+      <?php foreach ([[I18n::t('monitoramento.cpu_agora'), $cv], [I18n::t('monitoramento.ram_agora'), $rv], [I18n::t('monitoramento.disco_agora'), $dv]] as [$lbl, $val]): ?>
         <div class="card-new" style="text-align:center;">
           <div style="font-size:28px;font-weight:700;line-height:1;margin-bottom:4px;color:<?php echo pctColor($val); ?>;"><?php echo number_format($val, 1); ?>%</div>
-          <div style="font-size:12px;color:#64748b;"><?php echo $lbl; ?></div>
+          <div style="font-size:12px;color:#64748b;"><?php echo View::e($lbl); ?></div>
         </div>
       <?php endforeach; ?>
     </div>
   <?php endif; ?>
 
   <?php if (!empty($cpuData)): ?>
-    <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;">Atualização automática a cada 30s. Última: <span id="lastRefresh">agora</span></p>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;"><?php echo View::e(I18n::t('monitoramento.atualizacao_auto')); ?> <span id="lastRefresh"><?php echo View::e(I18n::t('monitoramento.agora')); ?></span></p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px;">
-      <?php foreach ([['chartCpu','CPU (%)','#4F46E5'],['chartRam','RAM (%)','#7C3AED'],['chartDisk','Disco (%)','#0ea5e9']] as [$cid,$clbl,$ccol]): ?>
+      <?php foreach ([['chartCpu',I18n::t('monitoramento.cpu') . ' (%)','#4F46E5'],['chartRam',I18n::t('monitoramento.ram') . ' (%)','#7C3AED'],['chartDisk',I18n::t('monitoramento.disco') . ' (%)','#0ea5e9']] as [$cid,$clbl,$ccol]): ?>
         <div class="card-new">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:<?php echo $ccol; ?>;"><?php echo $clbl; ?></div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:<?php echo $ccol; ?>;"><?php echo View::e($clbl); ?></div>
           <canvas id="<?php echo $cid; ?>" height="110"></canvas>
         </div>
       <?php endforeach; ?>
@@ -84,15 +85,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php endif; ?>
 
   <div class="card-new">
-    <div class="card-new-title" style="margin-bottom:12px;">Histórico</div>
+    <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('monitoramento.historico')); ?></div>
     <div style="overflow:auto;">
       <table style="width:100%;border-collapse:collapse;">
         <thead>
           <tr>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Data/Hora</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">CPU</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">RAM</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Disco</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.data_hora')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.cpu')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.ram')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.disco')); ?></th>
           </tr>
         </thead>
         <tbody>
@@ -109,7 +110,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             </tr>
           <?php endforeach; ?>
           <?php if (empty($metricasArr)): ?>
-            <tr><td colspan="4" style="padding:12px;color:#94a3b8;">Ainda não há métricas.</td></tr>
+            <tr><td colspan="4" style="padding:12px;color:#94a3b8;"><?php echo View::e(I18n::t('monitoramento.sem_metricas')); ?></td></tr>
           <?php endif; ?>
         </tbody>
       </table>

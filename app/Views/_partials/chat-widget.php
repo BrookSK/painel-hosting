@@ -2,6 +2,8 @@
 // Widget de suporte — aparece em todas as páginas
 // Detecta se há cliente logado para liberar chat ao vivo
 use LRV\Core\Auth;
+use LRV\Core\I18n;
+use LRV\Core\View;
 $_cwLogado = false;
 $_cwCsrf   = '';
 try {
@@ -28,7 +30,7 @@ if ($_cwWsUrl === '') {
      data-logado="<?php echo $_cwLogado ? '1' : '0'; ?>"
      data-csrf="<?php echo htmlspecialchars($_cwCsrf, ENT_QUOTES, 'UTF-8'); ?>"
      data-wsurl="<?php echo htmlspecialchars($_cwWsUrl, ENT_QUOTES, 'UTF-8'); ?>"
-     title="Suporte" aria-label="Abrir suporte" role="button" tabindex="0">
+     title="<?php echo View::e(I18n::t('widget.suporte')); ?>" aria-label="<?php echo View::e(I18n::t('widget.abrir_suporte')); ?>" role="button" tabindex="0">
   <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
     <path d="M22 3H4a2 2 0 00-2 2v13a2 2 0 002 2h5l4 4 4-4h5a2 2 0 002-2V5a2 2 0 00-2-2z" fill="#fff" opacity=".95"/>
     <circle cx="9" cy="12" r="1.5" fill="#4F46E5"/>
@@ -37,7 +39,7 @@ if ($_cwWsUrl === '') {
   </svg>
 </div>
 
-<div id="cw-drawer" role="dialog" aria-modal="true" aria-label="Suporte">
+<div id="cw-drawer" role="dialog" aria-modal="true" aria-label="<?php echo View::e(I18n::t('widget.suporte')); ?>">
   <div id="cw-head">
     <div style="display:flex;align-items:center;gap:10px;">
       <div id="cw-head-icon">
@@ -46,23 +48,23 @@ if ($_cwWsUrl === '') {
         </svg>
       </div>
       <div>
-        <div style="color:#fff;font-weight:700;font-size:14px;">Suporte</div>
-        <div style="color:rgba(255,255,255,.65);font-size:12px;">Como podemos ajudar?</div>
+        <div style="color:#fff;font-weight:700;font-size:14px;"><?php echo View::e(I18n::t('widget.suporte')); ?></div>
+        <div style="color:rgba(255,255,255,.65);font-size:12px;"><?php echo View::e(I18n::t('widget.como_ajudar')); ?></div>
       </div>
     </div>
-    <button id="cw-close" aria-label="Fechar">✕</button>
+    <button id="cw-close" aria-label="<?php echo View::e(I18n::t('widget.fechar')); ?>">✕</button>
   </div>
 
   <!-- Tela: menu -->
   <div id="cw-s-menu" class="cw-screen cw-active">
     <div id="cw-msgs-menu">
-      <div class="cw-bmsg">Olá! Sou o assistente virtual. Como posso ajudar você hoje?</div>
+      <div class="cw-bmsg"><?php echo View::e(I18n::t('widget.ola')); ?></div>
     </div>
     <div class="cw-opts">
-      <button class="cw-opt" data-go="bot">💬 Tirar uma dúvida</button>
-      <button class="cw-opt" data-go="live">🧑‍💻 Falar com atendente</button>
-      <button class="cw-opt" data-go="ticket">🎫 Abrir um ticket</button>
-      <button class="cw-opt" data-go="email">📧 Enviar e-mail</button>
+      <button class="cw-opt" data-go="bot"><?php echo View::e(I18n::t('widget.tirar_duvida')); ?></button>
+      <button class="cw-opt" data-go="live"><?php echo View::e(I18n::t('widget.falar_atendente')); ?></button>
+      <button class="cw-opt" data-go="ticket"><?php echo View::e(I18n::t('widget.abrir_ticket')); ?></button>
+      <button class="cw-opt" data-go="email"><?php echo View::e(I18n::t('widget.enviar_email')); ?></button>
     </div>
   </div>
 
@@ -95,7 +97,7 @@ if ($_cwWsUrl === '') {
   </div>
 
   <div id="cw-back" style="display:none;padding:8px 12px;border-top:1px solid #f1f5f9;flex-shrink:0;">
-    <button id="cw-backbtn" style="background:none;border:none;color:#4F46E5;font-size:13px;cursor:pointer;font-family:inherit;padding:0;">← Voltar</button>
+    <button id="cw-backbtn" style="background:none;border:none;color:#4F46E5;font-size:13px;cursor:pointer;font-family:inherit;padding:0;"><?php echo View::e(I18n::t('widget.voltar')); ?></button>
   </div>
 </div>
 

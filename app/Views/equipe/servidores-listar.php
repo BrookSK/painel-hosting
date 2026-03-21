@@ -1,21 +1,22 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function formatarGb(int $mb): string {
     if ($mb <= 0) return '0 GB';
     return ((int)round($mb / 1024)) . ' GB';
 }
 
-$pageTitle = 'Servidores';
+$pageTitle = I18n::t('eq_servidores.titulo');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
-<div class="page-title">Servidores</div>
-<div class="page-subtitle">Nodes do cluster e capacidade disponível</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_servidores.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_servidores.subtitulo')); ?></div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-  <span class="texto" style="margin:0;">Cadastre seus nodes e a capacidade total.</span>
-  <a class="botao" href="/equipe/servidores/novo">Novo servidor</a>
+  <span class="texto" style="margin:0;"><?php echo View::e(I18n::t('eq_servidores.cadastre')); ?></span>
+  <a class="botao" href="/equipe/servidores/novo"><?php echo View::e(I18n::t('eq_servidores.novo')); ?></a>
 </div>
 
 <div class="card-new">
@@ -23,8 +24,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <table>
       <thead>
         <tr>
-          <th>Hostname</th><th>IP</th><th>CPU</th><th>Memória</th>
-          <th>Armazenamento</th><th>Status</th><th>Setup</th><th>Ações</th>
+          <th><?php echo View::e(I18n::t('eq_servidores.hostname')); ?></th><th><?php echo View::e(I18n::t('eq_servidores.ip')); ?></th><th><?php echo View::e(I18n::t('eq_servidores.cpu')); ?></th><th><?php echo View::e(I18n::t('eq_servidores.memoria')); ?></th>
+          <th><?php echo View::e(I18n::t('eq_servidores.armazenamento')); ?></th><th><?php echo View::e(I18n::t('eq_servidores.status')); ?></th><th><?php echo View::e(I18n::t('eq_servidores.setup')); ?></th><th><?php echo View::e(I18n::t('eq_servidores.acoes')); ?></th>
         </tr>
       </thead>
       <tbody>
@@ -43,45 +44,45 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <td>
               <?php
                 $st = (string)($s['status'] ?? '');
-                if ($st === 'active')      echo '<span class="badge-new badge-green">Ativo</span>';
-                elseif ($st === 'maintenance') echo '<span class="badge-new badge-yellow">Manutenção</span>';
-                else                       echo '<span class="badge-new badge-gray">Inativo</span>';
+                if ($st === 'active')      echo '<span class="badge-new badge-green">' . View::e(I18n::t('eq_servidores.ativo')) . '</span>';
+                elseif ($st === 'maintenance') echo '<span class="badge-new badge-yellow">' . View::e(I18n::t('eq_servidores.manutencao')) . '</span>';
+                else                       echo '<span class="badge-new badge-gray">' . View::e(I18n::t('eq_servidores.inativo')) . '</span>';
                 if ($isOnline !== null) {
                     echo $isOnline === 1
-                        ? ' <span class="badge-new badge-green">Online</span>'
-                        : ' <span class="badge-new badge-red">Offline</span>';
+                        ? ' <span class="badge-new badge-green">' . View::e(I18n::t('eq_servidores.online')) . '</span>'
+                        : ' <span class="badge-new badge-red">' . View::e(I18n::t('eq_servidores.offline')) . '</span>';
                 }
               ?>
             </td>
             <td id="setup-badge-<?php echo $sid; ?>">
               <?php
-                if ($setupSt === 'ready')         echo '<span class="badge-new badge-green">Pronto</span>';
-                elseif ($setupSt === 'initializing') echo '<span class="badge-new badge-yellow">Inicializando…</span>';
-                elseif ($setupSt === 'error')     echo '<span class="badge-new badge-red">Erro</span>';
-                else                              echo '<span class="badge-new badge-gray">Pendente</span>';
+                if ($setupSt === 'ready')         echo '<span class="badge-new badge-green">' . View::e(I18n::t('eq_servidores.pronto')) . '</span>';
+                elseif ($setupSt === 'initializing') echo '<span class="badge-new badge-yellow">' . View::e(I18n::t('eq_servidores.inicializando')) . '</span>';
+                elseif ($setupSt === 'error')     echo '<span class="badge-new badge-red">' . View::e(I18n::t('eq_servidores.erro')) . '</span>';
+                else                              echo '<span class="badge-new badge-gray">' . View::e(I18n::t('eq_servidores.pendente')) . '</span>';
               ?>
             </td>
             <td style="white-space:nowrap;">
-              <a href="/equipe/servidores/editar?id=<?php echo $sid; ?>">Editar</a>
+              <a href="/equipe/servidores/editar?id=<?php echo $sid; ?>"><?php echo View::e(I18n::t('eq_servidores.editar')); ?></a>
               &nbsp;·&nbsp;
               <a href="/equipe/servidores/terminal-seguro?id=<?php echo $sid; ?>">Terminal</a>
               &nbsp;·&nbsp;
               <?php if ($setupSt === 'error'): ?>
                 <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,true);return false;"
-                   style="color:#f59e0b;">Continuar setup</a>
+                   style="color:#f59e0b;"><?php echo View::e(I18n::t('eq_servidores.continuar_setup')); ?></a>
                 &nbsp;·&nbsp;
-                <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;">Reiniciar</a>
+                <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;"><?php echo View::e(I18n::t('eq_servidores.reiniciar')); ?></a>
               <?php elseif ($setupSt === 'ready'): ?>
                 <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;"
-                   style="color:#64748b;">Re-inicializar</a>
+                   style="color:#64748b;"><?php echo View::e(I18n::t('eq_servidores.re_inicializar')); ?></a>
               <?php else: ?>
-                <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;">Inicializar</a>
+                <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;"><?php echo View::e(I18n::t('eq_servidores.inicializar')); ?></a>
               <?php endif; ?>
             </td>
           </tr>
         <?php endforeach; ?>
         <?php if (empty($servidores)): ?>
-          <tr><td colspan="8">Nenhum servidor cadastrado ainda.</td></tr>
+          <tr><td colspan="8"><?php echo View::e(I18n::t('eq_servidores.nenhum')); ?></td></tr>
         <?php endif; ?>
       </tbody>
     </table>
@@ -93,12 +94,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   <div style="background:#fff;border-radius:16px;padding:28px;width:min(700px,96vw);max-height:92vh;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
 
     <div style="display:flex;justify-content:space-between;align-items:center;">
-      <strong id="modal-setup-titulo" style="font-size:16px;">Inicializar servidor</strong>
+      <strong id="modal-setup-titulo" style="font-size:16px;"><?php echo View::e(I18n::t('eq_servidores.modal_titulo')); ?></strong>
       <button id="btn-fechar-x" onclick="fecharSetup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;line-height:1;">✕</button>
     </div>
 
     <p class="texto" style="margin:0;font-size:13px;">
-      Conecta via SSH e prepara o servidor automaticamente: Docker, rede <code>lrv-net</code> e usuário de terminal.
+      <?php echo View::e(I18n::t('eq_servidores.modal_desc')); ?>
     </p>
 
     <!-- Barra de progresso -->
@@ -111,9 +112,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div id="setup-log" style="background:#0b1020;color:#e2e8f0;border-radius:12px;padding:14px;font-size:12px;font-family:monospace;min-height:200px;max-height:320px;overflow-y:auto;white-space:pre-wrap;flex:1;"></div>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <button id="btn-iniciar-setup" class="botao" onclick="executarSetup()">Inicializar agora</button>
+      <button id="btn-iniciar-setup" class="botao" onclick="executarSetup()"><?php echo View::e(I18n::t('eq_servidores.inicializar_agora')); ?></button>
       <button id="btn-continuar-setup" class="botao" onclick="executarSetup(true)" style="display:none;background:#f59e0b;">Continuar de onde parou</button>
-      <button id="btn-fechar-setup" class="botao" onclick="fecharSetup()" style="background:#64748b;">Fechar</button>
+      <button id="btn-fechar-setup" class="botao" onclick="fecharSetup()" style="background:#64748b;"><?php echo View::e(I18n::t('geral.fechar')); ?></button>
     </div>
   </div>
 </div>

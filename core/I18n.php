@@ -34,4 +34,28 @@ final class I18n
 
         return (string) (self::$cache[$idioma][$chave] ?? $chave);
     }
+
+    /**
+     * Traduz com substituição de placeholders (%s, %d).
+     */
+    public static function tf(string $chave, mixed ...$args): string
+    {
+        $tpl = self::t($chave);
+        if (count($args) === 0) return $tpl;
+        return sprintf($tpl, ...$args);
+    }
+
+    /**
+     * Retorna a chave de settings com sufixo do idioma atual.
+     * Ex: legal.terms_html → legal.terms_html.en-US (se idioma != pt-BR)
+     * Fallback para a chave sem sufixo (pt-BR é o padrão).
+     */
+    public static function settingsKey(string $baseKey): string
+    {
+        $idioma = self::$idioma;
+        if ($idioma === 'pt-BR') {
+            return $baseKey;
+        }
+        return $baseKey . '.' . $idioma;
+    }
 }

@@ -2,13 +2,14 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\ConfiguracoesSistema;
+use LRV\Core\I18n;
 
 $vps    = (array)($vps ?? []);
 $vpsId  = (int)($vps['id'] ?? 0);
 $status = (string)($vps['status'] ?? '');
 $porta  = (int)ConfiguracoesSistema::terminalWsInternalPort();
 
-$pageTitle    = 'Terminal VPS #' . $vpsId;
+$pageTitle    = I18n::tf('terminal.titulo', $vpsId);
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -17,8 +18,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
   <div>
-    <div class="page-title">Terminal VPS #<?php echo $vpsId; ?></div>
-    <div class="page-subtitle" style="margin-bottom:0;">Sessão isolada dentro do contêiner</div>
+    <div class="page-title"><?php echo View::e(I18n::tf('terminal.titulo', $vpsId)); ?></div>
+    <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::t('terminal.subtitulo')); ?></div>
   </div>
   <a href="/cliente/vps" class="botao ghost sm">← VPS</a>
 </div>
@@ -26,18 +27,18 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div class="card-new">
   <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
     <div>
-      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Abrir sessão</div>
-      <div style="font-size:13px;color:#64748b;">Tudo é auditado. O acesso é restrito ao contêiner da sua VPS.</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;"><?php echo View::e(I18n::t('terminal.abrir_sessao')); ?></div>
+      <div style="font-size:13px;color:#64748b;"><?php echo View::e(I18n::t('terminal.auditado')); ?></div>
     </div>
     <span class="badge-new" style="background:#f1f5f9;color:#334155;">WS: 127.0.0.1:<?php echo $porta; ?></span>
   </div>
 
   <?php if ($status !== 'running'): ?>
-    <div class="erro" style="margin-bottom:12px;">VPS não está em execução (status=<?php echo View::e($status); ?>). O terminal ficará disponível quando estiver rodando.</div>
+    <div class="erro" style="margin-bottom:12px;"><?php echo View::e(I18n::tf('terminal.vps_nao_rodando', $status)); ?></div>
   <?php endif; ?>
 
   <div style="margin-bottom:12px;">
-    <button class="botao" id="btnConectar" type="button" style="width:100%;" <?php echo ($status !== 'running') ? 'disabled' : ''; ?>>Conectar</button>
+    <button class="botao" id="btnConectar" type="button" style="width:100%;" <?php echo ($status !== 'running') ? 'disabled' : ''; ?>><?php echo View::e(I18n::t('terminal.conectar')); ?></button>
   </div>
 
   <div id="alerta" class="erro" style="display:none;margin-bottom:12px;"></div>
@@ -46,9 +47,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div style="padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.18);color:#e2e8f0;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
       <div>Terminal</div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button id="btnUpload" class="botao ghost sm" type="button" style="padding:4px 10px;font-size:12px;">↑ Upload</button>
-        <button id="btnDownload" class="botao ghost sm" type="button" style="padding:4px 10px;font-size:12px;">↓ Download</button>
-        <div id="status" style="opacity:.9;font-size:13px;">Desconectado</div>
+        <button id="btnUpload" class="botao ghost sm" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('terminal.upload')); ?></button>
+        <button id="btnDownload" class="botao ghost sm" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('terminal.download')); ?></button>
+        <div id="status" style="opacity:.9;font-size:13px;"><?php echo View::e(I18n::t('terminal.desconectado')); ?></div>
       </div>
     </div>
     <pre id="out" style="margin:0;padding:12px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;height:420px;overflow:auto;"></pre>
@@ -58,25 +59,25 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </div>
   </div>
 
-  <div style="font-size:13px;color:#94a3b8;margin-top:10px;">Conexão via proxy reverso: <strong>/ws/terminal</strong> (WSS).</div>
+  <div style="font-size:13px;color:#94a3b8;margin-top:10px;"><?php echo View::e(I18n::t('terminal.conexao_proxy')); ?></div>
 </div>
 
 <!-- Modal upload -->
 <div id="modalUpload" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;">
   <div class="card-new" style="max-width:420px;width:90%;">
-    <div class="card-new-title" style="margin-bottom:12px;">Enviar arquivo para a VPS</div>
+    <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('terminal.enviar_arquivo')); ?></div>
     <div style="margin-bottom:10px;">
-      <label style="font-size:13px;display:block;margin-bottom:4px;">Arquivo</label>
+      <label style="font-size:13px;display:block;margin-bottom:4px;"><?php echo View::e(I18n::t('terminal.arquivo')); ?></label>
       <input type="file" id="uploadFile" class="input" />
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:13px;display:block;margin-bottom:4px;">Caminho remoto</label>
+      <label style="font-size:13px;display:block;margin-bottom:4px;"><?php echo View::e(I18n::t('terminal.caminho_remoto')); ?></label>
       <input type="text" id="uploadPath" class="input" placeholder="/home/user/arquivo.txt" />
     </div>
     <div id="uploadStatus" style="font-size:13px;margin-bottom:10px;display:none;"></div>
     <div style="display:flex;gap:8px;">
-      <button class="botao" id="btnUploadEnviar" type="button">Enviar</button>
-      <button class="botao ghost" type="button" onclick="document.getElementById('modalUpload').style.display='none'">Cancelar</button>
+      <button class="botao" id="btnUploadEnviar" type="button"><?php echo View::e(I18n::t('geral.enviar')); ?></button>
+      <button class="botao ghost" type="button" onclick="document.getElementById('modalUpload').style.display='none'"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
     </div>
   </div>
 </div>
@@ -84,14 +85,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <!-- Modal download -->
 <div id="modalDownload" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;">
   <div class="card-new" style="max-width:420px;width:90%;">
-    <div class="card-new-title" style="margin-bottom:12px;">Baixar arquivo da VPS</div>
+    <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('terminal.baixar_arquivo')); ?></div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:13px;display:block;margin-bottom:4px;">Caminho remoto</label>
+      <label style="font-size:13px;display:block;margin-bottom:4px;"><?php echo View::e(I18n::t('terminal.caminho_remoto')); ?></label>
       <input type="text" id="downloadPath" class="input" placeholder="/home/user/arquivo.txt" />
     </div>
     <div style="display:flex;gap:8px;">
-      <button class="botao" id="btnDownloadIniciar" type="button">Baixar</button>
-      <button class="botao ghost" type="button" onclick="document.getElementById('modalDownload').style.display='none'">Cancelar</button>
+      <button class="botao" id="btnDownloadIniciar" type="button"><?php echo View::e(I18n::t('terminal.baixar')); ?></button>
+      <button class="botao ghost" type="button" onclick="document.getElementById('modalDownload').style.display='none'"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
     </div>
   </div>
 </div>

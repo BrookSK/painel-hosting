@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\Settings;
+use LRV\Core\I18n;
 
 $roomId = (int)($room['id'] ?? 0);
 $wsUrl = (string)Settings::obter('chat.ws_url', '');
@@ -10,7 +11,7 @@ if ($wsUrl === '') {
     $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'wss' : 'ws';
     $wsUrl = $proto . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ':' . $wsPort;
 }
-$pageTitle    = 'Chat de Suporte';
+$pageTitle    = I18n::t('chat.titulo');
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -43,13 +44,13 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </style>
 
 <div style="margin-bottom:24px;">
-  <div class="page-title">Chat de Suporte</div>
-  <div class="page-subtitle" style="margin-bottom:0;">Fale com nossa equipe em tempo real</div>
+  <div class="page-title"><?php echo View::e(I18n::t('chat.titulo')); ?></div>
+  <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::t('chat.subtitulo')); ?></div>
 </div>
 
 <div class="card-new" style="max-width:760px;position:relative;">
   <?php if ((string)($room['status'] ?? '') === 'closed'): ?>
-    <div style="font-size:13px;color:#64748b;margin-bottom:16px;">Este chat foi encerrado.</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:16px;"><?php echo View::e(I18n::t('chat.encerrado')); ?></div>
     <?php
       $_jaAvaliou = false;
       try {
@@ -68,9 +69,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <?php else: ?>
       <div style="font-size:13px;color:#16a34a;margin-bottom:16px;">Voce ja avaliou este atendimento. Obrigado!</div>
     <?php endif; ?>
-    <a href="/cliente/painel" class="botao ghost">Voltar ao painel</a>
+    <a href="/cliente/painel" class="botao ghost"><?php echo View::e(I18n::t('apps.voltar_painel')); ?></a>
   <?php else: ?>
-    <div id="chat-status"><span class="dot-pending"></span> Conectando...</div>
+    <div id="chat-status"><span class="dot-pending"></span> <?php echo View::e(I18n::t('chat.conectando')); ?></div>
     <div id="chat-box"></div>
     <div class="chat-upload-preview-c" id="uploadPreviewC">
       <span id="uploadFileNameC"></span>
@@ -82,8 +83,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <button type="button" id="btnFileC" title="Enviar arquivo">📎</button>
         <input type="file" id="fileInputC" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
       </div>
-      <textarea id="chat-input" placeholder="Digite sua mensagem..." disabled></textarea>
-      <button class="botao" id="btn-enviar" disabled>Enviar</button>
+      <textarea id="chat-input" placeholder="<?php echo View::e(I18n::t('chat.digite_mensagem')); ?>" disabled></textarea>
+      <button class="botao" id="btn-enviar" disabled><?php echo View::e(I18n::t('chat.enviar')); ?></button>
     </div>
     <div class="emoji-picker-c" id="emojiPickerC"></div>
   <?php endif; ?>

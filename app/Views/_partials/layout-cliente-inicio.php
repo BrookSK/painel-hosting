@@ -18,6 +18,7 @@ foreach (explode(' ', trim($_cliNome)) as $_w) {
 if ($_initials === '') $_initials = 'C';
 
 $_pageTitle = (string)($pageTitle ?? SistemaConfig::nome());
+$_t = static fn(string $k): string => I18n::t($k);
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">
@@ -48,22 +49,22 @@ $_pageTitle = (string)($pageTitle ?? SistemaConfig::nome());
         <div class="header-avatar-wrap" onclick="toggleAvatarDropdownCli()" id="avatarWrapCli">
           <div class="header-avatar"><?php echo View::e($_initials); ?></div>
           <div class="header-avatar-info">
-            <span class="header-avatar-name"><?php echo View::e($_cliNome ?: 'Cliente'); ?></span>
-            <span class="header-avatar-role">Área do cliente</span>
+            <span class="header-avatar-name"><?php echo View::e($_cliNome ?: I18n::t('geral.area_cliente')); ?></span>
+            <span class="header-avatar-role"><?php echo View::e(I18n::t('geral.area_cliente')); ?></span>
           </div>
           <div class="avatar-dropdown" id="avatarDropdownCli">
             <div class="avatar-dropdown-info">
-              <div class="avatar-dropdown-name"><?php echo View::e($_cliNome ?: 'Cliente'); ?></div>
+              <div class="avatar-dropdown-name"><?php echo View::e($_cliNome ?: I18n::t('geral.area_cliente')); ?></div>
               <div class="avatar-dropdown-email"><?php echo View::e($_cliEmail); ?></div>
             </div>
             <a href="/cliente/minha-conta" class="avatar-dropdown-item">
               <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              Minha Conta
+              <?php echo View::e(I18n::t('geral.minha_conta')); ?>
             </a>
             <div class="avatar-dropdown-divider"></div>
             <a href="/cliente/sair" class="avatar-dropdown-item avatar-dropdown-danger">
               <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M13 10H3M13 10l-3-3M13 10l-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Sair
+              <?php echo View::e(I18n::t('geral.sair')); ?>
             </a>
           </div>
         </div>

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function gb(int $mb): string {
     if ($mb <= 0) return '0 GB';
@@ -9,14 +10,14 @@ function gb(int $mb): string {
 
 function badgeStatusVpsEquipe(string $st): string {
     $map = [
-        'running'              => ['Em execução','badge-green'],
-        'suspended_payment'    => ['Suspensa','badge-red'],
-        'pending_payment'      => ['Aguard. pagamento','badge-yellow'],
-        'pending_node'         => ['Aguard. node','badge-yellow'],
-        'pending_provisioning' => ['Prov. pendente','badge-yellow'],
-        'provisioning'         => ['Provisionando','badge-blue'],
-        'error'                => ['Erro','badge-red'],
-        'removed'              => ['Removida','badge-gray'],
+        'running'              => [I18n::t('eq_vps.em_execucao'),'badge-green'],
+        'suspended_payment'    => [I18n::t('eq_vps.suspensa'),'badge-red'],
+        'pending_payment'      => [I18n::t('eq_vps.aguard_pagamento'),'badge-yellow'],
+        'pending_node'         => [I18n::t('eq_vps.aguard_node'),'badge-yellow'],
+        'pending_provisioning' => [I18n::t('eq_vps.prov_pendente'),'badge-yellow'],
+        'provisioning'         => [I18n::t('eq_vps.provisionando'),'badge-blue'],
+        'error'                => [I18n::t('eq_vps.erro'),'badge-red'],
+        'removed'              => [I18n::t('eq_vps.removida'),'badge-gray'],
     ];
     $d = $map[$st] ?? [View::e($st),'badge-gray'];
     return '<span class="badge-new '.$d[1].'">'.$d[0].'</span>';
@@ -25,15 +26,15 @@ function badgeStatusVpsEquipe(string $st): string {
 $pageTitle = 'VPS';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
-<div class="page-title">VPS</div>
-<div class="page-subtitle">Provisionamento, status e ações</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_vps.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_vps.subtitulo')); ?></div>
 
 <div class="card-new">
   <div style="overflow:auto;">
     <table>
       <thead>
         <tr>
-          <th>VPS</th><th>Cliente</th><th>CPU / RAM / Disco</th><th>Status</th><th>Node</th><th>Ações</th>
+          <th>VPS</th><th><?php echo View::e(I18n::t('eq_vps.cliente')); ?></th><th><?php echo View::e(I18n::t('eq_vps.cpu_ram_disco')); ?></th><th><?php echo View::e(I18n::t('eq_vps.status')); ?></th><th><?php echo View::e(I18n::t('eq_vps.node')); ?></th><th><?php echo View::e(I18n::t('eq_vps.acoes')); ?></th>
         </tr>
       </thead>
       <tbody>
@@ -55,7 +56,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <td><?php echo View::e((string)($v['server_id']??'')); ?></td>
             <td>
               <div class="linha" style="gap:4px;flex-wrap:wrap;">
-                <?php foreach ([['provisionar','Provisionar','btn-primary'],['reativar','Reativar','btn-outline'],['reiniciar','Reiniciar','btn-outline'],['suspender','Suspender','btn-outline'],['remover','Remover','btn-outline']] as [$acao,$label,$cls]): ?>
+                <?php foreach ([['provisionar',I18n::t('eq_vps.provisionar'),'btn-primary'],['reativar',I18n::t('eq_vps.reativar'),'btn-outline'],['reiniciar',I18n::t('eq_vps.reiniciar'),'btn-outline'],['suspender',I18n::t('eq_vps.suspender'),'btn-outline'],['remover',I18n::t('eq_vps.remover'),'btn-outline']] as [$acao,$label,$cls]): ?>
                   <form method="post" action="/equipe/vps/<?php echo $acao; ?>"<?php echo $acao==='remover' ? ' onsubmit="return confirm(\'Remover VPS #'.$vid.'?\')"' : ''; ?>>
                     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
@@ -67,7 +68,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           </tr>
         <?php endforeach; ?>
         <?php if (empty($vps)): ?>
-          <tr><td colspan="6">Nenhuma VPS encontrada.</td></tr>
+          <tr><td colspan="6"><?php echo View::e(I18n::t('eq_vps.nenhuma')); ?></td></tr>
         <?php endif; ?>
       </tbody>
     </table>

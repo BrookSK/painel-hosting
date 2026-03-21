@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function badgeInit(bool $ok): string
 {
     return $ok
-        ? '<span class="badge-new badge-success">OK</span>'
-        : '<span class="badge-new badge-danger">Pendente</span>';
+        ? '<span class="badge-new badge-success">' . View::e(I18n::t('eq_init.ok')) . '</span>'
+        : '<span class="badge-new badge-danger">' . View::e(I18n::t('eq_init.pendente')) . '</span>';
 }
 
 function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
@@ -19,31 +20,31 @@ function badgeInfo(?bool $ok, string $textoOk, string $textoKo): string
         : '<span class="badge-new badge-danger">' . View::e($textoKo) . '</span>';
 }
 
-$pageTitle = 'Inicialização';
+$pageTitle = I18n::t('eq_init.titulo');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
 
-<div class="page-title">Assistente de inicialização</div>
-<div class="page-subtitle">Verificações e ações para deixar o servidor pronto</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_init.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_init.subtitulo')); ?></div>
 
 <div class="card-new" style="max-width:980px;">
 
   <?php if (!empty($erro)): ?>
-    <div class="erro" style="margin-bottom:10px;">Erro: <?php echo View::e((string)$erro); ?></div>
+    <div class="erro" style="margin-bottom:10px;"><?php echo View::e(I18n::t('eq_init.erro')); ?>: <?php echo View::e((string)$erro); ?></div>
   <?php endif; ?>
 
   <?php if (!empty($ok)): ?>
-    <div class="sucesso" style="margin-bottom:10px;">Ação executada.</div>
+    <div class="sucesso" style="margin-bottom:10px;"><?php echo View::e(I18n::t('eq_init.acao_executada')); ?></div>
   <?php endif; ?>
 
-  <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Status</h2>
+  <h2 class="titulo" style="font-size:16px;margin-bottom:12px;"><?php echo View::e(I18n::t('eq_init.status')); ?></h2>
   <div style="overflow:auto;">
     <table style="width:100%;border-collapse:collapse;">
       <thead>
         <tr>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Item</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Status</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Detalhe</th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.item')); ?></th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.status')); ?></th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.detalhe')); ?></th>
         </tr>
       </thead>
       <tbody>
@@ -60,7 +61,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
   <?php if (!empty($pendentes)): ?>
     <div style="margin-top:12px;">
-      <div class="texto" style="margin:0 0 6px 0;"><strong>Migrations pendentes:</strong></div>
+      <div class="texto" style="margin:0 0 6px 0;"><strong><?php echo View::e(I18n::t('eq_init.migrations_pendentes')); ?></strong></div>
       <div class="linha" style="flex-wrap:wrap;gap:6px;">
         <?php foreach (($pendentes ?? []) as $p): ?>
           <span class="badge-new badge-warning"><?php echo View::e((string)$p); ?></span>
@@ -70,68 +71,68 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   <?php endif; ?>
 
   <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:14px;">
-    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Ações</h2>
+    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;"><?php echo View::e(I18n::t('eq_init.acoes')); ?></h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
       <form method="post" action="/equipe/inicializacao/aplicar-schema" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Aplicar schema.sql</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.aplicar_schema')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/aplicar-migrations" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Aplicar migrations</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.aplicar_migrations')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/criar-diretorios" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Criar diretórios</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.criar_diretorios')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/gerar-tokens" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Gerar tokens/defaults</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.gerar_tokens')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/processar-job" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Processar 1 job</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.processar_job')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/coletar-status" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Coletar status (1x)</strong></div>
-        <button class="botao" type="submit">Enfileirar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.coletar_status')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.enfileirar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/coletar-status-continuo" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Iniciar coleta contínua</strong></div>
-        <button class="botao" type="submit">Iniciar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.coleta_continua')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.iniciar')); ?></button>
       </form>
 
       <form method="post" action="/equipe/inicializacao/testar-nodes" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conectividade dos nodes</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.testar_nodes')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
     </div>
   </div>
 
   <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:14px;">
-    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Terminal WS (Admin)</h2>
+    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;"><?php echo View::e(I18n::t('eq_init.terminal_ws')); ?></h2>
     <?php $tw = (array)($terminal_ws ?? []); ?>
     <div style="overflow:auto;">
       <table style="width:100%;border-collapse:collapse;">
         <thead>
           <tr>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Item</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Status</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Detalhe</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.item')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.status')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.detalhe')); ?></th>
           </tr>
         </thead>
         <tbody>
@@ -172,22 +173,22 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div class="grid" style="margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
       <form method="post" action="/equipe/inicializacao/terminal/instalar-deps" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Instalar dependências (composer)</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.instalar_deps')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
         <div class="texto" style="font-size:13px;opacity:.9;margin-top:10px;">Log: <code><?php echo View::e((string)($tw['composer_log_path'] ?? '')); ?></code></div>
       </form>
 
       <form method="post" action="/equipe/inicializacao/terminal/iniciar-daemon" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Iniciar daemon</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.iniciar_daemon')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
         <div class="texto" style="font-size:13px;opacity:.9;margin-top:10px;">Log: <code><?php echo View::e((string)($tw['log_path'] ?? '')); ?></code></div>
       </form>
 
       <form method="post" action="/equipe/inicializacao/terminal/parar-daemon" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <div class="texto" style="margin:0 0 10px 0;"><strong>Parar daemon</strong></div>
-        <button class="botao" type="submit">Executar</button>
+        <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.parar_daemon')); ?></strong></div>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.executar')); ?></button>
       </form>
     </div>
 
@@ -197,20 +198,20 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   </div>
 
   <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:14px;">
-    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Nodes cadastrados</h2>
+    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;"><?php echo View::e(I18n::t('eq_init.nodes_cadastrados')); ?></h2>
     <div class="texto" style="margin:0 0 10px 0;opacity:.9;">
-      Esta lista mostra o status e o último resultado de conectividade (SSH + <code>docker version</code>).
+      <?php echo View::e(I18n::t('eq_init.nodes_desc')); ?>
     </div>
     <div style="overflow:auto;">
       <table style="width:100%;border-collapse:collapse;">
         <thead>
           <tr>
             <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Node</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Host</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Status</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.host')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.status')); ?></th>
             <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Conectividade</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Última checagem</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Último erro</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.ultima_checagem')); ?></th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('eq_init.ultimo_erro')); ?></th>
           </tr>
         </thead>
         <tbody>
@@ -221,9 +222,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
                 <?php
                   $stNode = (string)($n['status'] ?? '');
-                  if ($stNode === 'active') echo '<span class="badge-new badge-success">Ativo</span>';
-                  elseif ($stNode === 'maintenance') echo '<span class="badge-new badge-warning">Manutenção</span>';
-                  else echo '<span class="badge-new badge-neutral">Inativo</span>';
+                  if ($stNode === 'active') echo '<span class="badge-new badge-success">' . View::e(I18n::t('geral.ativo')) . '</span>';
+                  elseif ($stNode === 'maintenance') echo '<span class="badge-new badge-warning">' . View::e(I18n::t('eq_servidores.manutencao')) . '</span>';
+                  else echo '<span class="badge-new badge-neutral">' . View::e(I18n::t('geral.inativo')) . '</span>';
                 ?>
               </td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
@@ -242,7 +243,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             </tr>
           <?php endforeach; ?>
           <?php if (empty($nodes)): ?>
-            <tr><td colspan="6" style="padding:12px;">Nenhum node cadastrado ainda.</td></tr>
+            <tr><td colspan="6" style="padding:12px;"><?php echo View::e(I18n::t('eq_init.nenhum_node')); ?></td></tr>
           <?php endif; ?>
         </tbody>
       </table>
@@ -250,7 +251,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   </div>
 
   <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:14px;">
-    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Worker via HTTP (sem CLI)</h2>
+    <h2 class="titulo" style="font-size:16px;margin-bottom:12px;"><?php echo View::e(I18n::t('eq_init.worker_http')); ?></h2>
     <?php
       $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
       $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
@@ -259,7 +260,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       $urlOnce = $base . '/api/worker/run-once';
     ?>
     <div class="texto" style="margin:0 0 10px 0;opacity:.9;">
-      Endpoint para rodar 1 job (ideal para cron externo). Autenticação por header <code>x-worker-token</code>.
+      <?php echo View::e(I18n::t('eq_init.worker_desc')); ?> <code>x-worker-token</code>.
     </div>
     <div class="card-new" style="margin:0;">
       <div class="texto" style="margin:0 0 6px 0;"><strong>URL:</strong></div>
@@ -267,7 +268,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <div class="texto" style="margin:12px 0 6px 0;"><strong>Token:</strong></div>
       <code id="worker-token" style="padding:6px 8px;background:#f1f5f9;border-radius:10px;display:inline-block;"><?php echo View::e($tokenWorker); ?></code>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="botao" type="button" id="btn-testar-worker">Testar (executar 1 job via HTTP)</button>
+        <button class="botao" type="button" id="btn-testar-worker"><?php echo View::e(I18n::t('eq_init.testar_worker')); ?></button>
         <span id="worker-resp" class="texto" style="margin:0;opacity:.9;"></span>
       </div>
     </div>
@@ -275,14 +276,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
   <?php if (!empty($logs)): ?>
     <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:14px;">
-      <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Logs</h2>
+      <h2 class="titulo" style="font-size:16px;margin-bottom:12px;"><?php echo View::e(I18n::t('eq_init.logs')); ?></h2>
       <pre style="white-space:pre-wrap;background:#0b1020;color:#e5e7eb;padding:12px;border-radius:12px;overflow:auto;"><?php echo View::e(implode("\n", (array)$logs)); ?></pre>
     </div>
   <?php endif; ?>
 
   <div style="margin-top:14px;">
     <p class="texto" style="font-size:13px;margin:0;opacity:.85;">
-      Observação: para Deploy/Backups o servidor precisa ter <strong>ssh</strong> e <strong>scp</strong> disponíveis e o PHP com <strong>shell_exec</strong> habilitado.
+      <?php echo View::e(I18n::t('eq_init.obs_deploy')); ?>
     </p>
   </div>
 </div>

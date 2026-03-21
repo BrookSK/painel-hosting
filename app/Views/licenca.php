@@ -4,9 +4,9 @@ use LRV\Core\I18n;
 use LRV\Core\SistemaConfig;
 $conteudoCustomizado = (string)($conteudo_customizado ?? '');
 $_topo_links = [
-    ['href' => '/termos',     'label' => 'Termos'],
-    ['href' => '/privacidade','label' => 'Privacidade'],
-    ['href' => '/contato',    'label' => 'Contato'],
+    ['href' => '/termos',     'label' => I18n::t('licenca.nav_termos')],
+    ['href' => '/privacidade','label' => I18n::t('licenca.nav_privacidade')],
+    ['href' => '/contato',    'label' => I18n::t('licenca.nav_contato')],
 ];
 ?>
 <!doctype html>
@@ -14,7 +14,7 @@ $_topo_links = [
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <?php $seo_titulo = 'Licença de Uso — ' . SistemaConfig::nome(); require __DIR__ . '/_partials/seo.php'; ?>
+  <?php $seo_titulo = I18n::t('licenca.titulo') . ' — ' . SistemaConfig::nome(); require __DIR__ . '/_partials/seo.php'; ?>
   <?php require __DIR__ . '/_partials/estilo.php'; ?>
   <style>
     body{background:#060d1f;}
@@ -43,9 +43,9 @@ $_topo_links = [
 
   <div class="pub-page-hero">
     <div class="pub-page-hero-inner">
-      <div class="pub-page-label">Legal</div>
-      <h1 class="pub-page-title">Licença de Uso Proprietária</h1>
-      <p class="pub-page-sub">Este documento estabelece os termos e condições de uso do software LRV Cloud Manager.</p>
+      <div class="pub-page-label"><?php echo View::e(I18n::t('licenca.label')); ?></div>
+      <h1 class="pub-page-title"><?php echo View::e(I18n::t('licenca.titulo')); ?></h1>
+      <p class="pub-page-sub"><?php echo View::e(I18n::t('licenca.subtitulo')); ?></p>
     </div>
   </div>
 

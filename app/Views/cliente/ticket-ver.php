@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $st = (string)($ticket['status'] ?? 'open');
 
@@ -26,7 +27,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="page-title">Ticket #<?php echo (int)($ticket['id'] ?? 0); ?></div>
     <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e((string)($ticket['subject'] ?? '')); ?></div>
   </div>
-  <a href="/cliente/tickets" class="botao ghost sm">Voltar</a>
+  <a href="/cliente/tickets" class="botao ghost sm"><?php echo View::e(I18n::t('geral.voltar')); ?></a>
 </div>
 
 <div class="card-new" style="margin-bottom:14px;">
@@ -41,7 +42,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 
 <div class="card-new" style="margin-bottom:14px;">
-  <div class="card-new-title" style="margin-bottom:12px;">Mensagens</div>
+  <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('tickets.mensagem')); ?></div>
   <?php foreach (($mensagens ?? []) as $m): ?>
     <?php $tipo = (string)($m['sender_type'] ?? ''); ?>
     <div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:10px;background:<?php echo $tipo === 'client' ? '#ffffff' : '#f8fafc'; ?>;">
@@ -53,12 +54,12 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </div>
   <?php endforeach; ?>
   <?php if (empty($mensagens)): ?>
-    <div style="color:#94a3b8;font-size:13px;">Nenhuma mensagem ainda.</div>
+    <div style="color:#94a3b8;font-size:13px;"><?php echo View::e(I18n::t('geral.nenhum_resultado')); ?></div>
   <?php endif; ?>
 </div>
 
 <div class="card-new">
-  <div class="card-new-title" style="margin-bottom:12px;">Responder</div>
+  <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('tickets.responder')); ?></div>
   <?php if (!empty($erro)): ?>
     <div class="erro"><?php echo View::e((string)$erro); ?></div>
   <?php endif; ?>
@@ -87,7 +88,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
       <input type="hidden" name="ticket_id" value="<?php echo (int)($ticket['id'] ?? 0); ?>" />
       <textarea class="input" name="message" rows="6" style="margin-bottom:12px;"></textarea>
-      <button class="botao" type="submit">Enviar resposta</button>
+      <button class="botao" type="submit"><?php echo View::e(I18n::t('geral.enviar')); ?></button>
     </form>
   <?php endif; ?>
 </div>

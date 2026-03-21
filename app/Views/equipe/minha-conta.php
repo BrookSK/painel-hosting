@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $pageTitle = 'Minha Conta';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
@@ -17,8 +18,8 @@ foreach (explode(' ', trim($_nome)) as $w) {
 if ($_initials === '') $_initials = 'U';
 ?>
 
-<div class="page-title">Minha Conta</div>
-<div class="page-subtitle">Gerencie suas informações pessoais e senha</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_conta.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_conta.subtitulo')); ?></div>
 
 <?php if (!empty($ok)): ?><div class="sucesso"><?php echo View::e($ok); ?></div><?php endif; ?>
 <?php if (!empty($erro)): ?><div class="erro"><?php echo View::e($erro); ?></div><?php endif; ?>
@@ -36,7 +37,7 @@ if ($_initials === '') $_initials = 'U';
     </div>
     <div class="mc-avatar-name"><?php echo View::e($_nome); ?></div>
     <span class="mc-role-badge"><?php echo View::e($_role); ?></span>
-    <p class="mc-avatar-hint">PNG, JPG, WEBP · máx. 2 MB</p>
+    <p class="mc-avatar-hint"><?php echo View::e(I18n::t('eq_conta.hint_avatar')); ?></p>
   </div>
 
   <!-- Coluna direita: formulário -->
@@ -44,47 +45,47 @@ if ($_initials === '') $_initials = 'U';
     <form method="POST" action="/equipe/minha-conta/salvar" enctype="multipart/form-data">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 
-      <p class="mc-section-label">Informações pessoais</p>
+      <p class="mc-section-label"><?php echo View::e(I18n::t('eq_conta.info_pessoais')); ?></p>
 
       <div class="mc-field">
-        <label class="mc-label" for="avatarInput">Foto de perfil</label>
+        <label class="mc-label" for="avatarInput"><?php echo View::e(I18n::t('eq_conta.foto_perfil')); ?></label>
         <div class="mc-upload-row">
           <label for="avatarInput" class="botao sm sec" style="cursor:pointer;">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v7M3.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Escolher foto
+            <?php echo View::e(I18n::t('eq_conta.escolher_foto')); ?>
           </label>
-          <span class="mc-filename" id="avatarFilename">Nenhum arquivo selecionado</span>
+          <span class="mc-filename" id="avatarFilename"><?php echo View::e(I18n::t('eq_conta.nenhum_arquivo')); ?></span>
           <input type="file" name="avatar" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" />
         </div>
       </div>
 
       <div class="mc-row">
         <div class="mc-field">
-          <label class="mc-label" for="name">Nome</label>
+          <label class="mc-label" for="name"><?php echo View::e(I18n::t('eq_conta.nome')); ?></label>
           <input type="text" id="name" name="name" class="input mc-input" value="<?php echo View::e($_nome); ?>" required />
         </div>
         <div class="mc-field">
-          <label class="mc-label" for="email">E-mail</label>
+          <label class="mc-label" for="email"><?php echo View::e(I18n::t('auth.email')); ?></label>
           <input type="email" id="email" name="email" class="input mc-input" value="<?php echo View::e($_email); ?>" required />
         </div>
       </div>
 
       <div class="mc-divider"></div>
-      <p class="mc-section-label">Alterar senha <span class="mc-section-hint">(deixe em branco para não alterar)</span></p>
+      <p class="mc-section-label"><?php echo View::e(I18n::t('eq_conta.alterar_senha')); ?> <span class="mc-section-hint"><?php echo View::e(I18n::t('eq_conta.hint_senha')); ?></span></p>
 
       <div class="mc-row">
         <div class="mc-field">
-          <label class="mc-label" for="senha_atual">Senha atual</label>
+          <label class="mc-label" for="senha_atual"><?php echo View::e(I18n::t('eq_conta.senha_atual')); ?></label>
           <input type="password" id="senha_atual" name="senha_atual" class="input mc-input" autocomplete="current-password" />
         </div>
         <div class="mc-field">
-          <label class="mc-label" for="nova_senha">Nova senha</label>
+          <label class="mc-label" for="nova_senha"><?php echo View::e(I18n::t('eq_conta.nova_senha')); ?></label>
           <input type="password" id="nova_senha" name="nova_senha" class="input mc-input" autocomplete="new-password" minlength="8" />
         </div>
       </div>
 
       <div class="mc-actions">
-        <button type="submit" class="botao">Salvar alterações</button>
+        <button type="submit" class="botao"><?php echo View::e(I18n::t('eq_conta.salvar')); ?></button>
       </div>
     </form>
   </div>

@@ -67,17 +67,17 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
       <span class="navbar-brand-name"><?php echo View::e($_nome); ?></span>
     </a>
     <div class="navbar-links">
-      <a href="#funcionalidades">Funcionalidades</a>
-      <a href="#planos">Planos</a>
-      <a href="#tecnologia">Tecnologia</a>
-      <a href="/status">Status</a>
-      <a href="/contato">Contato</a>
+      <a href="#funcionalidades"><?php echo View::e(I18n::t('infra.nav_funcionalidades')); ?></a>
+      <a href="#planos"><?php echo View::e(I18n::t('infra.nav_planos')); ?></a>
+      <a href="#tecnologia"><?php echo View::e(I18n::t('infra.nav_tecnologia')); ?></a>
+      <a href="/status"><?php echo View::e(I18n::t('infra.nav_status')); ?></a>
+      <a href="/contato"><?php echo View::e(I18n::t('infra.nav_contato')); ?></a>
     </div>
     <div class="navbar-actions">
       <?php require __DIR__ . '/_partials/idioma.php'; ?>
-      <a href="/cliente/entrar" class="navbar-btn ghost">Entrar</a>
+      <a href="/cliente/entrar" class="navbar-btn ghost"><?php echo View::e(I18n::t('infra.nav_entrar')); ?></a>
       <a href="/cliente/criar-conta" class="navbar-btn solid">
-        <?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?>
+        <?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.nav_criar_conta')); ?>
       </a>
       <button class="navbar-hamburger" id="navHamburger" aria-label="Menu" onclick="toggleDrawer()">
         <span></span><span></span><span></span>
@@ -88,14 +88,14 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 
 <!-- DRAWER MOBILE -->
 <div class="navbar-drawer" id="navDrawer">
-  <a href="#funcionalidades" onclick="closeDrawer()">Funcionalidades</a>
-  <a href="#planos" onclick="closeDrawer()">Planos</a>
-  <a href="#tecnologia" onclick="closeDrawer()">Tecnologia</a>
-  <a href="/status" onclick="closeDrawer()">Status</a>
-  <a href="/contato" onclick="closeDrawer()">Contato</a>
+  <a href="#funcionalidades" onclick="closeDrawer()"><?php echo View::e(I18n::t('infra.nav_funcionalidades')); ?></a>
+  <a href="#planos" onclick="closeDrawer()"><?php echo View::e(I18n::t('infra.nav_planos')); ?></a>
+  <a href="#tecnologia" onclick="closeDrawer()"><?php echo View::e(I18n::t('infra.nav_tecnologia')); ?></a>
+  <a href="/status" onclick="closeDrawer()"><?php echo View::e(I18n::t('infra.nav_status')); ?></a>
+  <a href="/contato" onclick="closeDrawer()"><?php echo View::e(I18n::t('infra.nav_contato')); ?></a>
   <div class="drawer-actions">
-    <a href="/cliente/entrar" class="ghost navbar-btn" onclick="closeDrawer()">Entrar</a>
-    <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?></a>
+    <a href="/cliente/entrar" class="ghost navbar-btn" onclick="closeDrawer()"><?php echo View::e(I18n::t('infra.nav_entrar')); ?></a>
+    <a href="/cliente/criar-conta" class="solid navbar-btn" onclick="closeDrawer()"><?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.nav_criar_conta')); ?></a>
   </div>
 </div>
 
@@ -225,76 +225,76 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
-    <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Plataforma Cloud SaaS</div>
-    <h1 class="hero-title">Infraestrutura cloud<br><span class="grad">simples e poderosa</span></h1>
-    <p class="hero-sub">Provisione VPS, faça deploy de aplicações, gerencie e-mails, backups e suporte em um único painel. Tudo automatizado, seguro e pronto para escalar.</p>
+    <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span><?php echo View::e(I18n::t('infra.hero_eyebrow')); ?></div>
+    <h1 class="hero-title"><?php echo View::e(I18n::t('infra.hero_titulo')); ?><br><span class="grad"><?php echo View::e(I18n::t('infra.hero_titulo_grad')); ?></span></h1>
+    <p class="hero-sub"><?php echo View::e(I18n::t('infra.hero_sub')); ?></p>
     <div class="hero-ctas">
       <a href="/cliente/criar-conta" class="hero-btn primary">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta grátis'; ?>
+        <?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.hero_criar_conta')); ?>
       </a>
-      <a href="#planos" class="hero-btn outline">Ver planos →</a>
+      <a href="#planos" class="hero-btn outline"><?php echo View::e(I18n::t('infra.hero_ver_planos')); ?></a>
     </div>
     <?php if ($_trial_ativo && $_trial_desc !== ''): ?>
     <p class="hero-trial-note"><?php echo View::e($_trial_desc); ?></p>
     <?php endif; ?>
     <div class="hero-badges">
-      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Deploy automatizado</span>
-      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Backups automáticos</span>
-      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Suporte via chat e tickets</span>
-      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Monitoramento 24/7</span>
-      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Terminal web integrado</span>
+      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.badge_deploy')); ?></span>
+      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.badge_backups')); ?></span>
+      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.badge_suporte')); ?></span>
+      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.badge_monitoramento')); ?></span>
+      <span class="hero-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.badge_terminal')); ?></span>
     </div>
   </div>
 </section>
 
 <div class="stats-bar">
   <div class="stats-bar-inner">
-    <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-lbl">Uptime garantido</div></div>
-    <div class="stat-item"><div class="stat-num">&lt;60s</div><div class="stat-lbl">Provisionamento</div></div>
-    <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-lbl">Monitoramento</div></div>
-    <div class="stat-item"><div class="stat-num">AES-256</div><div class="stat-lbl">Criptografia</div></div>
+    <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-lbl"><?php echo View::e(I18n::t('infra.stat_uptime')); ?></div></div>
+    <div class="stat-item"><div class="stat-num">&lt;60s</div><div class="stat-lbl"><?php echo View::e(I18n::t('infra.stat_provisioning')); ?></div></div>
+    <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-lbl"><?php echo View::e(I18n::t('infra.stat_monitoring')); ?></div></div>
+    <div class="stat-item"><div class="stat-num">AES-256</div><div class="stat-lbl"><?php echo View::e(I18n::t('infra.stat_encryption')); ?></div></div>
   </div>
 </div>
 
 <section class="section alt" id="funcionalidades">
   <div class="section-inner">
-    <div class="section-label">Funcionalidades</div>
-    <h2 class="section-title">Tudo que você precisa em um lugar</h2>
-    <p class="section-sub">Do provisionamento ao suporte, cada recurso foi pensado para simplificar sua operação.</p>
+    <div class="section-label"><?php echo View::e(I18n::t('infra.feat_label')); ?></div>
+    <h2 class="section-title"><?php echo View::e(I18n::t('infra.feat_titulo')); ?></h2>
+    <p class="section-sub"><?php echo View::e(I18n::t('infra.feat_sub')); ?></p>
     <div class="feat-grid">
-      <div class="feat-card"><div class="feat-icon v"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="5" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="2" y="13" width="18" height="5" rx="2" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="8.5" r="1.2" fill="currentColor"/><circle cx="17" cy="15.5" r="1.2" fill="currentColor"/></svg></div><div class="feat-name">VPS Gerenciadas</div><div class="feat-desc">Provisione, suspenda, reinicie e monitore suas VPS com poucos cliques.</div><span class="feat-tag">KVM / Docker</span></div>
-      <div class="feat-card"><div class="feat-icon b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M6 8l3 2-3 2M12 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="feat-name">Terminal Web</div><div class="feat-desc">Acesse o terminal SSH diretamente pelo navegador. Auditoria completa de comandos.</div><span class="feat-tag">SSH / WebSocket</span></div>
-      <div class="feat-card"><div class="feat-icon i"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 4l5 5-5 5M11 18h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="feat-name">Deploy de Aplicações</div><div class="feat-desc">Faça deploy de aplicações Docker com um clique. Logs em tempo real e rollback fácil.</div><span class="feat-tag">Docker</span></div>
-      <div class="feat-card"><div class="feat-icon g"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v12M7 11l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><div class="feat-name">Backups Automáticos</div><div class="feat-desc">Backups agendados com download direto. Retenção configurável e restauração com um clique.</div><span class="feat-tag">Agendado</span></div>
-      <div class="feat-card"><div class="feat-icon r"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 14l5-5 3 3 5-6 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/></svg></div><div class="feat-name">Monitoramento</div><div class="feat-desc">CPU, memória e disco em tempo real. Alertas automáticos por e-mail e WhatsApp.</div><span class="feat-tag">Tempo real</span></div>
-      <div class="feat-card"><div class="feat-icon o"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2 9h18" stroke="currentColor" stroke-width="1.7"/><path d="M7 14h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><div class="feat-name">E-mails Profissionais</div><div class="feat-desc">Crie contas no seu próprio domínio. Integração com Mailcow e webmail incluso.</div><span class="feat-tag">Mailcow</span></div>
-      <div class="feat-card"><div class="feat-icon c"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 5h14a2 2 0 012 2v8a2 2 0 01-2 2H7l-5 3V7a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div class="feat-name">Suporte Integrado</div><div class="feat-desc">Chat ao vivo e sistema de tickets com histórico completo de atendimentos.</div><span class="feat-tag">Chat + Tickets</span></div>
-      <div class="feat-card"><div class="feat-icon y"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2l2.4 5 5.6.8-4 3.9.9 5.5L11 14.5l-4.9 2.7.9-5.5L3 7.8l5.6-.8L11 2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div class="feat-name">Planos Flexíveis</div><div class="feat-desc">Escolha o plano ideal para seu projeto. Upgrade ou downgrade a qualquer momento.</div><span class="feat-tag">Asaas / Stripe</span></div>
-      <div class="feat-card"><div class="feat-icon s"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3C7.686 3 5 5.686 5 9c0 2.21 1.197 4.14 2.97 5.19L8 18h6l.03-3.81C15.803 13.14 17 11.21 17 9c0-3.314-2.686-6-6-6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div class="feat-name">2FA & Segurança</div><div class="feat-desc">Autenticação em dois fatores, RBAC por roles, auditoria completa e proteção CSRF.</div><span class="feat-tag">TOTP / RBAC</span></div>
+      <div class="feat-card"><div class="feat-icon v"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="5" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="2" y="13" width="18" height="5" rx="2" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="8.5" r="1.2" fill="currentColor"/><circle cx="17" cy="15.5" r="1.2" fill="currentColor"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_vps')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_vps_desc')); ?></div><span class="feat-tag">KVM / Docker</span></div>
+      <div class="feat-card"><div class="feat-icon b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M6 8l3 2-3 2M12 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_terminal')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_terminal_desc')); ?></div><span class="feat-tag">SSH / WebSocket</span></div>
+      <div class="feat-card"><div class="feat-icon i"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 4l5 5-5 5M11 18h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_deploy')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_deploy_desc')); ?></div><span class="feat-tag">Docker</span></div>
+      <div class="feat-card"><div class="feat-icon g"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v12M7 11l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_backups')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_backups_desc')); ?></div><span class="feat-tag">Agendado</span></div>
+      <div class="feat-card"><div class="feat-icon r"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 14l5-5 3 3 5-6 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_monitor')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_monitor_desc')); ?></div><span class="feat-tag">Tempo real</span></div>
+      <div class="feat-card"><div class="feat-icon o"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2 9h18" stroke="currentColor" stroke-width="1.7"/><path d="M7 14h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_email')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_email_desc')); ?></div><span class="feat-tag">Mailcow</span></div>
+      <div class="feat-card"><div class="feat-icon c"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 5h14a2 2 0 012 2v8a2 2 0 01-2 2H7l-5 3V7a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_suporte')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_suporte_desc')); ?></div><span class="feat-tag">Chat + Tickets</span></div>
+      <div class="feat-card"><div class="feat-icon y"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2l2.4 5 5.6.8-4 3.9.9 5.5L11 14.5l-4.9 2.7.9-5.5L3 7.8l5.6-.8L11 2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_planos')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_planos_desc')); ?></div><span class="feat-tag">Asaas / Stripe</span></div>
+      <div class="feat-card"><div class="feat-icon s"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3C7.686 3 5 5.686 5 9c0 2.21 1.197 4.14 2.97 5.19L8 18h6l.03-3.81C15.803 13.14 17 11.21 17 9c0-3.314-2.686-6-6-6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div class="feat-name"><?php echo View::e(I18n::t('infra.feat_2fa')); ?></div><div class="feat-desc"><?php echo View::e(I18n::t('infra.feat_2fa_desc')); ?></div><span class="feat-tag">TOTP / RBAC</span></div>
     </div>
   </div>
 </section>
 
 <section class="section">
   <div class="section-inner">
-    <div class="section-label">Como funciona</div>
-    <h2 class="section-title">Do zero ao ar em minutos</h2>
-    <p class="section-sub">Sem configurações complexas. Sua infraestrutura pronta para produção em 4 passos.</p>
+    <div class="section-label"><?php echo View::e(I18n::t('infra.steps_label')); ?></div>
+    <h2 class="section-title"><?php echo View::e(I18n::t('infra.steps_titulo')); ?></h2>
+    <p class="section-sub"><?php echo View::e(I18n::t('infra.steps_sub')); ?></p>
     <div class="steps">
-      <div class="step"><div class="step-num">1</div><div class="step-title">Crie sua conta</div><div class="step-desc">Cadastro rápido, sem cartão de crédito para começar.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-title">Escolha um plano</div><div class="step-desc">Selecione os recursos que seu projeto precisa.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-title">VPS provisionada</div><div class="step-desc">Seu servidor é criado automaticamente em menos de 60 segundos.</div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-title">Gerencie tudo</div><div class="step-desc">Terminal, deploy, backups, e-mails e suporte em um único painel.</div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-title"><?php echo View::e(I18n::t('infra.step1_titulo')); ?></div><div class="step-desc"><?php echo View::e(I18n::t('infra.step1_desc')); ?></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-title"><?php echo View::e(I18n::t('infra.step2_titulo')); ?></div><div class="step-desc"><?php echo View::e(I18n::t('infra.step2_desc')); ?></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-title"><?php echo View::e(I18n::t('infra.step3_titulo')); ?></div><div class="step-desc"><?php echo View::e(I18n::t('infra.step3_desc')); ?></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-title"><?php echo View::e(I18n::t('infra.step4_titulo')); ?></div><div class="step-desc"><?php echo View::e(I18n::t('infra.step4_desc')); ?></div></div>
     </div>
   </div>
 </section>
 
 <section class="section alt" id="planos">
   <div class="section-inner">
-    <div class="section-label">Planos</div>
-    <h2 class="section-title">Preços transparentes, sem surpresas</h2>
-    <p class="section-sub">Escolha o plano ideal para o seu projeto. Todos incluem suporte, backups e monitoramento.</p>
+    <div class="section-label"><?php echo View::e(I18n::t('infra.plans_label')); ?></div>
+    <h2 class="section-title"><?php echo View::e(I18n::t('infra.plans_titulo')); ?></h2>
+    <p class="section-sub"><?php echo View::e(I18n::t('infra.plans_sub')); ?></p>
     <?php if (!empty($_planos)): ?>
     <div class="plans-grid">
       <?php foreach ($_planos as $_i => $_p):
@@ -307,97 +307,98 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
         $_bw    = (int)($_specs['bandwidth_gb'] ?? 0);
         $_price = (float)$_p['price'];
         $_cycle = (string)($_p['billing_cycle'] ?? 'monthly');
-        $_cycleLabel = $_cycle === 'yearly' ? '/ano' : '/mês';
+        $_cycleLabel = $_cycle === 'yearly' ? I18n::t('infra.plans_ano') : I18n::t('infra.plans_mes');
+        $_cycleBillingLabel = $_cycle === 'yearly' ? I18n::t('infra.plans_anual') : I18n::t('infra.plans_mensal');
         $_destaque = $_i === 1;
       ?>
       <div class="plan-card <?php echo $_destaque ? 'destaque' : ''; ?>">
-        <?php if ($_destaque): ?><div class="plan-badge">Mais popular</div><?php endif; ?>
+        <?php if ($_destaque): ?><div class="plan-badge"><?php echo View::e(I18n::t('infra.plans_popular')); ?></div><?php endif; ?>
         <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
         <?php if (!empty($_p['description'])): ?><div class="plan-desc"><?php echo View::e((string)$_p['description']); ?></div><?php endif; ?>
-        <div class="plan-price">R$ <?php echo number_format($_price, 2, ',', '.'); ?><span><?php echo $_cycleLabel; ?></span></div>
-        <div class="plan-cycle"><?php echo $_cycle === 'yearly' ? 'Cobrado anualmente' : 'Cobrado mensalmente'; ?></div>
+        <div class="plan-price"><?php echo View::e(I18n::t('infra.plans_moeda')); ?> <?php echo number_format($_price, 2, ',', '.'); ?><span><?php echo View::e($_cycleLabel); ?></span></div>
+        <div class="plan-cycle"><?php echo View::e($_cycleBillingLabel); ?></div>
         <ul class="plan-specs">
           <?php if ($_vcpu > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
           <?php if ($_ram > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_ram; ?> GB RAM</li><?php elseif ($_ramMb > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_ramMb; ?> MB RAM</li><?php endif; ?>
           <?php if ($_disco > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_disco; ?> GB SSD</li><?php endif; ?>
           <?php if ($_bw > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_bw; ?> GB bandwidth</li><?php endif; ?>
-          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Backups automáticos</li>
-          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Monitoramento 24/7</li>
-          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Suporte via chat e tickets</li>
+          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.plans_backups')); ?></li>
+          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.plans_monitor')); ?></li>
+          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.plans_suporte')); ?></li>
         </ul>
-        <div class="plan-cta"><a href="/cliente/criar-conta" class="botao" style="width:100%;justify-content:center;"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Começar agora'; ?></a></div>
+        <div class="plan-cta"><a href="/cliente/criar-conta" class="botao" style="width:100%;justify-content:center;"><?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.plans_comecar')); ?></a></div>
       </div>
       <?php endforeach; ?>
     </div>
     <?php else: ?>
-    <div class="plans-grid"><div class="plan-empty">Planos em breve. <a href="/contato">Entre em contato</a> para saber mais.</div></div>
+    <div class="plans-grid"><div class="plan-empty"><?php echo View::e(I18n::t('infra.plans_empty')); ?> <a href="/contato"><?php echo View::e(I18n::t('infra.plans_contato')); ?></a> <?php echo View::e(I18n::t('infra.plans_saber_mais')); ?></div></div>
     <?php endif; ?>
-    <p style="text-align:center;margin-top:24px;font-size:13px;color:#94a3b8;">Precisa de algo personalizado? <a href="/contato">Fale com a equipe</a></p>
+    <p style="text-align:center;margin-top:24px;font-size:13px;color:#94a3b8;"><?php echo View::e(I18n::t('infra.plans_custom')); ?> <a href="/contato"><?php echo View::e(I18n::t('infra.plans_fale')); ?></a></p>
   </div>
 </section>
 
 <section class="section dark" id="tecnologia">
   <div class="section-inner">
-    <div class="section-label light">Tecnologia</div>
-    <h2 class="section-title light">Stack moderno e confiável</h2>
-    <p class="section-sub light">Construído com as melhores tecnologias para garantir performance, segurança e escalabilidade.</p>
+    <div class="section-label light"><?php echo View::e(I18n::t('infra.tech_label')); ?></div>
+    <h2 class="section-title light"><?php echo View::e(I18n::t('infra.tech_titulo')); ?></h2>
+    <p class="section-sub light"><?php echo View::e(I18n::t('infra.tech_sub')); ?></p>
     <div class="tech-grid">
-      <div class="tech-card"><div class="tech-card-icon">🐘</div><div class="tech-card-name">PHP 8.3 + MVC próprio</div><div class="tech-card-desc">Framework MVC customizado, sem overhead de dependências externas. Rápido e previsível.</div></div>
-      <div class="tech-card"><div class="tech-card-icon">🐬</div><div class="tech-card-name">MySQL com prepared statements</div><div class="tech-card-desc">Todas as queries usam prepared statements. Zero ORM, controle total sobre o banco.</div></div>
-      <div class="tech-card"><div class="tech-card-icon">🐳</div><div class="tech-card-name">Docker & SSH remoto</div><div class="tech-card-desc">Provisionamento e deploy via SSH. Containers Docker gerenciados diretamente pelo painel.</div></div>
-      <div class="tech-card"><div class="tech-card-icon">⚡</div><div class="tech-card-name">WebSocket em tempo real</div><div class="tech-card-desc">Terminal web e chat ao vivo via WebSocket. Latência mínima, experiência fluida.</div></div>
-      <div class="tech-card"><div class="tech-card-icon">🔒</div><div class="tech-card-name">Segurança em camadas</div><div class="tech-card-desc">CSRF, RBAC, 2FA TOTP, rate limiting, replay attack protection e auditoria completa.</div></div>
-      <div class="tech-card"><div class="tech-card-icon">📧</div><div class="tech-card-name">Mailcow integrado</div><div class="tech-card-desc">Gerenciamento de e-mails via API Mailcow. Domínios próprios, webmail e DNS automático.</div></div>
+      <div class="tech-card"><div class="tech-card-icon">🐘</div><div class="tech-card-name"><?php echo View::e(I18n::t('infra.tech_php')); ?></div><div class="tech-card-desc"><?php echo View::e(I18n::t('infra.tech_php_desc')); ?></div></div>
+      <div class="tech-card"><div class="tech-card-icon">🐬</div><div class="tech-card-name"><?php echo View::e(I18n::t('infra.tech_mysql')); ?></div><div class="tech-card-desc"><?php echo View::e(I18n::t('infra.tech_mysql_desc')); ?></div></div>
+      <div class="tech-card"><div class="tech-card-icon">🐳</div><div class="tech-card-name"><?php echo View::e(I18n::t('infra.tech_docker')); ?></div><div class="tech-card-desc"><?php echo View::e(I18n::t('infra.tech_docker_desc')); ?></div></div>
+      <div class="tech-card"><div class="tech-card-icon">⚡</div><div class="tech-card-name"><?php echo View::e(I18n::t('infra.tech_ws')); ?></div><div class="tech-card-desc"><?php echo View::e(I18n::t('infra.tech_ws_desc')); ?></div></div>
+      <div class="tech-card"><div class="tech-card-icon">🔒</div><div class="tech-card-name"><?php echo View::e(I18n::t('infra.tech_sec')); ?></div><div class="tech-card-desc"><?php echo View::e(I18n::t('infra.tech_sec_desc')); ?></div></div>
+      <div class="tech-card"><div class="tech-card-icon">📧</div><div class="tech-card-name"><?php echo View::e(I18n::t('infra.tech_mail')); ?></div><div class="tech-card-desc"><?php echo View::e(I18n::t('infra.tech_mail_desc')); ?></div></div>
     </div>
   </div>
 </section>
 
 <section class="section dark" style="padding-top:0;">
   <div class="section-inner">
-    <div class="section-label light" style="margin-bottom:10px;">Segurança</div>
-    <h2 class="section-title light" style="margin-bottom:10px;">Sua infraestrutura protegida</h2>
-    <p class="section-sub light">Múltiplas camadas de segurança para proteger seus dados e operações.</p>
+    <div class="section-label light" style="margin-bottom:10px;"><?php echo View::e(I18n::t('infra.sec_label')); ?></div>
+    <h2 class="section-title light" style="margin-bottom:10px;"><?php echo View::e(I18n::t('infra.sec_titulo')); ?></h2>
+    <p class="section-sub light"><?php echo View::e(I18n::t('infra.sec_sub')); ?></p>
     <div class="security-grid">
-      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l6 3v5c0 3.5-2.5 6.5-6 7.5C4.5 16.5 2 13.5 2 10V5l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div><div><div class="sec-title">Autenticação 2FA (TOTP)</div><div class="sec-desc">Proteção extra com autenticação em dois fatores via Google Authenticator ou similar.</div></div></div>
-      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><div><div class="sec-title">RBAC por roles</div><div class="sec-desc">Controle granular de permissões por papel: superadmin, admin, devops, dev e suporte.</div></div></div>
-      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2v4M10 14v4M2 10h4M14 10h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.6"/></svg></div><div><div class="sec-title">Proteção CSRF & Rate Limit</div><div class="sec-desc">Tokens CSRF em todos os formulários e rate limiting por IP para prevenir abusos.</div></div></div>
-      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><div><div class="sec-title">Auditoria completa</div><div class="sec-desc">Log de todas as ações da equipe e clientes. Rastreabilidade total para compliance.</div></div></div>
+      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l6 3v5c0 3.5-2.5 6.5-6 7.5C4.5 16.5 2 13.5 2 10V5l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div><div><div class="sec-title"><?php echo View::e(I18n::t('infra.sec_2fa')); ?></div><div class="sec-desc"><?php echo View::e(I18n::t('infra.sec_2fa_desc')); ?></div></div></div>
+      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><div><div class="sec-title"><?php echo View::e(I18n::t('infra.sec_rbac')); ?></div><div class="sec-desc"><?php echo View::e(I18n::t('infra.sec_rbac_desc')); ?></div></div></div>
+      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2v4M10 14v4M2 10h4M14 10h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.6"/></svg></div><div><div class="sec-title"><?php echo View::e(I18n::t('infra.sec_csrf')); ?></div><div class="sec-desc"><?php echo View::e(I18n::t('infra.sec_csrf_desc')); ?></div></div></div>
+      <div class="sec-item"><div class="sec-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><div><div class="sec-title"><?php echo View::e(I18n::t('infra.sec_audit')); ?></div><div class="sec-desc"><?php echo View::e(I18n::t('infra.sec_audit_desc')); ?></div></div></div>
     </div>
   </div>
 </section>
 
 <section class="section alt">
   <div class="section-inner">
-    <div class="section-label">FAQ</div>
-    <h2 class="section-title">Perguntas frequentes</h2>
-    <p class="section-sub">Tire suas dúvidas sobre a plataforma.</p>
+    <div class="section-label"><?php echo View::e(I18n::t('infra.faq_label')); ?></div>
+    <h2 class="section-title"><?php echo View::e(I18n::t('infra.faq_titulo')); ?></h2>
+    <p class="section-sub"><?php echo View::e(I18n::t('infra.faq_sub')); ?></p>
     <div class="faq-list">
-      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Preciso de cartão de crédito para começar?<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a">Não. Você pode criar sua conta e explorar o painel gratuitamente. O cartão só é necessário ao assinar um plano pago.</div></div>
-      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Em quanto tempo minha VPS fica pronta?<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a">O provisionamento é automático e leva menos de 60 segundos após a confirmação do pagamento.</div></div>
-      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Posso fazer upgrade ou downgrade do plano?<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a">Sim. Você pode alterar seu plano a qualquer momento pelo painel. A mudança é aplicada imediatamente.</div></div>
-      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Os backups são automáticos?<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a">Sim. Backups são agendados automaticamente conforme o plano. Você também pode criar backups manuais e fazer download a qualquer momento.</div></div>
-      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Como funciona o suporte?<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a">O suporte é feito via chat ao vivo e sistema de tickets diretamente no painel. Nossa equipe responde em horário comercial.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><?php echo View::e(I18n::t('infra.faq1_q')); ?><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a"><?php echo View::e(I18n::t('infra.faq1_a')); ?></div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><?php echo View::e(I18n::t('infra.faq2_q')); ?><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a"><?php echo View::e(I18n::t('infra.faq2_a')); ?></div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><?php echo View::e(I18n::t('infra.faq3_q')); ?><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a"><?php echo View::e(I18n::t('infra.faq3_a')); ?></div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><?php echo View::e(I18n::t('infra.faq4_q')); ?><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a"><?php echo View::e(I18n::t('infra.faq4_a')); ?></div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><?php echo View::e(I18n::t('infra.faq5_q')); ?><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a"><?php echo View::e(I18n::t('infra.faq5_a')); ?></div></div>
     </div>
   </div>
 </section>
 
 <section class="section">
   <div class="section-inner">
-    <div class="section-label">Acesso</div>
-    <h2 class="section-title">Escolha seu perfil</h2>
-    <p class="section-sub">Área do cliente ou painel administrativo — cada um com seu espaço.</p>
+    <div class="section-label"><?php echo View::e(I18n::t('infra.access_label')); ?></div>
+    <h2 class="section-title"><?php echo View::e(I18n::t('infra.access_titulo')); ?></h2>
+    <p class="section-sub"><?php echo View::e(I18n::t('infra.access_sub')); ?></p>
     <div class="access-grid">
       <div class="access-card">
         <div class="access-icon v"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M3 20c0-3.866 2.686-7 6-7s6 3.134 6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 10c1.657 0 3 1.343 3 3v6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="16" cy="6.5" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg></div>
-        <div class="access-title">Área do cliente</div>
-        <div class="access-desc">Acesse suas VPS, aplicações, e-mails, backups, monitoramento e suporte.</div>
-        <div class="access-actions"><a href="/cliente/entrar" class="botao sm">Entrar</a><a href="/cliente/criar-conta" class="botao ghost sm"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta'; ?></a></div>
+        <div class="access-title"><?php echo View::e(I18n::t('infra.access_cliente')); ?></div>
+        <div class="access-desc"><?php echo View::e(I18n::t('infra.access_cliente_desc')); ?></div>
+        <div class="access-actions"><a href="/cliente/entrar" class="botao sm"><?php echo View::e(I18n::t('infra.access_entrar')); ?></a><a href="/cliente/criar-conta" class="botao ghost sm"><?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.nav_criar_conta')); ?></a></div>
       </div>
       <div class="access-card">
         <div class="access-icon i"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
-        <div class="access-title">Painel administrativo</div>
-        <div class="access-desc">Gerencie clientes, servidores, cobranças, tickets e toda a infraestrutura.</div>
-        <div class="access-actions"><a href="/equipe/entrar" class="botao sm sec">Entrar como equipe</a></div>
+        <div class="access-title"><?php echo View::e(I18n::t('infra.access_admin')); ?></div>
+        <div class="access-desc"><?php echo View::e(I18n::t('infra.access_admin_desc')); ?></div>
+        <div class="access-actions"><a href="/equipe/entrar" class="botao sm sec"><?php echo View::e(I18n::t('infra.access_entrar_equipe')); ?></a></div>
       </div>
     </div>
   </div>
@@ -405,11 +406,11 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 
 <section class="cta-final">
   <div class="cta-final-inner">
-    <h2 class="cta-title"><?php echo $_trial_ativo ? 'Comece seu teste grátis agora' : 'Pronto para começar?'; ?></h2>
-    <p class="cta-sub"><?php echo $_trial_ativo && $_trial_desc !== '' ? View::e($_trial_desc) : 'Crie sua conta agora e tenha sua infraestrutura funcionando em minutos.'; ?></p>
+    <h2 class="cta-title"><?php echo $_trial_ativo ? View::e(I18n::t('infra.cta_trial')) : View::e(I18n::t('infra.cta_pronto')); ?></h2>
+    <p class="cta-sub"><?php echo $_trial_ativo && $_trial_desc !== '' ? View::e($_trial_desc) : View::e(I18n::t('infra.cta_sub')); ?></p>
     <div class="cta-btns">
-      <a href="/cliente/criar-conta" class="hero-btn primary"><?php echo $_trial_ativo ? View::e($_trial_label) : 'Criar conta grátis'; ?></a>
-      <a href="/contato" class="hero-btn outline">Falar com a equipe</a>
+      <a href="/cliente/criar-conta" class="hero-btn primary"><?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.cta_criar_conta')); ?></a>
+      <a href="/contato" class="hero-btn outline"><?php echo View::e(I18n::t('infra.cta_falar')); ?></a>
     </div>
   </div>
 </section>
@@ -417,14 +418,14 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-grid">
-      <div><div class="footer-brand-name"><?php echo View::e($_nome); ?></div><div class="footer-brand-desc">Plataforma cloud SaaS para gerenciamento de VPS, aplicações, e-mails e suporte.</div></div>
-      <div><div class="footer-col-title">Produto</div><ul class="footer-links"><li><a href="#funcionalidades">Funcionalidades</a></li><li><a href="#planos">Planos</a></li><li><a href="#tecnologia">Tecnologia</a></li><li><a href="/changelog">Changelog</a></li></ul></div>
-      <div><div class="footer-col-title">Suporte</div><ul class="footer-links"><li><a href="/contato">Contato</a></li><li><a href="/status">Status do sistema</a></li><li><a href="/cliente/tickets">Tickets</a></li></ul></div>
-      <div><div class="footer-col-title">Legal</div><ul class="footer-links"><li><a href="/termos">Termos de uso</a></li><li><a href="/privacidade">Privacidade</a></li></ul></div>
+      <div><div class="footer-brand-name"><?php echo View::e($_nome); ?></div><div class="footer-brand-desc"><?php echo View::e(I18n::t('infra.footer_desc')); ?></div></div>
+      <div><div class="footer-col-title"><?php echo View::e(I18n::t('infra.footer_col_produto')); ?></div><ul class="footer-links"><li><a href="#funcionalidades"><?php echo View::e(I18n::t('infra.footer_funcionalidades')); ?></a></li><li><a href="#planos"><?php echo View::e(I18n::t('infra.footer_planos')); ?></a></li><li><a href="#tecnologia"><?php echo View::e(I18n::t('infra.footer_tecnologia')); ?></a></li><li><a href="/changelog">Changelog</a></li></ul></div>
+      <div><div class="footer-col-title"><?php echo View::e(I18n::t('infra.footer_col_suporte')); ?></div><ul class="footer-links"><li><a href="/contato"><?php echo View::e(I18n::t('infra.footer_contato')); ?></a></li><li><a href="/status"><?php echo View::e(I18n::t('infra.footer_status')); ?></a></li><li><a href="/cliente/tickets"><?php echo View::e(I18n::t('infra.footer_tickets')); ?></a></li></ul></div>
+      <div><div class="footer-col-title"><?php echo View::e(I18n::t('infra.footer_col_legal')); ?></div><ul class="footer-links"><li><a href="/termos"><?php echo View::e(I18n::t('infra.footer_termos')); ?></a></li><li><a href="/privacidade"><?php echo View::e(I18n::t('infra.footer_privacidade')); ?></a></li></ul></div>
     </div>
     <div class="footer-bottom">
       <div><?php echo View::e(SistemaConfig::copyrightText()); ?> · <?php echo View::e($_nome); ?> v<?php echo View::e(SistemaConfig::versao()); ?></div>
-      <div class="footer-status-dot">Sistema operacional</div>
+      <div class="footer-status-dot"><?php echo View::e(I18n::t('infra.footer_sistema_op')); ?></div>
     </div>
   </div>
 </footer>

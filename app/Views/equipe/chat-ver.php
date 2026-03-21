@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\Csrf;
+use LRV\Core\I18n;
 
 $roomId = (int)($room['id']??0);
 $status = (string)($room['status']??'open');
@@ -18,7 +19,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <div class="page-title">Chat #<?php echo $roomId; ?></div>
 <div class="page-subtitle">
   <?php echo View::e((string)($cliente['name']??'Cliente #'.($room['client_id']??''))); ?>
-  &nbsp;·&nbsp; <?php echo $status==='open'?'Aberto':'Encerrado'; ?>
+  &nbsp;·&nbsp; <?php echo $status==='open'? View::e(I18n::t('eq_chat_ver.aberto')) : View::e(I18n::t('eq_chat_ver.encerrado')); ?>
 </div>
 
 <style>
@@ -69,23 +70,23 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <div class="chat-msgs" id="chatMsgs"></div>
           <div class="chat-upload-preview" id="uploadPreview">
             <span id="uploadFileName"></span>
-            <button id="uploadCancel" title="Cancelar" aria-label="Cancelar arquivo">✕</button>
+            <button id="uploadCancel" title="<?php echo View::e(I18n::t('geral.cancelar')); ?>" aria-label="<?php echo View::e(I18n::t('eq_chat_ver.cancelar_arquivo')); ?>">✕</button>
           </div>
           <div class="chat-input-row">
             <div class="chat-toolbar">
-              <button type="button" id="btnEmoji" title="Emojis" aria-label="Emojis">😊</button>
-              <button type="button" id="btnFile" title="Enviar arquivo" aria-label="Enviar arquivo">📎</button>
+              <button type="button" id="btnEmoji" title="<?php echo View::e(I18n::t('eq_chat_ver.emojis')); ?>" aria-label="<?php echo View::e(I18n::t('eq_chat_ver.emojis')); ?>">😊</button>
+              <button type="button" id="btnFile" title="<?php echo View::e(I18n::t('eq_chat_ver.enviar_arquivo')); ?>" aria-label="<?php echo View::e(I18n::t('eq_chat_ver.enviar_arquivo')); ?>">📎</button>
               <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
             </div>
-            <input class="input" type="text" id="chatInput" placeholder="Digite sua mensagem..." autocomplete="off" />
-            <button class="botao" id="chatEnviar">Enviar</button>
+            <input class="input" type="text" id="chatInput" placeholder="<?php echo View::e(I18n::t('eq_chat_ver.placeholder')); ?>" autocomplete="off" />
+            <button class="botao" id="chatEnviar"><?php echo View::e(I18n::t('eq_chat_ver.enviar')); ?></button>
           </div>
           <div class="emoji-picker" id="emojiPicker"></div>
         </div>
         <form method="post" action="/equipe/chat/fechar" style="margin-top:12px;">
           <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
           <input type="hidden" name="room_id" value="<?php echo $roomId; ?>" />
-          <button class="botao danger sm" type="submit" onclick="return confirm('Encerrar este chat?')">Encerrar chat</button>
+          <button class="botao danger sm" type="submit" onclick="return confirm('<?php echo View::e(I18n::t('eq_chat_ver.confirmar_encerrar')); ?>')"><?php echo View::e(I18n::t('eq_chat_ver.encerrar')); ?></button>
         </form>
       <?php else: ?>
         <div class="chat-box">
@@ -139,52 +140,52 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <?php endforeach; ?>
           </div>
         </div>
-        <p class="texto" style="margin-top:10px;">Este chat foi encerrado.</p>
+        <p class="texto" style="margin-top:10px;"><?php echo View::e(I18n::t('eq_chat_ver.chat_encerrado')); ?></p>
       <?php endif; ?>
     </div>
   </div>
 
   <div class="sidebar-info">
     <div class="info-card">
-      <h3>👤 Cliente</h3>
+      <h3>👤 <?php echo View::e(I18n::t('eq_chat_ver.cliente_label')); ?></h3>
       <?php if (!empty($cliente)): ?>
-        <div class="info-row"><span class="info-label">Nome</span><span class="info-value"><?php echo View::e((string)($cliente['name']??'')); ?></span></div>
-        <div class="info-row"><span class="info-label">E-mail</span><span class="info-value"><?php echo View::e((string)($cliente['email']??'')); ?></span></div>
-        <div class="info-row"><span class="info-label">Cadastro</span><span class="info-value"><?php echo View::e((string)($cliente['created_at']??'')); ?></span></div>
-        <div style="margin-top:8px;"><a href="/equipe/clientes/ver?id=<?php echo (int)($cliente['id']??0); ?>" class="botao sm" style="font-size:12px;">Ver perfil completo</a></div>
+        <div class="info-row"><span class="info-label"><?php echo View::e(I18n::t('eq_chat_ver.nome')); ?></span><span class="info-value"><?php echo View::e((string)($cliente['name']??'')); ?></span></div>
+        <div class="info-row"><span class="info-label"><?php echo View::e(I18n::t('eq_chat_ver.email')); ?></span><span class="info-value"><?php echo View::e((string)($cliente['email']??'')); ?></span></div>
+        <div class="info-row"><span class="info-label"><?php echo View::e(I18n::t('eq_chat_ver.cadastro')); ?></span><span class="info-value"><?php echo View::e((string)($cliente['created_at']??'')); ?></span></div>
+        <div style="margin-top:8px;"><a href="/equipe/clientes/ver?id=<?php echo (int)($cliente['id']??0); ?>" class="botao sm" style="font-size:12px;"><?php echo View::e(I18n::t('eq_chat_ver.ver_perfil')); ?></a></div>
       <?php else: ?>
-        <p class="empty-info">Cliente não encontrado.</p>
+        <p class="empty-info"><?php echo View::e(I18n::t('eq_chat_ver.nao_encontrado')); ?></p>
       <?php endif; ?>
     </div>
     <div class="info-card">
-      <h3>💳 Assinaturas</h3>
+      <h3>💳 <?php echo View::e(I18n::t('eq_chat_ver.assinaturas')); ?></h3>
       <?php if (!empty($assinaturas)): ?>
-        <table class="mini-table"><thead><tr><th>Plano</th><th>Status</th></tr></thead><tbody>
+        <table class="mini-table"><thead><tr><th><?php echo View::e(I18n::t('eq_chat_ver.plano')); ?></th><th><?php echo View::e(I18n::t('geral.status')); ?></th></tr></thead><tbody>
           <?php foreach ($assinaturas as $a): ?>
             <tr><td><?php echo View::e((string)($a['plan_name']??'—')); ?></td><td><span class="badge-new <?php echo ($a['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($a['status']??'')); ?></span></td></tr>
           <?php endforeach; ?>
         </tbody></table>
-      <?php else: ?><p class="empty-info">Nenhuma assinatura.</p><?php endif; ?>
+      <?php else: ?><p class="empty-info"><?php echo View::e(I18n::t('eq_chat_ver.nenhuma_assinatura')); ?></p><?php endif; ?>
     </div>
     <div class="info-card">
-      <h3>🖥️ VPS</h3>
+      <h3>🖥️ <?php echo View::e(I18n::t('eq_chat_ver.vps')); ?></h3>
       <?php if (!empty($vps)): ?>
         <table class="mini-table"><thead><tr><th>ID</th><th>CPU/RAM</th><th>Status</th></tr></thead><tbody>
           <?php foreach ($vps as $v): ?>
             <tr><td>#<?php echo (int)($v['id']??0); ?></td><td><?php echo (int)($v['cpu']??0); ?>vCPU / <?php echo round(((int)($v['ram']??0))/1024/1024/1024,1); ?>GB</td><td><span class="badge-new <?php echo ($v['status']??'')==='active'?'badge-green':'badge-yellow'; ?>"><?php echo View::e((string)($v['status']??'')); ?></span></td></tr>
           <?php endforeach; ?>
         </tbody></table>
-      <?php else: ?><p class="empty-info">Nenhuma VPS.</p><?php endif; ?>
+      <?php else: ?><p class="empty-info"><?php echo View::e(I18n::t('eq_chat_ver.nenhuma_vps')); ?></p><?php endif; ?>
     </div>
     <div class="info-card">
-      <h3>🎫 Tickets recentes</h3>
+      <h3>🎫 <?php echo View::e(I18n::t('eq_chat_ver.tickets_recentes')); ?></h3>
       <?php if (!empty($tickets)): ?>
-        <table class="mini-table"><thead><tr><th>Assunto</th><th>Status</th></tr></thead><tbody>
+        <table class="mini-table"><thead><tr><th><?php echo View::e(I18n::t('tickets.assunto')); ?></th><th><?php echo View::e(I18n::t('geral.status')); ?></th></tr></thead><tbody>
           <?php foreach ($tickets as $t): ?>
             <tr><td><a href="/equipe/tickets/ver?id=<?php echo (int)($t['id']??0); ?>" style="color:#4F46E5;"><?php echo View::e((string)($t['subject']??'')); ?></a></td><td><span class="badge-new <?php echo ($t['status']??'')==='open'?'badge-green':(($t['status']??'')==='closed'?'badge-red':'badge-yellow'); ?>"><?php echo View::e((string)($t['status']??'')); ?></span></td></tr>
           <?php endforeach; ?>
         </tbody></table>
-      <?php else: ?><p class="empty-info">Nenhum ticket.</p><?php endif; ?>
+      <?php else: ?><p class="empty-info"><?php echo View::e(I18n::t('eq_chat_ver.nenhum_ticket')); ?></p><?php endif; ?>
     </div>
   </div>
 </div>

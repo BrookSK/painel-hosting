@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $cliente = $cliente ?? [];
 $ok      = (string)($ok ?? ($_GET['ok'] ?? ''));
@@ -8,7 +9,7 @@ $erro    = (string)($erro ?? '');
 
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
-$pageTitle    = 'Minha Conta';
+$pageTitle    = I18n::t('conta.titulo');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 $iniciais = 'C';
@@ -20,8 +21,8 @@ if (count($partes) >= 2) {
 }
 ?>
 
-<div class="page-title">Minha Conta</div>
-<div class="page-subtitle" style="margin-bottom:20px;">Gerencie seus dados pessoais e senha de acesso</div>
+<div class="page-title"><?php echo View::e(I18n::t('conta.titulo')); ?></div>
+<div class="page-subtitle" style="margin-bottom:20px;"><?php echo View::e(I18n::t('conta.subtitulo')); ?></div>
 
 <?php if ($ok === 'dados'): ?>
   <div class="sucesso" style="margin-bottom:16px;">Dados atualizados com sucesso.</div>
@@ -50,14 +51,14 @@ if (count($partes) >= 2) {
   <!-- Dados pessoais -->
   <div style="display:flex;flex-direction:column;gap:16px;">
     <div class="card-new">
-      <div class="card-new-title">Dados pessoais</div>
+      <div class="card-new-title"><?php echo View::e(I18n::t('conta.dados_pessoais')); ?></div>
       <form method="POST" action="/cliente/minha-conta/salvar">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="aba" value="dados" />
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div style="grid-column:1/-1;">
-            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Nome completo</label>
+            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('auth.nome')); ?></label>
             <input class="input" type="text" name="name" value="<?php echo View::e((string)($cliente['name'] ?? '')); ?>" required />
           </div>
           <div style="grid-column:1/-1;">
@@ -79,47 +80,47 @@ if (count($partes) >= 2) {
           </div>
         </div>
 
-        <button type="submit" class="botao">Salvar dados</button>
+        <button type="submit" class="botao"><?php echo View::e(I18n::t('geral.salvar')); ?></button>
       </form>
     </div>
 
     <!-- Alterar senha -->
     <div class="card-new">
-      <div class="card-new-title">Alterar senha</div>
+      <div class="card-new-title"><?php echo View::e(I18n::t('conta.alterar_senha')); ?></div>
       <form method="POST" action="/cliente/minha-conta/salvar">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="aba" value="senha" />
         <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px;">
           <div>
-            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Senha atual</label>
+            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.senha_atual')); ?></label>
             <input class="input" type="password" name="senha_atual" autocomplete="current-password" placeholder="••••••••" />
           </div>
           <div>
-            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Nova senha</label>
+            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.nova_senha')); ?></label>
             <input class="input" type="password" name="senha_nova" autocomplete="new-password" placeholder="Mínimo 8 caracteres" />
           </div>
           <div>
-            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Confirmar nova senha</label>
+            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.confirmar_senha')); ?></label>
             <input class="input" type="password" name="senha_confirmar" autocomplete="new-password" placeholder="Repita a nova senha" />
           </div>
         </div>
-        <button type="submit" class="botao">Alterar senha</button>
+        <button type="submit" class="botao"><?php echo View::e(I18n::t('conta.alterar_senha')); ?></button>
       </form>
     </div>
   </div>
 
   <!-- Segurança -->
   <div class="card-new" style="margin-bottom:16px;">
-    <div class="card-new-title" style="margin-bottom:8px;">Segurança</div>
+    <div class="card-new-title" style="margin-bottom:8px;"><?php echo View::e(I18n::t('2fa.seguranca')); ?></div>
     <p style="font-size:13px;color:#64748b;margin-bottom:14px;line-height:1.5;">
       Ative a autenticação em dois fatores (2FA) para proteger sua conta com uma camada extra de segurança.
     </p>
-    <a href="/cliente/2fa/configurar" class="botao">Configurar 2FA</a>
+    <a href="/cliente/2fa/configurar" class="botao"><?php echo View::e(I18n::t('2fa.configurar')); ?></a>
   </div>
 
   <!-- Endereço -->
   <div class="card-new">
-    <div class="card-new-title">Endereço</div>
+    <div class="card-new-title"><?php echo View::e(I18n::t('conta.endereco')); ?></div>
     <p style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.5;">Opcional. Usado para emissão de notas fiscais e correspondências.</p>
     <form method="POST" action="/cliente/minha-conta/salvar">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
@@ -132,19 +133,19 @@ if (count($partes) >= 2) {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
         <div style="grid-column:1/-1;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">CEP</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.cep')); ?></label>
           <input class="input" type="text" name="address_zip" id="cepInput" value="<?php echo View::e((string)($cliente['address_zip'] ?? '')); ?>" placeholder="00000-000" maxlength="9" style="max-width:160px;" />
         </div>
         <div style="grid-column:1/-1;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Logradouro</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.rua')); ?></label>
           <input class="input" type="text" name="address_street" id="streetInput" value="<?php echo View::e((string)($cliente['address_street'] ?? '')); ?>" placeholder="Rua, Avenida..." />
         </div>
         <div>
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Número</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.numero')); ?></label>
           <input class="input" type="text" name="address_number" value="<?php echo View::e((string)($cliente['address_number'] ?? '')); ?>" placeholder="123" />
         </div>
         <div>
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Complemento</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.complemento')); ?></label>
           <input class="input" type="text" name="address_complement" value="<?php echo View::e((string)($cliente['address_complement'] ?? '')); ?>" placeholder="Apto, Sala..." />
         </div>
         <div>
@@ -152,19 +153,19 @@ if (count($partes) >= 2) {
           <input class="input" type="text" name="address_district" id="districtInput" value="<?php echo View::e((string)($cliente['address_district'] ?? '')); ?>" placeholder="Bairro" />
         </div>
         <div>
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Cidade</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.cidade')); ?></label>
           <input class="input" type="text" name="address_city" id="cityInput" value="<?php echo View::e((string)($cliente['address_city'] ?? '')); ?>" placeholder="São Paulo" />
         </div>
         <div>
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">Estado (UF)</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.estado')); ?> (UF)</label>
           <input class="input" type="text" name="address_state" id="stateInput" value="<?php echo View::e((string)($cliente['address_state'] ?? '')); ?>" placeholder="SP" maxlength="2" style="max-width:80px;text-transform:uppercase;" />
         </div>
         <div>
-          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">País</label>
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('conta.pais')); ?></label>
           <input class="input" type="text" name="address_country" value="<?php echo View::e((string)($cliente['address_country'] ?? 'BR')); ?>" placeholder="BR" maxlength="2" style="max-width:80px;text-transform:uppercase;" />
         </div>
       </div>
-      <button type="submit" class="botao">Salvar endereço</button>
+      <button type="submit" class="botao"><?php echo View::e(I18n::t('geral.salvar')); ?></button>
     </form>
   </div>
 </div>

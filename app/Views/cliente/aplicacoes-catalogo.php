@@ -2,8 +2,9 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\Csrf;
+use LRV\Core\I18n;
 
-$pageTitle = 'Catálogo de Aplicações';
+$pageTitle = I18n::t('apps.catalogo');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 $csrf = Csrf::token();
 ?>
@@ -28,12 +29,12 @@ $csrf = Csrf::token();
 .install-status{font-size:13px;color:#64748b;margin-top:10px;display:none;}
 </style>
 
-<div class="page-title">Catálogo de Aplicações</div>
-<div class="page-subtitle">Instale aplicações prontas com 1 clique na sua VPS</div>
+<div class="page-title"><?php echo View::e(I18n::t('apps.catalogo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('apps.catalogo_subtitulo')); ?></div>
 
 <?php if (empty($vpsList)): ?>
   <div class="card-new" style="margin-top:16px;">
-    <p class="texto">Você precisa de uma VPS ativa para instalar aplicações. <a href="/cliente/painel">Voltar ao painel</a></p>
+    <p class="texto"><?php echo View::e(I18n::t('apps.vps_necessaria')); ?> <a href="/cliente/painel"><?php echo View::e(I18n::t('apps.voltar_painel')); ?></a></p>
   </div>
 <?php else: ?>
 
@@ -43,7 +44,7 @@ $csrf = Csrf::token();
       $cat = (string)($t['category'] ?? 'other');
       $categorias[$cat][] = $t;
   }
-  $catLabels = ['cms'=>'CMS','backend'=>'Backend','database'=>'Banco de Dados','webserver'=>'Web Server','dev'=>'Desenvolvimento','other'=>'Outros'];
+  $catLabels = ['cms'=>I18n::t('cat.cms'),'backend'=>I18n::t('cat.backend'),'database'=>I18n::t('cat.database'),'webserver'=>I18n::t('cat.webserver'),'dev'=>I18n::t('cat.dev'),'other'=>I18n::t('cat.other')];
 ?>
 
 <?php foreach ($categorias as $cat => $items): ?>
@@ -56,7 +57,7 @@ $csrf = Csrf::token();
           <div class="cat-name"><?php echo View::e((string)($t['name']??'')); ?></div>
           <div class="cat-desc"><?php echo View::e((string)($t['description']??'')); ?></div>
           <span class="cat-tag"><?php echo View::e((string)($t['docker_image']??'')); ?></span>
-          <button class="botao sm" onclick="openInstall(<?php echo (int)$t['id']; ?>,<?php echo View::e(json_encode($t)); ?>)">Instalar</button>
+          <button class="botao sm" onclick="openInstall(<?php echo (int)$t['id']; ?>,<?php echo View::e(json_encode($t)); ?>)"><?php echo View::e(I18n::t('apps.instalar')); ?></button>
         </div>
       <?php endforeach; ?>
     </div>
@@ -90,8 +91,8 @@ $csrf = Csrf::token();
         <textarea name="env_json" id="fEnv" rows="4" placeholder='{"KEY":"value"}'></textarea>
       </div>
       <div class="install-actions">
-        <button type="button" class="botao ghost sm" onclick="closeInstall()">Cancelar</button>
-        <button type="submit" class="botao sm" id="installBtn">Instalar</button>
+        <button type="button" class="botao ghost sm" onclick="closeInstall()"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
+        <button type="submit" class="botao sm" id="installBtn"><?php echo View::e(I18n::t('apps.instalar')); ?></button>
       </div>
       <div class="install-status" id="installStatus"></div>
     </form>
@@ -100,7 +101,7 @@ $csrf = Csrf::token();
 <?php endif; ?>
 
 <div style="margin-top:20px;">
-  <a href="/cliente/aplicacoes" class="botao ghost sm">← Minhas aplicações</a>
+  <a href="/cliente/aplicacoes" class="botao ghost sm"><?php echo I18n::t('apps.minhas_apps'); ?></a>
 </div>
 
 <script>

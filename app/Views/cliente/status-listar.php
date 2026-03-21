@@ -1,25 +1,26 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 function badgeSvcStatusCliente(string $st): string {
-    if ($st === 'operational') return '<span class="badge-new badge-green">Operacional</span>';
-    if ($st === 'degraded')    return '<span class="badge-new badge-yellow">Degradado</span>';
-    if ($st === 'major_outage') return '<span class="badge-new badge-red">Indisponível</span>';
-    return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">Desconhecido</span>';
+    if ($st === 'operational') return '<span class="badge-new badge-green">' . View::e(I18n::t('status.operacional')) . '</span>';
+    if ($st === 'degraded')    return '<span class="badge-new badge-yellow">' . View::e(I18n::t('status.degradado')) . '</span>';
+    if ($st === 'major_outage') return '<span class="badge-new badge-red">' . View::e(I18n::t('status.indisponivel')) . '</span>';
+    return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">' . View::e(I18n::t('status.desconhecido')) . '</span>';
 }
 
 function badgeIncidentStatusCliente(string $st): string {
-    if ($st === 'resolved')   return '<span class="badge-new badge-green">Resolvido</span>';
-    if ($st === 'monitoring') return '<span class="badge-new" style="background:#e0f2fe;color:#075985;">Monitorando</span>';
-    if ($st === 'identified') return '<span class="badge-new badge-yellow">Identificado</span>';
-    return '<span class="badge-new badge-red">Investigando</span>';
+    if ($st === 'resolved')   return '<span class="badge-new badge-green">' . View::e(I18n::t('status.resolvido_em')) . '</span>';
+    if ($st === 'monitoring') return '<span class="badge-new" style="background:#e0f2fe;color:#075985;">' . View::e(I18n::t('status.monitorando')) . '</span>';
+    if ($st === 'identified') return '<span class="badge-new badge-yellow">' . View::e(I18n::t('status.identificado')) . '</span>';
+    return '<span class="badge-new badge-red">' . View::e(I18n::t('status.investigando')) . '</span>';
 }
 
 function badgeImpactCliente(string $impact): string {
-    if ($impact === 'critical') return '<span class="badge-new badge-red">Crítico</span>';
-    if ($impact === 'major')    return '<span class="badge-new badge-yellow">Alto</span>';
-    return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">Baixo</span>';
+    if ($impact === 'critical') return '<span class="badge-new badge-red">' . View::e(I18n::t('status.critico')) . '</span>';
+    if ($impact === 'major')    return '<span class="badge-new badge-yellow">' . View::e(I18n::t('status.alto')) . '</span>';
+    return '<span class="badge-new" style="background:#f1f5f9;color:#334155;">' . View::e(I18n::t('status.baixo')) . '</span>';
 }
 
 function corBarCli(string $st): string {
@@ -33,7 +34,7 @@ $servicesArr        = is_array($services ?? null) ? $services : [];
 $incidentsArr       = is_array($incidents ?? null) ? $incidents : [];
 $incidentServicesMap = is_array($incidentServices ?? null) ? $incidentServices : [];
 
-$pageTitle    = 'Status';
+$pageTitle    = I18n::t('status.titulo');
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -45,21 +46,21 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </style>
 
 <div style="margin-bottom:24px;">
-  <div class="page-title">Status</div>
-  <div class="page-subtitle" style="margin-bottom:0;">Disponibilidade das suas VPS</div>
+  <div class="page-title"><?php echo View::e(I18n::t('status.titulo')); ?></div>
+  <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::t('status.disponibilidade')); ?></div>
 </div>
 
 <div class="card-new" style="margin-bottom:14px;">
-  <div class="card-new-title" style="margin-bottom:12px;">Suas VPS</div>
+  <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('status.suas_vps')); ?></div>
   <div style="overflow:auto;">
     <table style="width:100%;border-collapse:collapse;">
       <thead>
         <tr>
           <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">VPS</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Status</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Uptime (24h)</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Histórico</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Última checagem</th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.status')); ?></th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('status.uptime_24h')); ?></th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('status.historico')); ?></th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('status.ultima_checagem')); ?></th>
         </tr>
       </thead>
       <tbody>
@@ -84,7 +85,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           </tr>
         <?php endforeach; ?>
         <?php if (empty($servicesArr)): ?>
-          <tr><td colspan="5" style="padding:12px;color:#94a3b8;">Sem dados ainda.</td></tr>
+          <tr><td colspan="5" style="padding:12px;color:#94a3b8;"><?php echo View::e(I18n::t('status.sem_dados')); ?></td></tr>
         <?php endif; ?>
       </tbody>
     </table>
@@ -92,9 +93,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 
 <div class="card-new">
-  <div class="card-new-title" style="margin-bottom:12px;">Incidentes</div>
+  <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('status.incidentes')); ?></div>
   <?php if (empty($incidentsArr)): ?>
-    <div style="font-size:13px;color:#94a3b8;">Nenhum incidente recente.</div>
+    <div style="font-size:13px;color:#94a3b8;"><?php echo View::e(I18n::t('status.nenhum_incidente')); ?></div>
   <?php else: ?>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <?php foreach ($incidentsArr as $inc): ?>
@@ -106,8 +107,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <div>
               <div><strong><?php echo View::e((string)($inc['title'] ?? '')); ?></strong></div>
               <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
-                Início: <?php echo View::e((string)($inc['started_at'] ?? '')); ?>
-                <?php if (trim((string)($inc['resolved_at'] ?? '')) !== ''): ?> | Resolvido: <?php echo View::e((string)($inc['resolved_at'] ?? '')); ?><?php endif; ?>
+                <?php echo View::e(I18n::t('status.inicio')); ?>: <?php echo View::e((string)($inc['started_at'] ?? '')); ?>
+                <?php if (trim((string)($inc['resolved_at'] ?? '')) !== ''): ?> | <?php echo View::e(I18n::t('status.resolvido_em')); ?>: <?php echo View::e((string)($inc['resolved_at'] ?? '')); ?><?php endif; ?>
               </div>
             </div>
             <div style="display:flex;gap:6px;">
@@ -120,7 +121,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <?php endif; ?>
           <?php if (!empty($svc)): ?>
             <div style="margin-bottom:8px;">
-              <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;">Serviços afetados</div>
+              <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('status.servicos_afetados')); ?></div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <?php foreach ($svc as $sv): ?>
                   <?php if (!is_array($sv)) continue; ?>
@@ -132,7 +133,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <?php $up = $updates[$iid] ?? []; ?>
           <?php if (!empty($up)): ?>
             <div>
-              <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;">Atualizações</div>
+              <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('status.atualizacoes')); ?></div>
               <div style="display:flex;flex-direction:column;gap:6px;">
                 <?php foreach ($up as $u): ?>
                   <?php if (!is_array($u)) continue; ?>

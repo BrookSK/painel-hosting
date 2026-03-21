@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\Core;
 
 use LRV\Core\ConfiguracoesSistema;
+use LRV\Core\I18n;
 
 final class SistemaConfig
 {
@@ -38,17 +39,32 @@ final class SistemaConfig
 
     public static function termsHtml(): string
     {
-        return (string) Settings::obter('legal.terms_html', '');
+        $key = I18n::settingsKey('legal.terms_html');
+        $val = (string) Settings::obter($key, '');
+        if ($val === '' && $key !== 'legal.terms_html') {
+            $val = (string) Settings::obter('legal.terms_html', '');
+        }
+        return $val;
     }
 
     public static function privacyHtml(): string
     {
-        return (string) Settings::obter('legal.privacy_html', '');
+        $key = I18n::settingsKey('legal.privacy_html');
+        $val = (string) Settings::obter($key, '');
+        if ($val === '' && $key !== 'legal.privacy_html') {
+            $val = (string) Settings::obter('legal.privacy_html', '');
+        }
+        return $val;
     }
 
     public static function licenseHtml(): string
     {
-        return (string) Settings::obter('legal.license_html', '');
+        $key = I18n::settingsKey('legal.license_html');
+        $val = (string) Settings::obter($key, '');
+        if ($val === '' && $key !== 'legal.license_html') {
+            $val = (string) Settings::obter('legal.license_html', '');
+        }
+        return $val;
     }
 
     // ── SEO ─────────────────────────────────────────────────
@@ -102,8 +118,8 @@ final class SistemaConfig
         static $cache = null;
         if ($cache !== null) return $cache;
 
-        $arquivo = defined('BASE_PATH')
-            ? BASE_PATH . '/CHANGELOG.md'
+        $arquivo = \defined('BASE_PATH')
+            ? \BASE_PATH . '/CHANGELOG.md'
             : dirname(__DIR__) . '/CHANGELOG.md';
 
         if (is_file($arquivo)) {

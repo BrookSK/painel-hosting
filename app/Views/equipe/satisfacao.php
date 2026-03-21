@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $pageTitle = 'Satisfação';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
@@ -21,28 +22,28 @@ function _star_color(float $m): string {
     return '#ef4444';
 }
 function _rating_label(int $r): string {
-    return ['', 'Muito ruim', 'Ruim', 'Regular', 'Bom', 'Excelente'][$r] ?? '';
+    return ['', I18n::t('eq_satisfacao.muito_ruim'), I18n::t('eq_satisfacao.ruim'), I18n::t('eq_satisfacao.regular'), I18n::t('eq_satisfacao.bom'), I18n::t('eq_satisfacao.excelente')][$r] ?? '';
 }
 function _badge_rating(int $r): string {
     $c = ['', '#ef4444','#f97316','#eab308','#22c55e','#16a34a'][$r] ?? '#94a3b8';
     return "<span style='display:inline-block;background:{$c};color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;'>{$r}★</span>";
 }
 ?>
-<div class="page-title">Satisfação do Suporte</div>
-<div class="page-subtitle">Avaliações de tickets e chats encerrados</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_satisfacao.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_satisfacao.subtitulo')); ?></div>
 
 <!-- Cards de resumo -->
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
   <div class="card-new" style="text-align:center;padding:20px 16px;">
     <div style="font-size:36px;font-weight:700;color:<?php echo _star_color($_media); ?>;"><?php echo $_total > 0 ? number_format($_media, 1) : '—'; ?></div>
-    <div style="font-size:13px;color:#64748b;margin-top:4px;">Média geral</div>
+    <div style="font-size:13px;color:#64748b;margin-top:4px;"><?php echo View::e(I18n::t('eq_satisfacao.media_geral')); ?></div>
     <?php if ($_total > 0): ?>
       <div style="font-size:20px;color:<?php echo _star_color($_media); ?>;margin-top:2px;"><?php echo str_repeat('★', (int)round($_media)) . str_repeat('☆', 5 - (int)round($_media)); ?></div>
     <?php endif; ?>
   </div>
   <div class="card-new" style="text-align:center;padding:20px 16px;">
     <div style="font-size:36px;font-weight:700;color:#4F46E5;"><?php echo $_total; ?></div>
-    <div style="font-size:13px;color:#64748b;margin-top:4px;">Total de avaliações</div>
+    <div style="font-size:13px;color:#64748b;margin-top:4px;"><?php echo View::e(I18n::t('eq_satisfacao.total_avaliacoes')); ?></div>
   </div>
   <?php foreach ($porTipo as $_pt): ?>
   <div class="card-new" style="text-align:center;padding:20px 16px;">
@@ -55,7 +56,7 @@ function _badge_rating(int $r): string {
 <!-- Distribuição de notas -->
 <?php if ($_total > 0): ?>
 <div class="card-new" style="max-width:520px;margin-bottom:24px;">
-  <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:14px;">Distribuição de notas</div>
+  <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:14px;"><?php echo View::e(I18n::t('eq_satisfacao.distribuicao')); ?></div>
   <?php foreach ([5 => $_cinco, 4 => $_quatro, 3 => $_tres, 2 => $_dois, 1 => $_um] as $_n => $_q): ?>
     <?php $_pct = $_total > 0 ? round($_q / $_total * 100) : 0; ?>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -72,14 +73,14 @@ function _badge_rating(int $r): string {
 <!-- Por agente -->
 <?php if (!empty($porAgente)): ?>
 <div class="card-new" style="margin-bottom:24px;">
-  <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:14px;">Por agente</div>
+  <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:14px;"><?php echo View::e(I18n::t('eq_satisfacao.por_agente')); ?></div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;">
     <thead>
       <tr style="border-bottom:1px solid #e2e8f0;color:#64748b;">
-        <th style="text-align:left;padding:6px 8px;">Agente</th>
-        <th style="text-align:center;padding:6px 8px;">Avaliações</th>
-        <th style="text-align:center;padding:6px 8px;">Média</th>
-        <th style="text-align:center;padding:6px 8px;">Positivas (≥4)</th>
+        <th style="text-align:left;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.agente')); ?></th>
+        <th style="text-align:center;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.avaliacoes')); ?></th>
+        <th style="text-align:center;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.media')); ?></th>
+        <th style="text-align:center;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.positivas')); ?></th>
       </tr>
     </thead>
     <tbody>
@@ -99,19 +100,19 @@ function _badge_rating(int $r): string {
 
 <!-- Últimas avaliações -->
 <div class="card-new">
-  <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:14px;">Últimas avaliações</div>
+  <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:14px;"><?php echo View::e(I18n::t('eq_satisfacao.ultimas')); ?></div>
   <?php if (empty($recentes)): ?>
-    <p class="texto">Nenhuma avaliação registrada ainda.</p>
+    <p class="texto"><?php echo View::e(I18n::t('eq_satisfacao.nenhuma')); ?></p>
   <?php else: ?>
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead>
         <tr style="border-bottom:1px solid #e2e8f0;color:#64748b;">
-          <th style="text-align:left;padding:6px 8px;">Data</th>
-          <th style="text-align:left;padding:6px 8px;">Tipo</th>
-          <th style="text-align:left;padding:6px 8px;">Cliente</th>
-          <th style="text-align:left;padding:6px 8px;">Agente</th>
-          <th style="text-align:center;padding:6px 8px;">Nota</th>
-          <th style="text-align:left;padding:6px 8px;">Comentário</th>
+          <th style="text-align:left;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.data')); ?></th>
+          <th style="text-align:left;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.tipo')); ?></th>
+          <th style="text-align:left;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.cliente')); ?></th>
+          <th style="text-align:left;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.agente')); ?></th>
+          <th style="text-align:center;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.nota')); ?></th>
+          <th style="text-align:left;padding:6px 8px;"><?php echo View::e(I18n::t('eq_satisfacao.comentario')); ?></th>
         </tr>
       </thead>
       <tbody>

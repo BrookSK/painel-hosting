@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
-$pageTitle = 'Erros do Sistema';
+$pageTitle = I18n::t('eq_erros.titulo');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
 $erros          = $erros ?? [];
@@ -21,8 +22,8 @@ function erroCorBadge(int $code): string {
     return 'background:#e0f2fe;color:#0369a1;';
 }
 ?>
-<div class="page-title">Erros do Sistema</div>
-<div class="page-subtitle">Registro de erros HTTP, exceções e falhas capturadas</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_erros.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_erros.subtitulo')); ?></div>
 
 <?php if (!empty($resumo)): ?>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
@@ -32,9 +33,9 @@ function erroCorBadge(int $code): string {
     <div style="font-size:22px;font-weight:800;<?php echo erroCorBadge((int)$r['http_code']); ?>border-radius:8px;padding:2px 8px;display:inline-block;">
       <?php echo (int)$r['http_code']; ?>
     </div>
-    <div style="font-size:12px;color:#64748b;margin-top:4px;"><?php echo (int)$r['total']; ?> total</div>
+    <div style="font-size:12px;color:#64748b;margin-top:4px;"><?php echo (int)$r['total']; ?> <?php echo View::e(I18n::t('eq_erros.total')); ?></div>
     <?php if ((int)$r['pendentes'] > 0): ?>
-    <div style="font-size:11px;color:#b91c1c;"><?php echo (int)$r['pendentes']; ?> pendentes</div>
+    <div style="font-size:11px;color:#b91c1c;"><?php echo (int)$r['pendentes']; ?> <?php echo View::e(I18n::t('eq_erros.pendentes')); ?></div>
     <?php endif; ?>
   </a>
   <?php endforeach; ?>
@@ -44,9 +45,9 @@ function erroCorBadge(int $code): string {
 <div class="card-new" style="margin-bottom:16px;">
   <form method="get" action="/equipe/erros" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
     <div>
-      <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;">Código HTTP</label>
+      <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('eq_erros.codigo_http')); ?></label>
       <select class="input" name="code" style="width:120px;">
-        <option value="0" <?php echo $filtroCode===0?'selected':''; ?>>Todos</option>
+        <option value="0" <?php echo $filtroCode===0?'selected':''; ?>><?php echo View::e(I18n::t('eq_erros.todos')); ?></option>
         <option value="400" <?php echo $filtroCode===400?'selected':''; ?>>400</option>
         <option value="401" <?php echo $filtroCode===401?'selected':''; ?>>401</option>
         <option value="403" <?php echo $filtroCode===403?'selected':''; ?>>403</option>
@@ -59,40 +60,40 @@ function erroCorBadge(int $code): string {
       </select>
     </div>
     <div>
-      <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;">Tipo</label>
+      <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('eq_erros.tipo')); ?></label>
       <input class="input" type="text" name="type" value="<?php echo View::e($filtroType); ?>" placeholder="exception, not_found…" style="width:160px;" />
     </div>
     <div>
-      <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;">Status</label>
+      <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('geral.status')); ?></label>
       <select class="input" name="resolved" style="width:130px;">
-        <option value="-1" <?php echo $filtroResolved===-1?'selected':''; ?>>Todos</option>
-        <option value="0"  <?php echo $filtroResolved===0?'selected':''; ?>>Pendentes</option>
-        <option value="1"  <?php echo $filtroResolved===1?'selected':''; ?>>Resolvidos</option>
+        <option value="-1" <?php echo $filtroResolved===-1?'selected':''; ?>><?php echo View::e(I18n::t('eq_erros.todos')); ?></option>
+        <option value="0"  <?php echo $filtroResolved===0?'selected':''; ?>><?php echo View::e(I18n::t('eq_erros.pendentes')); ?></option>
+        <option value="1"  <?php echo $filtroResolved===1?'selected':''; ?>><?php echo View::e(I18n::t('eq_erros.resolvido')); ?>s</option>
       </select>
     </div>
-    <button class="botao sm" type="submit">Filtrar</button>
-    <a href="/equipe/erros" class="botao ghost sm">Limpar</a>
+    <button class="botao sm" type="submit"><?php echo View::e(I18n::t('eq_erros.filtrar')); ?></button>
+    <a href="/equipe/erros" class="botao ghost sm"><?php echo View::e(I18n::t('eq_erros.limpar')); ?></a>
     <div style="margin-left:auto;display:flex;gap:8px;">
-      <button class="botao sec sm" type="button" onclick="limparResolvidos()">Limpar resolvidos</button>
+      <button class="botao sec sm" type="button" onclick="limparResolvidos()"><?php echo View::e(I18n::t('eq_erros.limpar_resolvidos')); ?></button>
     </div>
   </form>
 </div>
 
 <div class="card-new" style="padding:0;overflow:hidden;">
   <?php if (empty($erros)): ?>
-    <div style="padding:40px;text-align:center;color:#64748b;">Nenhum erro encontrado.</div>
+    <div style="padding:40px;text-align:center;color:#64748b;"><?php echo View::e(I18n::t('eq_erros.nenhum')); ?></div>
   <?php else: ?>
   <table style="width:100%;border-collapse:collapse;font-size:13px;">
     <thead>
       <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
         <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">#</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">Código</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">Tipo</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">URL</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">Mensagem</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">IP</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">Data</th>
-        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;">Status</th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('eq_erros.codigo')); ?></th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('eq_erros.tipo')); ?></th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('eq_erros.url')); ?></th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('eq_erros.mensagem')); ?></th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('eq_erros.ip')); ?></th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('eq_erros.data')); ?></th>
+        <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"><?php echo View::e(I18n::t('geral.status')); ?></th>
         <th style="padding:10px 14px;text-align:left;font-weight:600;color:#475569;"></th>
       </tr>
     </thead>
@@ -128,13 +129,13 @@ function erroCorBadge(int $code): string {
         </td>
         <td style="padding:10px 14px;">
           <?php if ((int)($e['resolved']??0) === 1): ?>
-            <span style="font-size:11px;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:999px;">Resolvido</span>
+            <span style="font-size:11px;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:999px;"><?php echo View::e(I18n::t('eq_erros.resolvido')); ?></span>
           <?php else: ?>
-            <span style="font-size:11px;background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:999px;">Pendente</span>
+            <span style="font-size:11px;background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:999px;"><?php echo View::e(I18n::t('eq_erros.pendente')); ?></span>
           <?php endif; ?>
         </td>
         <td style="padding:10px 14px;white-space:nowrap;">
-          <a href="/equipe/erros/ver?id=<?php echo (int)$e['id']; ?>" class="botao ghost sm" style="font-size:12px;">Ver</a>
+          <a href="/equipe/erros/ver?id=<?php echo (int)$e['id']; ?>" class="botao ghost sm" style="font-size:12px;"><?php echo View::e(I18n::t('geral.ver')); ?></a>
           <?php if ((int)($e['resolved']??0) === 0): ?>
           <button class="botao sm" style="font-size:12px;" onclick="resolverErro(<?php echo (int)$e['id']; ?>)">✓</button>
           <?php endif; ?>
@@ -157,7 +158,7 @@ function erroCorBadge(int $code): string {
 <?php endif; ?>
 
 <div style="margin-top:10px;font-size:13px;color:#94a3b8;">
-  <?php echo $total; ?> erro(s) encontrado(s)
+  <?php echo I18n::tf('eq_erros.encontrados', $total); ?>
 </div>
 
 <script>

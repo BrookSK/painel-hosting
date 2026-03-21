@@ -2,18 +2,19 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\SistemaConfig;
+use LRV\Core\I18n;
 
-$pageTitle = 'Configuracoes';
+$pageTitle = I18n::t('eq_config.titulo');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
-<div class="page-title">Configuracoes</div>
-<div class="page-subtitle">Pagamentos, webhooks, alertas e identidade visual</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_config.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_config.subtitulo')); ?></div>
 
 <div class="card-new" style="max-width:920px;">
-  <p class="texto">Tudo aqui fica salvo no banco (tabela <strong>settings</strong>). Nao usamos arquivo <strong>.env</strong>.</p>
+  <p class="texto"><?php echo I18n::t('eq_config.desc_banco'); ?></p>
 
   <?php if (!empty($erro)): ?><div class="erro"><?php echo View::e((string)$erro); ?></div><?php endif; ?>
-  <?php if (!empty($salvo)): ?><div class="sucesso">Configuracoes salvas.</div><?php endif; ?>
+  <?php if (!empty($salvo)): ?><div class="sucesso"><?php echo View::e(I18n::t('eq_config.salvas')); ?></div><?php endif; ?>
 
   <form method="post" action="/equipe/configuracoes">
     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
@@ -54,14 +55,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
-    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Geral</h2>
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.geral')); ?></h2>
     <div class="grid">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">URL base publica da aplicacao</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.url_base')); ?></label>
         <input class="input" type="text" name="app_url_base" value="<?php echo View::e((string)($app_url_base??'')); ?>" placeholder="https://painel.seudominio.com" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">E-mail do admin para alertas</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.email_admin')); ?></label>
         <input class="input" type="email" name="email_admin" value="<?php echo View::e((string)($email_admin??'')); ?>" />
       </div>
     </div>
@@ -219,18 +220,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
-    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Identidade Visual</h2>
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.identidade_visual')); ?></h2>
     <div class="grid">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Nome do sistema</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.nome_sistema')); ?></label>
         <input class="input" type="text" name="system_name" value="<?php echo View::e((string)($system_name??'')); ?>" placeholder="LRV Cloud Manager" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Nome da empresa</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.nome_empresa')); ?></label>
         <input class="input" type="text" name="system_company_name" value="<?php echo View::e((string)($system_company_name??'')); ?>" placeholder="LRV Cloud" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">URL do logotipo</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.url_logo')); ?></label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input class="input" type="text" name="system_logo_url" id="system_logo_url" value="<?php echo View::e((string)($system_logo_url??'')); ?>" placeholder="https://... ou /uploads/imagens/..." style="flex:1;" />
           <label class="botao sec" style="cursor:pointer;white-space:nowrap;padding:9px 14px;font-size:13px;" title="Fazer upload de imagem">
@@ -243,7 +244,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <?php endif; ?>
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">URL do favicon</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.url_favicon')); ?></label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input class="input" type="text" name="system_favicon_url" id="system_favicon_url" value="<?php echo View::e((string)($system_favicon_url??'')); ?>" placeholder="https://... ou /uploads/imagens/..." style="flex:1;" />
           <label class="botao sec" style="cursor:pointer;white-space:nowrap;padding:9px 14px;font-size:13px;" title="Fazer upload de imagem">
@@ -256,39 +257,63 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <?php endif; ?>
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Texto de copyright (footer)</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.copyright_footer')); ?></label>
         <input class="input" type="text" name="system_copyright_text" value="<?php echo View::e((string)($system_copyright_text??'')); ?>" placeholder="2025 LRV Cloud" />
       </div>
     </div>
 
-    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Paginas Legais</h2>
-    <p class="texto" style="font-size:13px;">HTML permitido. Acessivel em <a href="/termos" target="_blank">/termos</a>, <a href="/privacidade" target="_blank">/privacidade</a> e <a href="/licenca" target="_blank">/licenca</a>.</p>
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.paginas_legais')); ?></h2>
+    <p class="texto" style="font-size:13px;"><?php echo I18n::t('eq_config.desc_legais'); ?> <a href="/termos" target="_blank">/termos</a>, <a href="/privacidade" target="_blank">/privacidade</a> e <a href="/licenca" target="_blank">/licenca</a>.</p>
     <div style="margin-top:12px;">
-      <label style="display:block;font-size:13px;margin-bottom:6px;">Termos de Uso (HTML)</label>
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Termos de Uso (HTML) — Português</label>
       <textarea class="input" name="legal_terms_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_terms_html??'')); ?></textarea>
     </div>
     <div style="margin-top:12px;">
-      <label style="display:block;font-size:13px;margin-bottom:6px;">Politica de Privacidade (HTML)</label>
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Terms of Service (HTML) — English</label>
+      <textarea class="input" name="legal_terms_html_en" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_terms_html_en??'')); ?></textarea>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Términos de Servicio (HTML) — Español</label>
+      <textarea class="input" name="legal_terms_html_es" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_terms_html_es??'')); ?></textarea>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Politica de Privacidade (HTML) — Português</label>
       <textarea class="input" name="legal_privacy_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_privacy_html??'')); ?></textarea>
     </div>
     <div style="margin-top:12px;">
-      <label style="display:block;font-size:13px;margin-bottom:6px;">Licença de Uso (HTML)</label>
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Privacy Policy (HTML) — English</label>
+      <textarea class="input" name="legal_privacy_html_en" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_privacy_html_en??'')); ?></textarea>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Política de Privacidad (HTML) — Español</label>
+      <textarea class="input" name="legal_privacy_html_es" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_privacy_html_es??'')); ?></textarea>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Licença de Uso (HTML) — Português</label>
       <p class="texto" style="font-size:12px;margin-bottom:6px;">Se preenchido, substitui o texto padrão da licença em <a href="/licenca" target="_blank">/licenca</a>. Deixe em branco para usar o texto padrão do sistema.</p>
       <textarea class="input" name="legal_license_html" rows="8" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_license_html??'')); ?></textarea>
     </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">License (HTML) — English</label>
+      <textarea class="input" name="legal_license_html_en" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_license_html_en??'')); ?></textarea>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Licencia (HTML) — Español</label>
+      <textarea class="input" name="legal_license_html_es" rows="6" style="resize:vertical;font-family:monospace;font-size:13px;"><?php echo View::e((string)($legal_license_html_es??'')); ?></textarea>
+    </div>
 
-    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Teste Grátis (Trial)</h2>
-    <p class="texto" style="font-size:13px;">Quando ativo, novos clientes recebem um servidor de teste ao criar conta.</p>
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.trial')); ?></h2>
+    <p class="texto" style="font-size:13px;"><?php echo View::e(I18n::t('eq_config.trial_desc')); ?></p>
     <div class="grid">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Trial ativo</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.trial_ativo')); ?></label>
         <select class="input" name="trial_enabled">
           <option value="1" <?php echo ((string)($trial_enabled??'0'))==='1'?'selected':''; ?>>Sim — exibir CTA na home</option>
           <option value="0" <?php echo ((string)($trial_enabled??'0'))==='0'?'selected':''; ?>>Não</option>
         </select>
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Duração (dias)</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.duracao_dias')); ?></label>
         <input class="input" type="number" name="trial_dias" value="<?php echo View::e((string)($trial_dias??'7')); ?>" min="1" max="365" />
       </div>
       <div>
@@ -304,17 +329,17 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <input class="input" type="number" name="trial_disco_gb" value="<?php echo View::e((string)($trial_disco_gb??'20')); ?>" min="1" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Label do botão CTA</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.label_cta')); ?></label>
         <input class="input" type="text" name="trial_label_cta" value="<?php echo View::e((string)($trial_label_cta??'Testar grátis')); ?>" placeholder="Testar grátis por 7 dias" />
       </div>
     </div>
     <div style="margin-top:12px;">
-      <label style="display:block;font-size:13px;margin-bottom:6px;">Descrição do trial (exibida na home)</label>
+      <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.desc_trial')); ?></label>
       <input class="input" type="text" name="trial_descricao" value="<?php echo View::e((string)($trial_descricao??'')); ?>" placeholder="Experimente gratuitamente por 7 dias, sem cartão de crédito." />
     </div>
 
-    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">SEO & Indexação</h2>
-    <p class="texto" style="font-size:13px;">Configurações para o Google e outros buscadores indexarem corretamente o site público.</p>
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.seo')); ?></h2>
+    <p class="texto" style="font-size:13px;"><?php echo View::e(I18n::t('eq_config.seo_desc')); ?></p>
     <div class="grid">
       <div>
         <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Título padrão (tag &lt;title&gt;)</label>
@@ -377,7 +402,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
 
     <div style="margin-top:20px;">
-      <button class="botao" type="submit">Salvar</button>
+      <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_config.salvar')); ?></button>
     </div>
   </form>
 </div>

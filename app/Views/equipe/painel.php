@@ -28,7 +28,7 @@ if ($initials === '') $initials = 'U';
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard</title>
+  <title><?php echo View::e(I18n::t('eq_painel.titulo')); ?></title>
   <?php require __DIR__ . '/../_partials/estilo-equipe.php'; ?>
 </head>
 <body>
@@ -38,69 +38,69 @@ if ($initials === '') $initials = 'U';
   <div class="app-main">
     <?php require __DIR__ . '/../_partials/header-equipe.php'; ?>
     <div class="page-content">
-      <div class="page-title">Dashboard</div>
-      <div class="page-subtitle">Bem-vindo de volta, <?php echo View::e($nome); ?>.</div>
+      <div class="page-title"><?php echo View::e(I18n::t('eq_painel.titulo')); ?></div>
+      <div class="page-subtitle"><?php echo View::e(I18n::tf('eq_painel.subtitulo', $nome)); ?></div>
 
       <div class="stats-grid">
         <div class="stat-card-new">
           <div class="stat-card-header">
-            <span class="stat-card-label">VPS Ativas</span>
+            <span class="stat-card-label"><?php echo View::e(I18n::t('eq_painel.vps_ativas')); ?></span>
             <div class="stat-card-icon blue">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
             </div>
           </div>
           <div class="stat-card-value"><?php echo $vpsRunning; ?></div>
-          <div class="stat-card-sub">de <?php echo $totalVps; ?> total</div>
+          <div class="stat-card-sub"><?php echo View::e(I18n::tf('eq_painel.de_total', (string)$totalVps)); ?></div>
         </div>
         <div class="stat-card-new">
           <div class="stat-card-header">
-            <span class="stat-card-label">Clientes</span>
+            <span class="stat-card-label"><?php echo View::e(I18n::t('eq_painel.clientes')); ?></span>
             <div class="stat-card-icon purple">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M2 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 8c1.657 0 3 1.343 3 3v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="14" cy="5" r="2" stroke="currentColor" stroke-width="1.6"/></svg>
             </div>
           </div>
           <div class="stat-card-value"><?php echo $totalClientes; ?></div>
-          <div class="stat-card-sub">cadastrados</div>
+          <div class="stat-card-sub"><?php echo View::e(I18n::t('eq_painel.cadastrados')); ?></div>
         </div>
         <div class="stat-card-new">
           <div class="stat-card-header">
-            <span class="stat-card-label">Tickets Abertos</span>
+            <span class="stat-card-label"><?php echo View::e(I18n::t('eq_painel.tickets_abertos')); ?></span>
             <div class="stat-card-icon orange">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
             </div>
           </div>
           <div class="stat-card-value"><?php echo $totalTickets; ?></div>
-          <div class="stat-card-sub">aguardando resposta</div>
+          <div class="stat-card-sub"><?php echo View::e(I18n::t('eq_painel.aguardando_resposta')); ?></div>
         </div>
         <div class="stat-card-new">
           <div class="stat-card-header">
-            <span class="stat-card-label">Jobs Pendentes</span>
+            <span class="stat-card-label"><?php echo View::e(I18n::t('eq_painel.jobs_pendentes')); ?></span>
             <div class="stat-card-icon red">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </div>
           </div>
           <div class="stat-card-value"><?php echo $jobsPendentes; ?></div>
-          <div class="stat-card-sub">na fila</div>
+          <div class="stat-card-sub"><?php echo View::e(I18n::t('eq_painel.na_fila')); ?></div>
         </div>
         <div class="stat-card-new">
           <div class="stat-card-header">
-            <span class="stat-card-label">Nodes Online</span>
+            <span class="stat-card-label"><?php echo View::e(I18n::t('eq_painel.nodes_online')); ?></span>
             <div class="stat-card-icon green">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" stroke="currentColor" stroke-width="1.6"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
           </div>
           <div class="stat-card-value"><?php echo $nodesOnline; ?></div>
-          <div class="stat-card-sub">servidores ativos</div>
+          <div class="stat-card-sub"><?php echo View::e(I18n::t('eq_painel.servidores_ativos')); ?></div>
         </div>
         <div class="stat-card-new">
           <div class="stat-card-header">
-            <span class="stat-card-label">Receita Mensal</span>
+            <span class="stat-card-label"><?php echo View::e(I18n::t('eq_painel.receita_mensal')); ?></span>
             <div class="stat-card-icon indigo">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </div>
           </div>
           <div class="stat-card-value sm">R$&nbsp;<?php echo View::e($receitaMensal); ?></div>
-          <div class="stat-card-sub">assinaturas ativas</div>
+          <div class="stat-card-sub"><?php echo View::e(I18n::t('eq_painel.assinaturas_ativas')); ?></div>
         </div>
       </div>
 
@@ -108,32 +108,32 @@ if ($initials === '') $initials = 'U';
         <div class="card-new">
           <div class="card-new-title">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            Ações rápidas
+            <?php echo View::e(I18n::t('eq_painel.acoes_rapidas')); ?>
           </div>
           <div class="quick-actions">
             <a href="/equipe/vps" class="quick-action-btn">
               <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="#4F46E5" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="#4F46E5" stroke-width="1.6"/></svg></div>
-              Gerenciar VPS
+              <?php echo View::e(I18n::t('eq_painel.gerenciar_vps')); ?>
             </a>
             <a href="/equipe/tickets" class="quick-action-btn">
               <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V6a2 2 0 012-2z" stroke="#4F46E5" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-              Ver tickets
+              <?php echo View::e(I18n::t('eq_painel.ver_tickets')); ?>
             </a>
             <a href="/equipe/usuarios" class="quick-action-btn">
               <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="6" r="3" stroke="#4F46E5" stroke-width="1.6"/><path d="M2 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-              Clientes
+              <?php echo View::e(I18n::t('eq_painel.clientes')); ?>
             </a>
             <a href="/equipe/servidores" class="quick-action-btn">
               <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" stroke="#4F46E5" stroke-width="1.6"/></svg></div>
-              Servidores
+              <?php echo View::e(I18n::t('equipe.servidores')); ?>
             </a>
             <a href="/equipe/monitoramento" class="quick-action-btn">
               <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2 13l4-4 3 3 4-5 3 3" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-              Monitoramento
+              <?php echo View::e(I18n::t('equipe.monitoramento')); ?>
             </a>
             <a href="/equipe/assinaturas" class="quick-action-btn">
               <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="#4F46E5" stroke-width="1.6"/><path d="M2 9h16" stroke="#4F46E5" stroke-width="1.6"/></svg></div>
-              Assinaturas
+              <?php echo View::e(I18n::t('equipe.assinaturas')); ?>
             </a>
           </div>
         </div>
@@ -141,7 +141,7 @@ if ($initials === '') $initials = 'U';
         <div class="card-new">
           <div class="card-new-title">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Seu acesso
+            <?php echo View::e(I18n::t('eq_painel.seu_acesso')); ?>
           </div>
           <div class="user-card-avatar"><?php echo View::e($initials); ?></div>
           <div class="user-card-name"><?php echo View::e($nome); ?></div>
@@ -155,9 +155,9 @@ if ($initials === '') $initials = 'U';
           <div class="user-card-actions">
             <a href="/equipe/2fa/configurar" class="btn-sm btn-primary">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="5.5" width="8" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M4 5.5V4a2 2 0 014 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-              Segurança
+              <?php echo View::e(I18n::t('eq_painel.seguranca')); ?>
             </a>
-            <a href="/equipe/permissoes" class="btn-sm btn-outline">Permissões</a>
+            <a href="/equipe/permissoes" class="btn-sm btn-outline"><?php echo View::e(I18n::t('eq_painel.permissoes')); ?></a>
           </div>
         </div>
       </div>
@@ -169,19 +169,19 @@ if ($initials === '') $initials = 'U';
         </a>
         <a href="/equipe/chat" class="quick-action-btn" style="flex:none;">
           <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h3l3 3 3-3h5a1 1 0 001-1V4a1 1 0 00-1-1z" stroke="#4F46E5" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-          Chat ao vivo
+          <?php echo View::e(I18n::t('eq_painel.chat_vivo')); ?>
         </a>
         <a href="/equipe/backups" class="quick-action-btn" style="flex:none;">
           <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v10M6 9l4 4 4-4" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15h12" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-          Backups
+          <?php echo View::e(I18n::t('equipe.backups')); ?>
         </a>
         <a href="/equipe/terminal" class="quick-action-btn" style="flex:none;">
           <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#4F46E5" stroke-width="1.6"/><path d="M6 8l3 2-3 2M11 12h3" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          Terminal
+          <?php echo View::e(I18n::t('equipe.terminal')); ?>
         </a>
         <a href="/equipe/inicializacao" class="quick-action-btn" style="flex:none;">
           <div class="quick-action-icon"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="#4F46E5" stroke-width="1.6"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-          Inicialização
+          <?php echo View::e(I18n::t('eq_painel.inicializacao')); ?>
         </a>
       </div>
 

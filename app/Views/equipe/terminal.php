@@ -2,29 +2,30 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\ConfiguracoesSistema;
+use LRV\Core\I18n;
 
 $porta = (int)ConfiguracoesSistema::terminalWsInternalPort();
 
-$pageTitle = 'Terminal (Admin)';
+$pageTitle = I18n::t('eq_terminal.titulo');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
 <meta name="csrf-token" content="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-<div class="page-title">Terminal (Admin)</div>
-<div class="page-subtitle">Acesso SSH ao node via WebSocket</div>
+<div class="page-title"><?php echo View::e(I18n::t('eq_terminal.titulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_terminal.subtitulo')); ?></div>
 
 <div class="card-new">
   <div class="linha" style="justify-content:space-between;align-items:flex-end;margin-bottom:16px;">
     <div>
-      <div class="texto" style="margin:0;">Escolha um node e conecte. Tudo e auditado.</div>
+      <div class="texto" style="margin:0;"><?php echo View::e(I18n::t('eq_terminal.escolha_node')); ?></div>
     </div>
     <div><span class="badge">WS interno: 127.0.0.1:<?php echo (int)$porta; ?></span></div>
   </div>
 
   <div class="grid" style="margin-bottom:12px;">
     <div>
-      <label style="display:block;font-size:13px;margin-bottom:6px;">Node</label>
+      <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_terminal.node')); ?></label>
       <select class="input" id="server_id">
-        <option value="">Selecione...</option>
+        <option value=""><?php echo View::e(I18n::t('eq_terminal.selecione')); ?></option>
         <?php foreach (((array)($servers??[])) as $s): ?>
           <?php $sid=(int)($s['id']??0);$hn=(string)($s['hostname']??'');$ip=(string)($s['ip_address']??'');$st=(string)($s['status']??'');$online=(int)($s['is_online']??0); ?>
           <option value="<?php echo $sid; ?>">#<?php echo $sid; ?> <?php echo View::e($hn); ?> (<?php echo View::e($ip); ?>)<?php echo $st!=='active'?' [inativo]':''; ?><?php echo $online===1?' [online]':''; ?></option>
@@ -32,7 +33,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </select>
     </div>
     <div>
-      <button class="botao" id="btnConectar" type="button" style="width:100%;margin-top:22px;">Conectar</button>
+      <button class="botao" id="btnConectar" type="button" style="width:100%;margin-top:22px;"><?php echo View::e(I18n::t('eq_terminal.conectar')); ?></button>
     </div>
   </div>
 
@@ -42,27 +43,27 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div style="padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.18);color:#e2e8f0;font-size:13px;display:flex;justify-content:space-between;">
       <div>Terminal</div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button id="btnUpload" class="botao sec" type="button" style="padding:4px 10px;font-size:12px;">Upload</button>
-        <button id="btnDownload" class="botao sec" type="button" style="padding:4px 10px;font-size:12px;">Download</button>
-        <div id="status" style="opacity:.9;">Desconectado</div>
+        <button id="btnUpload" class="botao sec" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('eq_terminal.upload')); ?></button>
+        <button id="btnDownload" class="botao sec" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('eq_terminal.download')); ?></button>
+        <div id="status" style="opacity:.9;"><?php echo View::e(I18n::t('eq_terminal.desconectado')); ?></div>
       </div>
     </div>
     <pre id="out" style="margin:0;padding:12px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;height:420px;overflow:auto;"></pre>
     <div style="border-top:1px solid rgba(148,163,184,.18);padding:10px 12px;">
-      <input class="input" id="in" type="text" autocomplete="off" placeholder="Digite um comando e pressione Enter" style="background:#0b1220;border-color:#1f2937;color:#e2e8f0;" />
+      <input class="input" id="in" type="text" autocomplete="off" placeholder="<?php echo View::e(I18n::t('eq_terminal.placeholder')); ?>" style="background:#0b1220;border-color:#1f2937;color:#e2e8f0;" />
     </div>
   </div>
 
   <!-- Modal upload -->
   <div id="modalUpload" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;">
     <div class="card-new" style="max-width:420px;width:90%;">
-      <div class="card-new-title">Enviar arquivo para o servidor</div>
-      <div style="margin-bottom:10px;"><label style="font-size:13px;display:block;margin-bottom:4px;">Arquivo</label><input type="file" id="uploadFile" class="input" /></div>
-      <div style="margin-bottom:12px;"><label style="font-size:13px;display:block;margin-bottom:4px;">Caminho remoto</label><input type="text" id="uploadPath" class="input" placeholder="/tmp/arquivo.txt" /></div>
+      <div class="card-new-title"><?php echo View::e(I18n::t('eq_terminal.enviar_arquivo')); ?></div>
+      <div style="margin-bottom:10px;"><label style="font-size:13px;display:block;margin-bottom:4px;"><?php echo View::e(I18n::t('eq_terminal.arquivo')); ?></label><input type="file" id="uploadFile" class="input" /></div>
+      <div style="margin-bottom:12px;"><label style="font-size:13px;display:block;margin-bottom:4px;"><?php echo View::e(I18n::t('eq_terminal.caminho_remoto')); ?></label><input type="text" id="uploadPath" class="input" placeholder="/tmp/arquivo.txt" /></div>
       <div id="uploadStatus" style="font-size:13px;margin-bottom:10px;display:none;"></div>
       <div class="linha" style="gap:8px;">
-        <button class="botao" id="btnUploadEnviar" type="button">Enviar</button>
-        <button class="botao sec" type="button" onclick="document.getElementById('modalUpload').style.display='none'">Cancelar</button>
+        <button class="botao" id="btnUploadEnviar" type="button"><?php echo View::e(I18n::t('eq_terminal.enviar')); ?></button>
+        <button class="botao sec" type="button" onclick="document.getElementById('modalUpload').style.display='none'"><?php echo View::e(I18n::t('eq_terminal.cancelar')); ?></button>
       </div>
     </div>
   </div>
@@ -70,16 +71,16 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   <!-- Modal download -->
   <div id="modalDownload" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;">
     <div class="card-new" style="max-width:420px;width:90%;">
-      <div class="card-new-title">Baixar arquivo do servidor</div>
-      <div style="margin-bottom:12px;"><label style="font-size:13px;display:block;margin-bottom:4px;">Caminho remoto</label><input type="text" id="downloadPath" class="input" placeholder="/var/log/syslog" /></div>
+      <div class="card-new-title"><?php echo View::e(I18n::t('eq_terminal.baixar_arquivo')); ?></div>
+      <div style="margin-bottom:12px;"><label style="font-size:13px;display:block;margin-bottom:4px;"><?php echo View::e(I18n::t('eq_terminal.caminho_remoto')); ?></label><input type="text" id="downloadPath" class="input" placeholder="/var/log/syslog" /></div>
       <div class="linha" style="gap:8px;">
-        <button class="botao" id="btnDownloadIniciar" type="button">Baixar</button>
-        <button class="botao sec" type="button" onclick="document.getElementById('modalDownload').style.display='none'">Cancelar</button>
+        <button class="botao" id="btnDownloadIniciar" type="button"><?php echo View::e(I18n::t('eq_terminal.baixar')); ?></button>
+        <button class="botao sec" type="button" onclick="document.getElementById('modalDownload').style.display='none'"><?php echo View::e(I18n::t('eq_terminal.cancelar')); ?></button>
       </div>
     </div>
   </div>
 
-  <div class="texto" style="margin-top:10px;font-size:13px;opacity:.9;">Conexao via proxy reverso: <strong>/ws/terminal</strong> (WSS).</div>
+  <div class="texto" style="margin-top:10px;font-size:13px;opacity:.9;"><?php echo View::e(I18n::t('eq_terminal.proxy_hint')); ?> <strong>/ws/terminal</strong> (WSS).</div>
 </div>
 
 <script>

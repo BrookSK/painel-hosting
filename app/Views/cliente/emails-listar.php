@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\Csrf;
+use LRV\Core\I18n;
 
 $webmailUrl     = (string)($webmail_url ?? '');
 $dominioPadrao  = (string)($dominio_padrao ?? '');
@@ -15,15 +16,15 @@ foreach ($dominiosAtivos as $d) {
     if (!in_array($d, $dominiosSelect, true)) $dominiosSelect[] = $d;
 }
 
-$pageTitle    = 'Meus E-mails';
+$pageTitle    = I18n::t('emails.titulo');
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
 <div style="margin-bottom:24px;">
-  <div class="page-title">Meus E-mails</div>
-  <div class="page-subtitle" style="margin-bottom:0;">Gerenciar caixas de entrada</div>
+  <div class="page-title"><?php echo View::e(I18n::t('emails.titulo')); ?></div>
+  <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::t('emails.subtitulo')); ?></div>
 </div>
 
 <?php if (!empty($erro)): ?>
@@ -38,15 +39,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div class="card-new">
     <div class="card-new-title" style="margin-bottom:14px;">Caixas de entrada</div>
     <?php if (empty($emails)): ?>
-      <p style="color:#94a3b8;font-size:13px;">Nenhum e-mail criado ainda.</p>
+      <p style="color:#94a3b8;font-size:13px;"><?php echo View::e(I18n::t('emails.nenhum')); ?></p>
     <?php else: ?>
       <div style="overflow:auto;">
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr>
-              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">E-mail</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('auth.email')); ?></th>
               <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Quota</th>
-              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Ações</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.acoes')); ?></th>
             </tr>
           </thead>
           <tbody>
@@ -62,13 +63,13 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
                   <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <?php if ($webmailLink !== ''): ?>
-                      <a href="<?php echo View::e($webmailLink); ?>" target="_blank" rel="noopener" class="botao sm ghost">Webmail</a>
+                      <a href="<?php echo View::e($webmailLink); ?>" target="_blank" rel="noopener" class="botao sm ghost"><?php echo View::e(I18n::t('emails.webmail')); ?></a>
                     <?php endif; ?>
-                    <button class="botao sm ghost" onclick="abrirAlterarSenha(<?php echo $emailId; ?>, '<?php echo View::e($emailAddr); ?>')">Alterar senha</button>
+                    <button class="botao sm ghost" onclick="abrirAlterarSenha(<?php echo $emailId; ?>, '<?php echo View::e($emailAddr); ?>')"><?php echo View::e(I18n::t('emails.alterar_senha')); ?></button>
                     <form method="post" action="/cliente/emails/remover" style="display:inline;" onsubmit="return confirm('Remover <?php echo View::e($emailAddr); ?>?')">
                       <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                       <input type="hidden" name="email_id" value="<?php echo $emailId; ?>" />
-                      <button class="botao danger sm" type="submit">Remover</button>
+                      <button class="botao danger sm" type="submit"><?php echo View::e(I18n::t('emails.remover')); ?></button>
                     </form>
                   </div>
                 </td>
@@ -82,7 +83,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
   <div>
     <div class="card-new">
-      <div class="card-new-title" style="margin-bottom:6px;">Criar novo e-mail</div>
+      <div class="card-new-title" style="margin-bottom:6px;"><?php echo View::e(I18n::t('emails.criar')); ?></div>
       <?php if ($totalEmails >= $limite): ?>
         <div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px;">
           Seu plano permite até <strong><?php echo $limite; ?></strong> conta(s).
@@ -95,11 +96,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <form method="post" action="/cliente/emails/criar" <?php echo $totalEmails >= $limite ? 'style="opacity:.5;pointer-events:none;"' : ''; ?>>
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <div style="margin-bottom:10px;">
-          <label style="display:block;font-size:13px;margin-bottom:5px;">Usuário</label>
+          <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('emails.usuario')); ?></label>
           <input class="input" type="text" name="local_part" placeholder="usuario" required pattern="[a-z0-9._\-]+" />
         </div>
         <div style="margin-bottom:10px;">
-          <label style="display:block;font-size:13px;margin-bottom:5px;">Domínio</label>
+          <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('emails.dominio')); ?></label>
           <?php if (count($dominiosSelect) > 1): ?>
             <select class="input" name="domain" required>
               <?php foreach ($dominiosSelect as $d): ?>
@@ -114,14 +115,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <?php endif; ?>
         </div>
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;margin-bottom:5px;">Senha</label>
+          <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('auth.senha')); ?></label>
           <input class="input" type="password" name="password" required minlength="8" />
         </div>
-        <button class="botao" type="submit">Criar e-mail</button>
+        <button class="botao" type="submit"><?php echo View::e(I18n::t('emails.criar')); ?></button>
       </form>
 
       <div style="border-top:1px solid #f1f5f9;padding-top:12px;margin-top:12px;">
-        <a href="/cliente/emails/dominios" class="botao ghost sm">Gerenciar domínios próprios</a>
+        <a href="/cliente/emails/dominios" class="botao ghost sm"><?php echo View::e(I18n::t('emails.dominios')); ?></a>
       </div>
     </div>
   </div>
