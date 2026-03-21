@@ -111,6 +111,10 @@ function _nav_ativo(string $path, string $uri): string {
   </nav>
 
   <div class="sidebar-footer">
+    <a href="/equipe/minha-conta" class="nav-item<?php echo _nav_ativo('/equipe/minha-conta', $_seg); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Minha Conta</span>
+    </a>
     <a href="/equipe/configuracoes" class="nav-item<?php echo _nav_ativo('/equipe/configuracoes', $_seg); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>Configurações</span>

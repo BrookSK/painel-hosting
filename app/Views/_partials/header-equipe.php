@@ -5,19 +5,28 @@ use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
 
 $_notif_count = 0;
+$_h_nome   = '';
+$_h_role   = '';
+$_h_email  = '';
+$_h_avatar = '';
 try {
     $uid = Auth::equipeId();
     if ($uid !== null) {
         $pdo = BancoDeDados::pdo();
-        $s = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = :u AND read_at IS NULL');
+        $s = $pdo->prepare('SELECT name, email, role, avatar_url FROM users WHERE id = :u');
         $s->execute([':u' => $uid]);
-        $_notif_count = (int) $s->fetchColumn();
+        $row = $s->fetch();
+        if ($row) {
+            $_h_nome   = (string) $row['name'];
+            $_h_role   = (string) $row['role'];
+            $_h_email  = (string) $row['email'];
+            $_h_avatar = (string) ($row['avatar_url'] ?? '');
+        }
+        $s2 = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = :u AND read_at IS NULL');
+        $s2->execute([':u' => $uid]);
+        $_notif_count = (int) $s2->fetchColumn();
     }
 } catch (\Throwable $e) {}
-
-$_h_nome  = (string) ($usuario['name'] ?? '');
-$_h_role  = (string) ($usuario['role'] ?? '');
-$_h_email = (string) ($usuario['email'] ?? '');
 
 $_initials = '';
 foreach (explode(' ', trim($_h_nome)) as $w) {
@@ -48,7 +57,13 @@ if ($_initials === '') $_initials = 'U';
       <?php endif; ?>
     </a>
     <div class="header-avatar-wrap" id="avatarMenu">
-      <div class="header-avatar"><?php echo View::e($_initials); ?></div>
+      <div class="header-avatar">
+        <?php if ($_h_avatar !== ''): ?>
+          <img src="<?php echo View::e($_h_avatar); ?>" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+        <?php else: ?>
+          <?php echo View::e($_initials); ?>
+        <?php endif; ?>
+      </div>
       <div class="header-avatar-info">
         <span class="header-avatar-name"><?php echo View::e($_h_nome); ?></span>
         <span class="header-avatar-role"><?php echo View::e($_h_role); ?></span>
@@ -59,11 +74,14 @@ if ($_initials === '') $_initials = 'U';
           <div class="avatar-dropdown-name"><?php echo View::e($_h_nome); ?></div>
           <div class="avatar-dropdown-email"><?php echo View::e($_h_email); ?></div>
         </div>
+        <a href="/equipe/minha-conta" class="avatar-dropdown-item">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.038 2.462-5.5 5.5-5.5S13 9.962 13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Minha Conta
+        </a>
         <a href="/equipe/2fa/configurar" class="avatar-dropdown-item">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="7" width="9" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           Segurança / 2FA
         </a>
-        <a href="/equipe/permissoes" class="avatar-dropdown-item">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.038 2.462-5.5 5.5-5.5S13 9.962 13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           Permissões
         </a>

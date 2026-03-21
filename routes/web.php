@@ -53,6 +53,7 @@ use LRV\App\Controllers\Equipe\EmailsController as EquipeEmailsController;
 use LRV\App\Controllers\LegalController;
 use LRV\App\Controllers\ChangelogController;
 use LRV\App\Controllers\Equipe\ErrosController;
+use LRV\App\Controllers\Equipe\MinhaContaController;
 use LRV\Core\Middlewares;
 
 $roteador->get('/', [InicialController::class, 'index']);
@@ -136,6 +137,10 @@ $roteador->get('/equipe/terminal/auditoria/ver', [TerminalController::class, 'au
 $roteador->get('/equipe/jobs', [JobsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/jobs/ver', [JobsController::class, 'ver'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/sair', [EquipeSairController::class, 'sair'], [Middlewares::exigirLoginEquipe()]);
+
+// Minha conta
+$roteador->get('/equipe/minha-conta', [MinhaContaController::class, 'index'], [Middlewares::exigirLoginEquipe()]);
+$roteador->post('/equipe/minha-conta/salvar', [MinhaContaController::class, 'salvar'], [Middlewares::exigirLoginEquipe()]);
 
 $roteador->get('/cliente/entrar', [ClienteEntrarController::class, 'formulario']);
 $roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_client', 10, 60)]);
