@@ -64,7 +64,7 @@ final class ChatRoomService
     public function buscarPorId(int $roomId): ?array
     {
         $pdo  = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, client_id, user_id, status FROM chat_rooms WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT r.id, r.client_id, r.user_id, r.status, r.created_at, c.name AS client_name, c.email AS client_email FROM chat_rooms r LEFT JOIN clients c ON c.id = r.client_id WHERE r.id = :id LIMIT 1');
         $stmt->execute([':id' => $roomId]);
         $r = $stmt->fetch();
         return is_array($r) ? $r : null;

@@ -41,8 +41,35 @@ final class ChatController
             return Resposta::texto('Room não encontrada.', 404);
         }
 
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $clientId = (int) ($room['client_id'] ?? 0);
+
+        // Dados do cliente
+        $stmtC = $pdo->prepare('SELECT id, name, email, created_at FROM clients WHERE id = :id LIMIT 1');
+        $stmtC->execute([':id' => $clientId]);
+        $cliente = $stmtC->fetch() ?: [];
+
+        // Tickets recentes
+        $stmtT = $pdo->prepare('SELECT id, subject, status, created_at FROM tickets WHERE client_id = :c ORDER BY created_at DESC LIMIT 10');
+        $stmtT->execute([':c' => $clientId]);
+        $tickets = $stmtT->fetchAll() ?: [];
+
+        // Assinaturas
+        $stmtA = $pdo->prepare('SELECT s.id, s.status, s.created_at, p.name AS plan_name FROM subscriptions s LEFT JOIN plans p ON s.plan_id = p.id WHERE s.client_id = :c ORDER BY s.created_at DESC LIMIT 10');
+        $stmtA->execute([':c' => $clientId]);
+        $assinaturas = $stmtA->fetchAll() ?: [];
+
+        // VPS
+        $stmtV = $pdo->prepare('SELECT id, hostname, status FROM vps WHERE client_id = :c ORDER BY id DESC LIMIT 10');
+        $stmtV->execute([':c' => $clientId]);
+        $vps = $stmtV->fetchAll() ?: [];
+
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/chat-ver.php', [
-            'room' => $room,
+            'room'        => $room,
+            'cliente'     => $cliente,
+            'tickets'     => $tickets,
+            'assinaturas' => $assinaturas,
+            'vps'         => $vps,
         ]);
 
         return Resposta::html($html);
