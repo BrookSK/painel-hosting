@@ -13,7 +13,7 @@ if ($_favicon !== ''):
 html{scroll-behavior:smooth;}
 body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#f1f5f9;color:#0f172a;overflow-x:hidden;}
 a{color:#4F46E5;text-decoration:none;}
-a:hover{text-decoration:underline;}
+a:hover{text-decoration:none;}
 
 /* ── Legacy topo (compatibilidade) ───────────────────── */
 .topo{background:linear-gradient(90deg,#060d1f,#0B1C3D,#4F46E5,#7C3AED);color:#fff;padding:16px 18px;}

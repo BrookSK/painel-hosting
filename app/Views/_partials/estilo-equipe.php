@@ -12,6 +12,7 @@ body {
   display: flex;
 }
 a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: none; }
 
 /* ── Layout Shell ─────────────────────────────────────────── */
 .app-shell {
