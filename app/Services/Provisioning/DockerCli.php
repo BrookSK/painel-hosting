@@ -28,10 +28,29 @@ final class DockerCli
         }
 
         $this->remoto = [
-            'host' => $host,
-            'porta' => $porta,
+            'host'    => $host,
+            'porta'   => $porta,
             'usuario' => $usuario,
-            'chave' => $caminhoChavePrivada,
+            'chave'   => $caminhoChavePrivada,
+            'senha'   => null,
+        ];
+    }
+
+    public function definirRemotoComSenha(string $host, int $porta, string $usuario, string $senha): void
+    {
+        $host    = trim($host);
+        $usuario = trim($usuario);
+
+        if ($host === '' || $porta <= 0 || $porta > 65535 || $usuario === '' || $senha === '') {
+            throw new \InvalidArgumentException('Destino remoto inválido.');
+        }
+
+        $this->remoto = [
+            'host'    => $host,
+            'porta'   => $porta,
+            'usuario' => $usuario,
+            'chave'   => null,
+            'senha'   => $senha,
         ];
     }
 
@@ -188,12 +207,17 @@ final class DockerCli
             throw new \RuntimeException('Destino remoto não configurado. O painel não deve executar Docker localmente.');
         }
 
-        $host = (string) ($this->remoto['host'] ?? '');
-        $porta = (int) ($this->remoto['porta'] ?? 22);
-        $usuario = (string) ($this->remoto['usuario'] ?? '');
-        $chave = (string) ($this->remoto['chave'] ?? '');
+        $host    = (string)($this->remoto['host'] ?? '');
+        $porta   = (int)($this->remoto['porta'] ?? 22);
+        $usuario = (string)($this->remoto['usuario'] ?? '');
+        $chave   = (string)($this->remoto['chave'] ?? '');
+        $senha   = (string)($this->remoto['senha'] ?? '');
 
-        $r = $this->exec->executar($host, $porta, $usuario, $chave, $dockerCmd, 60);
+        if ($senha !== '') {
+            $r = $this->exec->executarComSenha($host, $porta, $usuario, $senha, $dockerCmd, 60);
+        } else {
+            $r = $this->exec->executar($host, $porta, $usuario, $chave, $dockerCmd, 60);
+        }
         $comando = (string) ($r['comando'] ?? '');
         $saida = (string) ($r['saida'] ?? '');
 

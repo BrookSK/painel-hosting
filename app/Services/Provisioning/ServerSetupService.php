@@ -7,6 +7,7 @@ namespace LRV\App\Services\Provisioning;
 use LRV\Core\BancoDeDados;
 use LRV\Core\ConfiguracoesSistema;
 use LRV\App\Services\Infra\SshExecutor;
+use LRV\App\Services\Infra\SshCrypto;
 
 /**
  * Prepara um servidor para uso via SSH.
@@ -37,20 +38,40 @@ final class ServerSetupService
             return $this->erroFatal('Servidor não encontrado.');
         }
 
-        $host  = trim((string)($srv['ip_address'] ?? $srv['hostname'] ?? ''));
-        $port  = (int)($srv['ssh_port'] ?? 22);
-        $user  = trim((string)($srv['ssh_user'] ?? ''));
-        $keyId = trim((string)($srv['ssh_key_id'] ?? ''));
+        $host     = trim((string)($srv['ip_address'] ?? $srv['hostname'] ?? ''));
+        $port     = (int)($srv['ssh_port'] ?? 22);
+        $user     = trim((string)($srv['ssh_user'] ?? ''));
+        $authType = (string)($srv['ssh_auth_type'] ?? 'key');
+        $useSudo  = (bool)(int)($srv['use_sudo'] ?? 0);
 
-        if ($host === '' || $port <= 0 || $user === '' || $keyId === '') {
+        if ($host === '' || $port <= 0 || $user === '') {
             return $this->erroFatal('Dados SSH incompletos. Configure o servidor antes de inicializar.');
         }
 
-        $keyDir  = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
-        $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
+        // Resolve credencial conforme tipo de autenticação
+        $keyPath    = null;
+        $senha      = null;
+        $sudoSenha  = '';
 
-        if (!is_file($keyPath)) {
-            return $this->erroFatal('Chave SSH não encontrada: ' . $keyId);
+        if ($authType === 'password') {
+            $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
+            if ($senha === '') {
+                return $this->erroFatal('Senha SSH não configurada.');
+            }
+        } else {
+            $keyId   = trim((string)($srv['ssh_key_id'] ?? ''));
+            $keyDir  = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+            $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
+            if (!is_file($keyPath)) {
+                return $this->erroFatal('Chave SSH não encontrada: ' . $keyId);
+            }
+        }
+
+        // Resolve senha do sudo
+        if ($useSudo) {
+            $sudoRaw = SshCrypto::decifrar((string)($srv['sudo_password'] ?? ''));
+            // Se não tiver sudo_password separada, usa a própria senha SSH
+            $sudoSenha = $sudoRaw !== '' ? $sudoRaw : ($senha ?? '');
         }
 
         // Marca servidor como "inicializando"
@@ -58,8 +79,6 @@ final class ServerSetupService
 
         $passos = $this->definirPassos($srv);
         $total  = count($passos);
-
-        // Carrega logs existentes para saber o que já foi feito (modo retomar)
         $logsPrevios = [];
         if ($retomar) {
             $stLogs = $pdo->prepare('SELECT step, status FROM server_setup_logs WHERE server_id = :id ORDER BY id ASC');
@@ -88,7 +107,16 @@ final class ServerSetupService
             $this->upsertLog($pdo, $serverId, $nome, 'running', '');
 
             try {
-                $r     = $this->exec->executar($host, $port, $user, $keyPath, $passo['cmd'], $passo['timeout'] ?? 120);
+                // Aplica sudo se necessário e o passo exige privilégio
+                $cmdFinal = ($useSudo && !empty($passo['precisa_root']))
+                    ? SshExecutor::elevarComSudo($passo['cmd'], $sudoSenha)
+                    : $passo['cmd'];
+
+                if ($senha !== null) {
+                    $r = $this->exec->executarComSenha($host, $port, $user, $senha, $cmdFinal, $passo['timeout'] ?? 120);
+                } else {
+                    $r = $this->exec->executar($host, $port, $user, (string)$keyPath, $cmdFinal, $passo['timeout'] ?? 120);
+                }
                 $saida = trim((string)($r['saida'] ?? ''));
                 $ok    = (bool)($r['ok'] ?? false);
 
@@ -162,50 +190,58 @@ final class ServerSetupService
                 'cmd'            => 'echo lrv-ok',
                 'ok_if_contains' => 'lrv-ok',
                 'fatal'          => true,
+                'precisa_root'   => false,
                 'timeout'        => 15,
             ],
             [
-                'name'    => 'Atualizar pacotes',
-                'cmd'     => 'export DEBIAN_FRONTEND=noninteractive; apt-get update -qq 2>&1',
-                'fatal'   => false,
-                'timeout' => 120,
+                'name'         => 'Atualizar pacotes',
+                'cmd'          => 'export DEBIAN_FRONTEND=noninteractive; apt-get update -qq 2>&1',
+                'fatal'        => false,
+                'precisa_root' => true,
+                'timeout'      => 120,
             ],
             [
-                'name'    => 'Instalar dependências',
-                'cmd'     => 'export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq ca-certificates curl gnupg lsb-release 2>&1',
-                'fatal'   => false,
-                'timeout' => 180,
+                'name'         => 'Instalar dependências',
+                'cmd'          => 'export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq ca-certificates curl gnupg lsb-release 2>&1',
+                'fatal'        => false,
+                'precisa_root' => true,
+                'timeout'      => 180,
             ],
             [
-                'name'    => 'Instalar Docker',
-                'cmd'     => 'which docker >/dev/null 2>&1 && echo "docker already exists" || (curl -fsSL https://get.docker.com | sh 2>&1)',
-                'fatal'   => true,
-                'timeout' => 300,
+                'name'         => 'Instalar Docker',
+                'cmd'          => 'which docker >/dev/null 2>&1 && echo "docker already exists" || (curl -fsSL https://get.docker.com | sh 2>&1)',
+                'fatal'        => true,
+                'precisa_root' => true,
+                'timeout'      => 300,
             ],
             [
                 'name'           => 'Verificar Docker',
                 'cmd'            => 'docker version 2>&1',
                 'ok_if_contains' => 'Version',
                 'fatal'          => true,
+                'precisa_root'   => false,
                 'timeout'        => 20,
             ],
             [
-                'name'    => 'Habilitar Docker no boot',
-                'cmd'     => 'systemctl enable docker 2>&1 && systemctl start docker 2>&1; echo done',
-                'fatal'   => false,
-                'timeout' => 30,
+                'name'         => 'Habilitar Docker no boot',
+                'cmd'          => 'systemctl enable docker 2>&1 && systemctl start docker 2>&1; echo done',
+                'fatal'        => false,
+                'precisa_root' => true,
+                'timeout'      => 30,
             ],
             [
-                'name'    => 'Criar rede Docker lrv-net',
-                'cmd'     => 'docker network inspect lrv-net >/dev/null 2>&1 && echo "already exists" || docker network create lrv-net 2>&1',
-                'fatal'   => false,
-                'timeout' => 30,
+                'name'         => 'Criar rede Docker lrv-net',
+                'cmd'          => 'docker network inspect lrv-net >/dev/null 2>&1 && echo "already exists" || docker network create lrv-net 2>&1',
+                'fatal'        => false,
+                'precisa_root' => false,
+                'timeout'      => 30,
             ],
             [
-                'name'    => 'Criar usuário terminal',
-                'cmd'     => 'id ' . escapeshellarg($termUser) . ' >/dev/null 2>&1 && echo "already exists" || useradd -m -s /bin/bash ' . escapeshellarg($termUser) . ' 2>&1',
-                'fatal'   => false,
-                'timeout' => 20,
+                'name'         => 'Criar usuário terminal',
+                'cmd'          => 'id ' . escapeshellarg($termUser) . ' >/dev/null 2>&1 && echo "already exists" || useradd -m -s /bin/bash ' . escapeshellarg($termUser) . ' 2>&1',
+                'fatal'        => false,
+                'precisa_root' => true,
+                'timeout'      => 20,
             ],
         ];
     }

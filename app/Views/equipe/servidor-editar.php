@@ -1,10 +1,11 @@
 <?php
-
 declare(strict_types=1);
-
 use LRV\Core\View;
 
-$id = $servidor['id'] ?? null;
+$id       = $servidor['id'] ?? null;
+$authType = (string)($servidor['ssh_auth_type'] ?? 'password');
+$setupSt  = (string)($servidor['setup_status'] ?? 'pending');
+
 $pageTitle = $id ? 'Editar servidor' : 'Novo servidor';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
@@ -15,62 +16,44 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <div class="card-new" style="max-width:920px;">
 
   <?php if (!empty($erro)): ?>
-    <div class="erro"><?php echo View::e((string)$erro); ?></div>
+    <div class="erro" style="white-space:pre-wrap;"><?php echo View::e((string)$erro); ?></div>
   <?php endif; ?>
-
   <?php if (!empty($mensagem_ok)): ?>
     <div class="sucesso"><?php echo View::e((string)$mensagem_ok); ?></div>
   <?php endif; ?>
 
-  <?php if (array_key_exists('is_online', (array)$servidor) || array_key_exists('last_check_at', (array)$servidor) || array_key_exists('last_error', (array)$servidor)): ?>
+  <?php if (array_key_exists('is_online', (array)$servidor)): ?>
     <div class="card-new" style="margin:0 0 12px 0;">
-      <div class="texto" style="margin:0 0 6px 0;"><strong>Status de conectividade</strong></div>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
-        <div>
-          <div class="texto" style="margin:0;font-size:13px;opacity:.9;">Online</div>
-          <div style="margin-top:6px;">
-            <?php
-              if (!array_key_exists('is_online', (array)$servidor)) {
-                  echo '<span class="badge-new badge-neutral">N/A</span>';
-              } elseif ((int)($servidor['is_online'] ?? 0) === 1) {
-                  echo '<span class="badge-new badge-success">Online</span>';
-              } else {
-                  echo '<span class="badge-new badge-danger">Offline</span>';
-              }
-            ?>
-          </div>
-        </div>
-        <div>
-          <div class="texto" style="margin:0;font-size:13px;opacity:.9;">Última checagem</div>
-          <div style="margin-top:6px;"><code><?php echo View::e((string)($servidor['last_check_at'] ?? '')); ?></code></div>
-        </div>
+      <div class="texto" style="margin:0 0 6px 0;"><strong>Conectividade</strong></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <?php
+          if ((int)($servidor['is_online'] ?? 0) === 1) echo '<span class="badge-new badge-green">Online</span>';
+          else echo '<span class="badge-new badge-red">Offline</span>';
+          if (!empty($servidor['last_check_at'])) echo '<code style="font-size:12px;">' . View::e((string)$servidor['last_check_at']) . '</code>';
+        ?>
       </div>
       <?php if (!empty($servidor['last_error'])): ?>
-        <div style="margin-top:10px;">
-          <div class="texto" style="margin:0;font-size:13px;opacity:.9;">Último erro</div>
-          <pre style="white-space:pre-wrap;background:#0b1020;color:#e5e7eb;padding:10px;border-radius:12px;overflow:auto;margin-top:6px;"><?php echo View::e((string)($servidor['last_error'] ?? '')); ?></pre>
-        </div>
+        <pre style="white-space:pre-wrap;background:#0b1020;color:#e5e7eb;padding:10px;border-radius:12px;overflow:auto;margin-top:8px;font-size:12px;"><?php echo View::e((string)$servidor['last_error']); ?></pre>
       <?php endif; ?>
     </div>
   <?php endif; ?>
 
+  <!-- Ações rápidas -->
   <div class="card-new" style="margin:0 0 12px 0;">
-    <div class="texto" style="margin:0 0 10px 0;"><strong>Testar conexão</strong></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <button class="botao" type="submit" form="form-servidor" formaction="/equipe/servidores/testar-conexao">Testar SSH/Docker</button>
+    <div class="texto" style="margin:0 0 10px 0;"><strong>Ações</strong></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <button class="botao" type="submit" form="form-servidor" formaction="/equipe/servidores/testar-conexao">Testar conexão SSH</button>
       <?php if (!empty($servidor['id'])): ?>
         <?php
-          $setupSt = (string)($servidor['setup_status'] ?? 'pending');
-          $retomar = $setupSt === 'error' ? 'true' : 'false';
-          $btnLabel = $setupSt === 'error' ? 'Continuar setup' : ($setupSt === 'ready' ? 'Re-inicializar' : 'Inicializar servidor');
-          $btnStyle = $setupSt === 'error' ? 'background:#f59e0b;' : '';
+          $retomar   = $setupSt === 'error' ? 'true' : 'false';
+          $btnLabel  = $setupSt === 'error' ? 'Continuar setup' : ($setupSt === 'ready' ? 'Re-inicializar' : 'Inicializar servidor');
+          $btnColor  = $setupSt === 'error' ? 'background:#f59e0b;' : '';
         ?>
-        <button class="botao" type="button" style="<?php echo $btnStyle; ?>"
+        <button class="botao" type="button" style="<?php echo $btnColor; ?>"
           onclick="abrirSetupEditar(<?php echo (int)$servidor['id']; ?>,<?php echo View::e(json_encode((string)($servidor['hostname']??''))); ?>,<?php echo $retomar; ?>)">
           <?php echo View::e($btnLabel); ?>
         </button>
       <?php endif; ?>
-      <span class="texto" style="margin:0;opacity:.85;">Executa <code>docker version</code> no node.</span>
     </div>
   </div>
 
@@ -78,25 +61,26 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
     <input type="hidden" name="id" value="<?php echo View::e((string)($servidor['id'] ?? '')); ?>" />
 
+    <!-- Identificação -->
     <div class="grid">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Hostname</label>
-        <input class="input" type="text" name="hostname" value="<?php echo View::e((string)($servidor['hostname'] ?? '')); ?>" />
+        <input class="input" type="text" name="hostname" value="<?php echo View::e((string)($servidor['hostname'] ?? '')); ?>" placeholder="ex: node-01.lrvweb.com" />
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Status</label>
         <select class="input" name="status">
-          <option value="active" <?php echo ($servidor['status'] ?? '') === 'active' ? 'selected' : ''; ?>>Ativo</option>
+          <option value="active"      <?php echo ($servidor['status'] ?? '') === 'active'      ? 'selected' : ''; ?>>Ativo</option>
           <option value="maintenance" <?php echo ($servidor['status'] ?? '') === 'maintenance' ? 'selected' : ''; ?>>Manutenção</option>
-          <option value="inactive" <?php echo ($servidor['status'] ?? '') === 'inactive' ? 'selected' : ''; ?>>Inativo</option>
+          <option value="inactive"    <?php echo ($servidor['status'] ?? '') === 'inactive'    ? 'selected' : ''; ?>>Inativo</option>
         </select>
       </div>
     </div>
 
     <div class="grid" style="margin-top:12px;">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">IP</label>
-        <input class="input" type="text" name="ip_address" value="<?php echo View::e((string)($servidor['ip_address'] ?? '')); ?>" />
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Endereço IP</label>
+        <input class="input" type="text" name="ip_address" value="<?php echo View::e((string)($servidor['ip_address'] ?? '')); ?>" placeholder="ex: 192.168.1.10" />
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Porta SSH</label>
@@ -104,24 +88,75 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
-    <div class="grid" style="margin-top:12px;">
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário SSH</label>
-        <input class="input" type="text" name="ssh_user" value="<?php echo View::e((string)($servidor['ssh_user'] ?? '')); ?>" />
+    <!-- Autenticação SSH -->
+    <div class="card-new" style="margin:14px 0 0 0;">
+      <div class="texto" style="margin:0 0 12px 0;"><strong>Autenticação SSH</strong></div>
+
+      <div style="display:flex;gap:16px;margin-bottom:14px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;">
+          <input type="radio" name="ssh_auth_type" value="password"
+            <?php echo $authType === 'password' ? 'checked' : ''; ?>
+            onchange="toggleAuthType('password')" />
+          Usuário e senha
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;">
+          <input type="radio" name="ssh_auth_type" value="key"
+            <?php echo $authType === 'key' ? 'checked' : ''; ?>
+            onchange="toggleAuthType('key')" />
+          Chave SSH
+        </label>
       </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Identificador da chave SSH</label>
-        <input class="input" type="text" name="ssh_key_id" value="<?php echo View::e((string)($servidor['ssh_key_id'] ?? '')); ?>" />
-        <p class="texto" style="font-size:13px;margin-top:8px;">Arquivo dentro do diretório base configurado em <strong>/equipe/configuracoes</strong>.</p>
+
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário SSH</label>
+          <input class="input" type="text" name="ssh_user" value="<?php echo View::e((string)($servidor['ssh_user'] ?? 'root')); ?>" />
+        </div>
+
+        <!-- Senha -->
+        <div id="field-password" style="<?php echo $authType !== 'password' ? 'display:none;' : ''; ?>">
+          <label style="display:block;font-size:13px;margin-bottom:6px;">
+            Senha SSH<?php echo $id ? ' <span style="opacity:.6;font-weight:400;">(deixe em branco para manter)</span>' : ''; ?>
+          </label>
+          <input class="input" type="password" name="ssh_password" value="" autocomplete="new-password" />
+        </div>
+
+        <!-- Chave -->
+        <div id="field-key" style="<?php echo $authType !== 'key' ? 'display:none;' : ''; ?>">
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Identificador da chave SSH</label>
+          <input class="input" type="text" name="ssh_key_id" value="<?php echo View::e((string)($servidor['ssh_key_id'] ?? '')); ?>" placeholder="ex: node-01" />
+          <p class="texto" style="font-size:12px;margin-top:6px;">Nome do arquivo dentro do diretório configurado em <strong>/equipe/configuracoes</strong>.</p>
+        </div>
       </div>
     </div>
 
+    <!-- Sudo -->
     <div class="card-new" style="margin:12px 0 0 0;">
-      <div class="texto" style="margin:0 0 10px 0;"><strong>Terminal seguro (clientes)</strong></div>
-      <div class="texto" style="margin:0;opacity:.9;font-size:13px;">
-        Usado para abrir sessões de terminal do cliente dentro do contêiner via <code>ForceCommand</code>.
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+          <input type="checkbox" name="use_sudo" value="1" id="chk-sudo"
+            <?php echo !empty($servidor['use_sudo']) ? 'checked' : ''; ?>
+            onchange="toggleSudo(this.checked)" />
+          <strong>Usar sudo</strong>
+        </label>
+        <span class="texto" style="margin:0;font-size:13px;opacity:.8;">Marque se o usuário SSH não é root e precisa de sudo para instalar pacotes.</span>
       </div>
-      <div class="grid" style="margin-top:12px;">
+
+      <div id="sudo-fields" style="<?php echo empty($servidor['use_sudo']) ? 'display:none;' : ''; ?>">
+        <label style="display:block;font-size:13px;margin-bottom:6px;">
+          Senha do sudo<?php echo $id ? ' <span style="opacity:.6;font-weight:400;">(deixe em branco para usar a mesma senha SSH)</span>' : ''; ?>
+        </label>
+        <input class="input" type="password" name="sudo_password" value="" autocomplete="new-password"
+          placeholder="Deixe em branco para usar a mesma senha SSH" style="max-width:400px;" />
+        <p class="texto" style="font-size:12px;margin-top:6px;opacity:.8;">
+          Se o sudo não pede senha (NOPASSWD), deixe em branco também.
+        </p>
+      </div>
+    </div>
+    <div class="card-new" style="margin:12px 0 0 0;">
+      <div class="texto" style="margin:0 0 8px 0;"><strong>Terminal seguro (clientes)</strong></div>
+      <p class="texto" style="margin:0 0 10px 0;font-size:13px;opacity:.9;">Sessões de terminal do cliente via <code>ForceCommand</code>.</p>
+      <div class="grid">
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário SSH do terminal</label>
           <input class="input" type="text" name="terminal_ssh_user" value="<?php echo View::e((string)($servidor['terminal_ssh_user'] ?? 'lrv-terminal')); ?>" />
@@ -129,35 +164,36 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Identificador da chave do terminal</label>
           <input class="input" type="text" name="terminal_ssh_key_id" value="<?php echo View::e((string)($servidor['terminal_ssh_key_id'] ?? '')); ?>" />
-          <p class="texto" style="font-size:13px;margin-top:8px;">Deixe em branco para desativar terminal seguro neste node.</p>
+          <p class="texto" style="font-size:12px;margin-top:6px;">Deixe em branco para desativar terminal seguro neste node.</p>
         </div>
       </div>
       <?php if (!empty($servidor['id'])): ?>
-        <div style="margin-top:12px;">
-          <a class="botao" href="/equipe/servidores/terminal-seguro?id=<?php echo (int)($servidor['id'] ?? 0); ?>">Passo-a-passo de configuração no node</a>
+        <div style="margin-top:10px;">
+          <a class="botao" href="/equipe/servidores/terminal-seguro?id=<?php echo (int)$servidor['id']; ?>">Passo-a-passo no node</a>
         </div>
       <?php endif; ?>
     </div>
 
+    <!-- Capacidade -->
     <div class="grid" style="margin-top:12px;">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">CPU total</label>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">CPU total (vCPUs)</label>
         <input class="input" type="number" name="cpu_total" value="<?php echo View::e((string)($servidor['cpu_total'] ?? '')); ?>" min="1" />
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Memória total (MB)</label>
         <input class="input" type="number" name="ram_total" value="<?php echo View::e((string)($servidor['ram_total'] ?? '')); ?>" min="256" />
-        <p class="texto" style="font-size:13px;margin-top:8px;">Exemplo: 65536 = 64 GB</p>
+        <p class="texto" style="font-size:12px;margin-top:6px;">Ex: 65536 = 64 GB</p>
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Armazenamento total (MB)</label>
         <input class="input" type="number" name="storage_total" value="<?php echo View::e((string)($servidor['storage_total'] ?? '')); ?>" min="1024" />
-        <p class="texto" style="font-size:13px;margin-top:8px;">Exemplo: 1024000 = 1000 GB</p>
+        <p class="texto" style="font-size:12px;margin-top:6px;">Ex: 1024000 = 1 TB</p>
       </div>
     </div>
 
-    <div style="margin-top:14px;">
-      <button class="botao" type="submit">Salvar</button>
+    <div style="margin-top:16px;">
+      <button class="botao" type="submit">Salvar servidor</button>
     </div>
   </form>
 </div>
@@ -184,6 +220,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 </div>
 
 <script>
+function toggleAuthType(tipo) {
+    document.getElementById('field-password').style.display = tipo === 'password' ? '' : 'none';
+    document.getElementById('field-key').style.display      = tipo === 'key'      ? '' : 'none';
+}
+
+function toggleSudo(checked) {
+    document.getElementById('sudo-fields').style.display = checked ? '' : 'none';
+}
+
 var _setupId = 0, _setupRunning = false;
 
 function abrirSetupEditar(id, hostname, retomar) {
@@ -192,7 +237,7 @@ function abrirSetupEditar(id, hostname, retomar) {
     document.getElementById('setup-log').textContent = retomar ? 'Modo: continuar de onde parou.\n' : 'Clique para iniciar.\n';
     document.getElementById('setup-progress-bar').style.width = '0%';
     document.getElementById('setup-progress-txt').textContent = 'Aguardando início…';
-    document.getElementById('btn-iniciar-setup').style.display = retomar ? 'none' : '';
+    document.getElementById('btn-iniciar-setup').style.display  = retomar ? 'none' : '';
     document.getElementById('btn-continuar-setup').style.display = retomar ? '' : 'none';
     document.getElementById('btn-fechar-x').style.display = '';
     document.getElementById('modal-setup').style.display = 'flex';
