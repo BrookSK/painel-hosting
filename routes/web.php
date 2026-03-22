@@ -284,6 +284,13 @@ $roteador->post('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 
 // Onboarding
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
+// Soluções (landing pages públicas)
+$roteador->get('/solucoes/vps', [\LRV\App\Controllers\SolucoesController::class, 'vps']);
+$roteador->get('/solucoes/aplicacoes', [\LRV\App\Controllers\SolucoesController::class, 'aplicacoes']);
+$roteador->get('/solucoes/devops', [\LRV\App\Controllers\SolucoesController::class, 'devops']);
+$roteador->get('/solucoes/email', [\LRV\App\Controllers\SolucoesController::class, 'email']);
+$roteador->get('/solucoes/seguranca', [\LRV\App\Controllers\SolucoesController::class, 'seguranca']);
+
 // Páginas públicas legais e changelog
 $roteador->get('/termos', [LegalController::class, 'termos']);
 $roteador->get('/privacidade', [LegalController::class, 'privacidade']);
