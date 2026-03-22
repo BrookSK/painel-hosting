@@ -49,7 +49,7 @@ a{text-decoration:none}a:hover{text-decoration:none}
 <section class="lp-section lp-problema">
   <div class="lp-wrap">
     <div class="lp-two-col">
-      <div class="lp-col-icon">😩</div>
+      <div class="lp-col-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,100,100,.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
       <div>
         <h2><?php echo View::e(I18n::t("sol.{$_p}_problema_titulo")); ?></h2>
         <p><?php echo View::e(I18n::t("sol.{$_p}_problema_desc")); ?></p>
@@ -67,7 +67,7 @@ a{text-decoration:none}a:hover{text-decoration:none}
         <p><?php echo View::e(I18n::t("sol.{$_p}_solucao_desc")); ?></p>
         <a href="<?php echo View::e($_cta); ?>" class="lp-btn primary" style="margin-top:24px"><?php echo View::e(I18n::t("sol.{$_p}_cta")); ?></a>
       </div>
-      <div class="lp-col-icon">✅</div>
+      <div class="lp-col-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
     </div>
   </div>
 </section>
@@ -79,7 +79,7 @@ a{text-decoration:none}a:hover{text-decoration:none}
     <div class="lp-grid-3">
       <?php for ($i = 1; $i <= 6; $i++): ?>
       <div class="lp-card">
-        <div class="lp-card-check">✔</div>
+        <div class="lp-card-check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         <h3><?php echo View::e(I18n::t("sol.{$_p}_b{$i}_titulo")); ?></h3>
         <p><?php echo View::e(I18n::t("sol.{$_p}_b{$i}_desc")); ?></p>
       </div>
@@ -161,8 +161,8 @@ a{text-decoration:none}a:hover{text-decoration:none}
 .lp-btn.outline{color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.2);background:none}
 
 /* Sections */
-.lp-section{padding:80px 0}
-.lp-section-label{text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#818cf8;margin-bottom:48px}
+.lp-section{padding:100px 0}
+.lp-section-label{text-align:center;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#818cf8;margin-bottom:56px}
 
 /* Two-col */
 .lp-two-col{display:flex;align-items:center;gap:48px}
@@ -207,7 +207,7 @@ a{text-decoration:none}a:hover{text-decoration:none}
 .lp-depoimento-autor span{font-size:12px;color:rgba(255,255,255,.4)}
 
 /* CTA Section */
-.lp-cta-section{padding:80px 20px;background:linear-gradient(135deg,rgba(79,70,229,.12),rgba(124,58,237,.08));border-top:1px solid rgba(79,70,229,.15);border-bottom:1px solid rgba(79,70,229,.15)}
+.lp-cta-section{padding:100px 20px;background:linear-gradient(135deg,rgba(79,70,229,.12),rgba(124,58,237,.08));border-top:1px solid rgba(79,70,229,.15);border-bottom:1px solid rgba(79,70,229,.15)}
 .lp-cta-section h2{font-size:clamp(24px,4vw,36px);font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
 .lp-cta-section p{font-size:16px;color:rgba(255,255,255,.5);max-width:500px;margin:0 auto}
 
