@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **1.7.0**
+> Versão atual: **1.8.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -51,6 +51,7 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0026b_legal_force.sq
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0026c_license_content.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0027_chat_files.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0028_app_templates.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0029_cookie_consents.sql
 ```
 
 ### 3. Configuração do banco
@@ -186,6 +187,27 @@ Ou via painel em `/equipe/inicializacao`.
 - Auditoria de sessões, upload/download de arquivos
 - Modo seguro configurável (bloqueia comandos perigosos)
 
+### Cookies e Consentimento (LGPD)
+- Banner de cookies com 3 opções: aceitar todos, rejeitar opcionais, configurar
+- Modal de configuração granular com 4 categorias: necessários, analytics, marketing, preferências
+- Persistência no navegador (cookie 12 meses) e no banco de dados (usuários logados)
+- `CookieConsentService` com `verificarPermissao('categoria')` para bloqueio condicional de scripts
+- Função JS `ckTemPermissao('analytics')` para carregar scripts apenas com consentimento
+- Endpoints `POST /cookies/consent` (CSRF + rate limit) e `GET /cookies/consent`
+- Integrado à página `/privacidade` e ao footer público
+
+### Landing Pages de Soluções
+- 5 páginas de alta conversão em `/solucoes/` (VPS, Aplicações, DevOps, E-mail, Segurança)
+- Layout compartilhado com 8 seções: hero, problema, solução, benefícios, como funciona, prova social, CTA, FAQ
+- Copywriting profissional nos 3 idiomas, focado em decisores (CEOs, gestores)
+- Design gradiente azul→roxo, responsivo (mobile 1 col, tablet 2 col, desktop 3 col)
+
+### Mega Menu
+- Navbar pública com mega menus "Produtos" (4 colunas) e "Recursos" (4 colunas)
+- Desktop: hover com fade-in, 250ms delay no close
+- Mobile: drawer com accordion expandível
+- Links apontam para landing pages dedicadas em `/solucoes/`
+
 ### VPS / Provisioning
 - Jobs assíncronos: criar, parar, reiniciar, remover VPS
 - Seleção automática de node por capacidade disponível
@@ -225,6 +247,7 @@ app/
   Services/
     Billing/      # Asaas, Stripe
     Chat/         # WebSocket chat
+    Cookies/      # Consentimento LGPD
     Email/        # Mailcow
     Infra/        # SSH, NodeHealth
     Provisioning/ # Docker, VPS

@@ -28,7 +28,8 @@ mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026_legal_defaul
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026b_legal_force.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026c_license_content.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0027_chat_files.sql
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0028_app_templates.sql</pre>
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0028_app_templates.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0029_cookie_consents.sql</pre>
   <p style="font-size:13px;color:#64748b;margin-top:8px;">Ou via painel: <a href="/equipe/inicializacao">/equipe/inicializacao</a> → "Aplicar migrations".</p>
 
   <div class="section-title">2. Worker (Jobs)</div>
@@ -137,6 +138,40 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
     <li>Validação de propriedade (IDOR) — retorna 403 em todos os endpoints sensíveis</li>
     <li>Replay attack prevention nos webhooks Asaas e Stripe</li>
   </ul>
+
+  <div class="section-title">17. Cookies e Consentimento (LGPD)</div>
+  <p style="font-size:14px;color:#475569;">
+    Banner de cookies exibido automaticamente na primeira visita. O usuário pode aceitar todos, rejeitar opcionais ou configurar preferências granulares (necessários, analytics, marketing, preferências).
+  </p>
+  <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
+    <li>Persistência no navegador (cookie 12 meses) e no banco de dados (usuários logados)</li>
+    <li>Endpoints: <span class="badge-cmd">POST /cookies/consent</span> e <span class="badge-cmd">GET /cookies/consent</span></li>
+    <li>Função JS <span class="badge-cmd">ckTemPermissao('analytics')</span> para bloqueio condicional de scripts</li>
+    <li>Link "Cookies" no footer abre modal de preferências</li>
+    <li>Seção de cookies integrada à página <a href="/privacidade">/privacidade</a></li>
+  </ul>
+  <p style="font-size:13px;color:#64748b;">Requer migration <span class="badge-cmd">0029_cookie_consents.sql</span>.</p>
+
+  <div class="section-title">18. Landing Pages de Soluções</div>
+  <p style="font-size:14px;color:#475569;">
+    5 páginas de alta conversão em <code>/solucoes/</code>: VPS, Aplicações, DevOps, E-mail, Segurança.<br>
+    Layout compartilhado com 8 seções (hero, problema, solução, benefícios, como funciona, prova social, CTA, FAQ).<br>
+    Copywriting profissional nos 3 idiomas, focado em decisores.
+  </p>
+
+  <div class="section-title">19. Mega Menu</div>
+  <p style="font-size:14px;color:#475569;">
+    Navbar pública com mega menus "Produtos" (4 colunas) e "Recursos" (4 colunas).<br>
+    Desktop: hover com fade-in. Mobile: drawer com accordion.<br>
+    Links apontam para landing pages dedicadas em <code>/solucoes/</code>.
+  </p>
+
+  <div class="section-title">20. Internacionalização</div>
+  <p style="font-size:14px;color:#475569;">
+    Sistema traduzido em 3 idiomas: Português (pt-BR), Inglês (en-US), Espanhol (es-ES).<br>
+    Seletor de idioma disponível na navbar pública e nos painéis.<br>
+    Todas as strings usam <span class="badge-cmd">I18n::t('chave')</span> nas views.
+  </p>
 
 </div>
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>

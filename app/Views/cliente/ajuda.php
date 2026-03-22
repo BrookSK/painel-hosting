@@ -124,6 +124,11 @@ details ul{padding-left:18px;}
   <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_conta')); ?></div>
 
   <details>
+    <summary>Como gerenciar minhas preferências de cookies?</summary>
+    <p>Clique em "Cookies" no rodapé de qualquer página ou acesse a <a href="/privacidade#cookies">Política de Privacidade</a>. Você pode ativar ou desativar cookies de analytics, marketing e preferências a qualquer momento. Cookies necessários (sessão e segurança) não podem ser desativados.</p>
+  </details>
+
+  <details>
     <summary>Não consigo fazer login. O que fazer?</summary>
     <p>Verifique e-mail e senha. Após 10 tentativas incorretas, o IP é bloqueado por 30 minutos. Se esqueceu a senha, use <a href="/cliente/reset-senha">Esqueci minha senha</a>.</p>
   </details>

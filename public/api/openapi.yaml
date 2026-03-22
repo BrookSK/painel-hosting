@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: LRV Cloud Manager API
-  version: "1.7.0"
+  version: "1.8.0"
   description: |
     API interna do LRV Cloud Manager.
     Autenticação via sessão PHP (cookie de sessão).
@@ -30,6 +30,8 @@ tags:
     description: Status público do sistema
   - name: Webhooks
     description: Webhooks de gateways de pagamento
+  - name: Cookies
+    description: Consentimento de cookies (LGPD)
 
 paths:
   /equipe/entrar:
@@ -696,6 +698,37 @@ paths:
       responses:
         "200":
           description: Evento processado
+
+  /cookies/consent:
+    get:
+      tags: [Cookies]
+      summary: Obter preferências de cookies do usuário
+      responses:
+        "200":
+          description: Preferências atuais (ou null se não definidas)
+    post:
+      tags: [Cookies]
+      summary: Salvar preferências de cookies (LGPD)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                _csrf:
+                  type: string
+                analytics:
+                  type: string
+                marketing:
+                  type: string
+                preferences:
+                  type: string
+      responses:
+        "200":
+          description: Preferências salvas
+        "403":
+          description: Token CSRF inválido
 
 components:
   securitySchemes:

@@ -5,6 +5,36 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [1.8.0] — 2026-03-22
+
+### Adicionado
+- **Mega menu estilo DigitalOcean na navbar pública** — menus "Produtos" e "Recursos" com 4 colunas cada, hover com fade-in no desktop, drawer com accordion no mobile
+- **5 landing pages dedicadas em `/solucoes/`** — VPS, Aplicações, DevOps, E-mail, Segurança com layout de alta conversão (8 seções: hero, problema, solução, benefícios, como funciona, prova social, CTA, FAQ)
+- `SolucoesController` com 5 métodos e rotas públicas
+- Layout compartilhado `app/Views/solucoes/_layout.php` com design gradiente azul→roxo, cards responsivos e FAQ accordion
+- **Sistema de cookies e consentimento (LGPD)** — banner fixo no rodapé com 3 opções (aceitar todos, rejeitar opcionais, configurar)
+- Modal de configuração granular com toggles por categoria: necessários (sempre ativo), analytics, marketing, preferências
+- Tabela `cookie_consents` (migration `0029_cookie_consents.sql`) com user_id, session_id, IP, user_agent, preferences JSON
+- `CookieConsentService` com `salvarConsentimento()`, `obterConsentimento()`, `verificarPermissao()`
+- `CookieConsentController` com endpoints `POST /cookies/consent` (CSRF + rate limit) e `GET /cookies/consent`
+- Cookie `cookie_consent` no navegador com validade de 12 meses, `Secure`, `SameSite=Lax`
+- Função JS `ckTemPermissao('categoria')` para bloqueio condicional de scripts
+- Evento `cookieConsentUpdated` disparado ao salvar preferências
+- Link "Cookies" no footer público abre modal de preferências
+- Seção de cookies adicionada à página `/privacidade` com lista de categorias e link para configurar
+- Chaves i18n `cookies.*` nos 3 idiomas (pt-BR, en-US, es-ES)
+
+### Alterado
+- **Copywriting das landing pages refinado** — tom profissional para decisores (CEOs, gestores), sem linguagem informal, com mais autoridade e profundidade nos 3 idiomas
+- Emojis excessivos removidos do layout das landing pages (😩, ✅, ✔) — substituídos por ícones SVG discretos
+- Espaçamento entre seções das landing pages aumentado (80px → 100px)
+- Mega menu usa `position: fixed` para funcionar com scroll
+- Navbar pública reescrita com mega menus: Início, Produtos▾, Infraestrutura, Recursos▾, Planos, Status, Contato
+- Chaves `mega.*` adicionadas nos 3 idiomas (~50 chaves cada)
+- Chaves `sol.*` reescritas nos 3 idiomas com copy profissional focado em conversão
+
+---
+
 ## [1.7.0] — 2026-03-21
 
 ### Adicionado
