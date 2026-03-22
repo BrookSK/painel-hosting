@@ -21,20 +21,22 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 
     <div class="pn-links">
       <a href="/"><?php echo View::e(I18n::t('nav.inicio')); ?></a>
-      <a href="/infraestrutura"><?php echo View::e(I18n::t('nav.infraestrutura')); ?></a>
-      <a href="/infraestrutura#planos"><?php echo View::e(I18n::t('nav.planos')); ?></a>
-      <a href="/status"><?php echo View::e(I18n::t('nav.status')); ?></a>
-      <div class="pn-dropdown">
-        <button class="pn-dropdown-trigger" type="button"><?php echo View::e(I18n::t('nav.recursos')); ?> <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5 7.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <div class="pn-dropdown-menu">
-          <a href="/changelog"><span>📋</span> <?php echo View::e(I18n::t('nav.changelog')); ?></a>
-          <a href="/contato"><span>✉️</span> <?php echo View::e(I18n::t('nav.contato')); ?></a>
-          <div class="pn-dropdown-sep"></div>
-          <a href="/termos"><span>📄</span> <?php echo View::e(I18n::t('nav.termos')); ?></a>
-          <a href="/privacidade"><span>🔒</span> <?php echo View::e(I18n::t('nav.privacidade')); ?></a>
-          <a href="/licenca"><span>⚖️</span> <?php echo View::e(I18n::t('nav.licenca')); ?></a>
-        </div>
+
+      <!-- MEGA: Produtos -->
+      <div class="pn-mega-trigger" data-mega="produtos">
+        <button type="button"><?php echo View::e(I18n::t('nav.produtos')); ?> <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5 7.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
+
+      <a href="/infraestrutura"><?php echo View::e(I18n::t('nav.infraestrutura')); ?></a>
+
+      <!-- MEGA: Recursos -->
+      <div class="pn-mega-trigger" data-mega="recursos">
+        <button type="button"><?php echo View::e(I18n::t('nav.recursos')); ?> <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5 7.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+
+      <a href="/#planos"><?php echo View::e(I18n::t('nav.planos')); ?></a>
+      <a href="/status"><?php echo View::e(I18n::t('nav.status')); ?></a>
+      <a href="/contato"><?php echo View::e(I18n::t('nav.contato')); ?></a>
     </div>
 
     <div class="pn-actions">
@@ -48,15 +50,122 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
   </div>
 </nav>
 
-<!-- DRAWER MOBILE -->
+<!-- ══ MEGA MENU: PRODUTOS ══ -->
+<div class="pn-mega" id="megaProdutos">
+  <div class="pn-mega-inner">
+    <div class="pn-mega-col">
+      <h4>🏗️ <?php echo View::e(I18n::t('mega.prod_infra')); ?></h4>
+      <a href="/infraestrutura"><strong><?php echo View::e(I18n::t('mega.prod_vps')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_vps_desc')); ?></span></a>
+      <a href="/infraestrutura#planos"><strong><?php echo View::e(I18n::t('mega.prod_enterprise')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_enterprise_desc')); ?></span></a>
+      <a href="/infraestrutura"><strong><?php echo View::e(I18n::t('mega.prod_dedicado')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_dedicado_desc')); ?></span></a>
+    </div>
+    <div class="pn-mega-col">
+      <h4>📦 <?php echo View::e(I18n::t('mega.prod_apps')); ?></h4>
+      <a href="/cliente/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_wordpress')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_wordpress_desc')); ?></span></a>
+      <a href="/cliente/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_nodejs_desc')); ?></span></a>
+      <a href="/cliente/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_php')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_php_desc')); ?></span></a>
+      <a href="/cliente/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_python')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_python_desc')); ?></span></a>
+      <a href="/cliente/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_deploy')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_deploy_desc')); ?></span></a>
+    </div>
+    <div class="pn-mega-col">
+      <h4>⚙️ <?php echo View::e(I18n::t('mega.prod_devops')); ?></h4>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.prod_terminal')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_terminal_desc')); ?></span></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.prod_monitor')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_monitor_desc')); ?></span></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.prod_backups')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_backups_desc')); ?></span></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.prod_logs')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_logs_desc')); ?></span></a>
+    </div>
+    <div class="pn-mega-col">
+      <h4>💬 <?php echo View::e(I18n::t('mega.prod_comm')); ?></h4>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.prod_email')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_email_desc')); ?></span></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.prod_chat')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_chat_desc')); ?></span></a>
+      <a href="/contato"><strong><?php echo View::e(I18n::t('mega.prod_tickets')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_tickets_desc')); ?></span></a>
+    </div>
+  </div>
+  <div class="pn-mega-footer">
+    <a href="/infraestrutura"><?php echo View::e(I18n::t('mega.prod_ver_todos')); ?> →</a>
+  </div>
+</div>
+
+<!-- ══ MEGA MENU: RECURSOS ══ -->
+<div class="pn-mega pn-mega--recursos" id="megaRecursos">
+  <div class="pn-mega-inner">
+    <div class="pn-mega-col">
+      <h4>🚀 <?php echo View::e(I18n::t('mega.rec_perf')); ?></h4>
+      <a href="/#diferenciais"><strong><?php echo View::e(I18n::t('mega.rec_alta_disp')); ?></strong></a>
+      <a href="/#diferenciais"><strong><?php echo View::e(I18n::t('mega.rec_balanceamento')); ?></strong></a>
+    </div>
+    <div class="pn-mega-col">
+      <h4>🔐 <?php echo View::e(I18n::t('mega.rec_seg')); ?></h4>
+      <a href="/#diferenciais"><strong><?php echo View::e(I18n::t('mega.rec_isolamento')); ?></strong></a>
+      <a href="/#diferenciais"><strong><?php echo View::e(I18n::t('mega.rec_ddos')); ?></strong></a>
+      <a href="/#diferenciais"><strong><?php echo View::e(I18n::t('mega.rec_backups')); ?></strong></a>
+    </div>
+    <div class="pn-mega-col">
+      <h4>📊 <?php echo View::e(I18n::t('mega.rec_monit')); ?></h4>
+      <a href="/status"><strong><?php echo View::e(I18n::t('mega.rec_status')); ?></strong></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.rec_metricas')); ?></strong></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.rec_alertas')); ?></strong></a>
+    </div>
+    <div class="pn-mega-col">
+      <h4>🧑‍💻 <?php echo View::e(I18n::t('mega.rec_exp')); ?></h4>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.rec_painel')); ?></strong></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.rec_deploy')); ?></strong></a>
+      <a href="/#funcionalidades"><strong><?php echo View::e(I18n::t('mega.rec_cli')); ?></strong></a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DRAWER MOBILE ══ -->
 <div class="pn-drawer" id="pnDrawer">
   <a href="/"><?php echo View::e(I18n::t('nav.inicio')); ?></a>
+
+  <!-- Accordion: Produtos -->
+  <button class="pn-acc-toggle" type="button"><?php echo View::e(I18n::t('nav.produtos')); ?> <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="pn-acc-panel">
+    <span class="pn-acc-heading">🏗️ <?php echo View::e(I18n::t('mega.prod_infra')); ?></span>
+    <a href="/infraestrutura"><?php echo View::e(I18n::t('mega.prod_vps')); ?></a>
+    <a href="/infraestrutura#planos"><?php echo View::e(I18n::t('mega.prod_enterprise')); ?></a>
+    <a href="/infraestrutura"><?php echo View::e(I18n::t('mega.prod_dedicado')); ?></a>
+    <span class="pn-acc-heading">📦 <?php echo View::e(I18n::t('mega.prod_apps')); ?></span>
+    <a href="/cliente/aplicacoes"><?php echo View::e(I18n::t('mega.prod_wordpress')); ?></a>
+    <a href="/cliente/aplicacoes"><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></a>
+    <a href="/cliente/aplicacoes"><?php echo View::e(I18n::t('mega.prod_php')); ?></a>
+    <a href="/cliente/aplicacoes"><?php echo View::e(I18n::t('mega.prod_python')); ?></a>
+    <span class="pn-acc-heading">⚙️ <?php echo View::e(I18n::t('mega.prod_devops')); ?></span>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.prod_terminal')); ?></a>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.prod_monitor')); ?></a>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.prod_backups')); ?></a>
+    <span class="pn-acc-heading">💬 <?php echo View::e(I18n::t('mega.prod_comm')); ?></span>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.prod_email')); ?></a>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.prod_chat')); ?></a>
+    <a href="/contato"><?php echo View::e(I18n::t('mega.prod_tickets')); ?></a>
+  </div>
+
   <a href="/infraestrutura"><?php echo View::e(I18n::t('nav.infraestrutura')); ?></a>
-  <a href="/infraestrutura#planos"><?php echo View::e(I18n::t('nav.planos')); ?></a>
+
+  <!-- Accordion: Recursos -->
+  <button class="pn-acc-toggle" type="button"><?php echo View::e(I18n::t('nav.recursos')); ?> <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="pn-acc-panel">
+    <span class="pn-acc-heading">🚀 <?php echo View::e(I18n::t('mega.rec_perf')); ?></span>
+    <a href="/#diferenciais"><?php echo View::e(I18n::t('mega.rec_alta_disp')); ?></a>
+    <a href="/#diferenciais"><?php echo View::e(I18n::t('mega.rec_balanceamento')); ?></a>
+    <span class="pn-acc-heading">🔐 <?php echo View::e(I18n::t('mega.rec_seg')); ?></span>
+    <a href="/#diferenciais"><?php echo View::e(I18n::t('mega.rec_isolamento')); ?></a>
+    <a href="/#diferenciais"><?php echo View::e(I18n::t('mega.rec_ddos')); ?></a>
+    <span class="pn-acc-heading">📊 <?php echo View::e(I18n::t('mega.rec_monit')); ?></span>
+    <a href="/status"><?php echo View::e(I18n::t('mega.rec_status')); ?></a>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.rec_metricas')); ?></a>
+    <span class="pn-acc-heading">🧑‍💻 <?php echo View::e(I18n::t('mega.rec_exp')); ?></span>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.rec_painel')); ?></a>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.rec_deploy')); ?></a>
+    <a href="/#funcionalidades"><?php echo View::e(I18n::t('mega.rec_cli')); ?></a>
+  </div>
+
+  <a href="/#planos"><?php echo View::e(I18n::t('nav.planos')); ?></a>
   <a href="/status"><?php echo View::e(I18n::t('nav.status')); ?></a>
-  <a href="/changelog"><?php echo View::e(I18n::t('nav.changelog')); ?></a>
   <a href="/contato"><?php echo View::e(I18n::t('nav.contato')); ?></a>
   <div class="pn-drawer-sep"></div>
+  <a href="/changelog"><?php echo View::e(I18n::t('nav.changelog')); ?></a>
   <a href="/termos"><?php echo View::e(I18n::t('nav.termos')); ?></a>
   <a href="/privacidade"><?php echo View::e(I18n::t('nav.privacidade')); ?></a>
   <a href="/licenca"><?php echo View::e(I18n::t('nav.licenca')); ?></a>
@@ -79,20 +188,29 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 .pn-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
 .pn-links>a{color:rgba(255,255,255,.72);text-decoration:none;font-size:13.5px;font-weight:500;padding:6px 12px;border-radius:8px;transition:color .15s,background .15s}
 .pn-links>a:hover{color:#fff;background:rgba(255,255,255,.1)}
-</style>
-<style>
-/* ── Dropdown ── */
-.pn-dropdown{position:relative}
-.pn-dropdown-trigger{display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,.72);font-size:13.5px;font-weight:500;padding:6px 12px;border-radius:8px;background:none;border:none;cursor:pointer;transition:color .15s,background .15s}
-.pn-dropdown-trigger:hover{color:#fff;background:rgba(255,255,255,.1)}
-.pn-dropdown-trigger svg{transition:transform .2s}
-.pn-dropdown:hover .pn-dropdown-trigger svg{transform:rotate(180deg)}
-.pn-dropdown-menu{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);min-width:200px;background:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:8px;box-shadow:0 16px 48px rgba(0,0,0,.4);z-index:200}
-.pn-dropdown:hover .pn-dropdown-menu{display:block}
-.pn-dropdown-menu a{display:flex;align-items:center;gap:8px;padding:9px 12px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;transition:background .15s,color .15s}
-.pn-dropdown-menu a:hover{background:rgba(255,255,255,.08);color:#fff}
-.pn-dropdown-menu a span{font-size:15px;width:20px;text-align:center;flex-shrink:0}
-.pn-dropdown-sep{height:1px;background:rgba(255,255,255,.08);margin:6px 4px}
+
+/* ── Mega trigger (desktop) ── */
+.pn-mega-trigger{position:relative;display:inline-flex}
+.pn-mega-trigger button{display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,.72);font-size:13.5px;font-weight:500;padding:6px 12px;border-radius:8px;background:none;border:none;cursor:pointer;transition:color .15s,background .15s;font-family:inherit}
+.pn-mega-trigger button:hover,.pn-mega-trigger.active button{color:#fff;background:rgba(255,255,255,.1)}
+.pn-mega-trigger button svg{transition:transform .2s}
+.pn-mega-trigger.active button svg{transform:rotate(180deg)}
+
+/* ── Mega panel (desktop) ── */
+.pn-mega{display:none;position:absolute;top:60px;left:0;right:0;z-index:98;background:#0b1c3d;border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:megaFadeIn .2s ease}
+.pn-mega.open{display:block}
+@keyframes megaFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.pn-mega-inner{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:32px 20px 24px}
+.pn-mega-col{padding:0 20px;border-right:1px solid rgba(255,255,255,.06)}
+.pn-mega-col:last-child{border-right:none}
+.pn-mega-col h4{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin:0 0 14px;padding:0 8px}
+.pn-mega-col a{display:block;padding:8px;border-radius:8px;text-decoration:none;transition:background .15s;margin-bottom:2px}
+.pn-mega-col a:hover{background:rgba(255,255,255,.07)}
+.pn-mega-col a strong{display:block;color:#fff;font-size:13.5px;font-weight:600;line-height:1.3}
+.pn-mega-col a span{display:block;color:rgba(255,255,255,.45);font-size:12px;font-weight:400;margin-top:2px;line-height:1.35}
+.pn-mega-footer{max-width:1160px;margin:0 auto;padding:0 20px 20px;border-top:1px solid rgba(255,255,255,.06);padding-top:14px}
+.pn-mega-footer a{color:#818cf8;font-size:13px;font-weight:600;text-decoration:none;transition:color .15s}
+.pn-mega-footer a:hover{color:#a5b4fc}
 
 /* ── Actions ── */
 .pn-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -109,7 +227,7 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 .pn-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
 /* ── Drawer ── */
-.pn-drawer{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:rgba(6,13,31,.97);z-index:99;padding:24px 20px;flex-direction:column;gap:4px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pn-drawer{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:rgba(6,13,31,.97);z-index:99;padding:24px 20px;flex-direction:column;gap:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .pn-drawer.open{display:flex}
 .pn-drawer>a{color:rgba(255,255,255,.8);font-size:16px;font-weight:500;padding:14px 16px;border-radius:10px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .15s,color .15s;text-decoration:none}
 .pn-drawer>a:hover{background:rgba(255,255,255,.08);color:#fff}
@@ -119,13 +237,26 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 .pn-drawer-actions{display:flex;flex-direction:column;gap:10px;margin-top:12px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
 .pn-drawer-actions .pn-btn{text-align:center;justify-content:center;font-weight:700;padding:14px 16px;border-radius:10px}
 
+/* ── Accordion (mobile drawer) ── */
+.pn-acc-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;color:rgba(255,255,255,.8);font-size:16px;font-weight:500;padding:14px 16px;border:none;border-bottom:1px solid rgba(255,255,255,.06);background:none;cursor:pointer;font-family:inherit;text-align:left}
+.pn-acc-toggle svg{transition:transform .25s;flex-shrink:0}
+.pn-acc-toggle.open svg{transform:rotate(180deg)}
+.pn-acc-panel{display:none;padding:4px 0 8px 12px}
+.pn-acc-panel.open{display:block}
+.pn-acc-heading{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:10px 16px 4px;margin-top:4px}
+.pn-acc-panel a{display:block;color:rgba(255,255,255,.7);font-size:14.5px;font-weight:500;padding:10px 16px;border-radius:8px;text-decoration:none;transition:background .15s,color .15s}
+.pn-acc-panel a:hover{background:rgba(255,255,255,.08);color:#fff}
+
 /* ── Responsive ── */
 @media(max-width:1024px){
   .pn-links>a{padding:6px 8px;font-size:12.5px}
-  .pn-dropdown-trigger{padding:6px 8px;font-size:12.5px}
+  .pn-mega-trigger button{padding:6px 8px;font-size:12.5px}
+  .pn-mega-inner{grid-template-columns:repeat(2,1fr);gap:20px 0}
+  .pn-mega-col:nth-child(2){border-right:none}
 }
 @media(max-width:768px){
   .pn-links{display:none}
+  .pn-mega{display:none!important}
   .pn-actions>.pn-btn.ghost{display:none}
   .pn-actions>.pn-btn.solid{display:none}
   .pn-hamburger{display:flex}
@@ -135,16 +266,69 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 
 <script>
 (function(){
+  /* ── Hamburger / Drawer ── */
   var ham=document.getElementById('pnHamburger'),dr=document.getElementById('pnDrawer');
-  if(!ham||!dr)return;
-  ham.addEventListener('click',function(){
-    var open=dr.classList.toggle('open');
-    ham.classList.toggle('open',open);
-    document.body.style.overflow=open?'hidden':'';
+  if(ham&&dr){
+    ham.addEventListener('click',function(){
+      var open=dr.classList.toggle('open');
+      ham.classList.toggle('open',open);
+      document.body.style.overflow=open?'hidden':'';
+    });
+    dr.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click',function(){dr.classList.remove('open');ham.classList.remove('open');document.body.style.overflow='';});
+    });
+  }
+
+  /* ── Mega menus (desktop hover) ── */
+  var megaMap={'produtos':'megaProdutos','recursos':'megaRecursos'};
+  var triggers=document.querySelectorAll('.pn-mega-trigger');
+  var closeTimer=null;
+
+  function closeAll(){
+    triggers.forEach(function(t){t.classList.remove('active')});
+    Object.values(megaMap).forEach(function(id){
+      var el=document.getElementById(id);if(el)el.classList.remove('open');
+    });
+  }
+
+  function openMega(key){
+    if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}
+    closeAll();
+    var panel=document.getElementById(megaMap[key]);
+    if(!panel)return;
+    panel.classList.add('open');
+    var trig=document.querySelector('[data-mega="'+key+'"]');
+    if(trig)trig.classList.add('active');
+  }
+
+  triggers.forEach(function(trig){
+    var key=trig.getAttribute('data-mega');
+    trig.addEventListener('mouseenter',function(){openMega(key);});
+    trig.addEventListener('mouseleave',function(){
+      closeTimer=setTimeout(closeAll,250);
+    });
   });
-  dr.querySelectorAll('a').forEach(function(a){
-    a.addEventListener('click',function(){
-      dr.classList.remove('open');ham.classList.remove('open');document.body.style.overflow='';
+
+  Object.values(megaMap).forEach(function(id){
+    var panel=document.getElementById(id);
+    if(!panel)return;
+    panel.addEventListener('mouseenter',function(){if(closeTimer){clearTimeout(closeTimer);closeTimer=null;}});
+    panel.addEventListener('mouseleave',function(){closeTimer=setTimeout(closeAll,250);});
+  });
+
+  /* close mega on click outside */
+  document.addEventListener('click',function(e){
+    var inTrigger=e.target.closest('.pn-mega-trigger');
+    var inPanel=e.target.closest('.pn-mega');
+    if(!inTrigger&&!inPanel)closeAll();
+  });
+
+  /* ── Accordion (mobile) ── */
+  document.querySelectorAll('.pn-acc-toggle').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var panel=btn.nextElementSibling;
+      var isOpen=panel.classList.toggle('open');
+      btn.classList.toggle('open',isOpen);
     });
   });
 })();
