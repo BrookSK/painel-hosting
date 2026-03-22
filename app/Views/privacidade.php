@@ -51,6 +51,16 @@ use LRV\Core\SistemaConfig;
         <h1><?php echo View::e(I18n::t('privacidade.titulo')); ?></h1>
         <p><?php echo View::e(I18n::t('privacidade.vazio')); ?></p>
       <?php endif; ?>
+
+      <h2 id="cookies"><?php echo View::e(I18n::t('cookies.titulo')); ?></h2>
+      <p><?php echo View::e(I18n::t('cookies.privacidade_texto')); ?></p>
+      <ul>
+        <li><strong><?php echo View::e(I18n::t('cookies.cat_necessarios')); ?></strong> — <?php echo View::e(I18n::t('cookies.cat_necessarios_desc')); ?></li>
+        <li><strong><?php echo View::e(I18n::t('cookies.cat_analytics')); ?></strong> — <?php echo View::e(I18n::t('cookies.cat_analytics_desc')); ?></li>
+        <li><strong><?php echo View::e(I18n::t('cookies.cat_marketing')); ?></strong> — <?php echo View::e(I18n::t('cookies.cat_marketing_desc')); ?></li>
+        <li><strong><?php echo View::e(I18n::t('cookies.cat_preferencias')); ?></strong> — <?php echo View::e(I18n::t('cookies.cat_preferencias_desc')); ?></li>
+      </ul>
+      <p><a href="#" onclick="ckAbrirModal();return false" style="color:#4F46E5;font-weight:600"><?php echo View::e(I18n::t('cookies.configurar')); ?></a></p>
     </div>
   </div>
 

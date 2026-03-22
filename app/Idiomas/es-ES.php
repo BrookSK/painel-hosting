@@ -267,6 +267,27 @@ return [
     'footer.privacidade' => 'Privacidad',
     'footer.licenca' => 'Licencia de uso',
     'footer.sistemas_op' => 'Todos los sistemas operativos',
+    'footer.cookies' => 'Cookies',
+
+    // ── Cookies / Consentimiento ──
+    'cookies.titulo' => 'Utilizamos cookies',
+    'cookies.descricao' => 'Este sitio utiliza cookies para mejorar su experiencia de navegacion. Puede aceptar todas, rechazar las opcionales o configurar sus preferencias.',
+    'cookies.saiba_mais' => 'Mas informacion',
+    'cookies.aceitar_todos' => 'Aceptar todas',
+    'cookies.rejeitar_opcionais' => 'Rechazar opcionales',
+    'cookies.configurar' => 'Configurar',
+    'cookies.config_titulo' => 'Preferencias de cookies',
+    'cookies.config_desc' => 'Elija que categorias de cookies desea permitir. Las cookies necesarias estan siempre activas para garantizar el funcionamiento del sistema.',
+    'cookies.cat_necessarios' => 'Necesarias',
+    'cookies.cat_necessarios_desc' => 'Esenciales para autenticacion, sesion y seguridad. No se pueden desactivar.',
+    'cookies.cat_analytics' => 'Analytics',
+    'cookies.cat_analytics_desc' => 'Nos ayudan a entender como se utiliza el sitio para mejorar la experiencia.',
+    'cookies.cat_marketing' => 'Marketing',
+    'cookies.cat_marketing_desc' => 'Utilizadas para mostrar contenido relevante y medir campanas.',
+    'cookies.cat_preferencias' => 'Preferencias',
+    'cookies.cat_preferencias_desc' => 'Almacenan configuraciones como idioma y tema elegido.',
+    'cookies.salvar_prefs' => 'Guardar preferencias',
+    'cookies.privacidade_texto' => 'Utilizamos cookies para garantizar el funcionamiento del sistema, mejorar la experiencia de navegacion y, cuando se autoriza, analizar el uso del sitio. Puede gestionar sus preferencias en cualquier momento.',
 
     // ── Estado público ──
     'status.todos_operacionais' => 'Todos los sistemas operativos',

@@ -7,6 +7,7 @@ $_ft_copyright = SistemaConfig::copyrightText();
 $_ft_nome      = SistemaConfig::nome();
 ?>
 <?php require __DIR__ . '/chat-widget.php'; ?>
+<?php require __DIR__ . '/cookie-banner.php'; ?>
 <footer class="pub-footer">
   <div class="pub-footer-inner">
     <div class="pub-footer-grid">
@@ -37,6 +38,7 @@ $_ft_nome      = SistemaConfig::nome();
           <li><a href="/termos"><?php echo View::e(I18n::t('footer.termos')); ?></a></li>
           <li><a href="/privacidade"><?php echo View::e(I18n::t('footer.privacidade')); ?></a></li>
           <li><a href="/licenca"><?php echo View::e(I18n::t('footer.licenca')); ?></a></li>
+          <li><a href="#" onclick="ckAbrirModal();return false"><?php echo View::e(I18n::t('footer.cookies')); ?></a></li>
         </ul>
       </div>
     </div>

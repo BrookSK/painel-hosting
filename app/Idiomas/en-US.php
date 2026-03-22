@@ -267,6 +267,27 @@ return [
     'footer.privacidade' => 'Privacy',
     'footer.licenca' => 'License',
     'footer.sistemas_op' => 'All systems operational',
+    'footer.cookies' => 'Cookies',
+
+    // ── Cookies / Consent ──
+    'cookies.titulo' => 'We use cookies',
+    'cookies.descricao' => 'This site uses cookies to improve your browsing experience. You can accept all, reject optional cookies, or configure your preferences.',
+    'cookies.saiba_mais' => 'Learn more',
+    'cookies.aceitar_todos' => 'Accept all',
+    'cookies.rejeitar_opcionais' => 'Reject optional',
+    'cookies.configurar' => 'Configure',
+    'cookies.config_titulo' => 'Cookie preferences',
+    'cookies.config_desc' => 'Choose which cookie categories you want to allow. Necessary cookies are always active to ensure the system works properly.',
+    'cookies.cat_necessarios' => 'Necessary',
+    'cookies.cat_necessarios_desc' => 'Essential for authentication, session, and security. Cannot be disabled.',
+    'cookies.cat_analytics' => 'Analytics',
+    'cookies.cat_analytics_desc' => 'Help us understand how the site is used to improve the experience.',
+    'cookies.cat_marketing' => 'Marketing',
+    'cookies.cat_marketing_desc' => 'Used to display relevant content and measure campaigns.',
+    'cookies.cat_preferencias' => 'Preferences',
+    'cookies.cat_preferencias_desc' => 'Store settings such as language and chosen theme.',
+    'cookies.salvar_prefs' => 'Save preferences',
+    'cookies.privacidade_texto' => 'We use cookies to ensure the system works properly, improve the browsing experience, and, when authorized, analyze site usage. You can manage your preferences at any time.',
 
     // ── Public Status ──
     'status.todos_operacionais' => 'All systems operational',

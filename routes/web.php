@@ -308,3 +308,7 @@ $roteador->post('/equipe/erros/limpar-resolvidos', [ErrosController::class, 'lim
 $roteador->get('/equipe/satisfacao', [SatisfacaoController::class, 'index'], [Middlewares::exigirPermissao('view_tickets')]);
 $roteador->get('/cliente/avaliar', [AvaliacaoController::class, 'formulario'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/avaliar', [AvaliacaoController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('avaliacao', 10, 60)]);
+
+// Cookies / Consentimento (LGPD)
+$roteador->post('/cookies/consent', [\LRV\App\Controllers\CookieConsentController::class, 'salvar'], [Middlewares::rateLimitIp('cookie_consent', 20, 60)]);
+$roteador->get('/cookies/consent', [\LRV\App\Controllers\CookieConsentController::class, 'obter']);
