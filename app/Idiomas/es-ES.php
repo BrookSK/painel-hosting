@@ -515,6 +515,7 @@ return [
     'apps.vps_necessaria' => 'Necesitas una VPS activa para instalar aplicaciones.',
     'apps.voltar_painel' => 'Volver al panel',
     'apps.minhas_apps' => 'Mis aplicaciones',
+    'apps.roundcube_aviso' => 'Roundcube se instalará en su VPS y consumirá recursos (CPU, RAM, disco). Al instalar, el webmail predeterminado del sistema será reemplazado por Roundcube para sus dominios.',
     'apps.catalogo_btn' => 'Catalogo - Instalar nueva',
     'apps.selecione_vps' => 'VPS',
     'apps.dominio' => 'Dominio',
@@ -627,6 +628,7 @@ return [
     'cat.database' => 'Base de Datos',
     'cat.webserver' => 'Servidor Web',
     'cat.dev' => 'Desarrollo',
+    'cat.email' => 'Correo',
     'cat.other' => 'Otros',
 
     // ── Equipo ──

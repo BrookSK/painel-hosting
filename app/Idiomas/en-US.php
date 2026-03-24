@@ -515,6 +515,7 @@ return [
     'apps.vps_necessaria' => 'You need an active VPS to install applications.',
     'apps.voltar_painel' => 'Back to dashboard',
     'apps.minhas_apps' => '← My applications',
+    'apps.roundcube_aviso' => 'Roundcube will be installed on your VPS and will consume resources (CPU, RAM, disk). Once installed, the default webmail will be replaced by Roundcube for your domains.',
     'apps.catalogo_btn' => '📦 Catalog — Install new',
     'apps.selecione_vps' => 'VPS',
     'apps.dominio' => 'Domain',
@@ -627,6 +628,7 @@ return [
     'cat.database' => 'Database',
     'cat.webserver' => 'Web Server',
     'cat.dev' => 'Development',
+    'cat.email' => 'Email',
     'cat.other' => 'Other',
 
     // ── Team ──

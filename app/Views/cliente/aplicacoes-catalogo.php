@@ -44,7 +44,7 @@ $csrf = Csrf::token();
       $cat = (string)($t['category'] ?? 'other');
       $categorias[$cat][] = $t;
   }
-  $catLabels = ['cms'=>I18n::t('cat.cms'),'backend'=>I18n::t('cat.backend'),'database'=>I18n::t('cat.database'),'webserver'=>I18n::t('cat.webserver'),'dev'=>I18n::t('cat.dev'),'other'=>I18n::t('cat.other')];
+  $catLabels = ['cms'=>I18n::t('cat.cms'),'backend'=>I18n::t('cat.backend'),'database'=>I18n::t('cat.database'),'webserver'=>I18n::t('cat.webserver'),'dev'=>I18n::t('cat.dev'),'email'=>I18n::t('cat.email'),'other'=>I18n::t('cat.other')];
 ?>
 
 <?php foreach ($categorias as $cat => $items): ?>
@@ -67,6 +67,7 @@ $csrf = Csrf::token();
 <div class="install-modal-bg" id="installBg">
   <div class="install-modal">
     <h3 id="installTitle">Instalar aplicação</h3>
+    <div id="installWarning" style="display:none;background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:14px;"></div>
     <form id="installForm" onsubmit="return doInstall(event)">
       <input type="hidden" name="_csrf" value="<?php echo View::e($csrf); ?>" />
       <input type="hidden" name="template_id" id="fTplId" />
@@ -112,6 +113,11 @@ function openInstall(id,tpl){
   document.getElementById('installTitle').textContent='Instalar '+tpl.name;
   document.getElementById('fDomainWrap').style.display=parseInt(tpl.requires_domain)?'':'none';
   document.getElementById('fRepoWrap').style.display=parseInt(tpl.requires_repo)?'':'none';
+  var warn=document.getElementById('installWarning');
+  if(tpl.slug==='roundcube'){
+    warn.innerHTML='⚠️ <?php echo View::e(I18n::t('apps.roundcube_aviso')); ?>';
+    warn.style.display='';
+  }else{warn.style.display='none';}
   var envVars=tpl.environment_variables;
   if(envVars&&typeof envVars==='string')try{envVars=JSON.parse(envVars);}catch(e){envVars=null;}
   if(envVars&&typeof envVars==='object'&&Object.keys(envVars).length>0){

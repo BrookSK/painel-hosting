@@ -89,6 +89,17 @@ final class AppInstallService
             (string) ($app['environment_json'] ?? '')
         );
 
+        // Roundcube: injetar host do Mailcow das configurações do sistema
+        if ($slug === 'roundcube') {
+            $mailcowHost = parse_url(rtrim((string) Settings::obter('email.mailcow_url', ''), '/'), PHP_URL_HOST) ?: '';
+            if ($mailcowHost !== '') {
+                $envVars['ROUNDCUBEMAIL_DEFAULT_HOST'] = 'ssl://' . $mailcowHost;
+                $envVars['ROUNDCUBEMAIL_SMTP_SERVER'] = 'tls://' . $mailcowHost;
+            }
+            if (empty($envVars['ROUNDCUBEMAIL_DEFAULT_PORT'])) $envVars['ROUNDCUBEMAIL_DEFAULT_PORT'] = '993';
+            if (empty($envVars['ROUNDCUBEMAIL_SMTP_PORT'])) $envVars['ROUNDCUBEMAIL_SMTP_PORT'] = '587';
+        }
+
         $cmd = 'docker run -d'
             . ' --name ' . escapeshellarg($nomeContainer)
             . ' --network ' . escapeshellarg($rede)
@@ -139,6 +150,16 @@ final class AppInstallService
         $containerId = substr($out, 0, 12);
         $pdo->prepare("UPDATE applications SET status = 'running', container_id = :c, logs = :l WHERE id = :id")
             ->execute([':c' => $containerId, ':l' => 'Instalação concluída em ' . date('Y-m-d H:i:s'), ':id' => $applicationId]);
+
+        // Roundcube: atualizar webmail do cliente para usar o Roundcube
+        if ($slug === 'roundcube') {
+            $clientId = (int) ($app['client_id'] ?? 0);
+            if ($clientId > 0) {
+                $pdo->prepare('UPDATE client_domains SET webmail_app_id = :a WHERE client_id = :c AND status = "active"')
+                    ->execute([':a' => $applicationId, ':c' => $clientId]);
+                $log('Webmail do cliente atualizado para Roundcube.');
+            }
+        }
 
         $log('Instalação concluída. Container: ' . $containerId);
     }

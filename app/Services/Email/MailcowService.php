@@ -546,12 +546,37 @@ final class MailcowService
     public function webmailUrlParaDominio(string $domain): string
     {
         $pdo  = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT webmail_enabled, webmail_verified FROM client_domains WHERE domain = :d LIMIT 1');
+        $stmt = $pdo->prepare('SELECT webmail_enabled, webmail_verified, webmail_app_id FROM client_domains WHERE domain = :d LIMIT 1');
         $stmt->execute([':d' => $domain]);
         $row = $stmt->fetch();
 
-        if (is_array($row) && (int) $row['webmail_enabled'] === 1 && (int) $row['webmail_verified'] === 1) {
-            return 'https://webmail.' . $domain . '/SOGo';
+        if (is_array($row)) {
+            // Roundcube instalado — usar IP:porta do container
+            $appId = (int) ($row['webmail_app_id'] ?? 0);
+            if ($appId > 0) {
+                $aStmt = $pdo->prepare("SELECT port FROM applications WHERE id = :id AND status = 'running' LIMIT 1");
+                $aStmt->execute([':id' => $appId]);
+                $app = $aStmt->fetch();
+                if (is_array($app)) {
+                    // Roundcube roda na VPS do cliente, acessível via IP do servidor + porta
+                    $vStmt = $pdo->prepare(
+                        'SELECT s.ip_address FROM applications a
+                         JOIN vps v ON v.id = a.vps_id
+                         JOIN servers s ON s.id = v.server_id
+                         WHERE a.id = :id LIMIT 1'
+                    );
+                    $vStmt->execute([':id' => $appId]);
+                    $srv = $vStmt->fetch();
+                    if (is_array($srv)) {
+                        return 'http://' . $srv['ip_address'] . ':' . $app['port'];
+                    }
+                }
+            }
+
+            // Webmail personalizado via CNAME
+            if ((int) ($row['webmail_enabled'] ?? 0) === 1 && (int) ($row['webmail_verified'] ?? 0) === 1) {
+                return 'https://webmail.' . $domain . '/SOGo';
+            }
         }
 
         return $this->webmailUrl();
