@@ -311,7 +311,7 @@ final class ServerSetupService
             $monitoringToken = bin2hex(random_bytes(32));
             Settings::definir('monitoring.token', $monitoringToken);
         }
-        $baseUrl = rtrim(trim((string)Settings::obter('app.base_url', '')), '/');
+        $baseUrl = rtrim(trim((string)Settings::obter('app.url_base', '')), '/');
         $serverId = (int)($srv['id'] ?? 0);
 
         $monitorScript = <<<BASH

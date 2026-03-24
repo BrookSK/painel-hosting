@@ -315,3 +315,6 @@ $roteador->post('/cliente/avaliar', [AvaliacaoController::class, 'salvar'], [Mid
 // Cookies / Consentimento (LGPD)
 $roteador->post('/cookies/consent', [\LRV\App\Controllers\CookieConsentController::class, 'salvar'], [Middlewares::rateLimitIp('cookie_consent', 20, 60)]);
 $roteador->get('/cookies/consent', [\LRV\App\Controllers\CookieConsentController::class, 'obter']);
+
+// API — Métricas de monitoramento (recebe dados dos servidores)
+$roteador->post('/api/metrics/servers', [\LRV\App\Controllers\Api\MetricsController::class, 'registrarServidor'], [Middlewares::rateLimitIp('metrics_push', 30, 60)]);
