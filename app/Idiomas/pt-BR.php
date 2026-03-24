@@ -493,6 +493,11 @@ return [
     'emails.thunder_2' => 'Informe seu nome, e-mail e senha',
     'emails.thunder_3' => 'O Thunderbird pode detectar automaticamente. Se não, clique em "Configuração manual" e use os dados da tabela acima',
     'emails.thunder_4' => 'Clique em Concluído',
+    'emails.cota' => 'Cota de armazenamento',
+    'emails.cota_usada' => 'Usado',
+    'emails.cota_total' => 'Total',
+    'emails.cota_disponivel' => 'Disponível',
+    'emails.cota_hint' => 'Espaço reservado para esta caixa de e-mail. Selecione GB para valores maiores.',
 
     // ── Aplicações ──
     'apps.titulo' => 'Minhas Aplicações',

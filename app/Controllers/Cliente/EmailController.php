@@ -32,6 +32,8 @@ final class EmailController
             'dominios_ativos' => $this->dominiosAtivos($clienteId),
             'limite'        => $svc->limiteContasPorPlano($clienteId),
             'mailcow_host'  => $mailcowHost,
+            'cota_total'    => $svc->cotaTotalPlano($clienteId),
+            'cota_usada'    => $svc->cotaUsada($clienteId),
             'erro'          => '',
             'sucesso'       => '',
         ]);
@@ -50,14 +52,25 @@ final class EmailController
         $localPart  = $in->postString('local_part', 64, true);
         $domain     = $in->postString('domain', 191, true);
         $senha      = trim((string) ($req->post['password'] ?? ''));
+        $quotaMb    = (int) ($req->post['quota_mb'] ?? 0);
+        $quotaUnit  = strtolower(trim((string) ($req->post['quota_unit'] ?? 'mb')));
 
         if ($in->temErros() || $localPart === '' || $domain === '' || strlen($senha) < 8) {
             return $this->renderizarErro($clienteId, 'Preencha todos os campos. Senha mínima: 8 caracteres.');
         }
 
+        // Converter GB para MB se necessário
+        if ($quotaUnit === 'gb' && $quotaMb > 0 && $quotaMb < 1000) {
+            $quotaMb = $quotaMb * 1024;
+        }
+
+        if ($quotaMb < 100) {
+            $quotaMb = 0; // usa default
+        }
+
         try {
             $svc = new MailcowService(new ClienteHttp());
-            $svc->criarEmail($clienteId, $localPart, $domain, $senha);
+            $svc->criarEmail($clienteId, $localPart, $domain, $senha, $quotaMb);
         } catch (\Throwable $e) {
             return $this->renderizarErro($clienteId, $e->getMessage());
         }
@@ -125,6 +138,8 @@ final class EmailController
             'dominios_ativos' => $this->dominiosAtivos($clienteId),
             'limite'         => $svc->limiteContasPorPlano($clienteId),
             'mailcow_host'   => $mailcowHost,
+            'cota_total'     => $svc->cotaTotalPlano($clienteId),
+            'cota_usada'     => $svc->cotaUsada($clienteId),
             'erro'           => $erro,
             'sucesso'        => '',
         ]);

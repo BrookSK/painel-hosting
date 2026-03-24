@@ -32,7 +32,7 @@ final class MailcowService
     // ── Mailboxes ──────────────────────────────────────────────────────────
 
     /** Cria mailbox no Mailcow e salva no banco */
-    public function criarEmail(int $clientId, string $localPart, string $domain, string $senha): array
+    public function criarEmail(int $clientId, string $localPart, string $domain, string $senha, int $quotaMb = 0): array
     {
         $this->validarConfig();
 
@@ -46,11 +46,25 @@ final class MailcowService
             throw new \InvalidArgumentException('Domínio inválido.');
         }
 
-        // Verificar limite do plano
         $this->verificarLimitePlano($clientId);
 
-        $email   = $localPart . '@' . $domain;
-        $quotaMb = (int) Settings::obter('email.default_quota_mb', '1024');
+        // Quota: usar valor informado ou default
+        $defaultQuota = (int) Settings::obter('email.default_quota_mb', '1024');
+        if ($quotaMb <= 0) {
+            $quotaMb = $defaultQuota;
+        }
+
+        // Verificar cota total do plano
+        $cotaTotal = $this->cotaTotalPlano($clientId);
+        if ($cotaTotal > 0) {
+            $usada = $this->cotaUsada($clientId);
+            if (($usada + $quotaMb) > $cotaTotal) {
+                $disponivel = $cotaTotal - $usada;
+                throw new \RuntimeException("Cota insuficiente. Disponível: {$disponivel} MB de {$cotaTotal} MB.");
+            }
+        }
+
+        $email = $localPart . '@' . $domain;
 
         $resp = $this->post('/api/v1/add/mailbox', [
             'local_part'      => $localPart,
@@ -380,6 +394,37 @@ final class MailcowService
             throw new \RuntimeException("Seu plano permite até {$limite} conta(s) de e-mail. Faça upgrade para criar mais.");
         }
     }
+
+    public function cotaTotalPlano(int $clientId): int
+    {
+        $pdo  = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT p.specs_json FROM subscriptions s
+             JOIN plans p ON p.id = s.plan_id
+             WHERE s.client_id = :c AND s.status = "active"
+             ORDER BY s.id DESC LIMIT 1'
+        );
+        $stmt->execute([':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (is_array($row) && !empty($row['specs_json'])) {
+            $specs = json_decode((string) $row['specs_json'], true);
+            if (is_array($specs) && isset($specs['email_quota_mb'])) {
+                return (int) $specs['email_quota_mb'];
+            }
+        }
+
+        return (int) Settings::obter('email.default_total_quota_mb', '5120');
+    }
+
+    public function cotaUsada(int $clientId): int
+    {
+        $pdo  = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT COALESCE(SUM(quota_mb), 0) FROM client_emails WHERE client_id = :c AND active = 1');
+        $stmt->execute([':c' => $clientId]);
+        return (int) $stmt->fetchColumn();
+    }
+
 
     private function validarFormatoDominio(string $domain): bool
     {

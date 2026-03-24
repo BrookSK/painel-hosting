@@ -10,6 +10,9 @@ $dominiosAtivos = is_array($dominios_ativos ?? null) ? $dominios_ativos : [];
 $limite         = (int)($limite ?? 5);
 $totalEmails    = count(is_array($emails ?? null) ? $emails : []);
 $mailcowHost    = (string)($mailcow_host ?? '');
+$cotaTotal      = (int)($cota_total ?? 5120);
+$cotaUsada      = (int)($cota_usada ?? 0);
+$cotaDisponivel = max(0, $cotaTotal - $cotaUsada);
 
 $dominiosSelect = [];
 if ($dominioPadrao !== '') $dominiosSelect[] = $dominioPadrao;
@@ -85,6 +88,32 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div>
     <div class="card-new">
       <div class="card-new-title" style="margin-bottom:6px;"><?php echo View::e(I18n::t('emails.criar')); ?></div>
+
+      <!-- Cota de armazenamento -->
+      <?php
+        $cotaPct = $cotaTotal > 0 ? min(100, round($cotaUsada / $cotaTotal * 100)) : 0;
+        $cotaCor = $cotaPct > 90 ? '#ef4444' : ($cotaPct > 70 ? '#f59e0b' : '#4F46E5');
+        if ($cotaTotal >= 1024) {
+            $cotaTotalFmt = round($cotaTotal / 1024, 1) . ' GB';
+            $cotaUsadaFmt = round($cotaUsada / 1024, 1) . ' GB';
+            $cotaDispFmt  = round($cotaDisponivel / 1024, 1) . ' GB';
+        } else {
+            $cotaTotalFmt = $cotaTotal . ' MB';
+            $cotaUsadaFmt = $cotaUsada . ' MB';
+            $cotaDispFmt  = $cotaDisponivel . ' MB';
+        }
+      ?>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:4px;">
+          <span><?php echo View::e(I18n::t('emails.cota_usada')); ?>: <?php echo $cotaUsadaFmt; ?></span>
+          <span><?php echo View::e(I18n::t('emails.cota_total')); ?>: <?php echo $cotaTotalFmt; ?></span>
+        </div>
+        <div style="background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
+          <div style="background:<?php echo $cotaCor; ?>;height:100%;width:<?php echo $cotaPct; ?>%;border-radius:6px;transition:width .3s;"></div>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;"><?php echo View::e(I18n::t('emails.cota_disponivel')); ?>: <?php echo $cotaDispFmt; ?></div>
+      </div>
+
       <?php if ($totalEmails >= $limite): ?>
         <div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px;">
           Seu plano permite até <strong><?php echo $limite; ?></strong> conta(s).
@@ -94,7 +123,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <p style="font-size:13px;color:#64748b;margin-bottom:14px;"><?php echo $totalEmails; ?>/<?php echo $limite; ?> contas usadas.</p>
       <?php endif; ?>
 
-      <form method="post" action="/cliente/emails/criar" <?php echo $totalEmails >= $limite ? 'style="opacity:.5;pointer-events:none;"' : ''; ?>>
+      <form method="post" action="/cliente/emails/criar" id="formCriarEmail" <?php echo $totalEmails >= $limite ? 'style="opacity:.5;pointer-events:none;"' : ''; ?>
+            onsubmit="var q=this.querySelector('[name=quota_mb]'),u=this.querySelector('[name=quota_unit]');if(u&&u.value==='gb'){q.value=q.value*1024}">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <div style="margin-bottom:10px;">
           <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('emails.usuario')); ?></label>
@@ -114,6 +144,17 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <input class="input" type="text" name="domain" placeholder="seudominio.com" required />
             <p style="font-size:12px;color:#94a3b8;margin-top:4px;">Nenhum domínio configurado. <a href="/cliente/emails/dominios">Adicione seu domínio</a>.</p>
           <?php endif; ?>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('emails.cota')); ?></label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="input" type="number" name="quota_mb" value="1024" min="100" max="<?php echo $cotaDisponivel; ?>" step="100" style="width:120px;" />
+            <select name="quota_unit" style="font-size:13px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;">
+              <option value="mb">MB</option>
+              <option value="gb">GB</option>
+            </select>
+          </div>
+          <p style="font-size:11px;color:#94a3b8;margin-top:4px;"><?php echo View::e(I18n::t('emails.cota_hint')); ?></p>
         </div>
         <div style="margin-bottom:14px;">
           <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('auth.senha')); ?></label>

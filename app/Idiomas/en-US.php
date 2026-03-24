@@ -493,6 +493,11 @@ return [
     'emails.thunder_2' => 'Enter your name, email and password',
     'emails.thunder_3' => 'Thunderbird may auto-detect settings. If not, click "Manual config" and use the details from the table above',
     'emails.thunder_4' => 'Click Done',
+    'emails.cota' => 'Storage quota',
+    'emails.cota_usada' => 'Used',
+    'emails.cota_total' => 'Total',
+    'emails.cota_disponivel' => 'Available',
+    'emails.cota_hint' => 'Storage reserved for this mailbox. Select GB for larger values.',
 
     // ── Applications ──
     'apps.titulo' => 'My Applications',
