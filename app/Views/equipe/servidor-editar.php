@@ -279,34 +279,87 @@ function executarSetup(retomar) {
     document.getElementById('setup-log').textContent = '';
     appendLog('▶ ' + (retomar ? 'Retomando' : 'Iniciando') + ' setup #' + _setupId + '…\n');
 
+    var csrfVal = (document.querySelector('meta[name=csrf-token]') || {}).content || '';
     var fd = new FormData();
     fd.append('id', _setupId);
-    fd.append('_csrf', (document.querySelector('meta[name=csrf-token]') || {}).content || '');
+    fd.append('_csrf', csrfVal);
     if (retomar) fd.append('retomar', '1');
 
     fetch('/equipe/servidores/inicializar', { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            _setupRunning = false;
-            document.getElementById('btn-fechar-x').style.display = '';
-            var steps = data.steps || [], total = data.total || steps.length || 8, concluidos = data.concluidos || 0;
-            steps.forEach(function(s) {
-                appendLog((s.status === 'ok' ? '✔' : (s.status === 'error' ? '✘' : '…')) + ' ' + s.step);
-                if (s.output && s.output.trim()) appendLog('    ' + s.output.trim().replace(/\n/g, '\n    '));
-            });
-            var pct = total > 0 ? Math.round(concluidos / total * 100) : 0;
-            document.getElementById('setup-progress-bar').style.width = pct + '%';
-            document.getElementById('setup-progress-txt').textContent = concluidos + ' / ' + total + ' etapas (' + pct + '%)';
-            if (data.ok) {
-                appendLog('\n✔ Servidor pronto. Recarregue para ver o status atualizado.');
-                document.getElementById('btn-iniciar-setup').style.display = 'none';
-                document.getElementById('btn-continuar-setup').style.display = 'none';
-            } else {
-                appendLog('\n✘ Erros encontrados. Use "Continuar de onde parou".');
-                document.getElementById('btn-iniciar-setup').style.display = 'none';
-                document.getElementById('btn-continuar-setup').style.display = '';
-                document.getElementById('btn-continuar-setup').disabled = false;
+            if (!data.ok) {
+                appendLog('✘ ' + (data.erro || 'Erro ao iniciar setup.'));
+                _setupRunning = false;
+                document.getElementById('btn-fechar-x').style.display = '';
+                document.getElementById('btn-iniciar-setup').disabled = false;
+                return;
             }
+
+            var steps = data.steps || [];
+            var total = steps.length;
+            var idx = 0, concluidos = 0, temErroFatal = false;
+
+            function setP(c, t) {
+                var pct = t > 0 ? Math.round(c / t * 100) : 0;
+                document.getElementById('setup-progress-bar').style.width = pct + '%';
+                document.getElementById('setup-progress-txt').textContent = c + ' / ' + t + ' etapas (' + pct + '%)';
+            }
+            setP(0, total);
+
+            function proximo() {
+                if (idx >= steps.length || temErroFatal) {
+                    var fd3 = new FormData();
+                    fd3.append('id', _setupId);
+                    fd3.append('_csrf', csrfVal);
+                    fetch('/equipe/servidores/inicializar-finalizar', { method: 'POST', body: fd3 })
+                        .then(function(r) { return r.json(); })
+                        .then(function(fin) {
+                            _setupRunning = false;
+                            document.getElementById('btn-fechar-x').style.display = '';
+                            setP(fin.concluidos || concluidos, fin.total || total);
+                            if (fin.ok) {
+                                appendLog('\n✔ Servidor pronto. Recarregue para ver o status.');
+                                document.getElementById('btn-iniciar-setup').style.display = 'none';
+                                document.getElementById('btn-continuar-setup').style.display = 'none';
+                            } else {
+                                appendLog('\n✘ Erros encontrados. Use "Continuar de onde parou".');
+                                document.getElementById('btn-iniciar-setup').style.display = 'none';
+                                document.getElementById('btn-continuar-setup').style.display = '';
+                                document.getElementById('btn-continuar-setup').disabled = false;
+                            }
+                        })
+                        .catch(function(e) {
+                            _setupRunning = false;
+                            document.getElementById('btn-fechar-x').style.display = '';
+                            appendLog('✘ Erro ao finalizar: ' + e.message);
+                        });
+                    return;
+                }
+
+                var s = steps[idx]; idx++;
+                if (s.status === 'ok' && retomar) {
+                    appendLog('⏭ ' + s.name + ' (já concluído)');
+                    concluidos++; setP(concluidos, total); proximo(); return;
+                }
+                appendLog('⏳ ' + s.name + '…');
+                var fd2 = new FormData();
+                fd2.append('id', _setupId); fd2.append('step', s.name); fd2.append('_csrf', csrfVal);
+                fetch('/equipe/servidores/inicializar-passo', { method: 'POST', body: fd2 })
+                    .then(function(r2) { return r2.json(); })
+                    .then(function(r) {
+                        appendLog((r.status === 'ok' ? '✔' : '✘') + ' ' + s.name);
+                        if (r.output && r.output.trim() && r.status !== 'ok') appendLog('    ' + r.output.trim().replace(/\n/g, '\n    '));
+                        if (r.skipped || r.ok) concluidos++;
+                        else if (r.fatal) temErroFatal = true;
+                        setP(concluidos, total); proximo();
+                    })
+                    .catch(function(e) {
+                        appendLog('✘ ' + s.name + ' — ' + e.message);
+                        temErroFatal = true; setP(concluidos, total); proximo();
+                    });
+            }
+            proximo();
         })
         .catch(function(e) {
             _setupRunning = false;

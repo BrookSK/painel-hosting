@@ -11,7 +11,7 @@ use LRV\App\Services\Infra\SshCrypto;
 
 /**
  * Prepara um servidor para uso via SSH.
- * Suporta "continuar de onde parou": passos já marcados como 'ok' são pulados.
+ * Execução passo-a-passo para evitar timeout do proxy reverso.
  */
 final class ServerSetupService
 {
@@ -23,10 +23,9 @@ final class ServerSetupService
     }
 
     /**
-     * Executa o setup. Se $retomar=true, pula passos já concluídos com 'ok'.
-     * Retorna ['ok' => bool, 'steps' => [...], 'total' => int, 'concluidos' => int]
+     * Retorna a lista de passos e quais já foram concluídos.
      */
-    public function executar(int $serverId, bool $retomar = false): array
+    public function listarPassos(int $serverId): array
     {
         $pdo = BancoDeDados::pdo();
 
@@ -35,9 +34,69 @@ final class ServerSetupService
         $srv = $stmt->fetch();
 
         if (!is_array($srv)) {
-            return $this->erroFatal('Servidor não encontrado.');
+            return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
         }
 
+        $passos = $this->definirPassos($srv);
+        $nomes = array_map(fn($p) => $p['name'], $passos);
+
+        // Busca logs existentes
+        $stLogs = $pdo->prepare('SELECT step, status FROM server_setup_logs WHERE server_id = :id ORDER BY id ASC');
+        $stLogs->execute([':id' => $serverId]);
+        $logs = [];
+        foreach ($stLogs->fetchAll() as $l) {
+            $logs[$l['step']] = $l['status'];
+        }
+
+        return [
+            'ok' => true,
+            'steps' => array_map(fn($n) => [
+                'name' => $n,
+                'status' => $logs[$n] ?? 'pending',
+            ], $nomes),
+            'total' => count($nomes),
+        ];
+    }
+
+    /**
+     * Executa UM passo pelo nome. Retorna resultado imediato.
+     */
+    public function executarPasso(int $serverId, string $stepName, bool $forcar = false): array
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(360);
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        $stmt = $pdo->prepare('SELECT * FROM servers WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $serverId]);
+        $srv = $stmt->fetch();
+
+        if (!is_array($srv)) {
+            return ['ok' => false, 'step' => $stepName, 'status' => 'error', 'output' => 'Servidor não encontrado.'];
+        }
+
+        $passos = $this->definirPassos($srv);
+        $passo = null;
+        foreach ($passos as $p) {
+            if ($p['name'] === $stepName) { $passo = $p; break; }
+        }
+        if ($passo === null) {
+            return ['ok' => false, 'step' => $stepName, 'status' => 'error', 'output' => 'Passo não encontrado.'];
+        }
+
+        // Se já concluído e não forçar, pula
+        if (!$forcar) {
+            $stLog = $pdo->prepare('SELECT status FROM server_setup_logs WHERE server_id = :id AND step = :s LIMIT 1');
+            $stLog->execute([':id' => $serverId, ':s' => $stepName]);
+            $prev = $stLog->fetchColumn();
+            if ($prev === 'ok') {
+                return ['ok' => true, 'step' => $stepName, 'status' => 'ok', 'output' => '(já concluído)', 'skipped' => true];
+            }
+        }
+
+        // Resolve credenciais
         $host     = trim((string)($srv['ip_address'] ?? $srv['hostname'] ?? ''));
         $port     = (int)($srv['ssh_port'] ?? 22);
         $user     = trim((string)($srv['ssh_user'] ?? ''));
@@ -45,112 +104,100 @@ final class ServerSetupService
         $useSudo  = (bool)(int)($srv['use_sudo'] ?? 0);
 
         if ($host === '' || $port <= 0 || $user === '') {
-            return $this->erroFatal('Dados SSH incompletos. Configure o servidor antes de inicializar.');
+            return ['ok' => false, 'step' => $stepName, 'status' => 'error', 'output' => 'Dados SSH incompletos.'];
         }
 
-        // Resolve credencial conforme tipo de autenticação
-        $keyPath    = null;
-        $senha      = null;
-        $sudoSenha  = '';
+        $keyPath = null;
+        $senha = null;
+        $sudoSenha = '';
 
-        if ($authType === 'password') {
-            $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
-            if ($senha === '') {
-                return $this->erroFatal('Senha SSH não configurada.');
+        try {
+            if ($authType === 'password') {
+                $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
+                if ($senha === '') {
+                    return ['ok' => false, 'step' => $stepName, 'status' => 'error', 'output' => 'Senha SSH não configurada.'];
+                }
+            } else {
+                $keyId = trim((string)($srv['ssh_key_id'] ?? ''));
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
+                if (!is_file($keyPath)) {
+                    return ['ok' => false, 'step' => $stepName, 'status' => 'error', 'output' => 'Chave SSH não encontrada: ' . $keyId];
+                }
             }
-        } else {
-            $keyId   = trim((string)($srv['ssh_key_id'] ?? ''));
-            $keyDir  = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
-            $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
-            if (!is_file($keyPath)) {
-                return $this->erroFatal('Chave SSH não encontrada: ' . $keyId);
+            if ($useSudo) {
+                $sudoRaw = SshCrypto::decifrar((string)($srv['sudo_password'] ?? ''));
+                $sudoSenha = $sudoRaw !== '' ? $sudoRaw : ($senha ?? '');
             }
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'step' => $stepName, 'status' => 'error', 'output' => $e->getMessage()];
         }
 
-        // Resolve senha do sudo
-        if ($useSudo) {
-            $sudoRaw = SshCrypto::decifrar((string)($srv['sudo_password'] ?? ''));
-            // Se não tiver sudo_password separada, usa a própria senha SSH
-            $sudoSenha = $sudoRaw !== '' ? $sudoRaw : ($senha ?? '');
-        }
+        // Marca como running
+        $this->upsertLog($pdo, $serverId, $stepName, 'running', '');
 
-        // Marca servidor como "inicializando"
-        $this->atualizarSetupStatus($pdo, $serverId, 'initializing');
+        try {
+            $cmdFinal = ($useSudo && !empty($passo['precisa_root']))
+                ? SshExecutor::elevarComSudo($passo['cmd'], $sudoSenha)
+                : $passo['cmd'];
 
-        $passos = $this->definirPassos($srv);
-        $total  = count($passos);
-        $logsPrevios = [];
-        if ($retomar) {
-            $stLogs = $pdo->prepare('SELECT step, status FROM server_setup_logs WHERE server_id = :id ORDER BY id ASC');
-            $stLogs->execute([':id' => $serverId]);
-            foreach ($stLogs->fetchAll() as $l) {
-                $logsPrevios[$l['step']] = $l['status'];
+            if ($senha !== null) {
+                $r = $this->exec->executarComSenha($host, $port, $user, $senha, $cmdFinal, $passo['timeout'] ?? 120);
+            } else {
+                $r = $this->exec->executar($host, $port, $user, (string)$keyPath, $cmdFinal, $passo['timeout'] ?? 120);
             }
-        } else {
-            // Reinício completo: apaga logs anteriores
-            $pdo->prepare('DELETE FROM server_setup_logs WHERE server_id = :id')->execute([':id' => $serverId]);
-        }
 
-        $allOk     = true;
+            $saida = trim((string)($r['saida'] ?? ''));
+            $ok = (bool)($r['ok'] ?? false);
+
+            if (!$ok && !empty($passo['ok_if_contains']) && str_contains($saida, $passo['ok_if_contains'])) {
+                $ok = true;
+            }
+            if (!$ok && str_contains($saida, 'already exists')) {
+                $ok = true;
+            }
+
+            $status = $ok ? 'ok' : 'error';
+            $this->upsertLog($pdo, $serverId, $stepName, $status, $saida);
+
+            return [
+                'ok' => $ok,
+                'step' => $stepName,
+                'status' => $status,
+                'output' => $saida,
+                'fatal' => !empty($passo['fatal']) && !$ok,
+            ];
+        } catch (\Throwable $e) {
+            $this->upsertLog($pdo, $serverId, $stepName, 'error', $e->getMessage());
+            return [
+                'ok' => false,
+                'step' => $stepName,
+                'status' => 'error',
+                'output' => $e->getMessage(),
+                'fatal' => !empty($passo['fatal']),
+            ];
+        }
+    }
+
+    /**
+     * Atualiza o status final do servidor após todos os passos.
+     */
+    public function finalizarSetup(int $serverId): array
+    {
+        $pdo = BancoDeDados::pdo();
+
+        $stLogs = $pdo->prepare('SELECT step, status, output FROM server_setup_logs WHERE server_id = :id ORDER BY id ASC');
+        $stLogs->execute([':id' => $serverId]);
+        $logs = $stLogs->fetchAll();
+
+        $allOk = true;
         $concluidos = 0;
-
-        foreach ($passos as $passo) {
-            $nome = $passo['name'];
-
-            // Pular passos já concluídos (modo retomar)
-            if ($retomar && ($logsPrevios[$nome] ?? '') === 'ok') {
-                $concluidos++;
-                continue;
-            }
-
-            // Garante que existe uma linha no log (insere ou atualiza para 'running')
-            $this->upsertLog($pdo, $serverId, $nome, 'running', '');
-
-            try {
-                // Aplica sudo se necessário e o passo exige privilégio
-                $cmdFinal = ($useSudo && !empty($passo['precisa_root']))
-                    ? SshExecutor::elevarComSudo($passo['cmd'], $sudoSenha)
-                    : $passo['cmd'];
-
-                if ($senha !== null) {
-                    $r = $this->exec->executarComSenha($host, $port, $user, $senha, $cmdFinal, $passo['timeout'] ?? 120);
-                } else {
-                    $r = $this->exec->executar($host, $port, $user, (string)$keyPath, $cmdFinal, $passo['timeout'] ?? 120);
-                }
-                $saida = trim((string)($r['saida'] ?? ''));
-                $ok    = (bool)($r['ok'] ?? false);
-
-                // Alguns comandos retornam exit 1 mas são considerados ok pelo conteúdo
-                if (!$ok && !empty($passo['ok_if_contains']) && str_contains($saida, $passo['ok_if_contains'])) {
-                    $ok = true;
-                }
-                // Comandos idempotentes: "already exists" também é ok
-                if (!$ok && str_contains($saida, 'already exists')) {
-                    $ok = true;
-                }
-
-                $status = $ok ? 'ok' : 'error';
-                $this->upsertLog($pdo, $serverId, $nome, $status, $saida);
-
-                if ($ok) {
-                    $concluidos++;
-                } else {
-                    $allOk = false;
-                    if (!empty($passo['fatal'])) {
-                        break;
-                    }
-                }
-            } catch (\Throwable $e) {
-                $this->upsertLog($pdo, $serverId, $nome, 'error', $e->getMessage());
-                $allOk = false;
-                if (!empty($passo['fatal'])) {
-                    break;
-                }
-            }
+        foreach ($logs as $l) {
+            if ($l['status'] === 'ok') { $concluidos++; }
+            else { $allOk = false; }
         }
 
-        // Atualiza status final do servidor
-        if ($allOk) {
+        if ($allOk && $concluidos > 0) {
             $pdo->prepare("UPDATE servers SET setup_status='ready', status='active', is_online=1, last_check_at=:c, last_error=NULL WHERE id=:id")
                 ->execute([':c' => date('Y-m-d H:i:s'), ':id' => $serverId]);
         } else {
@@ -158,15 +205,19 @@ final class ServerSetupService
                 ->execute([':c' => date('Y-m-d H:i:s'), ':id' => $serverId]);
         }
 
-        $stLogs = $pdo->prepare('SELECT step, status, output FROM server_setup_logs WHERE server_id = :id ORDER BY id ASC');
-        $stLogs->execute([':id' => $serverId]);
+        return ['ok' => $allOk, 'total' => count($logs), 'concluidos' => $concluidos, 'steps' => $logs];
+    }
 
-        return [
-            'ok'        => $allOk,
-            'total'     => $total,
-            'concluidos' => $concluidos,
-            'steps'     => $stLogs->fetchAll(),
-        ];
+    /**
+     * Prepara o servidor para inicialização (limpa logs se não retomar).
+     */
+    public function prepararSetup(int $serverId, bool $retomar): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $this->atualizarSetupStatus($pdo, $serverId, 'initializing');
+        if (!$retomar) {
+            $pdo->prepare('DELETE FROM server_setup_logs WHERE server_id = :id')->execute([':id' => $serverId]);
+        }
     }
 
     /** Retorna os logs mais recentes de um servidor */
@@ -248,7 +299,6 @@ final class ServerSetupService
 
     private function upsertLog(\PDO $pdo, int $serverId, string $step, string $status, string $output): void
     {
-        // Tenta atualizar linha existente; se não existir, insere
         $upd = $pdo->prepare('UPDATE server_setup_logs SET status=:st, output=:o WHERE server_id=:s AND step=:n');
         $upd->execute([':st' => $status, ':o' => mb_substr($output, 0, 4000), ':s' => $serverId, ':n' => $step]);
 
@@ -264,17 +314,7 @@ final class ServerSetupService
             $pdo->prepare('UPDATE servers SET setup_status=:ss WHERE id=:id')
                 ->execute([':ss' => $setupStatus, ':id' => $serverId]);
         } catch (\Throwable) {
-            // coluna pode não existir ainda em instâncias antigas
+            // coluna pode não existir ainda
         }
-    }
-
-    private function erroFatal(string $msg): array
-    {
-        return [
-            'ok'        => false,
-            'total'     => 0,
-            'concluidos' => 0,
-            'steps'     => [['step' => 'Validação', 'status' => 'error', 'output' => $msg]],
-        ];
     }
 }

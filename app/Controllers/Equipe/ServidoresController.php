@@ -272,6 +272,9 @@ final class ServidoresController
     // Inicializar (setup automático)
     // -------------------------------------------------------------------------
 
+    /**
+     * Inicia o setup: retorna lista de passos (limpa logs se não retomar).
+     */
     public function inicializar(Requisicao $req): Resposta
     {
         $id      = (int)($req->post['id'] ?? 0);
@@ -279,10 +282,61 @@ final class ServidoresController
 
         if ($id <= 0) return Resposta::json(['ok' => false, 'erro' => 'ID inválido.'], 400);
 
-        $resultado = (new ServerSetupService())->executar($id, $retomar);
+        try {
+            $svc = new ServerSetupService();
+            $svc->prepararSetup($id, $retomar);
+            $resultado = $svc->listarPassos($id);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 500);
+        }
 
-        (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
-            'server.setup', 'server', $id, ['ok' => $resultado['ok'], 'retomar' => $retomar], $req);
+        try {
+            (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
+                'server.setup_start', 'server', $id, ['retomar' => $retomar], $req);
+        } catch (\Throwable $e) {}
+
+        return Resposta::json($resultado);
+    }
+
+    /**
+     * Executa UM passo do setup e retorna o resultado.
+     */
+    public function inicializarPasso(Requisicao $req): Resposta
+    {
+        $id   = (int)($req->post['id'] ?? 0);
+        $step = trim((string)($req->post['step'] ?? ''));
+
+        if ($id <= 0 || $step === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Parâmetros inválidos.'], 400);
+        }
+
+        try {
+            $resultado = (new ServerSetupService())->executarPasso($id, $step);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'step' => $step, 'status' => 'error', 'output' => $e->getMessage()], 500);
+        }
+
+        return Resposta::json($resultado);
+    }
+
+    /**
+     * Finaliza o setup: atualiza status do servidor com base nos logs.
+     */
+    public function inicializarFinalizar(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) return Resposta::json(['ok' => false, 'erro' => 'ID inválido.'], 400);
+
+        try {
+            $resultado = (new ServerSetupService())->finalizarSetup($id);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 500);
+        }
+
+        try {
+            (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
+                'server.setup_done', 'server', $id, ['ok' => $resultado['ok']], $req);
+        } catch (\Throwable $e) {}
 
         return Resposta::json($resultado);
     }

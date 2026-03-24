@@ -111,6 +111,8 @@ $roteador->get('/equipe/servidores/terminal-seguro', [ServidoresController::clas
 $roteador->post('/equipe/servidores/salvar', [ServidoresController::class, 'salvar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/testar-conexao', [ServidoresController::class, 'testarConexao'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/inicializar', [ServidoresController::class, 'inicializar'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/servidores/inicializar-passo', [ServidoresController::class, 'inicializarPasso'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/servidores/inicializar-finalizar', [ServidoresController::class, 'inicializarFinalizar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/servidores/logs-inicializacao', [ServidoresController::class, 'logsInicializacao'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/backups', [BackupsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/backups/criar', [BackupsController::class, 'criar'], [Middlewares::exigirPermissao('manage_vps')]);
