@@ -451,4 +451,109 @@ final class MailcowService
         $url = $this->baseUrl . $path;
         $this->http->requestJson('DELETE', $url, ['X-API-Key' => $this->apiKey], $items);
     }
+
+    public function ativarWebmailPersonalizado(int $clientId, int $dominioId): array
+    {
+        $pdo  = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, domain, status, webmail_enabled FROM client_domains WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $dominioId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('Domínio não encontrado.');
+        }
+        if ($row['status'] !== 'active') {
+            throw new \RuntimeException('O domínio precisa estar ativo (DNS verificado) antes de ativar o webmail personalizado.');
+        }
+
+        $domain = (string) $row['domain'];
+        $webmailHost = 'webmail.' . $domain;
+
+        // Verificar CNAME
+        $cnameOk = $this->verificarCNAME($webmailHost);
+
+        if (!$cnameOk) {
+            $pdo->prepare('UPDATE client_domains SET webmail_enabled = 1, webmail_verified = 0 WHERE id = :id')
+                ->execute([':id' => $dominioId]);
+            $mailcowHost = parse_url($this->baseUrl, PHP_URL_HOST) ?: '';
+            return [
+                'ok' => false,
+                'erro' => "CNAME não encontrado. Crie um registro CNAME: webmail.{$domain} → {$mailcowHost}",
+                'webmail_host' => $webmailHost,
+            ];
+        }
+
+        // CNAME ok — registrar SAN no Mailcow e marcar como verificado
+        $this->registrarSAN($webmailHost);
+
+        $pdo->prepare('UPDATE client_domains SET webmail_enabled = 1, webmail_verified = 1 WHERE id = :id')
+            ->execute([':id' => $dominioId]);
+
+        return ['ok' => true, 'webmail_url' => 'https://' . $webmailHost . '/SOGo'];
+    }
+
+    public function verificarWebmail(int $clientId, int $dominioId): array
+    {
+        $pdo  = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, domain FROM client_domains WHERE id = :id AND client_id = :c AND webmail_enabled = 1 LIMIT 1');
+        $stmt->execute([':id' => $dominioId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('Domínio não encontrado ou webmail não ativado.');
+        }
+
+        $webmailHost = 'webmail.' . (string) $row['domain'];
+        $cnameOk = $this->verificarCNAME($webmailHost);
+
+        if (!$cnameOk) {
+            return ['ok' => false, 'erro' => 'CNAME ainda não propagado.'];
+        }
+
+        $this->registrarSAN($webmailHost);
+
+        $pdo->prepare('UPDATE client_domains SET webmail_verified = 1 WHERE id = :id')
+            ->execute([':id' => $dominioId]);
+
+        return ['ok' => true, 'webmail_url' => 'https://' . $webmailHost . '/SOGo'];
+    }
+
+    private function verificarCNAME(string $hostname): bool
+    {
+        $records = @dns_get_record($hostname, DNS_CNAME);
+        if (!is_array($records) || count($records) === 0) {
+            // Fallback: check if A record resolves to Mailcow IP
+            $ip = @gethostbyname($hostname);
+            $mailcowHost = parse_url($this->baseUrl, PHP_URL_HOST) ?: '';
+            $mailcowIp = $mailcowHost !== '' ? @gethostbyname($mailcowHost) : '';
+            return $ip !== $hostname && $mailcowIp !== '' && $ip === $mailcowIp;
+        }
+        return true;
+    }
+
+    private function registrarSAN(string $hostname): void
+    {
+        // Adicionar hostname como SAN adicional no Mailcow via API
+        try {
+            $this->post('/api/v1/edit/domain-admin/san', [
+                'san' => $hostname,
+            ]);
+        } catch (\Throwable) {
+            // SAN registration is best-effort — Mailcow may handle it via ACME automatically
+        }
+    }
+
+    public function webmailUrlParaDominio(string $domain): string
+    {
+        $pdo  = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT webmail_enabled, webmail_verified FROM client_domains WHERE domain = :d LIMIT 1');
+        $stmt->execute([':d' => $domain]);
+        $row = $stmt->fetch();
+
+        if (is_array($row) && (int) $row['webmail_enabled'] === 1 && (int) $row['webmail_verified'] === 1) {
+            return 'https://webmail.' . $domain . '/SOGo';
+        }
+
+        return $this->webmailUrl();
+    }
 }

@@ -266,6 +266,8 @@ $roteador->post('/cliente/emails/dominios/adicionar', [ClienteDominiosEmailContr
 $roteador->post('/cliente/emails/dominios/verificar', [ClienteDominiosEmailController::class, 'verificar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
 $roteador->post('/cliente/emails/dominios/remover', [ClienteDominiosEmailController::class, 'remover'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/emails/dominios/instrucoes', [ClienteDominiosEmailController::class, 'instrucoes'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/emails/dominios/webmail-ativar', [ClienteDominiosEmailController::class, 'ativarWebmail'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('webmail_activate', 10, 60)]);
+$roteador->post('/cliente/emails/dominios/webmail-verificar', [ClienteDominiosEmailController::class, 'verificarWebmail'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('webmail_verify', 10, 60)]);
 
 // Reset de senha — cliente
 $roteador->get('/cliente/reset-senha', [ClienteResetSenhaController::class, 'formulario']);

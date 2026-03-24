@@ -59,7 +59,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               $emailAddr  = (string)($em['email'] ?? ($em['local_part'] ?? '') . '@' . ($em['domain'] ?? ''));
               $emailId    = (int)($em['id'] ?? 0);
               $domainPart = (string)($em['domain'] ?? '');
-              $webmailLink = $webmailUrl !== '' ? $webmailUrl : ($domainPart !== '' ? 'https://webmail.' . $domainPart : '');
+              $webmailLink = $webmailUrl;
             ?>
               <tr>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e($emailAddr); ?></td>

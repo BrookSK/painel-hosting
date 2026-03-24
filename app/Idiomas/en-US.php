@@ -498,6 +498,10 @@ return [
     'emails.cota_total' => 'Total',
     'emails.cota_disponivel' => 'Available',
     'emails.cota_hint' => 'Storage reserved for this mailbox. Select GB for larger values.',
+    'emails.ativar_webmail' => 'Enable custom webmail',
+    'emails.verificar_webmail' => 'Verify webmail',
+    'emails.webmail_ativado' => 'Custom webmail enabled successfully!',
+    'emails.webmail_personalizado_hint' => 'Access webmail via webmail.yourdomain.com',
 
     // ── Applications ──
     'apps.titulo' => 'My Applications',

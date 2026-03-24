@@ -498,6 +498,10 @@ return [
     'emails.cota_total' => 'Total',
     'emails.cota_disponivel' => 'Disponible',
     'emails.cota_hint' => 'Espacio reservado para este buzón. Seleccione GB para valores mayores.',
+    'emails.ativar_webmail' => 'Activar webmail personalizado',
+    'emails.verificar_webmail' => 'Verificar webmail',
+    'emails.webmail_ativado' => '¡Webmail personalizado activado con éxito!',
+    'emails.webmail_personalizado_hint' => 'Acceda al webmail vía webmail.sudominio.com',
 
     // ── Aplicaciones ──
     'apps.titulo' => 'Mis Aplicaciones',

@@ -27,6 +27,7 @@ final class DominiosEmailController
             'dominios'    => $dominios,
             'webmail_url' => $svc->webmailUrl(),
             'dns_template' => $svc->dnsInstructionsTemplate(),
+            'mailcow_host' => parse_url((string)\LRV\Core\Settings::obter('email.mailcow_url', ''), PHP_URL_HOST) ?: '',
             'erro'        => '',
             'sucesso'     => '',
         ]);
@@ -159,10 +160,61 @@ final class DominiosEmailController
             'dominios'    => $dominios,
             'webmail_url' => $svc->webmailUrl(),
             'dns_template' => $svc->dnsInstructionsTemplate(),
+            'mailcow_host' => parse_url((string)\LRV\Core\Settings::obter('email.mailcow_url', ''), PHP_URL_HOST) ?: '',
             'erro'        => $erro,
             'sucesso'     => '',
         ]);
 
         return Resposta::html($html, 422);
+    }
+
+    public function ativarWebmail(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::redirecionar('/cliente/entrar');
+        }
+
+        $dominioId = (int) ($req->post['dominio_id'] ?? 0);
+        if ($dominioId <= 0) {
+            return Resposta::texto('Domínio inválido.', 400);
+        }
+
+        try {
+            $res = (new MailcowService(new ClienteHttp()))->ativarWebmailPersonalizado($clienteId, $dominioId);
+        } catch (\Throwable $e) {
+            return $this->renderizarErro($clienteId, $e->getMessage());
+        }
+
+        if ($res['ok']) {
+            return Resposta::redirecionar('/cliente/emails/dominios?webmail=1');
+        }
+
+        return $this->renderizarErro($clienteId, $res['erro'] ?? 'Erro ao ativar webmail.');
+    }
+
+    public function verificarWebmail(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::redirecionar('/cliente/entrar');
+        }
+
+        $dominioId = (int) ($req->post['dominio_id'] ?? 0);
+        if ($dominioId <= 0) {
+            return Resposta::texto('Domínio inválido.', 400);
+        }
+
+        try {
+            $res = (new MailcowService(new ClienteHttp()))->verificarWebmail($clienteId, $dominioId);
+        } catch (\Throwable $e) {
+            return $this->renderizarErro($clienteId, $e->getMessage());
+        }
+
+        if ($res['ok']) {
+            return Resposta::redirecionar('/cliente/emails/dominios?webmail=1');
+        }
+
+        return $this->renderizarErro($clienteId, $res['erro'] ?? 'CNAME ainda não propagado.');
     }
 }

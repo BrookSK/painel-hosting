@@ -6,6 +6,8 @@ use LRV\Core\I18n;
 
 $dominios   = is_array($dominios ?? null) ? $dominios : [];
 $verificado = isset($_GET['verificado']);
+$webmailOk  = isset($_GET['webmail']);
+$mailcowHost = (string)($mailcow_host ?? '');
 
 function badgeDominio(string $status): string {
     if ($status === 'active')      return '<span class="badge-new badge-green">Ativo</span>';
@@ -32,6 +34,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <?php endif; ?>
 <?php if ($verificado): ?>
   <div class="sucesso">DNS verificado com sucesso! Seu domínio está ativo.</div>
+<?php endif; ?>
+<?php if ($webmailOk): ?>
+  <div class="sucesso"><?php echo View::e(I18n::t('emails.webmail_ativado')); ?></div>
 <?php endif; ?>
 
 <div class="grid" style="grid-template-columns:1fr 340px;gap:16px;align-items:start;">
@@ -72,6 +77,25 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
                   <input type="hidden" name="dominio_id" value="<?php echo $did; ?>" />
                   <button class="botao sm" type="submit"><?php echo View::e(I18n::t('emails.verificar_dns')); ?></button>
                 </form>
+              <?php endif; ?>
+              <?php if (($d['status'] ?? '') === 'active'): ?>
+                <?php $wmEnabled = (int)($d['webmail_enabled'] ?? 0); $wmVerified = (int)($d['webmail_verified'] ?? 0); ?>
+                <?php if ($wmEnabled && $wmVerified): ?>
+                  <a href="https://webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?>/SOGo" target="_blank" rel="noopener" class="botao sm" style="background:#10b981;">🌐 webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?></a>
+                <?php elseif ($wmEnabled && !$wmVerified): ?>
+                  <form method="post" action="/cliente/emails/dominios/webmail-verificar" style="display:inline;">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+                    <input type="hidden" name="dominio_id" value="<?php echo $did; ?>" />
+                    <button class="botao sm" type="submit"><?php echo View::e(I18n::t('emails.verificar_webmail')); ?></button>
+                  </form>
+                  <span style="font-size:11px;color:#f59e0b;align-self:center;">CNAME: webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?> → <?php echo View::e($mailcowHost); ?></span>
+                <?php else: ?>
+                  <form method="post" action="/cliente/emails/dominios/webmail-ativar" style="display:inline;">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+                    <input type="hidden" name="dominio_id" value="<?php echo $did; ?>" />
+                    <button class="botao sm ghost" type="submit" title="<?php echo View::e(I18n::t('emails.webmail_personalizado_hint')); ?>">🌐 <?php echo View::e(I18n::t('emails.ativar_webmail')); ?></button>
+                  </form>
+                <?php endif; ?>
               <?php endif; ?>
               <form method="post" action="/cliente/emails/dominios/remover" style="display:inline;"
                     onsubmit="return confirm('Remover o domínio <?php echo View::e((string)($d['domain'] ?? '')); ?>?')">
