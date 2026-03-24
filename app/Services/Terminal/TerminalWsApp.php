@@ -81,6 +81,8 @@ final class TerminalWsApp implements \Ratchet\MessageComponentInterface
             $sshPort = 22;
             $sshUser = '';
             $sshKeyId = '';
+            $sshAuthType = 'key';
+            $sshPasswordEnc = '';
             $remoteCommand = null;
 
             $val = $this->tokens->consumirToken($token);
@@ -132,9 +134,17 @@ final class TerminalWsApp implements \Ratchet\MessageComponentInterface
 
                 $sshUser = (string) ($server['ssh_user'] ?? '');
                 $sshKeyId = (string) ($server['ssh_key_id'] ?? '');
+                $sshAuthType = (string) ($server['ssh_auth_type'] ?? 'key');
+                $sshPasswordEnc = (string) ($server['ssh_password'] ?? '');
 
-                if (trim($sshHost) === '' || $sshPort <= 0 || $sshPort > 65535 || trim($sshUser) === '' || trim($sshKeyId) === '') {
+                if (trim($sshHost) === '' || $sshPort <= 0 || $sshPort > 65535 || trim($sshUser) === '') {
                     $conn->send("Servidor sem dados de SSH.\n");
+                    $conn->close();
+                    return;
+                }
+
+                if ($sshAuthType === 'key' && trim($sshKeyId) === '') {
+                    $conn->send("Servidor sem chave SSH configurada.\n");
                     $conn->close();
                     return;
                 }
@@ -228,51 +238,52 @@ final class TerminalWsApp implements \Ratchet\MessageComponentInterface
             }
 
             $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
-            if ($keyDir === '') {
-                if ($tipo === 'admin' && $sessionId > 0) {
-                    $this->audit->encerrarSessao($sessionId);
-                }
-                if ($tipo === 'client' && $sessionId > 0) {
-                    $this->clientAudit->encerrarSessao($sessionId);
-                }
-                $conn->send("Diretório de chaves SSH não configurado.\n");
-                $conn->close();
-                return;
-            }
 
-            $keyPath = $keyDir . DIRECTORY_SEPARATOR . $sshKeyId;
-            if (!is_file($keyPath)) {
-                if ($tipo === 'admin' && $sessionId > 0) {
-                    $this->audit->encerrarSessao($sessionId);
+            $proc = null;
+
+            if ($sshAuthType === 'password' && $sshPasswordEnc !== '') {
+                // Modo senha — SSH_ASKPASS + setsid
+                $sshPassword = \LRV\App\Services\Infra\SshCrypto::decifrar($sshPasswordEnc);
+                if ($sshPassword === '') {
+                    if ($tipo === 'admin' && $sessionId > 0) $this->audit->encerrarSessao($sessionId);
+                    if ($tipo === 'client' && $sessionId > 0) $this->clientAudit->encerrarSessao($sessionId);
+                    $conn->send("Senha SSH não pôde ser decifrada.\n");
+                    $conn->close();
+                    return;
                 }
-                if ($tipo === 'client' && $sessionId > 0) {
-                    $this->clientAudit->encerrarSessao($sessionId);
+                $proc = $this->abrirSshComSenha($sshHost, $sshPort, $sshUser, $sshPassword, $remoteCommand);
+            } else {
+                // Modo chave
+                if ($keyDir === '') {
+                    if ($tipo === 'admin' && $sessionId > 0) $this->audit->encerrarSessao($sessionId);
+                    if ($tipo === 'client' && $sessionId > 0) $this->clientAudit->encerrarSessao($sessionId);
+                    $conn->send("Diretório de chaves SSH não configurado.\n");
+                    $conn->close();
+                    return;
                 }
-                $conn->send("Chave SSH não encontrada.\n");
-                $conn->close();
-                return;
+
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . $sshKeyId;
+                if (!is_file($keyPath)) {
+                    if ($tipo === 'admin' && $sessionId > 0) $this->audit->encerrarSessao($sessionId);
+                    if ($tipo === 'client' && $sessionId > 0) $this->clientAudit->encerrarSessao($sessionId);
+                    $conn->send("Chave SSH não encontrada.\n");
+                    $conn->close();
+                    return;
+                }
+                $proc = $this->abrirSsh($sshHost, $sshPort, $sshUser, $keyPath, $remoteCommand);
             }
 
             if (!function_exists('proc_open')) {
-                if ($tipo === 'admin' && $sessionId > 0) {
-                    $this->audit->encerrarSessao($sessionId);
-                }
-                if ($tipo === 'client' && $sessionId > 0) {
-                    $this->clientAudit->encerrarSessao($sessionId);
-                }
+                if ($tipo === 'admin' && $sessionId > 0) $this->audit->encerrarSessao($sessionId);
+                if ($tipo === 'client' && $sessionId > 0) $this->clientAudit->encerrarSessao($sessionId);
                 $conn->send("proc_open indisponível.\n");
                 $conn->close();
                 return;
             }
 
-            $proc = $this->abrirSsh($sshHost, $sshPort, $sshUser, $keyPath, $remoteCommand);
             if ($proc === null) {
-                if ($tipo === 'admin' && $sessionId > 0) {
-                    $this->audit->encerrarSessao($sessionId);
-                }
-                if ($tipo === 'client' && $sessionId > 0) {
-                    $this->clientAudit->encerrarSessao($sessionId);
-                }
+                if ($tipo === 'admin' && $sessionId > 0) $this->audit->encerrarSessao($sessionId);
+                if ($tipo === 'client' && $sessionId > 0) $this->clientAudit->encerrarSessao($sessionId);
                 $conn->send("Falha ao iniciar SSH.\n");
                 $conn->close();
                 return;
@@ -529,13 +540,13 @@ final class TerminalWsApp implements \Ratchet\MessageComponentInterface
     {
         $pdo = BancoDeDados::pdo();
         try {
-            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, terminal_ssh_user, terminal_ssh_key_id, status, is_online FROM servers WHERE id = :id LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password, terminal_ssh_user, terminal_ssh_key_id, status, is_online FROM servers WHERE id = :id LIMIT 1');
             $stmt->execute([':id' => $serverId]);
             $s = $stmt->fetch();
             return is_array($s) ? $s : null;
         } catch (\Throwable $e) {
             try {
-                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, terminal_ssh_user, terminal_ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password, terminal_ssh_user, terminal_ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
                 $stmt->execute([':id' => $serverId]);
                 $s = $stmt->fetch();
                 return is_array($s) ? $s : null;
@@ -591,6 +602,86 @@ final class TerminalWsApp implements \Ratchet\MessageComponentInterface
 
         $proc = @proc_open($cmd, $descriptorspec, $pipes);
         if (!is_resource($proc) || !is_array($pipes)) {
+            return null;
+        }
+
+        foreach ([0, 1, 2] as $i) {
+            if (isset($pipes[$i]) && is_resource($pipes[$i])) {
+                @stream_set_blocking($pipes[$i], false);
+            }
+        }
+
+        return [
+            'proc' => $proc,
+            'pipes' => $pipes,
+        ];
+    }
+
+    /**
+     * Abre sessão SSH interativa com senha via SSH_ASKPASS + setsid.
+     */
+    private function abrirSshComSenha(string $host, int $porta, string $usuario, string $senha, ?string $remoteCommand = null): ?array
+    {
+        $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+
+        // Cria script askpass em storage/ (evita /tmp noexec)
+        $storageDir = defined('BASE_PATH') ? BASE_PATH . '/storage' : dirname(__DIR__, 3) . '/storage';
+        if (!is_dir($storageDir)) @mkdir($storageDir, 0700, true);
+
+        $senhaFile = $storageDir . '/ssh_pw_' . bin2hex(random_bytes(8));
+        file_put_contents($senhaFile, $senha);
+        chmod($senhaFile, 0600);
+
+        $askpassScript = $storageDir . '/askpass_' . bin2hex(random_bytes(8)) . '.sh';
+        file_put_contents($askpassScript, "#!/bin/sh\ncat " . escapeshellarg($senhaFile) . "\n");
+        chmod($askpassScript, 0700);
+
+        $destino = trim($usuario) . '@' . trim($host);
+
+        $args = [];
+        $args[] = 'setsid';
+        $args[] = 'ssh';
+        $args[] = '-tt';
+        $args[] = '-p ' . (int) $porta;
+        $args[] = '-o ConnectTimeout=8';
+        $args[] = '-o StrictHostKeyChecking=no';
+        $args[] = '-o UserKnownHostsFile=' . $knownHosts;
+        $args[] = '-o PasswordAuthentication=yes';
+        $args[] = '-o PubkeyAuthentication=no';
+        $args[] = '-o NumberOfPasswordPrompts=1';
+        $args[] = escapeshellarg($destino);
+
+        if ($remoteCommand !== null && trim($remoteCommand) !== '') {
+            $args[] = escapeshellarg($remoteCommand);
+        }
+
+        $cmd = implode(' ', $args);
+
+        $env = [
+            'SSH_ASKPASS' => $askpassScript,
+            'SSH_ASKPASS_REQUIRE' => 'force',
+            'DISPLAY' => ':0',
+            'PATH' => getenv('PATH') ?: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        ];
+
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $proc = @proc_open($cmd, $descriptorspec, $pipes, null, $env);
+
+        // Limpa arquivos temporários após um delay (o SSH já leu a senha)
+        // Usamos o loop para limpar depois de 5 segundos
+        $this->loop->addTimer(5.0, function () use ($askpassScript, $senhaFile) {
+            @unlink($askpassScript);
+            @unlink($senhaFile);
+        });
+
+        if (!is_resource($proc) || !is_array($pipes)) {
+            @unlink($askpassScript);
+            @unlink($senhaFile);
             return null;
         }
 
