@@ -178,6 +178,11 @@ final class DoisFatoresController
 
         $this->registrarAuthLog('team', $pendingId, 'login', $req);
 
+        $url = trim((string) ($_SESSION['redirect_after_login'] ?? ''));
+        unset($_SESSION['redirect_after_login']);
+        if ($url !== '' && str_starts_with($url, '/equipe/')) {
+            return Resposta::redirecionar($url);
+        }
         return Resposta::redirecionar('/equipe/painel');
     }
 

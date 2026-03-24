@@ -76,7 +76,17 @@ final class EntrarController
             $this->registrarAuthLog('team', $equipeId, 'login', $req);
         }
 
-        return Resposta::redirecionar('/equipe/painel');
+        return Resposta::redirecionar($this->urlRedirect('/equipe/painel'));
+    }
+
+    private function urlRedirect(string $fallback): string
+    {
+        $url = trim((string) ($_SESSION['redirect_after_login'] ?? ''));
+        unset($_SESSION['redirect_after_login']);
+        if ($url !== '' && str_starts_with($url, '/equipe/')) {
+            return $url;
+        }
+        return $fallback;
     }
 
     private function registrarAuthLog(string $tipo, string|int $actor, string $acao, \LRV\Core\Http\Requisicao $req): void

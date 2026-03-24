@@ -45,12 +45,14 @@ final class Bootstrap
             @ini_set('session.cookie_httponly', '1');
 
             session_set_cookie_params([
-                'lifetime' => 0,
+                'lifetime' => 86400,
                 'path' => '/',
                 'secure' => $https,
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
+
+            @ini_set('session.gc_maxlifetime', '86400');
 
             session_start();
         }

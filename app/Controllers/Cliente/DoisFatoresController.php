@@ -151,6 +151,11 @@ final class DoisFatoresController
         unset($_SESSION['2fa_pending_cliente_id']);
         $_SESSION['auth_cliente_id'] = $pendingId;
 
+        $url = trim((string) ($_SESSION['redirect_after_login'] ?? ''));
+        unset($_SESSION['redirect_after_login']);
+        if ($url !== '' && str_starts_with($url, '/cliente/')) {
+            return Resposta::redirecionar($url);
+        }
         return Resposta::redirecionar('/cliente/painel');
     }
 }

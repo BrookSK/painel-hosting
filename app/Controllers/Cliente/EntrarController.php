@@ -73,6 +73,16 @@ final class EntrarController
             }
         }
 
-        return Resposta::redirecionar('/cliente/painel');
+        return Resposta::redirecionar($this->urlRedirect('/cliente/painel'));
+    }
+
+    private function urlRedirect(string $fallback): string
+    {
+        $url = trim((string) ($_SESSION['redirect_after_login'] ?? ''));
+        unset($_SESSION['redirect_after_login']);
+        if ($url !== '' && str_starts_with($url, '/cliente/')) {
+            return $url;
+        }
+        return $fallback;
     }
 }

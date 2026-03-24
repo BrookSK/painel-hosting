@@ -13,15 +13,19 @@ final class Middlewares
     {
         return static function (Requisicao $req): ?Resposta {
             if (Auth::equipeId() === null) {
+                $_SESSION['redirect_after_login'] = $req->caminho . (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : '');
                 return Resposta::redirecionar('/equipe/entrar');
             }
 
-            // Verificar expiração de sessão por inatividade (30 min)
+            // Verificar expiração de sessão por inatividade (24h)
             $lastActivity = (int) ($_SESSION['equipe_last_activity'] ?? 0);
-            $timeout = 30 * 60; // 30 minutos
+            $timeout = 86400; // 24 horas
             if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
+                $caminho = $req->caminho . (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : '');
                 session_unset();
                 session_destroy();
+                session_start();
+                $_SESSION['redirect_after_login'] = $caminho;
                 return Resposta::redirecionar('/equipe/entrar?sessao=expirada');
             }
             $_SESSION['equipe_last_activity'] = time();
@@ -34,15 +38,19 @@ final class Middlewares
     {
         return static function (Requisicao $req): ?Resposta {
             if (Auth::clienteId() === null) {
+                $_SESSION['redirect_after_login'] = $req->caminho . (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : '');
                 return Resposta::redirecionar('/cliente/entrar');
             }
 
-            // Verificar expiração de sessão por inatividade (60 min)
+            // Verificar expiração de sessão por inatividade (24h)
             $lastActivity = (int) ($_SESSION['cliente_last_activity'] ?? 0);
-            $timeout = 60 * 60; // 60 minutos
+            $timeout = 86400; // 24 horas
             if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
+                $caminho = $req->caminho . (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : '');
                 session_unset();
                 session_destroy();
+                session_start();
+                $_SESSION['redirect_after_login'] = $caminho;
                 return Resposta::redirecionar('/cliente/entrar?sessao=expirada');
             }
             $_SESSION['cliente_last_activity'] = time();
