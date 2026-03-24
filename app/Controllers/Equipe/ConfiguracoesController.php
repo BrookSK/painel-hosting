@@ -25,6 +25,7 @@ final class ConfiguracoesController
             'stripe_secret_key' => ConfiguracoesSistema::stripeSecretKey(),
             'stripe_webhook_secret' => ConfiguracoesSistema::stripeWebhookSecret(),
             'app_url_base' => ConfiguracoesSistema::appUrlBase(),
+            'app_secret_key' => (string) Settings::obter('app.secret_key', ''),
             'tolerancia_dias' => (string) ConfiguracoesSistema::toleranciaPagamentoDias(),
             'evolution_url_base' => ConfiguracoesSistema::evolutionUrlBase(),
             'evolution_token' => ConfiguracoesSistema::evolutionToken(),
@@ -100,6 +101,7 @@ final class ConfiguracoesController
         $taxaConversaoUsd = (float) ($in->postString('taxa_conversao_usd', 20, false));
         if ($taxaConversaoUsd <= 0) $taxaConversaoUsd = 5.0;
         $appUrlBase = $in->postUrl('app_url_base', 255, false);
+        $appSecretKey = $in->postString('app_secret_key', 255, false);
 
         $tolerancia = $in->postInt('tolerancia_dias', 1, 365, false);
 
@@ -179,6 +181,7 @@ final class ConfiguracoesController
                 'stripe_webhook_secret' => $stripeWebhookSecret,
                 'taxa_conversao_usd' => (string) $taxaConversaoUsd,
                 'app_url_base' => $appUrlBase,
+                'app_secret_key' => $appSecretKey,
                 'tolerancia_dias' => $tolerancia > 0 ? (string) $tolerancia : '3',
                 'evolution_url_base' => $evoUrl,
                 'evolution_token' => $evoToken,
@@ -253,6 +256,7 @@ final class ConfiguracoesController
         Settings::definir('stripe.webhook_secret', $stripeWebhookSecret);
         Settings::definir('billing.taxa_conversao_usd', $taxaConversaoUsd);
         Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
+        Settings::definir('app.secret_key', $appSecretKey);
         Settings::definir('cobranca.tolerancia_dias', $tolerancia > 0 ? $tolerancia : 3);
         Settings::definir('whatsapp.evolution.url_base', $evoUrl);
         Settings::definir('whatsapp.evolution.token', $evoToken);
@@ -362,6 +366,7 @@ final class ConfiguracoesController
             'stripe_webhook_secret' => $stripeWebhookSecret,
             'taxa_conversao_usd' => (string) $taxaConversaoUsd,
             'app_url_base' => rtrim($appUrlBase, '/'),
+            'app_secret_key' => $appSecretKey,
             'tolerancia_dias' => (string) ($tolerancia > 0 ? $tolerancia : 3),
             'evolution_url_base' => $evoUrl,
             'evolution_token' => $evoToken,

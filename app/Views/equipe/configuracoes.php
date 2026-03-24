@@ -75,6 +75,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <input class="input" type="email" name="email_admin" value="<?php echo View::e((string)($email_admin??'')); ?>" />
       </div>
     </div>
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_config.secret_key')); ?></label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="input" type="text" name="app_secret_key" id="app_secret_key" value="<?php echo View::e((string)($app_secret_key??'')); ?>" style="flex:1;font-family:monospace;" />
+        <button type="button" class="botao" style="white-space:nowrap;" onclick="document.getElementById('app_secret_key').value=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('')"><?php echo View::e(I18n::t('eq_config.gerar_chave')); ?></button>
+      </div>
+      <p class="texto" style="font-size:12px;margin-top:6px;opacity:.8;"><?php echo View::e(I18n::t('eq_config.hint_secret_key')); ?></p>
+    </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">WhatsApp (Evolution API)</h2>
     <div class="grid">
