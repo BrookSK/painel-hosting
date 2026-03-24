@@ -20,40 +20,90 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 
     <h2 class="titulo" style="font-size:16px;margin-bottom:12px;">Asaas</h2>
-    <div class="grid">
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Token do Asaas</label>
-        <input class="input" type="password" name="asaas_token" value="<?php echo View::e((string)($asaas_token??'')); ?>" />
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Ambiente ativo</label>
+      <select class="input" name="asaas_mode" style="max-width:200px;">
+        <option value="sandbox" <?php echo ((string)($asaas_mode??'sandbox'))==='sandbox'?'selected':''; ?>>🧪 Sandbox</option>
+        <option value="production" <?php echo ((string)($asaas_mode??'sandbox'))==='production'?'selected':''; ?>>🟢 Produção</option>
+      </select>
+    </div>
+    <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🧪 Sandbox</div>
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Token (Sandbox)</label>
+          <input class="input" type="password" name="asaas_token_sandbox" value="<?php echo View::e((string)($asaas_token_sandbox??'')); ?>" />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">URL base (Sandbox)</label>
+          <input class="input" type="text" name="asaas_url_base_sandbox" value="<?php echo View::e((string)($asaas_url_base_sandbox??'https://sandbox.asaas.com/api/v3')); ?>" />
+        </div>
       </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">URL base do Asaas</label>
-        <input class="input" type="text" name="asaas_url_base" value="<?php echo View::e((string)($asaas_url_base??'')); ?>" />
+      <div style="margin-top:8px;">
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Segredo webhook (Sandbox)</label>
+        <input class="input" type="text" name="asaas_webhook_segredo_sandbox" value="<?php echo View::e((string)($asaas_webhook_segredo_sandbox??'')); ?>" />
       </div>
     </div>
-    <div class="grid" style="margin-top:12px;">
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Segredo do webhook Asaas</label>
-        <input class="input" type="text" name="asaas_webhook_segredo" value="<?php echo View::e((string)($asaas_webhook_segredo??'')); ?>" />
-        <p class="texto" style="font-size:13px;margin-top:8px;">Endpoint: <strong>/webhooks/asaas</strong></p>
+    <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🟢 Produção</div>
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Token (Produção)</label>
+          <input class="input" type="password" name="asaas_token_production" value="<?php echo View::e((string)($asaas_token_production??'')); ?>" />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">URL base (Produção)</label>
+          <input class="input" type="text" name="asaas_url_base_production" value="<?php echo View::e((string)($asaas_url_base_production??'https://api.asaas.com/v3')); ?>" />
+        </div>
       </div>
+      <div style="margin-top:8px;">
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Segredo webhook (Produção)</label>
+        <input class="input" type="text" name="asaas_webhook_segredo_production" value="<?php echo View::e((string)($asaas_webhook_segredo_production??'')); ?>" />
+      </div>
+    </div>
+    <div class="grid">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Tolerancia de inadimplencia (dias)</label>
         <input class="input" type="number" name="tolerancia_dias" value="<?php echo View::e((string)($tolerancia_dias??'3')); ?>" min="1" />
       </div>
     </div>
+    <p class="texto" style="font-size:13px;margin-top:8px;">Endpoint: <strong>/webhooks/asaas</strong></p>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Stripe</h2>
-    <div class="grid">
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Stripe - Secret Key</label>
-        <input class="input" type="password" name="stripe_secret_key" value="<?php echo View::e((string)($stripe_secret_key??'')); ?>" />
-      </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Stripe - Webhook Secret</label>
-        <input class="input" type="text" name="stripe_webhook_secret" value="<?php echo View::e((string)($stripe_webhook_secret??'')); ?>" />
-        <p class="texto" style="font-size:13px;margin-top:8px;">Endpoint: <strong>/webhooks/stripe</strong></p>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Ambiente ativo</label>
+      <select class="input" name="stripe_mode" style="max-width:200px;">
+        <option value="sandbox" <?php echo ((string)($stripe_mode??'sandbox'))==='sandbox'?'selected':''; ?>>🧪 Sandbox (Test)</option>
+        <option value="production" <?php echo ((string)($stripe_mode??'sandbox'))==='production'?'selected':''; ?>>🟢 Produção (Live)</option>
+      </select>
+    </div>
+    <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🧪 Sandbox (Test)</div>
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Secret Key (Test)</label>
+          <input class="input" type="password" name="stripe_secret_key_sandbox" value="<?php echo View::e((string)($stripe_secret_key_sandbox??'')); ?>" placeholder="sk_test_..." />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Webhook Secret (Test)</label>
+          <input class="input" type="text" name="stripe_webhook_secret_sandbox" value="<?php echo View::e((string)($stripe_webhook_secret_sandbox??'')); ?>" placeholder="whsec_..." />
+        </div>
       </div>
     </div>
+    <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🟢 Produção (Live)</div>
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Secret Key (Live)</label>
+          <input class="input" type="password" name="stripe_secret_key_production" value="<?php echo View::e((string)($stripe_secret_key_production??'')); ?>" placeholder="sk_live_..." />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Webhook Secret (Live)</label>
+          <input class="input" type="text" name="stripe_webhook_secret_production" value="<?php echo View::e((string)($stripe_webhook_secret_production??'')); ?>" placeholder="whsec_..." />
+        </div>
+      </div>
+    </div>
+    <p class="texto" style="font-size:13px;">Endpoint: <strong>/webhooks/stripe</strong></p>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Conversão de Moeda</h2>
     <div class="grid">

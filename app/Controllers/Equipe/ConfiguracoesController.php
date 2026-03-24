@@ -19,11 +19,18 @@ final class ConfiguracoesController
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
             'salvo' => false,
             'erro' => '',
-            'asaas_token' => ConfiguracoesSistema::asaasToken(),
-            'asaas_url_base' => ConfiguracoesSistema::asaasUrlBase(),
-            'asaas_webhook_segredo' => ConfiguracoesSistema::webhookSegredoAsaas(),
-            'stripe_secret_key' => ConfiguracoesSistema::stripeSecretKey(),
-            'stripe_webhook_secret' => ConfiguracoesSistema::stripeWebhookSecret(),
+            'asaas_mode' => (string) Settings::obter('asaas.mode', 'sandbox'),
+            'asaas_token_sandbox' => (string) Settings::obter('asaas.token.sandbox', ''),
+            'asaas_url_base_sandbox' => (string) Settings::obter('asaas.url_base.sandbox', 'https://sandbox.asaas.com/api/v3'),
+            'asaas_webhook_segredo_sandbox' => (string) Settings::obter('asaas.webhook_segredo.sandbox', ''),
+            'asaas_token_production' => (string) Settings::obter('asaas.token.production', ''),
+            'asaas_url_base_production' => (string) Settings::obter('asaas.url_base.production', 'https://api.asaas.com/v3'),
+            'asaas_webhook_segredo_production' => (string) Settings::obter('asaas.webhook_segredo.production', ''),
+            'stripe_mode' => (string) Settings::obter('stripe.mode', 'sandbox'),
+            'stripe_secret_key_sandbox' => (string) Settings::obter('stripe.secret_key.sandbox', ''),
+            'stripe_webhook_secret_sandbox' => (string) Settings::obter('stripe.webhook_secret.sandbox', ''),
+            'stripe_secret_key_production' => (string) Settings::obter('stripe.secret_key.production', ''),
+            'stripe_webhook_secret_production' => (string) Settings::obter('stripe.webhook_secret.production', ''),
             'app_url_base' => ConfiguracoesSistema::appUrlBase(),
             'app_secret_key' => (string) Settings::obter('app.secret_key', ''),
             'tolerancia_dias' => (string) ConfiguracoesSistema::toleranciaPagamentoDias(),
@@ -101,11 +108,20 @@ final class ConfiguracoesController
     {
         $in = $req->input();
 
-        $asaasToken = $in->postString('asaas_token', 300, false);
-        $asaasUrl = $in->postUrl('asaas_url_base', 255, false);
-        $asaasSegredo = $in->postString('asaas_webhook_segredo', 255, false);
-        $stripeSecretKey = $in->postString('stripe_secret_key', 255, false);
-        $stripeWebhookSecret = $in->postString('stripe_webhook_secret', 255, false);
+        $asaasMode = $in->postEnum('asaas_mode', ['sandbox', 'production'], 'sandbox');
+        $asaasTokenSandbox = $in->postString('asaas_token_sandbox', 300, false);
+        $asaasUrlSandbox = $in->postUrl('asaas_url_base_sandbox', 255, false);
+        $asaasSegredoSandbox = $in->postString('asaas_webhook_segredo_sandbox', 255, false);
+        $asaasTokenProduction = $in->postString('asaas_token_production', 300, false);
+        $asaasUrlProduction = $in->postUrl('asaas_url_base_production', 255, false);
+        $asaasSegredoProduction = $in->postString('asaas_webhook_segredo_production', 255, false);
+
+        $stripeMode = $in->postEnum('stripe_mode', ['sandbox', 'production'], 'sandbox');
+        $stripeSecretKeySandbox = $in->postString('stripe_secret_key_sandbox', 255, false);
+        $stripeWebhookSecretSandbox = $in->postString('stripe_webhook_secret_sandbox', 255, false);
+        $stripeSecretKeyProduction = $in->postString('stripe_secret_key_production', 255, false);
+        $stripeWebhookSecretProduction = $in->postString('stripe_webhook_secret_production', 255, false);
+
         $taxaConversaoUsd = (float) ($in->postString('taxa_conversao_usd', 20, false));
         if ($taxaConversaoUsd <= 0) $taxaConversaoUsd = 5.0;
         $appUrlBase = $in->postUrl('app_url_base', 255, false);
@@ -190,11 +206,18 @@ final class ConfiguracoesController
             $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
                 'salvo' => false,
                 'erro' => $in->primeiroErro(),
-                'asaas_token' => $asaasToken,
-                'asaas_url_base' => $asaasUrl,
-                'asaas_webhook_segredo' => $asaasSegredo,
-                'stripe_secret_key' => $stripeSecretKey,
-                'stripe_webhook_secret' => $stripeWebhookSecret,
+                'asaas_mode' => $asaasMode,
+                'asaas_token_sandbox' => $asaasTokenSandbox,
+                'asaas_url_base_sandbox' => $asaasUrlSandbox !== '' ? $asaasUrlSandbox : 'https://sandbox.asaas.com/api/v3',
+                'asaas_webhook_segredo_sandbox' => $asaasSegredoSandbox,
+                'asaas_token_production' => $asaasTokenProduction,
+                'asaas_url_base_production' => $asaasUrlProduction !== '' ? $asaasUrlProduction : 'https://api.asaas.com/v3',
+                'asaas_webhook_segredo_production' => $asaasSegredoProduction,
+                'stripe_mode' => $stripeMode,
+                'stripe_secret_key_sandbox' => $stripeSecretKeySandbox,
+                'stripe_webhook_secret_sandbox' => $stripeWebhookSecretSandbox,
+                'stripe_secret_key_production' => $stripeSecretKeyProduction,
+                'stripe_webhook_secret_production' => $stripeWebhookSecretProduction,
                 'taxa_conversao_usd' => (string) $taxaConversaoUsd,
                 'app_url_base' => $appUrlBase,
                 'app_secret_key' => $appSecretKey,
@@ -269,15 +292,26 @@ final class ConfiguracoesController
             return Resposta::html($html, 422);
         }
 
-        if ($asaasUrl === '') {
-            $asaasUrl = 'https://api.asaas.com/v3';
-        }
+        Settings::definir('asaas.mode', $asaasMode);
+        Settings::definir('asaas.token.sandbox', $asaasTokenSandbox);
+        Settings::definir('asaas.url_base.sandbox', $asaasUrlSandbox !== '' ? $asaasUrlSandbox : 'https://sandbox.asaas.com/api/v3');
+        Settings::definir('asaas.webhook_segredo.sandbox', $asaasSegredoSandbox);
+        Settings::definir('asaas.token.production', $asaasTokenProduction);
+        Settings::definir('asaas.url_base.production', $asaasUrlProduction !== '' ? $asaasUrlProduction : 'https://api.asaas.com/v3');
+        Settings::definir('asaas.webhook_segredo.production', $asaasSegredoProduction);
+        // Manter keys legadas apontando pro ambiente ativo
+        Settings::definir('asaas.token', $asaasMode === 'production' ? $asaasTokenProduction : $asaasTokenSandbox);
+        Settings::definir('asaas.url_base', $asaasMode === 'production' ? ($asaasUrlProduction !== '' ? $asaasUrlProduction : 'https://api.asaas.com/v3') : ($asaasUrlSandbox !== '' ? $asaasUrlSandbox : 'https://sandbox.asaas.com/api/v3'));
+        Settings::definir('asaas.webhook_segredo', $asaasMode === 'production' ? $asaasSegredoProduction : $asaasSegredoSandbox);
 
-        Settings::definir('asaas.token', $asaasToken);
-        Settings::definir('asaas.url_base', $asaasUrl);
-        Settings::definir('asaas.webhook_segredo', $asaasSegredo);
-        Settings::definir('stripe.secret_key', $stripeSecretKey);
-        Settings::definir('stripe.webhook_secret', $stripeWebhookSecret);
+        Settings::definir('stripe.mode', $stripeMode);
+        Settings::definir('stripe.secret_key.sandbox', $stripeSecretKeySandbox);
+        Settings::definir('stripe.webhook_secret.sandbox', $stripeWebhookSecretSandbox);
+        Settings::definir('stripe.secret_key.production', $stripeSecretKeyProduction);
+        Settings::definir('stripe.webhook_secret.production', $stripeWebhookSecretProduction);
+        // Manter keys legadas apontando pro ambiente ativo
+        Settings::definir('stripe.secret_key', $stripeMode === 'production' ? $stripeSecretKeyProduction : $stripeSecretKeySandbox);
+        Settings::definir('stripe.webhook_secret', $stripeMode === 'production' ? $stripeWebhookSecretProduction : $stripeWebhookSecretSandbox);
         Settings::definir('billing.taxa_conversao_usd', $taxaConversaoUsd);
         Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
         Settings::definir('app.secret_key', $appSecretKey);
@@ -367,11 +401,12 @@ final class ConfiguracoesController
             'settings',
             null,
             [
-                'asaas_url_base' => $asaasUrl,
-                'asaas_token_set' => $asaasToken !== '',
-                'asaas_webhook_segredo_set' => $asaasSegredo !== '',
-                'stripe_secret_key_set' => $stripeSecretKey !== '',
-                'stripe_webhook_secret_set' => $stripeWebhookSecret !== '',
+                'asaas_mode' => $asaasMode,
+                'asaas_url_base_sandbox' => $asaasUrlSandbox,
+                'asaas_url_base_production' => $asaasUrlProduction,
+                'asaas_token_set' => ($asaasTokenSandbox !== '' || $asaasTokenProduction !== ''),
+                'stripe_mode' => $stripeMode,
+                'stripe_key_set' => ($stripeSecretKeySandbox !== '' || $stripeSecretKeyProduction !== ''),
                 'app_url_base' => rtrim($appUrlBase, '/'),
                 'tolerancia_dias' => $tolerancia > 0 ? $tolerancia : 3,
                 'evolution_url_base' => $evoUrl,
@@ -393,11 +428,18 @@ final class ConfiguracoesController
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/configuracoes.php', [
             'salvo' => true,
             'erro' => '',
-            'asaas_token' => $asaasToken,
-            'asaas_url_base' => $asaasUrl,
-            'asaas_webhook_segredo' => $asaasSegredo,
-            'stripe_secret_key' => $stripeSecretKey,
-            'stripe_webhook_secret' => $stripeWebhookSecret,
+            'asaas_mode' => $asaasMode,
+            'asaas_token_sandbox' => $asaasTokenSandbox,
+            'asaas_url_base_sandbox' => $asaasUrlSandbox !== '' ? $asaasUrlSandbox : 'https://sandbox.asaas.com/api/v3',
+            'asaas_webhook_segredo_sandbox' => $asaasSegredoSandbox,
+            'asaas_token_production' => $asaasTokenProduction,
+            'asaas_url_base_production' => $asaasUrlProduction !== '' ? $asaasUrlProduction : 'https://api.asaas.com/v3',
+            'asaas_webhook_segredo_production' => $asaasSegredoProduction,
+            'stripe_mode' => $stripeMode,
+            'stripe_secret_key_sandbox' => $stripeSecretKeySandbox,
+            'stripe_webhook_secret_sandbox' => $stripeWebhookSecretSandbox,
+            'stripe_secret_key_production' => $stripeSecretKeyProduction,
+            'stripe_webhook_secret_production' => $stripeWebhookSecretProduction,
             'taxa_conversao_usd' => (string) $taxaConversaoUsd,
             'app_url_base' => rtrim($appUrlBase, '/'),
             'app_secret_key' => $appSecretKey,
