@@ -242,22 +242,26 @@ final class SshExecutor
 
     /**
      * Executa via SSH_ASKPASS + setsid — fornece senha sem terminal interativo.
-     * Cria um script temporário que retorna a senha via stdout,
-     * e usa setsid para desassociar o terminal, forçando o SSH a usar SSH_ASKPASS.
+     * O script askpass é salvo em storage/ (evita /tmp com noexec).
      */
     private function executarViaPty(string $host, int $porta, string $usuario, string $senha, string $cmd, int $timeout): array
     {
         $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
 
-        // Cria script temporário que imprime a senha
-        $askpassScript = tempnam(sys_get_temp_dir(), 'lrv_askpass_');
-        if ($askpassScript === false) {
-            return ['ok' => false, 'comando' => '', 'saida' => 'Não foi possível criar arquivo temporário para SSH_ASKPASS.', 'codigo' => 255];
-        }
-        file_put_contents($askpassScript, "#!/bin/sh\necho " . escapeshellarg($senha) . "\n");
+        // Diretório do projeto para o script askpass (evita /tmp noexec)
+        $storageDir = defined('BASE_PATH') ? BASE_PATH . '/storage' : dirname(__DIR__, 3) . '/storage';
+        if (!is_dir($storageDir)) @mkdir($storageDir, 0700, true);
+
+        $senhaFile = $storageDir . '/ssh_pw_' . bin2hex(random_bytes(8));
+        file_put_contents($senhaFile, $senha);
+        chmod($senhaFile, 0600);
+
+        // Usa /bin/cat como SSH_ASKPASS — lê a senha do arquivo
+        // SSH_ASKPASS é chamado sem argumentos, então criamos um wrapper via env
+        $askpassScript = $storageDir . '/askpass_' . bin2hex(random_bytes(8)) . '.sh';
+        file_put_contents($askpassScript, "#!/bin/sh\ncat " . escapeshellarg($senhaFile) . "\n");
         chmod($askpassScript, 0700);
 
-        // setsid desassocia o terminal, forçando SSH a usar SSH_ASKPASS
         $sshCmd = implode(' ', [
             'setsid',
             'ssh',
@@ -285,9 +289,14 @@ final class SshExecutor
             2 => ['pipe', 'w'],
         ];
 
+        $cleanup = function () use ($askpassScript, $senhaFile) {
+            @unlink($askpassScript);
+            @unlink($senhaFile);
+        };
+
         $process = @proc_open($sshCmd, $descriptorspec, $pipes, null, $env);
         if (!is_resource($process)) {
-            @unlink($askpassScript);
+            $cleanup();
             return ['ok' => false, 'comando' => $sshCmd, 'saida' => 'Falha ao iniciar processo SSH.', 'codigo' => 255];
         }
 
@@ -312,7 +321,7 @@ final class SshExecutor
                 $stderr .= (string)@stream_get_contents($pipes[2]);
                 foreach ([1, 2] as $i) { if (isset($pipes[$i]) && is_resource($pipes[$i])) @fclose($pipes[$i]); }
                 @proc_close($process);
-                @unlink($askpassScript);
+                $cleanup();
                 return ['ok' => false, 'comando' => $sshCmd, 'saida' => trim($stdout . "\n" . $stderr), 'codigo' => 124];
             }
 
@@ -321,7 +330,7 @@ final class SshExecutor
 
         foreach ([1, 2] as $i) { if (isset($pipes[$i]) && is_resource($pipes[$i])) @fclose($pipes[$i]); }
         $codigo = (int)@proc_close($process);
-        @unlink($askpassScript);
+        $cleanup();
 
         return [
             'ok'      => $codigo === 0,
