@@ -927,6 +927,28 @@ return [
     'eq_vps.erro' => 'Error',
     'eq_vps.removida' => 'Eliminada',
 
+    // ── Equipo — Aplicaciones ──
+    'eq_apps.titulo' => 'Aplicaciones',
+    'eq_apps.subtitulo' => 'Apps vinculadas a VPS y puertos reservados',
+    'eq_apps.desc' => 'Cree aplicaciones y reserve puertos únicos para exponer servicios.',
+    'eq_apps.nova' => 'Nueva aplicación',
+    'eq_apps.cliente' => 'Cliente',
+    'eq_apps.tipo' => 'Tipo',
+    'eq_apps.dominio' => 'Dominio',
+    'eq_apps.porta' => 'Puerto',
+    'eq_apps.status' => 'Estado',
+    'eq_apps.acoes' => 'Acciones',
+    'eq_apps.nenhuma' => 'Ninguna aplicación encontrada.',
+    'eq_apps.confirmar_deploy' => '¿Iniciar deploy ahora?',
+    'eq_apps.ativa' => 'Activa',
+    'eq_apps.inativa' => 'Inactiva',
+    'eq_apps.deploy' => 'Deploy',
+    'eq_apps.erro' => 'Error',
+    'eq_apps.catalogo' => 'Catálogo de plantillas',
+    'eq_apps.catalogo_desc' => 'Plantillas disponibles para instalación con un clic por los clientes.',
+    'eq_apps.requer_dominio' => 'Dominio',
+    'eq_apps.requer_repo' => 'Repositorio',
+
     // ── Equipo — Correos ──
     'eq_emails.titulo' => 'Correos',
     'eq_emails.subtitulo' => 'Cuentas de correo y dominios registrados por clientes',

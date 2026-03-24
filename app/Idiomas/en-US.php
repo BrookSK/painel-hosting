@@ -927,6 +927,28 @@ return [
     'eq_vps.erro' => 'Error',
     'eq_vps.removida' => 'Removed',
 
+    // ── Team — Applications ──
+    'eq_apps.titulo' => 'Applications',
+    'eq_apps.subtitulo' => 'Apps linked to VPS and reserved ports',
+    'eq_apps.desc' => 'Create applications and reserve unique ports to expose services.',
+    'eq_apps.nova' => 'New application',
+    'eq_apps.cliente' => 'Client',
+    'eq_apps.tipo' => 'Type',
+    'eq_apps.dominio' => 'Domain',
+    'eq_apps.porta' => 'Port',
+    'eq_apps.status' => 'Status',
+    'eq_apps.acoes' => 'Actions',
+    'eq_apps.nenhuma' => 'No applications found.',
+    'eq_apps.confirmar_deploy' => 'Start deploy now?',
+    'eq_apps.ativa' => 'Active',
+    'eq_apps.inativa' => 'Inactive',
+    'eq_apps.deploy' => 'Deploy',
+    'eq_apps.erro' => 'Error',
+    'eq_apps.catalogo' => 'Template catalog',
+    'eq_apps.catalogo_desc' => 'Templates available for one-click install by clients.',
+    'eq_apps.requer_dominio' => 'Domain',
+    'eq_apps.requer_repo' => 'Repository',
+
     // ── Team — Emails ──
     'eq_emails.titulo' => 'Emails',
     'eq_emails.subtitulo' => 'Email accounts and domains registered by clients',

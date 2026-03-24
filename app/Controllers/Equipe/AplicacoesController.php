@@ -28,8 +28,14 @@ final class AplicacoesController
         $stmt = $pdo->query($sql);
         $aplicacoes = $stmt->fetchAll();
 
+        $templates = [];
+        try {
+            $templates = $pdo->query('SELECT * FROM app_templates ORDER BY category, name')->fetchAll();
+        } catch (\Throwable) {}
+
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/aplicacoes-listar.php', [
             'aplicacoes' => is_array($aplicacoes) ? $aplicacoes : [],
+            'templates'  => is_array($templates) ? $templates : [],
         ]);
 
         return Resposta::html($html);

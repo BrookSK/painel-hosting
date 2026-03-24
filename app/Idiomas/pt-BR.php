@@ -1051,6 +1051,28 @@ return [
     'eq_vps.erro' => 'Erro',
     'eq_vps.removida' => 'Removida',
 
+    // ── Equipe — Aplicações ──
+    'eq_apps.titulo' => 'Aplicações',
+    'eq_apps.subtitulo' => 'Apps vinculados às VPS e portas reservadas',
+    'eq_apps.desc' => 'Crie aplicações e reserve portas únicas para expor serviços.',
+    'eq_apps.nova' => 'Nova aplicação',
+    'eq_apps.cliente' => 'Cliente',
+    'eq_apps.tipo' => 'Tipo',
+    'eq_apps.dominio' => 'Domínio',
+    'eq_apps.porta' => 'Porta',
+    'eq_apps.status' => 'Status',
+    'eq_apps.acoes' => 'Ações',
+    'eq_apps.nenhuma' => 'Nenhuma aplicação cadastrada.',
+    'eq_apps.confirmar_deploy' => 'Iniciar deploy agora?',
+    'eq_apps.ativa' => 'Ativa',
+    'eq_apps.inativa' => 'Inativa',
+    'eq_apps.deploy' => 'Deploy',
+    'eq_apps.erro' => 'Erro',
+    'eq_apps.catalogo' => 'Catálogo de templates',
+    'eq_apps.catalogo_desc' => 'Templates disponíveis para instalação one-click pelos clientes.',
+    'eq_apps.requer_dominio' => 'Domínio',
+    'eq_apps.requer_repo' => 'Repositório',
+
     // ── Equipe — E-mails ──
     'eq_emails.titulo' => 'E-mails',
     'eq_emails.subtitulo' => 'Contas de e-mail e domínios cadastrados pelos clientes',
