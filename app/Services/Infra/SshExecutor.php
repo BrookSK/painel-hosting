@@ -42,7 +42,8 @@ final class SshExecutor
     }
 
     /**
-     * Executa um comando remoto via SSH com senha (requer sshpass instalado no servidor do painel).
+     * Executa um comando remoto via SSH com senha.
+     * Prioridade: ext-ssh2 → proc_open com pty → sshpass (fallback).
      */
     public function executarComSenha(
         string $host,
@@ -60,22 +61,17 @@ final class SshExecutor
             throw new \InvalidArgumentException('Parâmetros inválidos para execução SSH com senha.');
         }
 
-        if (!$this->sshpassDisponivel()) {
-            throw new \RuntimeException('sshpass não está instalado no servidor do painel. Execute: apt-get install -y sshpass');
+        // 1) ext-ssh2
+        if (function_exists('ssh2_connect')) {
+            return $this->executarViaSsh2($host, $porta, $usuario, $senha, $cmd, $timeoutSegundos);
         }
 
-        $sshCmd = $this->montarComandoSenha($host, $porta, $usuario, $senha, $cmd);
-        return $this->executarProcesso($sshCmd, $timeoutSegundos);
-    }
+        // 2) proc_open com pseudo-terminal (pty)
+        if (function_exists('proc_open')) {
+            return $this->executarViaPty($host, $porta, $usuario, $senha, $cmd, $timeoutSegundos);
+        }
 
-    /**
-     * Verifica se sshpass está disponível no sistema.
-     */
-    public function sshpassDisponivel(): bool
-    {
-        if (!function_exists('shell_exec')) return false;
-        $out = @shell_exec('which sshpass 2>/dev/null');
-        return $out !== null && trim((string)$out) !== '';
+        throw new \RuntimeException('Nenhum método disponível para SSH com senha. Instale a extensão ssh2 ou habilite proc_open.');
     }
 
     /**
@@ -194,24 +190,137 @@ final class SshExecutor
         ]);
     }
 
-    private function montarComandoSenha(string $host, int $porta, string $usuario, string $senha, string $cmd): string
+    /**
+     * Executa via extensão ext-ssh2 (ssh2_connect).
+     */
+    private function executarViaSsh2(string $host, int $porta, string $usuario, string $senha, string $cmd, int $timeout): array
+    {
+        $conn = @ssh2_connect($host, $porta);
+        if (!$conn) {
+            return ['ok' => false, 'comando' => "ssh2_connect({$host}:{$porta})", 'saida' => 'Não foi possível conectar via SSH.', 'codigo' => 255];
+        }
+
+        if (!@ssh2_auth_password($conn, $usuario, $senha)) {
+            return ['ok' => false, 'comando' => "ssh2_auth_password({$usuario}@{$host})", 'saida' => 'Autenticação SSH por senha falhou.', 'codigo' => 255];
+        }
+
+        $stream = @ssh2_exec($conn, $cmd);
+        if (!$stream) {
+            return ['ok' => false, 'comando' => $cmd, 'saida' => 'Falha ao executar comando remoto.', 'codigo' => 255];
+        }
+
+        $stderrStream = ssh2_fetch_stream($stream, SSH2_STREAM_STDERR);
+        stream_set_blocking($stream, true);
+        stream_set_blocking($stderrStream, true);
+
+        if ($timeout > 0) {
+            stream_set_timeout($stream, $timeout);
+            stream_set_timeout($stderrStream, $timeout);
+        }
+
+        $stdout = (string)stream_get_contents($stream);
+        $stderr = (string)stream_get_contents($stderrStream);
+
+        fclose($stderrStream);
+        fclose($stream);
+
+        // ssh2_exec não retorna exit code diretamente; verificamos via echo $?
+        $exitStream = @ssh2_exec($conn, 'echo $?');
+        $exitCode = 0;
+        if ($exitStream) {
+            stream_set_blocking($exitStream, true);
+            $exitCode = (int)trim((string)stream_get_contents($exitStream));
+            fclose($exitStream);
+        }
+
+        return [
+            'ok'      => $exitCode === 0,
+            'comando' => $cmd,
+            'saida'   => trim($stdout . "\n" . $stderr),
+            'codigo'  => $exitCode,
+        ];
+    }
+
+    /**
+     * Executa via proc_open com pseudo-terminal (pty) — envia senha interativamente.
+     * Não requer sshpass.
+     */
+    private function executarViaPty(string $host, int $porta, string $usuario, string $senha, string $cmd, int $timeout): array
     {
         $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
-        // sshpass -p SENHA ssh -o StrictHostKeyChecking=no ...
-        return implode(' ', [
-            'sshpass',
-            '-p ' . escapeshellarg($senha),
+        $sshCmd = implode(' ', [
             'ssh',
             '-p ' . $porta,
-            '-o BatchMode=no',
             '-o ConnectTimeout=8',
             '-o StrictHostKeyChecking=no',
             '-o UserKnownHostsFile=' . $knownHosts,
             '-o PasswordAuthentication=yes',
             '-o PubkeyAuthentication=no',
+            '-o NumberOfPasswordPrompts=1',
             escapeshellarg($usuario . '@' . $host),
             escapeshellarg($cmd),
         ]);
+
+        $descriptorspec = [
+            0 => ['pty'],
+            1 => ['pty'],
+            2 => ['pty'],
+        ];
+
+        $process = @proc_open($sshCmd, $descriptorspec, $pipes);
+        if (!is_resource($process)) {
+            return ['ok' => false, 'comando' => $sshCmd, 'saida' => 'Falha ao iniciar processo SSH com pty.', 'codigo' => 255];
+        }
+
+        // Aguarda prompt de senha e envia
+        usleep(500_000);
+        @fwrite($pipes[0], $senha . "\n");
+        @fflush($pipes[0]);
+
+        stream_set_blocking($pipes[1], false);
+
+        $output = '';
+        $inicio = microtime(true);
+
+        while (true) {
+            $chunk = (string)@fread($pipes[1], 8192);
+            if ($chunk !== '') $output .= $chunk;
+
+            $status = proc_get_status($process);
+            if (!is_array($status) || empty($status['running'])) break;
+
+            if ($timeout > 0 && (microtime(true) - $inicio) > $timeout) {
+                @proc_terminate($process);
+                $output .= (string)@fread($pipes[1], 8192);
+                @fclose($pipes[0]);
+                @fclose($pipes[1]);
+                @proc_close($process);
+                return ['ok' => false, 'comando' => $sshCmd, 'saida' => trim($output), 'codigo' => 124];
+            }
+
+            usleep(50_000);
+        }
+
+        @fclose($pipes[0]);
+        @fclose($pipes[1]);
+        if (isset($pipes[2]) && is_resource($pipes[2])) @fclose($pipes[2]);
+        $codigo = (int)@proc_close($process);
+
+        // Remove linhas de prompt de senha do output
+        $lines = explode("\n", $output);
+        $filtered = [];
+        foreach ($lines as $line) {
+            $lower = strtolower(trim($line));
+            if (str_contains($lower, 'password:') || str_contains($lower, 'senha:')) continue;
+            $filtered[] = $line;
+        }
+
+        return [
+            'ok'      => $codigo === 0,
+            'comando' => $sshCmd,
+            'saida'   => trim(implode("\n", $filtered)),
+            'codigo'  => $codigo,
+        ];
     }
 
     private function executarProcesso(string $cmd, int $timeoutSegundos): array

@@ -5,6 +5,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [1.9.0] — 2026-03-24
+
+### Adicionado
+- **Upload de chave SSH no formulário de servidores** — campo de upload de arquivo substitui o input de texto para chaves SSH (principal e terminal seguro)
+- Validação de conteúdo do arquivo (aceita chaves privadas e públicas: RSA, OPENSSH, EC)
+- Indicador visual de chave já configurada com opção de substituir
+- Arquivo salvo automaticamente no diretório `sshKeyDir` com permissão 600
+- Chaves i18n `eq_srv_edit.upload_chave*` nos 3 idiomas
+
+### Alterado
+- **SSH com senha sem sshpass** — `SshExecutor::executarComSenha()` reescrito com prioridade: ext-ssh2 → proc_open com pseudo-terminal (pty)
+- Removida dependência do binário `sshpass` — não é mais necessário instalar no servidor do painel
+- `ServidoresController::salvar()` processa upload de arquivo via `$_FILES` em vez de texto
+- `ServidoresController::testarConexao()` busca chave do banco para testes em servidores existentes
+- Formulário de servidores usa `enctype="multipart/form-data"`
+
+---
+
 ## [1.8.0] — 2026-03-22
 
 ### Adicionado

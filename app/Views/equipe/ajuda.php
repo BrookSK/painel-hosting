@@ -62,6 +62,7 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
 
   <div class="section-title">8. Nodes / Servidores</div>
   <p style="font-size:14px;color:#475569;">Cadastre nodes em <a href="/equipe/servidores">/equipe/servidores</a>. O provisionamento seleciona automaticamente o node com mais capacidade disponível.</p>
+  <p style="font-size:14px;color:#475569;">A autenticação SSH suporta dois modos: <strong>chave privada</strong> (upload de arquivo .pem/id_rsa) ou <strong>usuário e senha</strong> (via ext-ssh2 ou pseudo-terminal, sem necessidade de sshpass). Ao fazer upload, o arquivo é salvo no diretório configurado em <code>infra.ssh_key_dir</code> com permissão 600.</p>
 
   <div class="section-title">9. Usuários e Permissões</div>
   <p style="font-size:14px;color:#475569;">

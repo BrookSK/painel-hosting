@@ -58,7 +58,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
   </div>
 
-  <form id="form-servidor" method="post" action="/equipe/servidores/salvar">
+  <form id="form-servidor" method="post" action="/equipe/servidores/salvar" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
     <input type="hidden" name="id" value="<?php echo View::e((string)($servidor['id'] ?? '')); ?>" />
 
@@ -124,9 +124,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
         <!-- Chave -->
         <div id="field-key" style="<?php echo $authType !== 'key' ? 'display:none;' : ''; ?>">
-          <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.id_chave')); ?></label>
-          <input class="input" type="text" name="ssh_key_id" value="<?php echo View::e((string)($servidor['ssh_key_id'] ?? '')); ?>" placeholder="ex: node-01" />
-          <p class="texto" style="font-size:12px;margin-top:6px;"><?php echo View::e(I18n::t('eq_srv_edit.hint_chave')); ?> <strong>/equipe/configuracoes</strong>.</p>
+          <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.upload_chave')); ?></label>
+          <?php if (!empty($servidor['ssh_key_id'])): ?>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f0f4ff;border-radius:8px;font-size:13px;">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#4F46E5;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+              <span><?php echo View::e(I18n::t('eq_srv_edit.chave_configurada')); ?>: <code><?php echo View::e((string)$servidor['ssh_key_id']); ?></code></span>
+            </div>
+          <?php endif; ?>
+          <input class="input" type="file" name="ssh_key_file" accept=".pem,.key,.pub,.ppk" style="padding:8px;" />
+          <p class="texto" style="font-size:12px;margin-top:6px;"><?php echo View::e(I18n::t('eq_srv_edit.hint_upload_chave')); ?></p>
+          <?php if (!empty($servidor['ssh_key_id'])): ?>
+            <p class="texto" style="font-size:12px;margin-top:4px;opacity:.7;"><?php echo View::e(I18n::t('eq_srv_edit.hint_substituir_chave')); ?></p>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -163,9 +172,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <input class="input" type="text" name="terminal_ssh_user" value="<?php echo View::e((string)($servidor['terminal_ssh_user'] ?? 'lrv-terminal')); ?>" />
         </div>
         <div>
-          <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.chave_terminal')); ?></label>
-          <input class="input" type="text" name="terminal_ssh_key_id" value="<?php echo View::e((string)($servidor['terminal_ssh_key_id'] ?? '')); ?>" />
-          <p class="texto" style="font-size:12px;margin-top:6px;"><?php echo View::e(I18n::t('eq_srv_edit.hint_terminal')); ?></p>
+          <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.upload_chave_terminal')); ?></label>
+          <?php if (!empty($servidor['terminal_ssh_key_id'])): ?>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f0f4ff;border-radius:8px;font-size:13px;">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#4F46E5;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+              <span><?php echo View::e(I18n::t('eq_srv_edit.chave_configurada')); ?>: <code><?php echo View::e((string)$servidor['terminal_ssh_key_id']); ?></code></span>
+            </div>
+          <?php endif; ?>
+          <input class="input" type="file" name="terminal_ssh_key_file" accept=".pem,.key,.pub,.ppk" style="padding:8px;" />
+          <p class="texto" style="font-size:12px;margin-top:6px;"><?php echo View::e(I18n::t('eq_srv_edit.hint_upload_terminal')); ?></p>
         </div>
       </div>
       <?php if (!empty($servidor['id'])): ?>

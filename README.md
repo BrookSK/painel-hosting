@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **1.8.0**
+> Versão atual: **1.9.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -224,6 +224,8 @@ Ou via painel em `/equipe/inicializacao`.
 - 2FA (TOTP RFC 6238) para clientes (`/cliente/2fa/configurar`)
 - Chave SSH de fallback removida — `SshCrypto` exige `app.secret_key` configurado
 - `config/instalacao.php` removido do Git (credenciais não versionadas)
+- Upload de chave SSH no formulário de servidores (substitui input de texto)
+- SSH com senha via ext-ssh2 ou proc_open com pty (sem dependência de `sshpass`)
 - Tokens de terminal e chat de uso único com TTL curto
 - Validação de propriedade (IDOR) em todos os endpoints sensíveis — retorna 403
 - Prevenção de replay attack nos webhooks Stripe e Asaas

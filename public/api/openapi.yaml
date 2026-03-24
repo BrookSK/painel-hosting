@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: LRV Cloud Manager API
-  version: "1.8.0"
+  version: "1.9.0"
   description: |
     API interna do LRV Cloud Manager.
     Autenticação via sessão PHP (cookie de sessão).

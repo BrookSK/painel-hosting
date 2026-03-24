@@ -101,12 +101,12 @@ final class ServidoresController
         $sshPort      = (int)($req->post['ssh_port'] ?? 22);
         $sshUser      = trim((string)($req->post['ssh_user'] ?? ''));
         $authType     = (string)($req->post['ssh_auth_type'] ?? 'password');
-        $sshKeyId     = trim((string)($req->post['ssh_key_id'] ?? ''));
+        $sshKeyId     = '';
         $sshPassword  = (string)($req->post['ssh_password'] ?? '');
         $useSudo      = !empty($req->post['use_sudo']);
         $sudoPassword = (string)($req->post['sudo_password'] ?? '');
         $termUser     = trim((string)($req->post['terminal_ssh_user'] ?? 'lrv-terminal'));
-        $termKeyId    = trim((string)($req->post['terminal_ssh_key_id'] ?? ''));
+        $termKeyId    = '';
         $ramTotal     = (int)($req->post['ram_total'] ?? 0);
         $cpuTotal     = (int)($req->post['cpu_total'] ?? 0);
         $storageTotal = (int)($req->post['storage_total'] ?? 0);
@@ -114,6 +114,28 @@ final class ServidoresController
 
         if (!in_array($authType, ['key', 'password'], true)) $authType = 'password';
         if (!in_array($status, ['active', 'inactive', 'maintenance'], true)) $status = 'active';
+
+        // Processar upload de chave SSH principal
+        $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+        if (!is_dir($keyDir)) @mkdir($keyDir, 0700, true);
+
+        if ($authType === 'key') {
+            $uploadResult = $this->processarUploadChave('ssh_key_file', $hostname ?: 'server', $keyDir, $id, 'ssh_key_id');
+            if ($uploadResult['erro'] !== '') {
+                $dados = compact('id','hostname','ip','sshPort','sshUser','authType','sshKeyId','sshPassword','useSudo','sudoPassword','termUser','termKeyId','ramTotal','cpuTotal','storageTotal','status');
+                return $this->renderizarComDados($dados, $uploadResult['erro']);
+            }
+            $sshKeyId = $uploadResult['id'];
+        }
+
+        // Processar upload de chave do terminal
+        $termUpload = $this->processarUploadChave('terminal_ssh_key_file', ($hostname ?: 'server') . '-terminal', $keyDir, $id, 'terminal_ssh_key_id');
+        if ($termUpload['erro'] !== '' && !empty($_FILES['terminal_ssh_key_file']['name'])) {
+            $termKeyId = $termUpload['id'];
+            $dados = compact('id','hostname','ip','sshPort','sshUser','authType','sshKeyId','sshPassword','useSudo','sudoPassword','termUser','termKeyId','ramTotal','cpuTotal','storageTotal','status');
+            return $this->renderizarComDados($dados, $termUpload['erro']);
+        }
+        $termKeyId = $termUpload['id'];
 
         $dados = compact('id','hostname','ip','sshPort','sshUser','authType','sshKeyId','sshPassword','useSudo','sudoPassword','termUser','termKeyId','ramTotal','cpuTotal','storageTotal','status');
 
@@ -127,10 +149,7 @@ final class ServidoresController
 
         // Validação por tipo de auth
         if ($authType === 'key') {
-            if ($sshKeyId === '') return $this->renderizarComDados($dados, 'Informe o identificador da chave SSH.');
-            if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/', $sshKeyId) !== 1) {
-                return $this->renderizarComDados($dados, 'Identificador da chave inválido.');
-            }
+            if ($sshKeyId === '') return $this->renderizarComDados($dados, 'Faça upload da chave privada SSH.');
         } else {
             // Modo senha: obrigatória apenas no cadastro novo; na edição pode ficar em branco (mantém a atual)
             if ($id === 0 && $sshPassword === '') {
@@ -174,12 +193,30 @@ final class ServidoresController
         $sshPort     = (int)($req->post['ssh_port'] ?? 22);
         $sshUser     = trim((string)($req->post['ssh_user'] ?? ''));
         $authType    = (string)($req->post['ssh_auth_type'] ?? 'password');
-        $sshKeyId    = trim((string)($req->post['ssh_key_id'] ?? ''));
+        $sshKeyId    = '';
         $sshPassword = (string)($req->post['ssh_password'] ?? '');
+
+        // Para testar conexão com chave, usa a chave já salva no banco
+        if ($authType === 'key' && $id > 0) {
+            try {
+                $stmt = BancoDeDados::pdo()->prepare('SELECT ssh_key_id FROM servers WHERE id=:id');
+                $stmt->execute([':id' => $id]);
+                $row = $stmt->fetch();
+                $sshKeyId = (string)($row['ssh_key_id'] ?? '');
+            } catch (\Throwable) {}
+        }
 
         $hostname     = trim((string)($req->post['hostname'] ?? ''));
         $termUser     = trim((string)($req->post['terminal_ssh_user'] ?? ''));
-        $termKeyId    = trim((string)($req->post['terminal_ssh_key_id'] ?? ''));
+        $termKeyId    = '';
+        if ($id > 0) {
+            try {
+                $stmt = BancoDeDados::pdo()->prepare('SELECT terminal_ssh_key_id FROM servers WHERE id=:id');
+                $stmt->execute([':id' => $id]);
+                $row = $stmt->fetch();
+                $termKeyId = (string)($row['terminal_ssh_key_id'] ?? '');
+            } catch (\Throwable) {}
+        }
         $ramTotal     = (int)($req->post['ram_total'] ?? 0);
         $cpuTotal     = (int)($req->post['cpu_total'] ?? 0);
         $storageTotal = (int)($req->post['storage_total'] ?? 0);
@@ -418,6 +455,67 @@ final class ServidoresController
         } catch (\Throwable) {
             return 0;
         }
+    }
+
+    /**
+     * Processa upload de arquivo de chave SSH.
+     * Retorna ['id' => string, 'erro' => string].
+     */
+    private function processarUploadChave(string $fieldName, string $nomeBase, string $keyDir, int $existingId, string $dbColumn): array
+    {
+        $file = $_FILES[$fieldName] ?? null;
+        $hasUpload = is_array($file) && !empty($file['name']) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK;
+
+        if ($hasUpload) {
+            $tmpPath = (string)($file['tmp_name'] ?? '');
+            $size = (int)($file['size'] ?? 0);
+
+            if ($size > 32768) {
+                return ['id' => '', 'erro' => 'Arquivo de chave muito grande (máx 32KB).'];
+            }
+            if ($size === 0 || !is_file($tmpPath)) {
+                return ['id' => '', 'erro' => 'Arquivo de chave inválido.'];
+            }
+
+            $conteudo = file_get_contents($tmpPath);
+            if ($conteudo === false || trim($conteudo) === '') {
+                return ['id' => '', 'erro' => 'Não foi possível ler o arquivo de chave.'];
+            }
+
+            // Validar que parece uma chave SSH (privada ou pública)
+            $trimmed = trim($conteudo);
+            $isPrivate = str_starts_with($trimmed, '-----BEGIN') && str_contains($trimmed, 'PRIVATE KEY');
+            $isPublic = str_starts_with($trimmed, 'ssh-') || (str_starts_with($trimmed, '-----BEGIN') && str_contains($trimmed, 'PUBLIC KEY'));
+            $isOpenSsh = str_starts_with($trimmed, '-----BEGIN OPENSSH PRIVATE KEY');
+
+            if (!$isPrivate && !$isPublic && !$isOpenSsh) {
+                return ['id' => '', 'erro' => 'O arquivo não parece ser uma chave SSH válida (privada ou pública).'];
+            }
+
+            // Gerar nome seguro para o arquivo
+            $safeName = preg_replace('/[^a-zA-Z0-9_.-]/', '-', $nomeBase);
+            if ($safeName === '' || $safeName === '-') $safeName = 'key-' . bin2hex(random_bytes(4));
+            $destPath = $keyDir . DIRECTORY_SEPARATOR . $safeName;
+
+            if (!@file_put_contents($destPath, $conteudo)) {
+                return ['id' => '', 'erro' => 'Não foi possível salvar a chave no diretório configurado.'];
+            }
+            @chmod($destPath, 0600);
+
+            return ['id' => $safeName, 'erro' => ''];
+        }
+
+        // Sem upload — manter chave existente do banco
+        if ($existingId > 0) {
+            try {
+                $stmt = BancoDeDados::pdo()->prepare("SELECT {$dbColumn} FROM servers WHERE id=:id");
+                $stmt->execute([':id' => $existingId]);
+                $row = $stmt->fetch();
+                return ['id' => (string)($row[$dbColumn] ?? ''), 'erro' => ''];
+            } catch (\Throwable) {}
+        }
+
+        return ['id' => '', 'erro' => ''];
     }
 
     private function renderizarComDados(array $dados, string $erro): Resposta
