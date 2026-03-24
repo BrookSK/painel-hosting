@@ -334,7 +334,6 @@ final class ServidoresController
                     $sudoRaw = SshCrypto::decifrar((string)($row['sudo_password'] ?? ''));
                     if ($sudoRaw === '') $sudoRaw = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
                     $sudoSenha = $sudoRaw;
-                    // Se senha SSH em branco no form, usa a salva
                     if ($sshPassword === '' && $authType === 'password') {
                         $sshPassword = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
                     }
@@ -342,50 +341,31 @@ final class ServidoresController
             } catch (\Throwable) {}
         }
 
-        // Comando de teste — com sudo se necessário
-        $cmdTeste = $useSudo
-            ? SshExecutor::elevarComSudo('docker version', $sudoSenha)
-            : 'docker version';
-
+        // 1) Testa conexão SSH básica (whoami)
         try {
-            $docker = new DockerCli();
-
+            $exec = new SshExecutor();
             if ($authType === 'password') {
                 if ($sshPassword === '') return [false, 'Informe a senha SSH.'];
-                $docker->definirRemotoComSenha($ip, $sshPort, $sshUser, $sshPassword);
+                $t = $exec->executarComSenha($ip, $sshPort, $sshUser, $sshPassword, 'whoami', 15);
             } else {
                 $keyDir  = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
                 $keyPath = $keyDir . DIRECTORY_SEPARATOR . $sshKeyId;
                 if (!is_file($keyPath)) return [false, 'Arquivo de chave não encontrado: ' . $sshKeyId];
-                $docker->definirRemoto($ip, $sshPort, $sshUser, $keyPath);
+                $t = $exec->executar($ip, $sshPort, $sshUser, $keyPath, 'whoami', 15);
             }
 
-            // Substitui o comando padrão pelo com sudo se necessário
-            if ($useSudo) {
-                // DockerCli não expõe execução direta com comando customizado no testarConexao,
-                // então usamos o SshExecutor diretamente para o teste
-                $exec = new \LRV\App\Services\Infra\SshExecutor();
-                if ($authType === 'password') {
-                    $t = $exec->executarComSenha($ip, $sshPort, $sshUser, $sshPassword, $cmdTeste, 20);
-                } else {
-                    $keyDir  = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
-                    $keyPath = $keyDir . DIRECTORY_SEPARATOR . $sshKeyId;
-                    $t = $exec->executar($ip, $sshPort, $sshUser, $keyPath, $cmdTeste, 20);
-                }
-            } else {
-                $t = $docker->testarConexao();
-            }
-
-            $saida = trim((string)($t['saida'] ?? ''));
             if (empty($t['ok'])) {
-                $msg = 'Falha ao validar conexão SSH/Docker.';
+                $saida = trim((string)($t['saida'] ?? ''));
+                $msg = 'Falha na conexão SSH.';
                 if ($saida !== '') $msg .= "\n\n" . $saida;
                 return [false, $msg];
             }
-            return [true, ''];
         } catch (\Throwable $e) {
             return [false, $e->getMessage()];
         }
+
+        // 2) SSH OK — aceita o servidor mesmo sem Docker
+        return [true, ''];
     }
 
     /**
