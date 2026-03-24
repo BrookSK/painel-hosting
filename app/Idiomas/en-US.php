@@ -949,6 +949,10 @@ return [
     'eq_apps.requer_dominio' => 'Domain',
     'eq_apps.requer_repo' => 'Repository',
 
+    // ── Team — Plans ──
+    'eq_planos.backup_slots' => 'Included backups',
+    'eq_planos.sem_backup' => 'No backup',
+
     // ── Team — Emails ──
     'eq_emails.titulo' => 'Emails',
     'eq_emails.subtitulo' => 'Email accounts and domains registered by clients',

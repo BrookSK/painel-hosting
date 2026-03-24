@@ -41,13 +41,19 @@ final class VpsBackupService
         }
 
         try {
-            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status, is_online FROM servers WHERE id = :id LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ssh_password, ssh_auth_type, status, is_online FROM servers WHERE id = :id LIMIT 1');
             $stmt->execute([':id' => $serverId]);
             $srv = $stmt->fetch();
         } catch (\Throwable $e) {
-            $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
-            $stmt->execute([':id' => $serverId]);
-            $srv = $stmt->fetch();
+            try {
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ssh_password, ssh_auth_type, status FROM servers WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $serverId]);
+                $srv = $stmt->fetch();
+            } catch (\Throwable $e2) {
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $serverId]);
+                $srv = $stmt->fetch();
+            }
         }
 
         if (!is_array($srv)) {
@@ -68,23 +74,38 @@ final class VpsBackupService
         }
         $sshPort = (int) ($srv['ssh_port'] ?? 22);
         $sshUser = trim((string) ($srv['ssh_user'] ?? ''));
-        $keyId = trim((string) ($srv['ssh_key_id'] ?? ''));
+        $authType = (string) ($srv['ssh_auth_type'] ?? 'key');
+        $keyPath = null;
+        $senha = null;
 
-        if ($host === '' || $sshPort <= 0 || $sshUser === '' || $keyId === '') {
+        if ($host === '' || $sshPort <= 0 || $sshUser === '') {
             throw new \RuntimeException('Node sem dados de SSH completos.');
         }
 
-        $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
-        if ($keyDir === '') {
-            throw new \RuntimeException('Diretório base das chaves SSH não configurado.');
-        }
+        if ($authType === 'password') {
+            $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string) ($srv['ssh_password'] ?? ''));
+            if ($senha === '') {
+                throw new \RuntimeException('Senha SSH do node não configurada.');
+            }
+            $this->docker->definirRemotoComSenha($host, $sshPort, $sshUser, $senha);
+        } else {
+            $keyId = trim((string) ($srv['ssh_key_id'] ?? ''));
+            if ($keyId === '') {
+                throw new \RuntimeException('Chave SSH do node não configurada.');
+            }
 
-        $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
-        if (!is_file($keyPath)) {
-            throw new \RuntimeException('Arquivo de chave não encontrado: ' . $keyId);
-        }
+            $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+            if ($keyDir === '') {
+                throw new \RuntimeException('Diretório base das chaves SSH não configurado.');
+            }
 
-        $this->docker->definirRemoto($host, $sshPort, $sshUser, $keyPath);
+            $keyPath = $keyDir . DIRECTORY_SEPARATOR . $keyId;
+            if (!is_file((string)$keyPath)) {
+                throw new \RuntimeException('Arquivo de chave não encontrado: ' . $keyId);
+            }
+
+            $this->docker->definirRemoto($host, $sshPort, $sshUser, (string)$keyPath);
+        }
 
         $log('Testando conexão SSH...');
         $t = $this->docker->executar('echo ok');
@@ -116,7 +137,7 @@ final class VpsBackupService
 
         $localFile = $localDir . DIRECTORY_SEPARATOR . basename($remoteFile);
 
-        $scpOut = $this->executarScp($host, $sshPort, $sshUser, $keyPath, $remoteFile, $localFile);
+        $scpOut = $this->executarScp($host, $sshPort, $sshUser, $authType, $keyPath ?? '', $senha ?? '', $remoteFile, $localFile);
         $scpOutTrim = trim($scpOut);
         if ($scpOutTrim !== '') {
             $log($scpOutTrim);
@@ -143,8 +164,25 @@ final class VpsBackupService
         $log('Backup concluído.');
     }
 
-    private function executarScp(string $host, int $porta, string $usuario, string $keyPath, string $remoteFile, string $localFile): string
+    private function executarScp(string $host, int $porta, string $usuario, string $authType, string $keyPath, string $senha, string $remoteFile, string $localFile): string
     {
+        // Para auth por senha, baixar via SSH cat em vez de scp
+        if ($authType === 'password' && $senha !== '') {
+            $exec = new \LRV\App\Services\Infra\SshExecutor();
+            $r = $exec->executarComSenha($host, $porta, $usuario, $senha, 'base64 ' . escapeshellarg($remoteFile), 300);
+            $b64 = trim((string) ($r['saida'] ?? ''));
+            if (empty($r['ok']) || $b64 === '') {
+                return 'Falha ao baixar via SSH: ' . $b64;
+            }
+            $decoded = base64_decode($b64, true);
+            if ($decoded === false) {
+                return 'Falha ao decodificar base64 do backup.';
+            }
+            file_put_contents($localFile, $decoded);
+            return '';
+        }
+
+        // Auth por chave: usar scp
         if (!function_exists('shell_exec') && !function_exists('exec')) {
             throw new \RuntimeException('Nenhum método de execução disponível (exec/shell_exec).');
         }

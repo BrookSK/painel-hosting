@@ -61,6 +61,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:6px;">Stripe Price ID (opcional)</label>
         <input class="input" type="text" name="stripe_price_id" value="<?php echo View::e((string)($plano['stripe_price_id']??'')); ?>" />
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_planos.backup_slots')); ?></label>
+        <select class="input" name="backup_slots">
+          <option value="0" <?php echo ((int)($plano['backup_slots']??0))===0?'selected':''; ?>>0 — <?php echo View::e(I18n::t('eq_planos.sem_backup')); ?></option>
+          <option value="1" <?php echo ((int)($plano['backup_slots']??0))===1?'selected':''; ?>>1 backup</option>
+          <option value="2" <?php echo ((int)($plano['backup_slots']??0))===2?'selected':''; ?>>2 backups</option>
+        </select>
+      </div>
     </div>
 
     <?php

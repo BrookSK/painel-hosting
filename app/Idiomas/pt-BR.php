@@ -1073,6 +1073,10 @@ return [
     'eq_apps.requer_dominio' => 'Domínio',
     'eq_apps.requer_repo' => 'Repositório',
 
+    // ── Equipe — Planos ──
+    'eq_planos.backup_slots' => 'Backups inclusos',
+    'eq_planos.sem_backup' => 'Sem backup',
+
     // ── Equipe — E-mails ──
     'eq_emails.titulo' => 'E-mails',
     'eq_emails.subtitulo' => 'Contas de e-mail e domínios cadastrados pelos clientes',

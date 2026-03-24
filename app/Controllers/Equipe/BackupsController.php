@@ -48,11 +48,49 @@ final class BackupsController
 
         $pdo = BancoDeDados::pdo();
 
-        $stmt = $pdo->prepare('SELECT id FROM vps WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT v.id, v.plan_id FROM vps v WHERE v.id = :id');
         $stmt->execute([':id' => $vpsId]);
         $vps = $stmt->fetch();
         if (!is_array($vps)) {
             return Resposta::texto('VPS não encontrada.', 404);
+        }
+
+        // Verificar limite de backups do plano
+        $planId = (int) ($vps['plan_id'] ?? 0);
+        $maxBackups = 0;
+        if ($planId > 0) {
+            try {
+                $stPlan = $pdo->prepare('SELECT backup_slots FROM plans WHERE id = :id');
+                $stPlan->execute([':id' => $planId]);
+                $plan = $stPlan->fetch();
+                $maxBackups = (int) ($plan['backup_slots'] ?? 0);
+            } catch (\Throwable) {
+                // coluna pode não existir ainda
+                $maxBackups = 99;
+            }
+        }
+
+        // Admin pode criar sem limite (maxBackups = 0 significa sem backup no plano, mas admin pode forçar)
+        // Contar backups existentes (completed ou running)
+        $stCount = $pdo->prepare("SELECT COUNT(*) FROM backups WHERE vps_id = :v AND status IN ('completed','running','queued')");
+        $stCount->execute([':v' => $vpsId]);
+        $existentes = (int) $stCount->fetchColumn();
+
+        // Se exceder o limite, apagar o mais antigo automaticamente (rotação)
+        if ($maxBackups > 0 && $existentes >= $maxBackups) {
+            $stOld = $pdo->prepare("SELECT id, file_path FROM backups WHERE vps_id = :v AND status = 'completed' ORDER BY id ASC LIMIT :lim");
+            $excesso = $existentes - $maxBackups + 1;
+            $stOld->bindValue(':v', $vpsId, \PDO::PARAM_INT);
+            $stOld->bindValue(':lim', $excesso, \PDO::PARAM_INT);
+            $stOld->execute();
+            $antigos = $stOld->fetchAll();
+            foreach ($antigos as $old) {
+                $oldPath = (string) ($old['file_path'] ?? '');
+                if ($oldPath !== '' && is_file($oldPath)) {
+                    @unlink($oldPath);
+                }
+                $pdo->prepare('DELETE FROM backups WHERE id = :id')->execute([':id' => (int) $old['id']]);
+            }
         }
 
         $ins = $pdo->prepare('INSERT INTO backups (vps_id, job_id, status, file_path, file_size, error, created_at, completed_at) VALUES (:v,NULL,:s,NULL,0,NULL,:c,NULL)');
