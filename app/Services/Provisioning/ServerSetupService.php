@@ -307,6 +307,10 @@ final class ServerSetupService
         // ── Script de monitoramento (cron) ──
         // Coleta CPU/RAM/Disco e envia para o painel via curl
         $monitoringToken = trim((string)Settings::obter('monitoring.token', ''));
+        if ($monitoringToken === '') {
+            $monitoringToken = bin2hex(random_bytes(32));
+            Settings::definir('monitoring.token', $monitoringToken);
+        }
         $baseUrl = rtrim(trim((string)Settings::obter('app.base_url', '')), '/');
         $serverId = (int)($srv['id'] ?? 0);
 
