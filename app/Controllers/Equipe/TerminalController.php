@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Controllers\Equipe;
 
 use LRV\App\Services\Audit\AuditLogService;
+use LRV\App\Services\Infra\SshCrypto;
 use LRV\App\Services\Infra\SshExecutor;
 use LRV\App\Services\Terminal\TerminalTokensService;
 use LRV\Core\Auth;
@@ -97,6 +98,107 @@ final class TerminalController
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => 'Não foi possível emitir o token.'], 500);
         }
+    }
+
+    /**
+     * Executa um comando via SSH (AJAX) e retorna o output.
+     * Funciona sem WebSocket — alternativa HTTP pura.
+     */
+    public function exec(Requisicao $req): Resposta
+    {
+        $equipeId = Auth::equipeId();
+        if ($equipeId === null) {
+            return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+        }
+
+        $in = $req->input();
+        $serverId = $in->postInt('server_id', 1, 2147483647, true);
+        $comando = trim((string) ($req->post['command'] ?? ''));
+
+        if ($in->temErros() || $serverId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Servidor inválido.'], 400);
+        }
+        if ($comando === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Comando vazio.'], 400);
+        }
+        if (strlen($comando) > 4096) {
+            return Resposta::json(['ok' => false, 'erro' => 'Comando muito longo.'], 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT id, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password, use_sudo, status FROM servers WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute([':id' => $serverId]);
+        $server = $stmt->fetch();
+
+        if (!is_array($server) || (string) ($server['status'] ?? '') !== 'active') {
+            return Resposta::json(['ok' => false, 'erro' => 'Servidor não encontrado ou inativo.'], 404);
+        }
+
+        $ip = (string) ($server['ip_address'] ?? '');
+        $porta = (int) ($server['ssh_port'] ?? 22);
+        $usuario = (string) ($server['ssh_user'] ?? 'root');
+        $authType = (string) ($server['ssh_auth_type'] ?? 'key');
+        $useSudo = (int) ($server['use_sudo'] ?? 0);
+
+        $ssh = new SshExecutor();
+
+        // Elevar com sudo se necessário
+        $cmdRemoto = $comando;
+        if ($useSudo === 1 && $usuario !== 'root') {
+            if ($authType === 'password') {
+                $senhaPlain = SshCrypto::decifrar((string) ($server['ssh_password'] ?? ''));
+                $cmdRemoto = SshExecutor::elevarComSudo($comando, $senhaPlain);
+            } else {
+                $cmdRemoto = SshExecutor::elevarComSudo($comando);
+            }
+        }
+
+        try {
+            if ($authType === 'password') {
+                $senhaPlain = SshCrypto::decifrar((string) ($server['ssh_password'] ?? ''));
+                if ($senhaPlain === '') {
+                    return Resposta::json(['ok' => false, 'erro' => 'Senha SSH não configurada ou falha ao decifrar.'], 500);
+                }
+                $result = $ssh->executarComSenha($ip, $porta, $usuario, $senhaPlain, $cmdRemoto, 30);
+            } else {
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string) ($server['ssh_key_id'] ?? '');
+                if (!is_file($keyPath)) {
+                    return Resposta::json(['ok' => false, 'erro' => 'Chave SSH não encontrada.'], 500);
+                }
+                $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $cmdRemoto, 30);
+            }
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 500);
+        }
+
+        // Auditoria
+        try {
+            (new AuditLogService())->registrar(
+                'team', $equipeId, 'terminal.exec', 'server', $serverId,
+                ['command' => $comando, 'exit_code' => $result['codigo'] ?? -1],
+                $req,
+            );
+        } catch (\Throwable $e) {
+            // silencioso
+        }
+
+        // Salvar comando na tabela de auditoria do terminal
+        try {
+            $pdo->prepare(
+                'INSERT INTO terminal_session_commands (session_id, command, created_at) VALUES (0, :cmd, NOW())'
+            )->execute([':cmd' => mb_substr($comando, 0, 2000)]);
+        } catch (\Throwable $e) {
+            // tabela pode não existir — silencioso
+        }
+
+        return Resposta::json([
+            'ok' => true,
+            'output' => (string) ($result['saida'] ?? ''),
+            'exit_code' => (int) ($result['codigo'] ?? -1),
+        ]);
     }
 
     public function auditoria(Requisicao $req): Resposta

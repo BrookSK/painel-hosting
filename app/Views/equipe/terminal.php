@@ -1,39 +1,34 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
-use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\I18n;
-
-$porta = (int)ConfiguracoesSistema::terminalWsInternalPort();
 
 $pageTitle = I18n::t('eq_terminal.titulo');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
 <meta name="csrf-token" content="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 <div class="page-title"><?php echo View::e(I18n::t('eq_terminal.titulo')); ?></div>
-<div class="page-subtitle"><?php echo View::e(I18n::t('eq_terminal.subtitulo')); ?></div>
+<div class="page-subtitle"><?php echo View::e(I18n::t('eq_terminal.subtitulo_http')); ?></div>
 
 <div class="card-new">
-  <div class="linha" style="justify-content:space-between;align-items:flex-end;margin-bottom:16px;">
-    <div>
-      <div class="texto" style="margin:0;"><?php echo View::e(I18n::t('eq_terminal.escolha_node')); ?></div>
-    </div>
-    <div><span class="badge">WS interno: 127.0.0.1:<?php echo (int)$porta; ?></span></div>
-  </div>
-
   <div class="grid" style="margin-bottom:12px;">
     <div>
       <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_terminal.node')); ?></label>
       <select class="input" id="server_id">
         <option value=""><?php echo View::e(I18n::t('eq_terminal.selecione')); ?></option>
-        <?php foreach (((array)($servers??[])) as $s): ?>
-          <?php $sid=(int)($s['id']??0);$hn=(string)($s['hostname']??'');$ip=(string)($s['ip_address']??'');$st=(string)($s['status']??'');$online=(int)($s['is_online']??0); ?>
-          <option value="<?php echo $sid; ?>">#<?php echo $sid; ?> <?php echo View::e($hn); ?> (<?php echo View::e($ip); ?>)<?php echo $st!=='active'?' [inativo]':''; ?><?php echo $online===1?' [online]':''; ?></option>
-        <?php endforeach; ?>
+<?php foreach (((array)($servers??[])) as $s): ?>
+<?php $sid=(int)($s['id']??0);$hn=(string)($s['hostname']??'');$ip=(string)($s['ip_address']??'');$st=(string)($s['status']??''); ?>
+        <option value="<?php echo $sid; ?>">#<?php echo $sid; ?> <?php echo View::e($hn); ?> (<?php echo View::e($ip); ?>)<?php echo $st!=='active'?' ['.View::e(I18n::t('eq_terminal.inativo')).']':''; ?></option>
+<?php endforeach; ?>
       </select>
     </div>
     <div>
-      <button class="botao" id="btnConectar" type="button" style="width:100%;margin-top:22px;"><?php echo View::e(I18n::t('eq_terminal.conectar')); ?></button>
+      <label style="display:block;font-size:13px;margin-bottom:6px;">&nbsp;</label>
+      <div class="linha" style="gap:8px;">
+        <button class="botao" id="btnConectar" type="button"><?php echo View::e(I18n::t('eq_terminal.conectar')); ?></button>
+        <button class="botao sec" id="btnUpload" type="button"><?php echo View::e(I18n::t('eq_terminal.upload')); ?></button>
+        <button class="botao sec" id="btnDownload" type="button"><?php echo View::e(I18n::t('eq_terminal.download')); ?></button>
+      </div>
     </div>
   </div>
 
@@ -41,16 +36,13 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
   <div style="border:1px solid #0b1220;border-radius:14px;overflow:hidden;background:#020617;">
     <div style="padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.18);color:#e2e8f0;font-size:13px;display:flex;justify-content:space-between;">
-      <div>Terminal</div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button id="btnUpload" class="botao sec" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('eq_terminal.upload')); ?></button>
-        <button id="btnDownload" class="botao sec" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('eq_terminal.download')); ?></button>
-        <div id="status" style="opacity:.9;"><?php echo View::e(I18n::t('eq_terminal.desconectado')); ?></div>
-      </div>
+      <div>Terminal <span style="opacity:.6;">(HTTP)</span></div>
+      <div id="status" style="opacity:.9;font-size:12px;"><?php echo View::e(I18n::t('eq_terminal.desconectado')); ?></div>
     </div>
-    <pre id="out" style="margin:0;padding:12px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;height:420px;overflow:auto;"></pre>
-    <div style="border-top:1px solid rgba(148,163,184,.18);padding:10px 12px;">
-      <input class="input" id="in" type="text" autocomplete="off" placeholder="<?php echo View::e(I18n::t('eq_terminal.placeholder')); ?>" style="background:#0b1220;border-color:#1f2937;color:#e2e8f0;" />
+    <pre id="out" style="margin:0;padding:12px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;height:420px;overflow:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+    <div style="border-top:1px solid rgba(148,163,184,.18);padding:10px 12px;display:flex;gap:8px;align-items:center;">
+      <span id="prompt" style="color:#22c55e;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;white-space:nowrap;">$</span>
+      <input class="input" id="in" type="text" autocomplete="off" placeholder="<?php echo View::e(I18n::t('eq_terminal.placeholder')); ?>" style="background:#0b1220;border-color:#1f2937;color:#e2e8f0;flex:1;" disabled />
     </div>
   </div>
 
@@ -80,62 +72,135 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
   </div>
 
-  <div class="texto" style="margin-top:10px;font-size:13px;opacity:.9;"><?php echo View::e(I18n::t('eq_terminal.proxy_hint')); ?> <strong>/ws/terminal</strong> (WSS).</div>
+  <div class="texto" style="margin-top:10px;font-size:13px;opacity:.9;"><?php echo View::e(I18n::t('eq_terminal.http_hint')); ?></div>
 </div>
 
+<?php
+// i18n strings for JS (avoid $ conflicts in inline script)
+$jsStrings = [
+    'selecione_node' => I18n::t('eq_terminal.selecione_node'),
+    'conectado_http' => I18n::t('eq_terminal.conectado_http'),
+    'sessao_iniciada' => I18n::t('eq_terminal.sessao_iniciada'),
+    'dica_http' => I18n::t('eq_terminal.dica_http'),
+    'executando' => I18n::t('eq_terminal.executando'),
+    'nao_conectado' => I18n::t('eq_terminal.nao_conectado'),
+    'preencha_upload' => I18n::t('eq_terminal.preencha_upload'),
+    'enviando' => I18n::t('eq_terminal.enviando'),
+];
+?>
 <script>
 (function(){
-  const elOut=document.getElementById('out'),elIn=document.getElementById('in'),elStatus=document.getElementById('status'),elAlerta=document.getElementById('alerta'),elServer=document.getElementById('server_id'),btn=document.getElementById('btnConectar');
-  let ws=null,conectado=false;
-  function sendResize(){if(!ws||ws.readyState!==1)return;const cols=Math.max(40,Math.floor(elOut.offsetWidth/8)),rows=Math.max(10,Math.floor(elOut.offsetHeight/16));ws.send(JSON.stringify({type:'resize',cols,rows}));}
-  const ro=new ResizeObserver(function(){sendResize();});ro.observe(elOut);
+  var T=<?php echo json_encode($jsStrings, JSON_UNESCAPED_UNICODE); ?>;
+  var DS='$';
+  var elOut=document.getElementById('out'),elIn=document.getElementById('in'),
+      elStatus=document.getElementById('status'),elAlerta=document.getElementById('alerta'),
+      elServer=document.getElementById('server_id'),elPrompt=document.getElementById('prompt'),
+      btn=document.getElementById('btnConectar');
+  var conectado=false,executando=false,serverId='',cwd='~';
+  var historico=[],histIdx=-1;
+
+  function csrf(){return(document.querySelector('meta[name="csrf-token"]')||{}).content||'';}
   function setErro(msg){elAlerta.style.display='block';elAlerta.textContent=msg;}
   function clearErro(){elAlerta.style.display='none';elAlerta.textContent='';}
-  function append(text){elOut.textContent+=text;elOut.scrollTop=elOut.scrollHeight;}
-  async function emitirToken(){
-    const serverId=(elServer.value||'').trim();
-    if(!serverId){throw new Error('Selecione um node.');}
-    const csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
-    const body=new URLSearchParams();body.set('server_id',serverId);
-    const resp=await fetch('/equipe/terminal/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf,'Accept':'application/json'},body});
-    const json=await resp.json();
-    if(!json||!json.ok){throw new Error((json&&json.erro)?json.erro:'Falha ao emitir token.');}
-    return json.token;
+  function append(text,cls){
+    if(cls){var s=document.createElement('span');s.style.color=cls;s.textContent=text;elOut.appendChild(s);}
+    else{elOut.textContent+=text;}
+    elOut.scrollTop=elOut.scrollHeight;
   }
-  function wsUrl(token){const proto=(location.protocol==='https:')?'wss://':'ws://';return proto+location.host+'/ws/terminal?token='+encodeURIComponent(token);}
-  async function conectar(){
-    clearErro();if(ws){try{ws.close();}catch(e){}}
-    elOut.textContent='';append('Abrindo sessao...\n');elStatus.textContent='Conectando...';
-    const token=await emitirToken();
-    ws=new WebSocket(wsUrl(token));
-    ws.onopen=function(){conectado=true;elStatus.textContent='Conectado';append('Conectado.\n');elIn.focus();sendResize();};
-    ws.onmessage=function(ev){append(String(ev.data||''));};
-    ws.onclose=function(){conectado=false;elStatus.textContent='Desconectado';append('\n[conexao encerrada]\n');};
-    ws.onerror=function(){setErro('Falha no WebSocket. Verifique proxy /ws/terminal e o daemon interno.');};
+  function setPrompt(p){elPrompt.textContent=p;}
+  function promptStr(){return cwd+' '+DS;}
+
+  function conectar(){
+    clearErro();
+    serverId=(elServer.value||'').trim();
+    if(!serverId){setErro(T.selecione_node);return;}
+    conectado=true;cwd='~';
+    elIn.disabled=false;elIn.focus();
+    elOut.textContent='';
+    elStatus.textContent=T.conectado_http;
+    setPrompt(promptStr());
+    append(T.sessao_iniciada+'\n','#22c55e');
+    append(T.dica_http+'\n\n','#94a3b8');
   }
-  btn.addEventListener('click',function(){conectar().catch(e=>setErro(e.message||'Erro ao conectar.'));});
+
+  async function executarComando(cmd){
+    if(executando)return;
+    executando=true;
+    elIn.disabled=true;
+    elStatus.textContent=T.executando;
+
+    var realCmd=cmd;
+    var isCD=/^\s*cd\s/.test(cmd)||cmd.trim()==='cd';
+    if(isCD){realCmd=cmd+' && pwd';}
+
+    var body=new URLSearchParams();
+    body.set('server_id',serverId);
+    body.set('command',realCmd);
+    try{
+      var resp=await fetch('/equipe/terminal/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf(),'Accept':'application/json'},body:body});
+      var json=await resp.json();
+      if(!json.ok){
+        append((json.erro||'Erro')+'\n','#ef4444');
+      }else{
+        var out=(json.output||'').replace(/\r\n/g,'\n');
+        if(isCD&&json.exit_code===0&&out.trim()!==''){
+          var lines=out.trim().split('\n');
+          cwd=lines[lines.length-1]||cwd;
+          if(lines.length>1)append(lines.slice(0,-1).join('\n')+'\n');
+        }else if(out!==''){
+          append(out+'\n');
+        }
+        if(json.exit_code!==0){
+          append('[exit '+json.exit_code+']\n','#f59e0b');
+        }
+      }
+    }catch(e){
+      append('Erro de rede: '+e.message+'\n','#ef4444');
+    }
+    setPrompt(promptStr());
+    elStatus.textContent=T.conectado_http;
+    executando=false;elIn.disabled=false;elIn.focus();
+  }
+
+  btn.addEventListener('click',conectar);
   elIn.addEventListener('keydown',function(ev){
-    if(ev.key!=='Enter')return;ev.preventDefault();
-    const v=elIn.value;elIn.value='';
-    if(!conectado||!ws||ws.readyState!==1){setErro('Nao conectado.');return;}
-    ws.send(v+"\n");
+    if(ev.key==='Enter'){
+      ev.preventDefault();
+      var v=elIn.value;elIn.value='';
+      if(!conectado){setErro(T.nao_conectado);return;}
+      if(v.trim()==='')return;
+      if(v.trim()==='clear'||v.trim()==='cls'){elOut.textContent='';return;}
+      historico.push(v);histIdx=historico.length;
+      append(promptStr()+' '+v+'\n','#22c55e');
+      executarComando(v);
+    }else if(ev.key==='ArrowUp'){
+      ev.preventDefault();
+      if(histIdx>0){histIdx--;elIn.value=historico[histIdx]||'';}
+    }else if(ev.key==='ArrowDown'){
+      ev.preventDefault();
+      if(histIdx<historico.length-1){histIdx++;elIn.value=historico[histIdx]||'';}
+      else{histIdx=historico.length;elIn.value='';}
+    }
   });
-  function getServerId(){return(elServer.value||'').trim();}
+
+  // Upload
+  function getServerId(){return serverId;}
   document.getElementById('btnUpload').addEventListener('click',function(){document.getElementById('modalUpload').style.display='flex';});
   document.getElementById('btnUploadEnviar').addEventListener('click',async function(){
-    const serverId=getServerId();if(!serverId){setErro('Selecione um servidor primeiro.');return;}
-    const file=document.getElementById('uploadFile').files[0],path=document.getElementById('uploadPath').value.trim(),statusEl=document.getElementById('uploadStatus');
-    if(!file||!path){statusEl.style.display='block';statusEl.textContent='Selecione um arquivo e informe o caminho.';return;}
-    statusEl.style.display='block';statusEl.textContent='Enviando...';
-    const csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'',fd=new FormData();
-    fd.append('file',file);fd.append('server_id',serverId);fd.append('remote_path',path);
-    try{const resp=await fetch('/equipe/terminal/upload',{method:'POST',headers:{'x-csrf-token':csrf},body:fd});const json=await resp.json();statusEl.textContent=json.ok?'OK: '+(json.mensagem||'Enviado.'):'Erro: '+(json.erro||'Erro.');}catch(e){statusEl.textContent='Erro de rede.';}
+    if(!getServerId()){setErro(T.selecione_node);return;}
+    var file=document.getElementById('uploadFile').files[0],path=document.getElementById('uploadPath').value.trim(),statusEl=document.getElementById('uploadStatus');
+    if(!file||!path){statusEl.style.display='block';statusEl.textContent=T.preencha_upload;return;}
+    statusEl.style.display='block';statusEl.textContent=T.enviando;
+    var fd=new FormData();fd.append('file',file);fd.append('server_id',getServerId());fd.append('remote_path',path);
+    try{var resp=await fetch('/equipe/terminal/upload',{method:'POST',headers:{'x-csrf-token':csrf()},body:fd});var json=await resp.json();statusEl.textContent=json.ok?'OK: '+(json.mensagem||''):'Erro: '+(json.erro||'');}catch(e){statusEl.textContent='Erro de rede.';}
   });
+
+  // Download
   document.getElementById('btnDownload').addEventListener('click',function(){document.getElementById('modalDownload').style.display='flex';});
   document.getElementById('btnDownloadIniciar').addEventListener('click',function(){
-    const serverId=getServerId();if(!serverId){setErro('Selecione um servidor primeiro.');return;}
-    const path=document.getElementById('downloadPath').value.trim();if(!path)return;
-    window.location.href='/equipe/terminal/download?server_id='+serverId+'&remote_path='+encodeURIComponent(path);
+    if(!getServerId()){setErro(T.selecione_node);return;}
+    var path=document.getElementById('downloadPath').value.trim();if(!path)return;
+    window.location.href='/equipe/terminal/download?server_id='+getServerId()+'&remote_path='+encodeURIComponent(path);
     document.getElementById('modalDownload').style.display='none';
   });
 })();
