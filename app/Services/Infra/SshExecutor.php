@@ -62,7 +62,7 @@ final class SshExecutor
         }
 
         // 1) ext-ssh2
-        if (function_exists('ssh2_connect')) {
+        if (function_exists('\\ssh2_connect')) {
             return $this->executarViaSsh2($host, $porta, $usuario, $senha, $cmd, $timeoutSegundos);
         }
 
@@ -195,21 +195,21 @@ final class SshExecutor
      */
     private function executarViaSsh2(string $host, int $porta, string $usuario, string $senha, string $cmd, int $timeout): array
     {
-        $conn = @ssh2_connect($host, $porta);
+        $conn = @\ssh2_connect($host, $porta);
         if (!$conn) {
             return ['ok' => false, 'comando' => "ssh2_connect({$host}:{$porta})", 'saida' => 'Não foi possível conectar via SSH.', 'codigo' => 255];
         }
 
-        if (!@ssh2_auth_password($conn, $usuario, $senha)) {
+        if (!@\ssh2_auth_password($conn, $usuario, $senha)) {
             return ['ok' => false, 'comando' => "ssh2_auth_password({$usuario}@{$host})", 'saida' => 'Autenticação SSH por senha falhou.', 'codigo' => 255];
         }
 
-        $stream = @ssh2_exec($conn, $cmd);
+        $stream = @\ssh2_exec($conn, $cmd);
         if (!$stream) {
             return ['ok' => false, 'comando' => $cmd, 'saida' => 'Falha ao executar comando remoto.', 'codigo' => 255];
         }
 
-        $stderrStream = ssh2_fetch_stream($stream, SSH2_STREAM_STDERR);
+        $stderrStream = \ssh2_fetch_stream($stream, \SSH2_STREAM_STDERR);
         stream_set_blocking($stream, true);
         stream_set_blocking($stderrStream, true);
 
@@ -224,8 +224,7 @@ final class SshExecutor
         fclose($stderrStream);
         fclose($stream);
 
-        // ssh2_exec não retorna exit code diretamente; verificamos via echo $?
-        $exitStream = @ssh2_exec($conn, 'echo $?');
+        $exitStream = @\ssh2_exec($conn, 'echo $?');
         $exitCode = 0;
         if ($exitStream) {
             stream_set_blocking($exitStream, true);
@@ -242,13 +241,25 @@ final class SshExecutor
     }
 
     /**
-     * Executa via proc_open com pseudo-terminal (pty) — envia senha interativamente.
-     * Não requer sshpass.
+     * Executa via SSH_ASKPASS + setsid — fornece senha sem terminal interativo.
+     * Cria um script temporário que retorna a senha via stdout,
+     * e usa setsid para desassociar o terminal, forçando o SSH a usar SSH_ASKPASS.
      */
     private function executarViaPty(string $host, int $porta, string $usuario, string $senha, string $cmd, int $timeout): array
     {
         $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+
+        // Cria script temporário que imprime a senha
+        $askpassScript = tempnam(sys_get_temp_dir(), 'lrv_askpass_');
+        if ($askpassScript === false) {
+            return ['ok' => false, 'comando' => '', 'saida' => 'Não foi possível criar arquivo temporário para SSH_ASKPASS.', 'codigo' => 255];
+        }
+        file_put_contents($askpassScript, "#!/bin/sh\necho " . escapeshellarg($senha) . "\n");
+        chmod($askpassScript, 0700);
+
+        // setsid desassocia o terminal, forçando SSH a usar SSH_ASKPASS
         $sshCmd = implode(' ', [
+            'setsid',
             'ssh',
             '-p ' . $porta,
             '-o ConnectTimeout=8',
@@ -261,64 +272,61 @@ final class SshExecutor
             escapeshellarg($cmd),
         ]);
 
-        $descriptorspec = [
-            0 => ['pty'],
-            1 => ['pty'],
-            2 => ['pty'],
+        $env = [
+            'SSH_ASKPASS' => $askpassScript,
+            'SSH_ASKPASS_REQUIRE' => 'force',
+            'DISPLAY' => ':0',
+            'PATH' => getenv('PATH') ?: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
         ];
 
-        $process = @proc_open($sshCmd, $descriptorspec, $pipes);
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($sshCmd, $descriptorspec, $pipes, null, $env);
         if (!is_resource($process)) {
-            return ['ok' => false, 'comando' => $sshCmd, 'saida' => 'Falha ao iniciar processo SSH com pty.', 'codigo' => 255];
+            @unlink($askpassScript);
+            return ['ok' => false, 'comando' => $sshCmd, 'saida' => 'Falha ao iniciar processo SSH.', 'codigo' => 255];
         }
 
-        // Aguarda prompt de senha e envia
-        usleep(500_000);
-        @fwrite($pipes[0], $senha . "\n");
-        @fflush($pipes[0]);
+        @fclose($pipes[0]);
+        @stream_set_blocking($pipes[1], false);
+        @stream_set_blocking($pipes[2], false);
 
-        stream_set_blocking($pipes[1], false);
-
-        $output = '';
+        $stdout = '';
+        $stderr = '';
         $inicio = microtime(true);
 
         while (true) {
-            $chunk = (string)@fread($pipes[1], 8192);
-            if ($chunk !== '') $output .= $chunk;
+            $stdout .= (string)@stream_get_contents($pipes[1]);
+            $stderr .= (string)@stream_get_contents($pipes[2]);
 
             $status = proc_get_status($process);
             if (!is_array($status) || empty($status['running'])) break;
 
             if ($timeout > 0 && (microtime(true) - $inicio) > $timeout) {
                 @proc_terminate($process);
-                $output .= (string)@fread($pipes[1], 8192);
-                @fclose($pipes[0]);
-                @fclose($pipes[1]);
+                $stdout .= (string)@stream_get_contents($pipes[1]);
+                $stderr .= (string)@stream_get_contents($pipes[2]);
+                foreach ([1, 2] as $i) { if (isset($pipes[$i]) && is_resource($pipes[$i])) @fclose($pipes[$i]); }
                 @proc_close($process);
-                return ['ok' => false, 'comando' => $sshCmd, 'saida' => trim($output), 'codigo' => 124];
+                @unlink($askpassScript);
+                return ['ok' => false, 'comando' => $sshCmd, 'saida' => trim($stdout . "\n" . $stderr), 'codigo' => 124];
             }
 
             usleep(50_000);
         }
 
-        @fclose($pipes[0]);
-        @fclose($pipes[1]);
-        if (isset($pipes[2]) && is_resource($pipes[2])) @fclose($pipes[2]);
+        foreach ([1, 2] as $i) { if (isset($pipes[$i]) && is_resource($pipes[$i])) @fclose($pipes[$i]); }
         $codigo = (int)@proc_close($process);
-
-        // Remove linhas de prompt de senha do output
-        $lines = explode("\n", $output);
-        $filtered = [];
-        foreach ($lines as $line) {
-            $lower = strtolower(trim($line));
-            if (str_contains($lower, 'password:') || str_contains($lower, 'senha:')) continue;
-            $filtered[] = $line;
-        }
+        @unlink($askpassScript);
 
         return [
             'ok'      => $codigo === 0,
             'comando' => $sshCmd,
-            'saida'   => trim(implode("\n", $filtered)),
+            'saida'   => trim($stdout . "\n" . $stderr),
             'codigo'  => $codigo,
         ];
     }
