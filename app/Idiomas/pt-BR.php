@@ -1032,6 +1032,8 @@ return [
     'eq_vps.subtitulo' => 'Provisionamento, status e ações',
     'eq_vps.cliente' => 'Cliente',
     'eq_vps.cpu_ram_disco' => 'CPU / RAM / Disco',
+    'eq_vps.status' => 'Status',
+    'eq_vps.acoes' => 'Ações',
     'eq_vps.node' => 'Node',
     'eq_vps.provisionar' => 'Provisionar',
     'eq_vps.reativar' => 'Reativar',

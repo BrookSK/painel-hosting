@@ -908,6 +908,8 @@ return [
     'eq_vps.subtitulo' => 'Provisioning, status and actions',
     'eq_vps.cliente' => 'Client',
     'eq_vps.cpu_ram_disco' => 'CPU / RAM / Disk',
+    'eq_vps.status' => 'Status',
+    'eq_vps.acoes' => 'Actions',
     'eq_vps.node' => 'Node',
     'eq_vps.provisionar' => 'Provision',
     'eq_vps.reativar' => 'Reactivate',
