@@ -3,10 +3,11 @@ declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
 
-$dominio     = is_array($dominio ?? null) ? $dominio : [];
-$dkim        = (string)($dkim ?? '');
-$dnsTemplate = (string)($dns_template ?? '');
-$domain      = (string)($dominio['domain'] ?? '');
+$dominio      = is_array($dominio ?? null) ? $dominio : [];
+$dkim         = (string)($dkim ?? '');
+$dnsTemplate  = (string)($dns_template ?? '');
+$domain       = (string)($dominio['domain'] ?? '');
+$mailcowHost  = (string)($mailcow_host ?? '');
 
 $pageTitle    = 'Instruções DNS — ' . $domain;
 $clienteNome  = (string)($cliente['name'] ?? '');
@@ -44,7 +45,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <tr>
           <td style="padding:8px 10px;"><span class="badge-new">MX</span></td>
           <td style="padding:8px 10px;"><code>@</code></td>
-          <td style="padding:8px 10px;"><code>mail.<?php echo View::e($domain); ?></code></td>
+          <td style="padding:8px 10px;"><code><?php echo View::e($mailcowHost !== '' ? $mailcowHost : 'mail.' . $domain); ?></code></td>
           <td style="padding:8px 10px;"><code>10</code></td>
         </tr>
       </tbody>

@@ -135,11 +135,16 @@ final class DominiosEmailController
         $template = $svc->dnsInstructionsTemplate();
         $template = str_replace('{domain}', (string) $dominio['domain'], $template);
 
+        $mailcowHost = parse_url($svc->webmailUrl(), PHP_URL_HOST)
+            ?: parse_url((string)\LRV\Core\Settings::obter('email.mailcow_url', ''), PHP_URL_HOST)
+            ?: '';
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/emails-dominios-instrucoes.php', [
-            'dominio'      => $dominio,
-            'dkim'         => $dkim,
-            'dns_template' => $template,
-            'webmail_url'  => $svc->webmailUrl(),
+            'dominio'       => $dominio,
+            'dkim'          => $dkim,
+            'dns_template'  => $template,
+            'webmail_url'   => $svc->webmailUrl(),
+            'mailcow_host'  => $mailcowHost,
         ]);
 
         return Resposta::html($html);
