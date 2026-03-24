@@ -22,6 +22,7 @@ final class EmailController
 
         $svc    = new MailcowService(new ClienteHttp());
         $emails = $svc->listar($clienteId);
+        $mailcowHost = parse_url((string)\LRV\Core\Settings::obter('email.mailcow_url', ''), PHP_URL_HOST) ?: '';
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/emails-listar.php', [
             'emails'        => $emails,
@@ -30,6 +31,7 @@ final class EmailController
             'dominio_padrao' => $svc->dominioPadrao(),
             'dominios_ativos' => $this->dominiosAtivos($clienteId),
             'limite'        => $svc->limiteContasPorPlano($clienteId),
+            'mailcow_host'  => $mailcowHost,
             'erro'          => '',
             'sucesso'       => '',
         ]);
@@ -113,6 +115,8 @@ final class EmailController
         $svc    = new MailcowService(new ClienteHttp());
         $emails = $svc->listar($clienteId);
 
+        $mailcowHost = parse_url((string)\LRV\Core\Settings::obter('email.mailcow_url', ''), PHP_URL_HOST) ?: '';
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/emails-listar.php', [
             'emails'         => $emails,
             'webmail_url'    => $svc->webmailUrl(),
@@ -120,6 +124,7 @@ final class EmailController
             'dominio_padrao' => $svc->dominioPadrao(),
             'dominios_ativos' => $this->dominiosAtivos($clienteId),
             'limite'         => $svc->limiteContasPorPlano($clienteId),
+            'mailcow_host'   => $mailcowHost,
             'erro'           => $erro,
             'sucesso'        => '',
         ]);

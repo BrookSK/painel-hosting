@@ -9,6 +9,7 @@ $dominioPadrao  = (string)($dominio_padrao ?? '');
 $dominiosAtivos = is_array($dominios_ativos ?? null) ? $dominios_ativos : [];
 $limite         = (int)($limite ?? 5);
 $totalEmails    = count(is_array($emails ?? null) ? $emails : []);
+$mailcowHost    = (string)($mailcow_host ?? '');
 
 $dominiosSelect = [];
 if ($dominioPadrao !== '') $dominiosSelect[] = $dominioPadrao;
@@ -128,6 +129,107 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
 
 </div>
+
+<!-- Tutoriais de configuração -->
+<?php if ($totalEmails > 0 && $mailcowHost !== ''): ?>
+<div style="margin-top:24px;">
+  <div class="card-new">
+    <div class="card-new-title" style="margin-bottom:6px;"><?php echo View::e(I18n::t('emails.tutoriais_titulo')); ?></div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px;"><?php echo View::e(I18n::t('emails.tutoriais_desc')); ?></p>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">⚙️ <?php echo View::e(I18n::t('emails.dados_config')); ?></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr>
+          <td style="padding:5px 10px;color:#64748b;width:160px;">IMAP</td>
+          <td style="padding:5px 10px;"><code><?php echo View::e($mailcowHost); ?></code> — <?php echo View::e(I18n::t('emails.porta')); ?> <code>993</code> (SSL/TLS)</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 10px;color:#64748b;">SMTP</td>
+          <td style="padding:5px 10px;"><code><?php echo View::e($mailcowHost); ?></code> — <?php echo View::e(I18n::t('emails.porta')); ?> <code>587</code> (STARTTLS)</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 10px;color:#64748b;"><?php echo View::e(I18n::t('emails.usuario_config')); ?></td>
+          <td style="padding:5px 10px;"><?php echo View::e(I18n::t('emails.seu_email_completo')); ?></td>
+        </tr>
+        <tr>
+          <td style="padding:5px 10px;color:#64748b;"><?php echo View::e(I18n::t('auth.senha')); ?></td>
+          <td style="padding:5px 10px;"><?php echo View::e(I18n::t('emails.senha_definida')); ?></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Outlook -->
+      <details style="border:1px solid #e2e8f0;border-radius:10px;padding:0;">
+        <summary style="padding:12px 14px;cursor:pointer;font-weight:600;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">📧</span> Outlook (<?php echo View::e(I18n::t('emails.pc_celular')); ?>)
+        </summary>
+        <div style="padding:0 14px 14px;font-size:13px;color:#475569;line-height:1.8;">
+          <ol style="padding-left:18px;margin:0;">
+            <li><?php echo View::e(I18n::t('emails.outlook_1')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.outlook_2')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.outlook_3')); ?></li>
+            <li><?php echo I18n::t('emails.outlook_4'); ?></li>
+            <li><?php echo View::e(I18n::t('emails.outlook_5')); ?></li>
+          </ol>
+          <p style="margin-top:8px;font-size:12px;color:#94a3b8;"><?php echo View::e(I18n::t('emails.outlook_mobile')); ?></p>
+        </div>
+      </details>
+
+      <!-- Gmail -->
+      <details style="border:1px solid #e2e8f0;border-radius:10px;padding:0;">
+        <summary style="padding:12px 14px;cursor:pointer;font-weight:600;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">📨</span> Gmail (<?php echo View::e(I18n::t('emails.pc_celular')); ?>)
+        </summary>
+        <div style="padding:0 14px 14px;font-size:13px;color:#475569;line-height:1.8;">
+          <ol style="padding-left:18px;margin:0;">
+            <li><?php echo View::e(I18n::t('emails.gmail_1')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.gmail_2')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.gmail_3')); ?></li>
+            <li><?php echo I18n::t('emails.gmail_4'); ?></li>
+            <li><?php echo View::e(I18n::t('emails.gmail_5')); ?></li>
+          </ol>
+          <p style="margin-top:8px;font-size:12px;color:#94a3b8;"><?php echo View::e(I18n::t('emails.gmail_mobile')); ?></p>
+        </div>
+      </details>
+
+      <!-- Apple Mail -->
+      <details style="border:1px solid #e2e8f0;border-radius:10px;padding:0;">
+        <summary style="padding:12px 14px;cursor:pointer;font-weight:600;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">🍎</span> Apple Mail (Mac / iPhone / iPad)
+        </summary>
+        <div style="padding:0 14px 14px;font-size:13px;color:#475569;line-height:1.8;">
+          <ol style="padding-left:18px;margin:0;">
+            <li><?php echo View::e(I18n::t('emails.apple_1')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.apple_2')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.apple_3')); ?></li>
+            <li><?php echo I18n::t('emails.apple_4'); ?></li>
+            <li><?php echo View::e(I18n::t('emails.apple_5')); ?></li>
+          </ol>
+        </div>
+      </details>
+
+      <!-- Thunderbird -->
+      <details style="border:1px solid #e2e8f0;border-radius:10px;padding:0;">
+        <summary style="padding:12px 14px;cursor:pointer;font-weight:600;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">🦊</span> Thunderbird
+        </summary>
+        <div style="padding:0 14px 14px;font-size:13px;color:#475569;line-height:1.8;">
+          <ol style="padding-left:18px;margin:0;">
+            <li><?php echo View::e(I18n::t('emails.thunder_1')); ?></li>
+            <li><?php echo View::e(I18n::t('emails.thunder_2')); ?></li>
+            <li><?php echo I18n::t('emails.thunder_3'); ?></li>
+            <li><?php echo View::e(I18n::t('emails.thunder_4')); ?></li>
+          </ol>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- Modal alterar senha -->
 <div id="modalSenha" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;">
