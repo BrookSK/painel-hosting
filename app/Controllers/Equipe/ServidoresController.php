@@ -163,6 +163,12 @@ final class ServidoresController
             return $this->renderizarComDados($dados, $erroConexao);
         }
 
+        // Verifica se app.secret_key está configurado (necessário para cifrar senhas)
+        $precisaCifrar = ($authType === 'password' && $sshPassword !== '') || ($useSudo && $sudoPassword !== '');
+        if ($precisaCifrar && (string)\LRV\Core\Settings::obter('app.secret_key', '') === '') {
+            return $this->renderizarComDados($dados, 'Configure app.secret_key em /equipe/configuracoes antes de salvar servidores com senha.');
+        }
+
         // Persiste
         $savedId = $this->persistir($id, $hostname, $ip, $sshPort, $sshUser, $authType, $sshKeyId, $sshPassword, $useSudo, $sudoPassword, $termUser, $termKeyId, $ramTotal, $cpuTotal, $storageTotal, $status);
         if ($savedId === 0) {
@@ -381,17 +387,17 @@ final class ServidoresController
     ): int {
         $pdo = BancoDeDados::pdo();
 
-        $senhaCifrada = null;
-        if ($authType === 'password' && $sshPassword !== '') {
-            $senhaCifrada = SshCrypto::cifrar($sshPassword);
-        }
-
-        $sudoCifrado = null;
-        if ($useSudo && $sudoPassword !== '') {
-            $sudoCifrado = SshCrypto::cifrar($sudoPassword);
-        }
-
         try {
+            $senhaCifrada = null;
+            if ($authType === 'password' && $sshPassword !== '') {
+                $senhaCifrada = SshCrypto::cifrar($sshPassword);
+            }
+
+            $sudoCifrado = null;
+            if ($useSudo && $sudoPassword !== '') {
+                $sudoCifrado = SshCrypto::cifrar($sudoPassword);
+            }
+
             if ($id > 0) {
                 $sets  = 'hostname=:h, ip_address=:ip, ssh_port=:sp, ssh_user=:su, ssh_auth_type=:at, ssh_key_id=:sk, use_sudo=:us, terminal_ssh_user=:tsu, terminal_ssh_key_id=:tsk, ram_total=:rt, cpu_total=:ct, storage_total=:st, status=:s';
                 $binds = [
