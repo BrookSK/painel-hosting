@@ -223,6 +223,49 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">Use <code>{domain}</code> como placeholder. Exibido ao cliente ao configurar domínio próprio.</p>
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Servidor de E-mail (Monitoramento)</h2>
+    <p class="texto" style="font-size:13px;margin-bottom:12px;">Configure o monitoramento do servidor onde o Mailcow está instalado. Alertas são enviados quando CPU, RAM ou disco ultrapassam os limites.</p>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">IP do servidor de e-mail</label>
+        <input class="input" type="text" name="email_server_ip" value="<?php echo View::e((string)($email_server_ip??'')); ?>" placeholder="185.217.126.133" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Porta SSH</label>
+        <input class="input" type="number" name="email_server_ssh_port" value="<?php echo View::e((string)($email_server_ssh_port??'22')); ?>" min="1" max="65535" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário SSH</label>
+        <input class="input" type="text" name="email_server_ssh_user" value="<?php echo View::e((string)($email_server_ssh_user??'root')); ?>" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Senha SSH</label>
+        <input class="input" type="password" name="email_server_ssh_password" value="<?php echo View::e((string)($email_server_ssh_password??'')); ?>" autocomplete="new-password" />
+      </div>
+    </div>
+    <div class="grid" style="margin-top:12px;">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Alerta CPU (%)</label>
+        <input class="input" type="number" name="email_alert_cpu" value="<?php echo View::e((string)($email_alert_cpu??'80')); ?>" min="50" max="100" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Alerta quando CPU ultrapassar este valor.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Alerta RAM (%)</label>
+        <input class="input" type="number" name="email_alert_ram" value="<?php echo View::e((string)($email_alert_ram??'85')); ?>" min="50" max="100" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Alerta Disco (%)</label>
+        <input class="input" type="number" name="email_alert_disk" value="<?php echo View::e((string)($email_alert_disk??'90')); ?>" min="50" max="100" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Monitoramento ativo</label>
+        <select class="input" name="email_monitoring_enabled">
+          <option value="1" <?php echo ((string)($email_monitoring_enabled??'0'))==='1'?'selected':''; ?>>Sim</option>
+          <option value="0" <?php echo ((string)($email_monitoring_enabled??'0'))==='0'?'selected':''; ?>>Não</option>
+        </select>
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Chat ao vivo (WebSocket)</h2>
     <div class="grid">
       <div>

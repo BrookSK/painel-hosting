@@ -53,6 +53,14 @@ final class ConfiguracoesController
             'email_webmail_mode'   => (string) Settings::obter('email.webmail_mode', 'global'),
             'email_max_accounts'   => (string) Settings::obter('email.max_accounts_per_plan', '5'),
             'email_dns_template'   => (string) Settings::obter('email.dns_instructions_template', ''),
+            'email_server_ip'      => (string) Settings::obter('email.server_ip', ''),
+            'email_server_ssh_port' => (string) Settings::obter('email.server_ssh_port', '22'),
+            'email_server_ssh_user' => (string) Settings::obter('email.server_ssh_user', 'root'),
+            'email_server_ssh_password' => '',
+            'email_alert_cpu'      => (string) Settings::obter('email.alert_cpu', '80'),
+            'email_alert_ram'      => (string) Settings::obter('email.alert_ram', '85'),
+            'email_alert_disk'     => (string) Settings::obter('email.alert_disk', '90'),
+            'email_monitoring_enabled' => (string) Settings::obter('email.monitoring_enabled', '0'),
             'chat_ws_port'         => (string) Settings::obter('chat.ws_port', '8082'),
             'chat_ws_url'          => (string) Settings::obter('chat.ws_url', ''),
             'system_name'           => SistemaConfig::nome(),            'system_logo_url'       => SistemaConfig::logoUrl(),
@@ -127,6 +135,14 @@ final class ConfiguracoesController
         $emailWebmailMode    = $in->postEnum('email_webmail_mode', ['global', 'custom'], 'global');
         $emailMaxAccounts    = $in->postInt('email_max_accounts', 1, 9999, false);
         $emailDnsTemplate    = $in->postString('email_dns_template', 65535, false);
+        $emailServerIp       = $in->postString('email_server_ip', 45, false);
+        $emailServerSshPort  = $in->postInt('email_server_ssh_port', 1, 65535, false);
+        $emailServerSshUser  = $in->postString('email_server_ssh_user', 64, false);
+        $emailServerSshPass  = $in->postString('email_server_ssh_password', 255, false);
+        $emailAlertCpu       = $in->postInt('email_alert_cpu', 50, 100, false);
+        $emailAlertRam       = $in->postInt('email_alert_ram', 50, 100, false);
+        $emailAlertDisk      = $in->postInt('email_alert_disk', 50, 100, false);
+        $emailMonitoringEnabled = $in->postEnum('email_monitoring_enabled', ['0', '1'], '0');
         $chatWsPort          = $in->postInt('chat_ws_port', 1, 65535, false);
         $chatWsUrl           = $in->postString('chat_ws_url', 500, false);
 
@@ -209,6 +225,14 @@ final class ConfiguracoesController
                 'email_webmail_mode'   => $emailWebmailMode,
                 'email_max_accounts'   => $emailMaxAccounts > 0 ? (string) $emailMaxAccounts : '5',
                 'email_dns_template'   => $emailDnsTemplate,
+                'email_server_ip'      => $emailServerIp,
+                'email_server_ssh_port' => $emailServerSshPort > 0 ? (string) $emailServerSshPort : '22',
+                'email_server_ssh_user' => $emailServerSshUser !== '' ? $emailServerSshUser : 'root',
+                'email_server_ssh_password' => '',
+                'email_alert_cpu'      => $emailAlertCpu > 0 ? (string) $emailAlertCpu : '80',
+                'email_alert_ram'      => $emailAlertRam > 0 ? (string) $emailAlertRam : '85',
+                'email_alert_disk'     => $emailAlertDisk > 0 ? (string) $emailAlertDisk : '90',
+                'email_monitoring_enabled' => $emailMonitoringEnabled,
                 'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
                 'chat_ws_url'          => $chatWsUrl,
                 'system_name'           => $systemName,
@@ -277,6 +301,16 @@ final class ConfiguracoesController
         Settings::definir('email.webmail_mode', $emailWebmailMode);
         Settings::definir('email.max_accounts_per_plan', $emailMaxAccounts > 0 ? $emailMaxAccounts : 5);
         Settings::definir('email.dns_instructions_template', $emailDnsTemplate);
+        Settings::definir('email.server_ip', $emailServerIp);
+        Settings::definir('email.server_ssh_port', $emailServerSshPort > 0 ? $emailServerSshPort : 22);
+        Settings::definir('email.server_ssh_user', $emailServerSshUser !== '' ? $emailServerSshUser : 'root');
+        if ($emailServerSshPass !== '') {
+            Settings::definir('email.server_ssh_password', \LRV\App\Services\Infra\SshCrypto::cifrar($emailServerSshPass));
+        }
+        Settings::definir('email.alert_cpu', $emailAlertCpu > 0 ? $emailAlertCpu : 80);
+        Settings::definir('email.alert_ram', $emailAlertRam > 0 ? $emailAlertRam : 85);
+        Settings::definir('email.alert_disk', $emailAlertDisk > 0 ? $emailAlertDisk : 90);
+        Settings::definir('email.monitoring_enabled', $emailMonitoringEnabled === '1' ? 1 : 0);
         Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
         Settings::definir('chat.ws_url', trim($chatWsUrl));
 
@@ -394,6 +428,14 @@ final class ConfiguracoesController
             'email_webmail_mode'   => $emailWebmailMode,
             'email_max_accounts'   => (string) ($emailMaxAccounts > 0 ? $emailMaxAccounts : 5),
             'email_dns_template'   => $emailDnsTemplate,
+            'email_server_ip'      => $emailServerIp,
+            'email_server_ssh_port' => (string) ($emailServerSshPort > 0 ? $emailServerSshPort : 22),
+            'email_server_ssh_user' => $emailServerSshUser !== '' ? $emailServerSshUser : 'root',
+            'email_server_ssh_password' => '',
+            'email_alert_cpu'      => (string) ($emailAlertCpu > 0 ? $emailAlertCpu : 80),
+            'email_alert_ram'      => (string) ($emailAlertRam > 0 ? $emailAlertRam : 85),
+            'email_alert_disk'     => (string) ($emailAlertDisk > 0 ? $emailAlertDisk : 90),
+            'email_monitoring_enabled' => ($emailMonitoringEnabled === '1' ? '1' : '0'),
             'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
             'chat_ws_url'          => $chatWsUrl,
             'system_name'           => $systemName,
