@@ -302,7 +302,7 @@ final class ServerSetupService
         $sshdCmd = 'grep -q ' . escapeshellarg('Match User ' . $termUser) . ' /etc/ssh/sshd_config'
             . ' && echo "already exists"'
             . ' || { printf ' . escapeshellarg("\n" . $matchBlock . "\n") . ' >> /etc/ssh/sshd_config'
-            . ' && systemctl restart sshd 2>&1 && echo lrv-sshd-ok; }';
+            . ' && (systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>&1) && echo lrv-sshd-ok; }';
 
         // ── Script de monitoramento (cron) ──
         // Coleta CPU/RAM/Disco e envia para o painel via curl
