@@ -6,6 +6,24 @@ namespace LRV\App\Services\Http;
 
 final class ClienteHttp
 {
+    public function requestForm(string $metodo, string $url, array $headers = [], array $body = []): array
+    {
+        $headersNorm = [];
+        foreach ($headers as $k => $v) {
+            $headersNorm[] = $k . ': ' . $v;
+        }
+        $headersNorm[] = 'Content-Type: application/x-www-form-urlencoded';
+        $payload = http_build_query($body);
+
+        if (function_exists('curl_init')) {
+            $result = $this->requestComCurl($metodo, $url, $headersNorm, $payload);
+        } else {
+            $result = $this->requestComStream($metodo, $url, $headersNorm, $payload);
+        }
+
+        return is_array($result['json'] ?? null) ? $result['json'] : $result;
+    }
+
     public function requestJson(string $metodo, string $url, array $headers = [], ?array $body = null): array
     {
         $headersNorm = [];

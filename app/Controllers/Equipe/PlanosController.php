@@ -156,6 +156,47 @@ final class PlanosController
             }
         }
 
+        // Auto-criar Stripe Price ID se Stripe está configurado e não tem price_id
+        if ($auditId > 0 && $stripePriceId === '') {
+            $stripeKey = \LRV\Core\ConfiguracoesSistema::stripeSecretKey();
+            if ($stripeKey !== '') {
+                try {
+                    $taxaUsd = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
+                    $precoUsd = round((float)$preco / $taxaUsd, 2);
+                    $centavos = (int)round($precoUsd * 100);
+                    if ($centavos > 0) {
+                        $http = new \LRV\App\Services\Http\ClienteHttp();
+                        // Criar produto
+                        $prodResp = $http->requestForm('POST', 'https://api.stripe.com/v1/products', [
+                            'Authorization' => 'Bearer ' . $stripeKey,
+                        ], [
+                            'name' => $nome,
+                            'description' => $desc !== '' ? $desc : $nome,
+                        ]);
+                        $prodId = (string)($prodResp['id'] ?? '');
+                        if ($prodId !== '') {
+                            // Criar preço recorrente
+                            $priceResp = $http->requestForm('POST', 'https://api.stripe.com/v1/prices', [
+                                'Authorization' => 'Bearer ' . $stripeKey,
+                            ], [
+                                'product' => $prodId,
+                                'unit_amount' => $centavos,
+                                'currency' => 'usd',
+                                'recurring[interval]' => 'month',
+                            ]);
+                            $newPriceId = (string)($priceResp['id'] ?? '');
+                            if ($newPriceId !== '') {
+                                $pdo->prepare('UPDATE plans SET stripe_price_id = :sp WHERE id = :id')
+                                    ->execute([':sp' => $newPriceId, ':id' => $auditId]);
+                            }
+                        }
+                    }
+                } catch (\Throwable) {
+                    // Silencioso — Stripe pode não estar configurado
+                }
+            }
+        }
+
         // Salvar addons
         if ($auditId > 0) {
             $addonsRaw = [];
