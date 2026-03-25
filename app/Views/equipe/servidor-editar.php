@@ -214,6 +214,49 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   </form>
 </div>
 
+<?php if (!empty($servidor['id']) && !empty($passos_detalhados)): ?>
+<!-- Inicialização parcial (passo a passo) -->
+<div class="card-new" style="margin-top:16px;">
+  <div class="card-new-title" style="margin-bottom:6px;">Inicialização parcial</div>
+  <p class="texto" style="margin:0 0 14px;font-size:13px;">Execute cada passo individualmente. Ideal para servidores que já têm serviços rodando.</p>
+
+  <div style="display:flex;flex-direction:column;gap:8px;" id="passos-parciais">
+    <?php foreach ($passos_detalhados as $i => $p):
+      $pNome = (string)($p['name'] ?? '');
+      $pStatus = (string)($p['status'] ?? 'pending');
+      $pEssencial = !empty($p['essencial']);
+      $pRisco = (string)($p['risco'] ?? 'nenhum');
+      $pDesc = (string)($p['descricao'] ?? '');
+      $riscoColor = $pRisco === 'alto' ? '#ef4444' : ($pRisco === 'baixo' ? '#f59e0b' : '#10b981');
+      $riscoBg = $pRisco === 'alto' ? '#fef2f2' : ($pRisco === 'baixo' ? '#fffbeb' : '#f0fdf4');
+      $riscoLabel = $pRisco === 'alto' ? 'Risco alto' : ($pRisco === 'baixo' ? 'Risco baixo' : 'Sem risco');
+      $statusIcon = $pStatus === 'done' ? '✔' : ($pStatus === 'error' ? '✘' : '○');
+      $statusColor = $pStatus === 'done' ? '#10b981' : ($pStatus === 'error' ? '#ef4444' : '#94a3b8');
+    ?>
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;" id="passo-<?php echo $i; ?>">
+      <span style="font-size:16px;color:<?php echo $statusColor; ?>;flex-shrink:0;width:20px;text-align:center;" id="passo-icon-<?php echo $i; ?>"><?php echo $statusIcon; ?></span>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-size:13px;font-weight:600;color:#1e293b;">
+          <?php echo View::e($pNome); ?>
+          <?php if ($pEssencial): ?><span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#e0e7ff;color:#3730a3;margin-left:6px;">Essencial</span><?php endif; ?>
+          <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:<?php echo $riscoBg; ?>;color:<?php echo $riscoColor; ?>;margin-left:4px;"><?php echo $riscoLabel; ?></span>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;"><?php echo $pDesc; ?></div>
+      </div>
+      <span id="passo-status-<?php echo $i; ?>" style="font-size:12px;color:<?php echo $statusColor; ?>;min-width:60px;text-align:center;">
+        <?php echo $pStatus === 'done' ? 'Concluído' : ($pStatus === 'error' ? 'Erro' : 'Pendente'); ?>
+      </span>
+      <button class="botao sm" type="button" id="passo-btn-<?php echo $i; ?>"
+              onclick="executarPassoParcial(<?php echo (int)$servidor['id']; ?>,<?php echo View::e(json_encode($pNome)); ?>,<?php echo $i; ?>)"
+              <?php echo $pStatus === 'done' ? 'disabled style="opacity:.5;"' : ''; ?>>
+        <?php echo $pStatus === 'done' ? '✓' : 'Executar'; ?>
+      </button>
+    </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
+
 <!-- Modal de inicialização -->
 <div id="modal-setup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:16px;padding:28px;width:min(700px,96vw);max-height:92vh;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
@@ -368,6 +411,42 @@ function executarSetup(retomar) {
             document.getElementById('btn-continuar-setup').disabled = false;
             appendLog('✘ Erro: ' + e.message);
         });
+}
+</script>
+
+<script>
+function executarPassoParcial(serverId, stepName, idx) {
+  var btn = document.getElementById('passo-btn-' + idx);
+  var icon = document.getElementById('passo-icon-' + idx);
+  var status = document.getElementById('passo-status-' + idx);
+  btn.disabled = true; btn.textContent = '⏳';
+  icon.textContent = '⏳'; icon.style.color = '#f59e0b';
+  status.textContent = 'Executando...'; status.style.color = '#f59e0b';
+
+  var csrf = (document.querySelector('meta[name=csrf-token]') || {}).content || '';
+  var fd = new FormData();
+  fd.append('id', serverId);
+  fd.append('step', stepName);
+
+  fetch('/equipe/servidores/inicializar-passo', {
+    method: 'POST',
+    headers: { 'x-csrf-token': csrf },
+    body: fd
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      icon.textContent = '✔'; icon.style.color = '#10b981';
+      status.textContent = 'Concluído'; status.style.color = '#10b981';
+      btn.textContent = '✓'; btn.style.opacity = '.5';
+    } else {
+      icon.textContent = '✘'; icon.style.color = '#ef4444';
+      status.textContent = d.erro ? d.erro.substring(0, 50) : 'Erro'; status.style.color = '#ef4444';
+      btn.textContent = 'Tentar'; btn.disabled = false;
+    }
+  }).catch(function() {
+    icon.textContent = '✘'; icon.style.color = '#ef4444';
+    status.textContent = 'Erro de rede'; status.style.color = '#ef4444';
+    btn.textContent = 'Tentar'; btn.disabled = false;
+  });
 }
 </script>
 

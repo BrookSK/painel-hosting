@@ -79,13 +79,23 @@ final class ServidoresController
 
         if (!is_array($servidor)) return Resposta::texto('Servidor não encontrado.', 404);
 
-        // Nunca expõe a senha cifrada para o form
         $servidor['ssh_password'] = '';
 
+        // Carregar passos detalhados para inicialização parcial
+        $passos = [];
+        try {
+            $svc = new \LRV\App\Services\Provisioning\ServerSetupService();
+            $res = $svc->listarPassos($id);
+            if (!empty($res['ok'])) {
+                $passos = $res['steps'] ?? [];
+            }
+        } catch (\Throwable) {}
+
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/equipe/servidor-editar.php', [
-            'erro'        => '',
-            'mensagem_ok' => '',
-            'servidor'    => $servidor,
+            'erro'              => '',
+            'mensagem_ok'       => '',
+            'servidor'          => $servidor,
+            'passos_detalhados' => $passos,
         ]));
     }
 

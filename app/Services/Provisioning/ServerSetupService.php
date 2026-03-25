@@ -39,7 +39,6 @@ final class ServerSetupService
         }
 
         $passos = $this->definirPassos($srv);
-        $nomes = array_map(fn($p) => $p['name'], $passos);
 
         // Busca logs existentes
         $stLogs = $pdo->prepare('SELECT step, status FROM server_setup_logs WHERE server_id = :id ORDER BY id ASC');
@@ -51,11 +50,14 @@ final class ServerSetupService
 
         return [
             'ok' => true,
-            'steps' => array_map(fn($n) => [
-                'name' => $n,
-                'status' => $logs[$n] ?? 'pending',
-            ], $nomes),
-            'total' => count($nomes),
+            'steps' => array_map(fn($p) => [
+                'name'      => $p['name'],
+                'status'    => $logs[$p['name']] ?? 'pending',
+                'essencial' => $p['essencial'] ?? false,
+                'risco'     => $p['risco'] ?? 'nenhum',
+                'descricao' => $p['descricao'] ?? '',
+            ], $passos),
+            'total' => count($passos),
         ];
     }
 
@@ -362,6 +364,9 @@ final class ServerSetupService
                 'fatal'          => true,
                 'precisa_root'   => false,
                 'timeout'        => 15,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Verifica se a conexão SSH está funcionando.',
             ],
 
             // ── 2. Sistema base ──
@@ -371,6 +376,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => true,
                 'timeout'      => 120,
+                'essencial'    => false,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Atualiza a lista de pacotes do sistema. Recomendado.',
             ],
             [
                 'name'         => 'Instalar dependências',
@@ -378,6 +386,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => true,
                 'timeout'      => 180,
+                'essencial'    => false,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Instala ferramentas básicas (curl, gnupg, htop, etc). Pule se já tem.',
             ],
             [
                 'name'           => 'Configurar timezone',
@@ -386,6 +397,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 15,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Define o fuso horário para America/Sao_Paulo.',
             ],
             [
                 'name'           => 'Configurar swap (2GB)',
@@ -394,6 +408,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 30,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Cria 2GB de swap se não existir. Pule se já tem swap configurado.',
             ],
 
             // ── 3. Docker ──
@@ -403,6 +420,9 @@ final class ServerSetupService
                 'fatal'        => true,
                 'precisa_root' => true,
                 'timeout'      => 300,
+                'essencial'    => true,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Instala o Docker. Se já está instalado, pula automaticamente.',
             ],
             [
                 'name'           => 'Verificar Docker',
@@ -411,6 +431,9 @@ final class ServerSetupService
                 'fatal'          => true,
                 'precisa_root'   => false,
                 'timeout'        => 20,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Confirma que o Docker está funcionando.',
             ],
             [
                 'name'         => 'Habilitar Docker no boot',
@@ -418,6 +441,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => true,
                 'timeout'      => 30,
+                'essencial'    => true,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Garante que o Docker inicia automaticamente ao reiniciar o servidor.',
             ],
 
             // ── 4. Redes Docker ──
@@ -427,6 +453,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => false,
                 'timeout'      => 30,
+                'essencial'    => true,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Cria rede Docker isolada para comunicação entre containers.',
             ],
             [
                 'name'         => 'Criar rede Docker ' . $redeVps,
@@ -434,6 +463,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => false,
                 'timeout'      => 30,
+                'essencial'    => true,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Cria rede Docker usada pelo provisionamento de VPS.',
             ],
 
             // ── 5. Diretórios e imagem base ──
@@ -444,6 +476,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 15,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Cria o diretório onde os volumes das VPS são armazenados.',
             ],
             [
                 'name'         => 'Puxar imagem base (' . $imagemBase . ')',
@@ -451,6 +486,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => false,
                 'timeout'      => 180,
+                'essencial'    => true,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Baixa a imagem Docker base usada para criar containers de VPS.',
             ],
 
             // ── 6. Terminal seguro (cliente) ──
@@ -460,6 +498,9 @@ final class ServerSetupService
                 'fatal'        => false,
                 'precisa_root' => true,
                 'timeout'      => 20,
+                'essencial'    => true,
+                'risco'        => 'nenhum',
+                'descricao'    => 'Cria o usuário SSH usado pelo terminal web do cliente.',
             ],
             [
                 'name'           => 'Adicionar terminal ao grupo docker',
@@ -468,6 +509,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 15,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Permite que o usuário terminal execute comandos Docker.',
             ],
             [
                 'name'           => 'Instalar wrapper ForceCommand',
@@ -476,6 +520,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 20,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala o script que isola o acesso SSH do cliente ao container dele.',
             ],
             [
                 'name'           => 'Configurar ForceCommand no sshd',
@@ -484,6 +531,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 30,
+                'essencial'      => true,
+                'risco'          => 'baixo',
+                'descricao'      => 'Configura o SSH para forçar o wrapper no usuário terminal. Reinicia o sshd (conexões SSH ativas podem cair por 1-2s).',
             ],
 
             // ── 7. Segurança ──
@@ -494,6 +544,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 60,
+                'essencial'      => false,
+                'risco'          => 'alto',
+                'descricao'      => '⚠️ CUIDADO: Habilita o firewall e só libera portas 22, 80, 443. Serviços em outras portas (Node, apps, painéis) serão BLOQUEADOS. Não rode em servidores com serviços existentes.',
             ],
             [
                 'name'           => 'Instalar fail2ban',
@@ -502,6 +555,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 120,
+                'essencial'      => false,
+                'risco'          => 'baixo',
+                'descricao'      => 'Protege contra brute-force SSH. Seguro em servidores existentes — não bloqueia serviços.',
             ],
 
             // ── 8. Monitoramento ──
@@ -512,6 +568,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 15,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala script que coleta CPU/RAM/disco e envia pro painel.',
             ],
             [
                 'name'           => 'Configurar cron de monitoramento (5min)',
@@ -520,6 +579,9 @@ final class ServerSetupService
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 15,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Agenda a coleta de métricas a cada 5 minutos via cron.',
             ],
         ];
     }
