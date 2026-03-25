@@ -409,16 +409,16 @@ $_trial_dias  = (int)($trial_dias ?? 7);
           <?php if (!empty($_planos)): ?>
           <?php foreach ($_planos as $_i => $_p):
             $_specs  = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
-            $_vcpu   = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
-            $_ram    = (int)($_specs['ram_gb'] ?? 0);
-            $_disco  = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
+            $_vcpu   = (int)($_p['cpu'] ?? $_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
+            $_ram    = (int)(($_p['ram'] ?? 0) > 256 ? round((int)$_p['ram'] / 1024) : ($_specs['ram_gb'] ?? 0));
+            $_disco  = (int)(($_p['storage'] ?? 0) > 256 ? round((int)$_p['storage'] / 1024) : ($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0));
             $_price  = (float)$_p['price'];
             $_pid    = (int)$_p['id'];
             $_addons = is_array($_p['addons'] ?? null) ? $_p['addons'] : [];
             $_badge  = (string)($_p['badge'] ?? '');
+            $_isFeatured = $_badge !== '';
           ?>
-          <div class="plan-card" id="pcard-<?php echo $_pid; ?>">
-            <?php if ($_badge !== ''): ?><div class="plan-badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
+          <div class="plan-card" id="pcard-<?php echo $_pid; ?>" style="<?php echo $_isFeatured ? 'border-color:#4F46E5;box-shadow:0 8px 24px rgba(79,70,229,.2);' : ''; ?>"><?php if ($_badge !== ''): ?><div class="plan-badge"><?php echo View::e($_badge); ?></div><?php endif; ?>
             <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
             <div class="plan-desc"><?php echo View::e((string)($_p['description'] ?? '')); ?></div>
             <div class="plan-price"><small><?php echo View::e(I18n::moeda()); ?></small> <?php echo View::e(I18n::numero(I18n::precoValor($_price), 0)); ?></div>

@@ -56,8 +56,8 @@ $_logo = SistemaConfig::logoUrl();
           <img src="<?php echo View::e($_logo); ?>" alt="logo" />
         <?php else: ?>
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect width="30" height="30" rx="8" fill="#4F46E5"/><path d="M7 15h16M15 7v16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <span class="auth-brand-name"><?php echo View::e($_nome); ?></span>
         <?php endif; ?>
-        <span class="auth-brand-name"><?php echo View::e($_nome); ?></span>
       </a>
       <h1><?php echo View::e(I18n::t('eq_entrar.titulo_painel')); ?></h1>
       <p><?php echo View::e(I18n::t('eq_entrar.desc_painel')); ?></p>

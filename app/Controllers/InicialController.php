@@ -21,10 +21,17 @@ final class InicialController
         try {
             $pdo   = BancoDeDados::pdo();
             $stmt  = $pdo->query(
-                "SELECT id, name, price_monthly AS price, billing_cycle, badge, specs_json, description
+                "SELECT id, name, price_monthly AS price, specs_json, description, is_featured,
+                        cpu, ram, storage, support_channels
                  FROM plans WHERE status = 'active' ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
+
+            // Gerar badge a partir de is_featured
+            foreach ($planos as &$_pp) {
+                $_pp['badge'] = ((int)($_pp['is_featured'] ?? 0) === 1) ? 'POPULAR' : '';
+            }
+            unset($_pp);
 
             // Buscar addons para cada plano
             if (!empty($planos)) {
@@ -61,10 +68,15 @@ final class InicialController
         try {
             $pdo  = BancoDeDados::pdo();
             $stmt = $pdo->query(
-                "SELECT id, name, price_monthly AS price, billing_cycle, badge, specs_json, description
+                "SELECT id, name, price_monthly AS price, specs_json, description, is_featured,
+                        cpu, ram, storage
                  FROM plans WHERE status = 'active' ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
+            foreach ($planos as &$_pp) {
+                $_pp['badge'] = ((int)($_pp['is_featured'] ?? 0) === 1) ? 'POPULAR' : '';
+            }
+            unset($_pp);
         } catch (\Throwable) {}
 
         $html = View::renderizar(__DIR__ . '/../Views/infraestrutura.php', [
