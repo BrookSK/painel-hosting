@@ -61,6 +61,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.catalogo')); ?></span>
     </a>
+    <a href="/cliente/git-deploy" class="nav-item<?php echo _nav_ativo_cli('/cliente/git-deploy', $_seg); ?>" data-tooltip="Git Deploy">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 7v3a3 3 0 003 3h4a3 3 0 003-3V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Git Deploy</span>
+    </a>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.assinaturas')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>

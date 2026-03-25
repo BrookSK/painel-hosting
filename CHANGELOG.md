@@ -5,6 +5,28 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [2.1.0] — 2026-03-25
+
+### Adicionado
+- **Sistema de planos completo** — 5 planos pré-cadastrados (Startup R$90, Essential R$297, Professional R$697, Business R$957, Enterprise R$1.497) com addons (Backup diário R$90, Suporte WhatsApp R$290)
+- **Badge "Popular/Destaque"** — campo `is_featured` nos planos; plano marcado aparece com badge "POPULAR" e borda destacada na landing page e na área do cliente
+- **Checkout com addons selecionáveis** — nova tela `/cliente/planos/checkout` onde o cliente seleciona addons antes de pagar; preço total atualiza em tempo real; addons cobrados no Asaas e Stripe
+- **Stripe Price ID automático** — ao salvar um plano, o sistema cria produto e preço no Stripe automaticamente via API (sem precisar copiar IDs manualmente)
+- **Specs do plano como campos visuais** — substituído JSON livre por campos com labels claros: contas de e-mail, cota de e-mail, banda, domínios, aplicações, SLA
+- **Inicialização parcial de servidores** — tela de edição do servidor mostra todos os 20 passos individualmente com badges de risco (Sem risco / Risco baixo / Risco alto) e botão "Executar" por passo
+- **Role de servidor** — coluna `role` na tabela `servers` (vps/email); servidores de e-mail não entram no pool de provisionamento de VPS
+- **Gráficos de monitoramento** — tela de monitoramento da equipe reescrita com gauges circulares, gráficos de linha (Canvas puro) e tabela limitada às últimas 12 coletas
+- **Botão instalar agente de monitoramento** — nas configurações, botão que conecta via SSH no servidor de e-mail e instala o `lrv-monitor` automaticamente
+- Migrations: `0034_server_role`, `0035_subscription_addons`, `0036_plan_featured_and_seed`
+
+### Corrigido
+- Logo + nome do sistema apareciam juntos nas telas de login (cliente e equipe) e na navbar pública — agora só mostra o texto quando não há logo configurada
+- Badge "Popular" não aparecia na landing page — `InicialController` agora usa `is_featured` em vez da coluna `badge` inexistente
+- Dados de vCPU/RAM/disco nos cards de plano da landing page agora vêm das colunas reais da tabela `plans`
+- `I18n` não encontrado em `plano-editar.php` — adicionado `use LRV\Core\I18n`
+
+---
+
 ## [2.0.0] — 2026-03-24
 
 ### Adicionado

@@ -179,6 +179,18 @@ details ul{padding-left:18px;}
     <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a> para ver o histórico de cobranças, status de pagamento e solicitar reembolso.</p>
   </details>
 
+  <div class="faq-section">Planos e Assinatura</div>
+
+  <details>
+    <summary>Como contratar um plano?</summary>
+    <p>Acesse <a href="/cliente/planos">Planos</a>, escolha o plano desejado e clique em "Contratar este plano". Na tela de checkout, você pode selecionar serviços adicionais (como Backup diário ou Suporte WhatsApp). O preço total é atualizado em tempo real antes de confirmar.</p>
+  </details>
+
+  <details>
+    <summary>O que são os serviços adicionais?</summary>
+    <p>São extras opcionais que você pode adicionar ao seu plano na hora de contratar. Cada addon tem um preço mensal adicional que é somado ao valor do plano. Você escolhe quais quer antes de pagar.</p>
+  </details>
+
   <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">
     <p style="font-size:13px;color:#64748b;margin-bottom:12px;"><?php echo View::e(I18n::t('ajuda.nao_encontrou')); ?></p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">

@@ -288,7 +288,14 @@ $roteador->post('/cliente/2fa/desativar', [ClienteDoisFatoresController::class, 
 $roteador->get('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 'formularioVerificar']);
 $roteador->post('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 'verificar'], [Middlewares::rateLimitIp('2fa_verify_cli', 10, 60)]);
 
-// Onboarding
+// Git Deploy
+$roteador->get('/cliente/git-deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/git-deploy/novo', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'novo'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/git-deploy/editar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'editar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'salvar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
+$roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
 // Soluções (landing pages públicas)

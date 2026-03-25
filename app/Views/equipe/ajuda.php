@@ -200,5 +200,21 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
     Suporte a autenticação SSH por senha no backup (sem sshpass).
   </p>
 
+  <div class="section-title">23. Planos e Checkout</div>
+  <p style="font-size:14px;color:#475569;">
+  Cadastre planos em <a href="/equipe/planos">/equipe/planos</a>. Campos visuais para limites (e-mail, cota, domínios, apps, SLA).<br>
+  Marque <strong>Destaque</strong> para exibir badge "POPULAR" na landing page.<br>
+  O Stripe Price ID é gerado automaticamente ao salvar (se Stripe configurado).<br>
+  Addons (ex: Backup diário, Suporte WhatsApp) são cobrados no checkout — o cliente seleciona antes de pagar.
+</p>
+
+<div class="section-title">24. Inicialização parcial de servidores</div>
+<p style="font-size:14px;color:#475569;">
+  Em <a href="/equipe/servidores">/equipe/servidores</a> → Editar, a seção "Inicialização parcial" lista os 20 passos individualmente.<br>
+  Cada passo tem badge de risco: <strong>Sem risco</strong> (verde), <strong>Risco baixo</strong> (amarelo), <strong>Risco alto</strong> (vermelho).<br>
+  O UFW (firewall) é marcado como <strong>Risco alto</strong> — não rode em servidores com serviços existentes.<br>
+  Passos essenciais: Docker, redes Docker, diretório /vps, usuário terminal, ForceCommand.
+</p>
+
 </div>
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
