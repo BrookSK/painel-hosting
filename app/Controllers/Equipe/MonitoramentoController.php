@@ -56,7 +56,7 @@ final class MonitoramentoController
             return Resposta::texto('Servidor não encontrado.', 404);
         }
 
-        $st = $pdo->prepare('SELECT cpu_usage, ram_usage, disk_usage, timestamp FROM server_metrics WHERE server_id = :id ORDER BY timestamp DESC LIMIT 200');
+        $st = $pdo->prepare('SELECT cpu_usage, ram_usage, disk_usage, timestamp FROM server_metrics WHERE server_id = :id ORDER BY timestamp DESC LIMIT 48');
         $st->execute([':id' => $serverId]);
         $metricas = $st->fetchAll();
 
