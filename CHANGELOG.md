@@ -5,6 +5,37 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [2.0.0] — 2026-03-24
+
+### Adicionado
+- **Integração completa com Mailcow** — servidor de e-mail instalado e configurado em `correio.lrvweb.com.br`
+- **Webmail SOGo funcional** — clientes criam domínios, verificam DNS (MX, SPF, DKIM) e criam contas de e-mail pelo painel
+- **Webmail personalizado** — clientes podem ativar `webmail.seudominio.com` via CNAME, com verificação automática
+- **Roundcube como alternativa** — disponível no catálogo de aplicações, substitui o SOGo ao instalar na VPS do cliente (com aviso de consumo de recursos)
+- **Tutoriais de configuração de e-mail** — seção expansível na tela de e-mails com instruções para Outlook, Gmail, Apple Mail e Thunderbird (PC e celular), nos 3 idiomas
+- **Cota de armazenamento por e-mail** — campo de quota (MB/GB) na criação de e-mail, barra de progresso de cota usada/total, validação contra limite do plano (`email_quota_mb` no `specs_json`)
+- **Monitoramento do servidor de e-mail** — campos de configuração (IP, SSH, limites de alerta) nas configurações do admin, alertas automáticos via e-mail e WhatsApp quando CPU/RAM/disco ultrapassam os limites (rate limit de 30 min)
+- **Sandbox/Produção para Asaas e Stripe** — campos separados para tokens e webhooks de sandbox e produção, com seletor de ambiente ativo; keys legadas atualizadas automaticamente
+- **Redirect pós-login** — ao acessar uma URL protegida sem login, o sistema salva a URL e redireciona de volta após autenticação (funciona com 2FA)
+- Categoria "E-mail" no catálogo de aplicações
+- Rota `POST /api/metrics/servers` para receber métricas de monitoramento dos servidores
+- Migrations: `0030_plan_backup_slots`, `0031_domain_webmail_subdomain`, `0032_roundcube_template`, `0033_client_webmail_app`
+
+### Corrigido
+- **Monitoramento não recebia métricas** — rota `/api/metrics/servers` não existia no `routes/web.php`; adicionada
+- **URL do monitoramento vazia** — `ServerSetupService` lia `app.base_url` em vez de `app.url_base`; corrigido
+- **sshd restart falhava no Debian/Ubuntu** — fallback de `systemctl restart sshd` para `systemctl restart ssh`
+- **Chaves i18n faltantes na tela de VPS** — `eq_vps.status` e `eq_vps.acoes` adicionadas nos 3 idiomas
+- **MX nas instruções DNS apontava para hostname errado** — view atualizada para usar o hostname real do Mailcow
+
+### Alterado
+- **Sessão aumentada para 24 horas** — cookie lifetime, gc_maxlifetime e timeout de inatividade (equipe e cliente) de 30-60 min para 86400 segundos
+- **Backup com suporte a senha SSH** — `VpsBackupService` detecta `ssh_auth_type` e usa método adequado
+- **Backup limitado por plano** — coluna `backup_slots` (0/1/2) na tabela `plans`, rotação automática do backup mais antigo
+- Catálogo de templates visível também na tela admin de aplicações
+
+---
+
 ## [1.9.0] — 2026-03-24
 
 ### Adicionado

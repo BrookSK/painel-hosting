@@ -63,7 +63,27 @@ details ul{padding-left:18px;}
 
   <details>
     <summary>Como acessar o webmail?</summary>
-    <p>Na listagem de e-mails, clique em "Webmail" ao lado do endereço desejado.</p>
+    <p>Na listagem de e-mails, clique em "Webmail" ao lado do endereço desejado. Você será redirecionado para o webmail do sistema (SOGo). Se você ativou o webmail personalizado no seu domínio, o link apontará para <code>webmail.seudominio.com</code>.</p>
+  </details>
+
+  <details>
+    <summary>Como configurar meu e-mail no Outlook, Gmail ou Apple Mail?</summary>
+    <p>Na tela de <a href="/cliente/emails">Meus E-mails</a>, role até a seção "Configurar em outros apps". Lá você encontra os dados de servidor (IMAP/SMTP) e tutoriais passo a passo para Outlook, Gmail, Apple Mail e Thunderbird, tanto no computador quanto no celular.</p>
+  </details>
+
+  <details>
+    <summary>O que é a cota de armazenamento?</summary>
+    <p>Cada conta de e-mail tem uma cota (espaço em disco). Ao criar um e-mail, você define a cota em MB ou GB. A barra de progresso mostra quanto do total do seu plano já foi usado. Se a cota acabar, você pode fazer upgrade do plano ou reduzir a cota de outras contas.</p>
+  </details>
+
+  <details>
+    <summary>Como ativar o webmail personalizado (webmail.meudominio.com)?</summary>
+    <p>Em <a href="/cliente/emails/dominios">Domínios de E-mail</a>, após o domínio estar ativo, clique em "Ativar webmail personalizado". O sistema pedirá para criar um registro CNAME no seu DNS. Após a propagação, clique em "Verificar webmail" e o acesso será liberado.</p>
+  </details>
+
+  <details>
+    <summary>Posso usar o Roundcube em vez do webmail padrão?</summary>
+    <p>Sim. Acesse o <a href="/cliente/aplicacoes/catalogo">Catálogo de Aplicações</a> e instale o "Roundcube Webmail". Ele será instalado na sua VPS e substituirá o webmail padrão automaticamente. Atenção: o Roundcube consome recursos (CPU, RAM, disco) da sua VPS.</p>
   </details>
 
   <details>
@@ -113,6 +133,7 @@ details ul{padding-left:18px;}
       <li><strong>Redis</strong> — Cache em memória</li>
       <li><strong>Nginx</strong> — Servidor web e proxy reverso</li>
       <li><strong>Site Estático</strong> — HTML/CSS/JS com Nginx Alpine</li>
+      <li><strong>Roundcube Webmail</strong> — Webmail moderno, substitui o webmail padrão</li>
     </ul>
   </details>
 

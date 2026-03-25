@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: LRV Cloud Manager API
-  version: "1.9.0"
+  version: "2.0.0"
   description: |
     API interna do LRV Cloud Manager.
     Autenticação via sessão PHP (cookie de sessão).
@@ -742,3 +742,48 @@ components:
       in: cookie
       name: PHPSESSID
       description: Sessão PHP autenticada como cliente
+
+  /api/metrics/servers:
+    post:
+      tags: [Monitoramento]
+      summary: Receber métricas de um servidor
+      description: Endpoint chamado pelo agente de monitoramento instalado nos servidores (cron a cada 5 min). Sem CSRF.
+      parameters:
+        - in: header
+          name: x-monitoring-token
+          required: true
+          schema:
+            type: string
+          description: Token de monitoramento configurado em settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [server_id, cpu_usage, ram_usage, disk_usage]
+              properties:
+                server_id:
+                  type: integer
+                cpu_usage:
+                  type: number
+                ram_usage:
+                  type: number
+                disk_usage:
+                  type: number
+                timestamp:
+                  type: string
+      responses:
+        "200":
+          description: Métrica registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        "401":
+          description: Token inválido
+        "422":
+          description: Payload inválido

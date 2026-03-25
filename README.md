@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **1.9.0**
+> Versão atual: **2.0.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -52,6 +52,10 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0026c_license_conten
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0027_chat_files.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0028_app_templates.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_21_0029_cookie_consents.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0030_plan_backup_slots.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0031_domain_webmail_subdomain.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0032_roundcube_template.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0033_client_webmail_app.sql
 ```
 
 ### 3. Configuração do banco
@@ -77,7 +81,15 @@ Configurações principais:
 | `terminal.token_ttl_seconds` | TTL dos tokens de terminal (padrão: 60s) |
 | `chat.ws_port` | Porta interna do WS do chat (padrão: 8082) |
 | `chat.ws_url` | URL pública do WebSocket do chat (ex: `wss://seudominio.com/ws/chat`) |
-| `email.mailcow_url` | URL base do Mailcow (ex: `https://mail.seudominio.com`) |
+| `email.mailcow_url` | URL base do Mailcow (ex: `https://correio.seudominio.com`) |
+| `email.mailcow_key` | API key Read-Write do Mailcow |
+| `email.webmail_url` | URL do webmail SOGo (ex: `https://correio.seudominio.com/SOGo`) |
+| `email.server_ip` | IP do servidor de e-mail (para monitoramento) |
+| `email.alert_cpu` | Limite de CPU (%) para alerta do servidor de e-mail |
+| `email.alert_ram` | Limite de RAM (%) para alerta |
+| `email.alert_disk` | Limite de disco (%) para alerta |
+| `asaas.mode` | Ambiente ativo: `sandbox` ou `production` |
+| `stripe.mode` | Ambiente ativo: `sandbox` ou `production` |
 | `email.mailcow_key` | API key do Mailcow |
 | `email.webmail_url` | URL do webmail (Roundcube/SOGo) — fallback global |
 | `alertas.email_admin` | E-mail para alertas |

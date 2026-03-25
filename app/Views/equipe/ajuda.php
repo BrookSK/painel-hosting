@@ -29,7 +29,11 @@ mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026b_legal_force
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0026c_license_content.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0027_chat_files.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0028_app_templates.sql
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0029_cookie_consents.sql</pre>
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0029_cookie_consents.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0030_plan_backup_slots.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0031_domain_webmail_subdomain.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0032_roundcube_template.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0033_client_webmail_app.sql</pre>
   <p style="font-size:13px;color:#64748b;margin-top:8px;">Ou via painel: <a href="/equipe/inicializacao">/equipe/inicializacao</a> → "Aplicar migrations".</p>
 
   <div class="section-title">2. Worker (Jobs)</div>
@@ -47,17 +51,25 @@ php worker.php --once   # processa um job e sai</pre>
 
   <div class="section-title">5. E-mail (Mailcow)</div>
   <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
-    <li><span class="badge-cmd">email.mailcow_url</span> — URL base do Mailcow</li>
-    <li><span class="badge-cmd">email.mailcow_key</span> — API key do Mailcow</li>
-    <li><span class="badge-cmd">email.webmail_url</span> — URL do webmail (fallback global)</li>
+    <li><span class="badge-cmd">email.mailcow_url</span> — URL base do Mailcow (ex: <code>https://correio.seudominio.com</code>)</li>
+    <li><span class="badge-cmd">email.mailcow_key</span> — API key Read-Write do Mailcow</li>
+    <li><span class="badge-cmd">email.webmail_url</span> — URL do webmail SOGo (fallback global)</li>
+    <li><span class="badge-cmd">email.default_domain</span> — Domínio padrão para clientes sem domínio próprio</li>
+    <li><span class="badge-cmd">email.default_total_quota_mb</span> — Cota total padrão de e-mail por cliente (5120 MB = 5 GB)</li>
   </ul>
+  <p style="font-size:14px;color:#475569;margin-top:8px;">O cliente pode ativar webmail personalizado (<code>webmail.seudominio.com</code>) via CNAME. Também pode instalar o Roundcube como alternativa ao SOGo pelo catálogo de aplicações.</p>
+
+  <div class="section-title">5.1 Monitoramento do servidor de e-mail</div>
+  <p style="font-size:14px;color:#475569;">Configure em <a href="/equipe/configuracoes">Configurações</a> → "Servidor de E-mail (Monitoramento)". Preencha o IP, SSH e limites de alerta. Quando CPU, RAM ou disco ultrapassam os limites, o admin recebe alerta por e-mail e WhatsApp (máximo 1 a cada 30 min).</p>
 
   <div class="section-title">6. Billing — Asaas (BRL)</div>
+  <p style="font-size:14px;color:#475569;">Campos separados para <strong>Sandbox</strong> e <strong>Produção</strong>. Selecione o ambiente ativo no seletor. As keys legadas são atualizadas automaticamente ao salvar.</p>
   <pre>Webhook endpoint: POST /webhooks/asaas
 Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   <p style="font-size:13px;color:#64748b;">Acompanhe eventos em <a href="/equipe/asaas-eventos">/equipe/asaas-eventos</a>.</p>
 
   <div class="section-title">7. Billing — Stripe (USD)</div>
+  <p style="font-size:14px;color:#475569;">Campos separados para <strong>Sandbox (Test)</strong> e <strong>Produção (Live)</strong>. Selecione o ambiente ativo no seletor.</p>
   <pre>Webhook endpoint: POST /webhooks/stripe</pre>
 
   <div class="section-title">8. Nodes / Servidores</div>
@@ -121,7 +133,7 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
     A instalação é feita via job assíncrono (<code>install_app_template</code>): pull de imagem, clone de repo, criação de container Docker com labels.
   </p>
   <ul style="padding-left:18px;font-size:14px;color:#475569;line-height:2;">
-    <li>Templates: WordPress, Node.js, PHP Laravel, MySQL, Redis, Nginx, Site Estático</li>
+    <li>Templates: WordPress, Node.js, PHP Laravel, MySQL, Redis, Nginx, Site Estático, <strong>Roundcube Webmail</strong></li>
     <li>Auto-assign de porta (evita conflitos)</li>
     <li>Labels Docker: <code>lrv.app_id</code>, <code>lrv.client_id</code></li>
     <li>Status: <code>installing</code>, <code>running</code>, <code>stopped</code>, <code>error</code></li>
@@ -172,6 +184,20 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
     Sistema traduzido em 3 idiomas: Português (pt-BR), Inglês (en-US), Espanhol (es-ES).<br>
     Seletor de idioma disponível na navbar pública e nos painéis.<br>
     Todas as strings usam <span class="badge-cmd">I18n::t('chave')</span> nas views.
+  </p>
+
+  <div class="section-title">21. Sessão e Redirect</div>
+  <p style="font-size:14px;color:#475569;">
+    Sessão dura <strong>24 horas</strong> de inatividade (equipe e cliente).<br>
+    Ao acessar uma URL protegida sem login, o sistema salva a URL e redireciona de volta após autenticação (funciona com 2FA).<br>
+    Cookie de sessão com <code>lifetime: 86400</code>, <code>Secure</code>, <code>HttpOnly</code>, <code>SameSite=Lax</code>.
+  </p>
+
+  <div class="section-title">22. Backup por plano</div>
+  <p style="font-size:14px;color:#475569;">
+    Coluna <code>backup_slots</code> na tabela <code>plans</code> (0, 1 ou 2 backups).<br>
+    Rotação automática: ao criar um novo backup, o mais antigo é removido se o limite for atingido.<br>
+    Suporte a autenticação SSH por senha no backup (sem sshpass).
   </p>
 
 </div>
