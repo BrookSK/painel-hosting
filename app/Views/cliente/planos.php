@@ -65,26 +65,22 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         </div>
       <?php endif; ?>
 
-      <form method="post" action="/cliente/assinar">
-        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-        <input type="hidden" name="plan_id" value="<?php echo (int) ($p['id'] ?? 0); ?>" />
-        <label style="display:block; font-size:13px; margin-bottom:6px;">Forma de pagamento</label>
-        <select class="input" name="billing_type" style="margin-bottom:12px;">
-          <option value="PIX">PIX</option>
-          <option value="BOLETO">Boleto</option>
-        </select>
-        <button class="botao" type="submit">Assinar e gerar cobrança</button>
-      </form>
-
-      <?php if (trim((string) ($p['stripe_price_id'] ?? '')) !== ''): ?>
-        <div style="height:10px;"></div>
-        <form method="post" action="/cliente/assinar">
-          <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
-          <input type="hidden" name="plan_id" value="<?php echo (int) ($p['id'] ?? 0); ?>" />
-          <input type="hidden" name="gateway" value="stripe" />
-          <button class="botao" type="submit" style="background:#111827;">Assinar com cartão (Stripe)</button>
-        </form>
+      <?php
+        $planAddons = is_array($p['addons'] ?? null) ? $p['addons'] : [];
+        if (!empty($planAddons)):
+      ?>
+        <div style="margin-bottom:12px;font-size:12px;color:#64748b;">
+          <div style="margin-bottom:4px;">Serviços adicionais disponíveis:</div>
+          <?php foreach ($planAddons as $pa): ?>
+            <div style="display:flex;justify-content:space-between;padding:2px 0;">
+              <span><?php echo View::e((string)($pa['name'] ?? '')); ?></span>
+              <span style="color:#4F46E5;font-weight:600;">+<?php echo View::e(I18n::preco((float)($pa['price'] ?? 0))); ?>/mês</span>
+            </div>
+          <?php endforeach; ?>
+        </div>
       <?php endif; ?>
+
+      <a href="/cliente/planos/checkout?plan_id=<?php echo (int)($p['id'] ?? 0); ?>" class="botao" style="display:block;text-align:center;">Contratar este plano</a>
     </div>
   <?php endforeach; ?>
 

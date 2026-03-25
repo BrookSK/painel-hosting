@@ -10,7 +10,7 @@ use LRV\Core\ConfiguracoesSistema;
 
 final class StripeCheckoutService
 {
-    public function criarCheckoutAssinaturaDoPlano(int $clientId, int $planId): array
+    public function criarCheckoutAssinaturaDoPlano(int $clientId, int $planId, array $addons = []): array
     {
         $secretKey = ConfiguracoesSistema::stripeSecretKey();
         if ($secretKey === '') {
@@ -81,11 +81,14 @@ final class StripeCheckoutService
 
             $due = (new DateTimeImmutable('now'))->modify('+1 day')->format('Y-m-d');
 
-            $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, asaas_subscription_id, stripe_subscription_id, stripe_checkout_session_id, status, next_due_date, created_at) VALUES (:c, :v, :p, NULL, NULL, NULL, :s, :n, :cr)');
+            $addonsJson = !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null;
+
+            $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, asaas_subscription_id, stripe_subscription_id, stripe_checkout_session_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, NULL, NULL, NULL, :s, :n, :cr)');
             $insSub->execute([
                 ':c' => $clientId,
                 ':v' => $vpsId,
                 ':p' => (int) $plano['id'],
+                ':aj' => $addonsJson,
                 ':s' => 'PENDING',
                 ':n' => $due,
                 ':cr' => $agora,
@@ -95,6 +98,32 @@ final class StripeCheckoutService
 
             $successUrl = $appUrl . '/cliente/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}';
             $cancelUrl = $appUrl . '/cliente/stripe/cancelado';
+
+            // Build line items: plan + addons
+            $lineItems = [
+                ['price' => $stripePriceId, 'quantity' => 1],
+            ];
+
+            // Create Stripe prices for addons on-the-fly
+            $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
+            foreach ($addons as $addon) {
+                $addonPriceBrl = (float)($addon['price'] ?? 0);
+                if ($addonPriceBrl <= 0) continue;
+                $addonUsdCents = (int)round(($addonPriceBrl / $taxaUsd) * 100);
+                if ($addonUsdCents <= 0) continue;
+                try {
+                    $addonProduct = $stripe->products->create([
+                        'name' => (string)($addon['name'] ?? 'Addon'),
+                    ]);
+                    $addonPrice = $stripe->prices->create([
+                        'product' => $addonProduct->id,
+                        'unit_amount' => $addonUsdCents,
+                        'currency' => 'usd',
+                        'recurring' => ['interval' => 'month'],
+                    ]);
+                    $lineItems[] = ['price' => $addonPrice->id, 'quantity' => 1];
+                } catch (\Throwable) {}
+            }
 
             $session = $stripe->checkout->sessions->create([
                 'mode' => 'subscription',
@@ -114,12 +143,7 @@ final class StripeCheckoutService
                         'local_plan_id' => (string) $planId,
                     ],
                 ],
-                'line_items' => [
-                    [
-                        'price' => $stripePriceId,
-                        'quantity' => 1,
-                    ],
-                ],
+                'line_items' => $lineItems,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
             ]);

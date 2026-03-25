@@ -70,7 +70,7 @@ final class AssinaturasService
         return $novoId;
     }
 
-    public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType): array
+    public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType, array $addons = []): array
     {
         $pdo = BancoDeDados::pdo();
 
@@ -81,6 +81,12 @@ final class AssinaturasService
         if (!is_array($plano)) {
             throw new \RuntimeException('Plano não encontrado.');
         }
+
+        $precoTotal = (float) $plano['price_monthly'];
+        foreach ($addons as $a) {
+            $precoTotal += (float)($a['price'] ?? 0);
+        }
+        $addonsJson = !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null;
 
         $customerId = $this->garantirClienteAsaas($clientId);
 
@@ -118,9 +124,9 @@ final class AssinaturasService
             $respAss = $this->asaas->criarAssinatura([
                 'customer' => $customerId,
                 'billingType' => $billingType,
-                'value' => (float) $plano['price_monthly'],
+                'value' => $precoTotal,
                 'cycle' => 'MONTHLY',
-                'description' => 'Assinatura ' . (string) $plano['name'],
+                'description' => 'Assinatura ' . (string) $plano['name'] . (!empty($addons) ? ' + addons' : ''),
                 'nextDueDate' => $due,
             ]);
 
@@ -130,11 +136,12 @@ final class AssinaturasService
             }
 
             try {
-                $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, asaas_subscription_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :a, :s, :n, :cr)');
+                $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, asaas_subscription_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, :a, :s, :n, :cr)');
                 $insSub->execute([
                     ':c' => $clientId,
                     ':v' => $vpsId,
                     ':p' => (int) $plano['id'],
+                    ':aj' => $addonsJson,
                     ':a' => $asaasSubId,
                     ':s' => 'PENDING',
                     ':n' => $due,

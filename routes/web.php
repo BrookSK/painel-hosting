@@ -180,6 +180,7 @@ $roteador->get('/cliente/criar-conta', [CriarContaController::class, 'formulario
 $roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar']);
 $roteador->get('/cliente/painel', [ClientePainelController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos', [ClientePlanosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/planos/checkout', [ClientePlanosController::class, 'checkout'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/assinar', [AssinarPlanoController::class, 'assinar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('subscribe', 5, 60)]);
 $roteador->get('/cliente/stripe/sucesso', [StripeCheckoutController::class, 'sucesso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/stripe/cancelado', [StripeCheckoutController::class, 'cancelado'], [Middlewares::exigirLoginCliente()]);

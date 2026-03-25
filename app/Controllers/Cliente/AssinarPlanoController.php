@@ -25,7 +25,27 @@ final class AssinarPlanoController
 
         $in = $req->input();
         $planId = $in->postInt('plan_id', 1, 2147483647, true);
-        $gateway = $in->postEnum('gateway', ['stripe'], '');
+        $gateway = trim((string)($req->post['gateway'] ?? 'PIX'));
+        $addonsIds = trim((string)($req->post['addons_ids'] ?? ''));
+
+        // Calcular addons selecionados
+        $addonsSelecionados = [];
+        $addonsTotal = 0.0;
+        if ($addonsIds !== '') {
+            $ids = array_filter(array_map('intval', explode(',', $addonsIds)));
+            if (!empty($ids)) {
+                $pdo = \LRV\Core\BancoDeDados::pdo();
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $st = $pdo->prepare("SELECT id, name, price FROM plan_addons WHERE id IN ({$placeholders}) AND plan_id = ? AND active = 1");
+                $params = array_merge($ids, [$planId]);
+                $st->execute($params);
+                $rows = $st->fetchAll();
+                foreach (($rows ?: []) as $r) {
+                    $addonsSelecionados[] = ['id' => (int)$r['id'], 'name' => (string)$r['name'], 'price' => (float)$r['price']];
+                    $addonsTotal += (float)$r['price'];
+                }
+            }
+        }
 
         if ($gateway === 'stripe') {
             if ($in->temErros() || $planId <= 0) {
@@ -35,7 +55,7 @@ final class AssinarPlanoController
             $service = new StripeCheckoutService();
 
             try {
-                $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId);
+                $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados);
             } catch (\Throwable $e) {
                 (new AuditLogService())->registrar(
                     'client',
@@ -73,7 +93,7 @@ final class AssinarPlanoController
             return Resposta::redirecionar($checkoutUrl);
         }
 
-        $billingType = $in->postEnum('billing_type', ['PIX', 'BOLETO'], 'PIX');
+        $billingType = (in_array($gateway, ['PIX', 'BOLETO'], true)) ? $gateway : 'PIX';
 
         if ($in->temErros() || $planId <= 0) {
             return Resposta::texto('Plano inválido.', 400);
@@ -82,7 +102,7 @@ final class AssinarPlanoController
         $service = new AssinaturasService(new AsaasApi(new ClienteHttp()));
 
         try {
-            $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType);
+            $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados);
         } catch (\Throwable $e) {
             (new AuditLogService())->registrar(
                 'client',
