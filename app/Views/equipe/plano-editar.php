@@ -149,7 +149,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div>
           <div style="font-size:14px;font-weight:700;color:#0f172a;">Serviços adicionais</div>
-          <div style="font-size:12px;color:#64748b;margin-top:2px;">Exibidos na landing page como opções extras. São informativos — não alteram limites do plano. O backup real é configurado em "Backups inclusos" acima.</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Exibidos na landing page como opções extras. São informativos — não alteram limites do plano. O backup real é configurado em "Backups inclusos" acima. Mas eles são cobrados no checkout — o cliente seleciona quais quer e o preço total é calculado.</div>
         </div>
         <button type="button" id="btn-add-addon" class="botao" style="font-size:12px;padding:6px 14px;">+ Adicionar</button>
       </div>
