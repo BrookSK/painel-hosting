@@ -315,6 +315,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         </select>
       </div>
     </div>
+    <div style="margin-top:14px;">
+      <button type="button" class="botao sm" id="btnInstalarAgente" onclick="instalarAgenteEmail()">📡 Instalar agente de monitoramento</button>
+      <span id="agenteStatus" style="font-size:13px;color:#64748b;margin-left:10px;"></span>
+      <p class="texto" style="font-size:12px;margin-top:6px;">Conecta via SSH no servidor de e-mail e instala o script de coleta de métricas (CPU, RAM, disco) com cron a cada 5 min. Salve as configurações acima antes de clicar.</p>
+    </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Chat ao vivo (WebSocket)</h2>
     <div class="grid">
@@ -578,6 +583,19 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     });
   });
 })();
+
+function instalarAgenteEmail(){
+  var btn=document.getElementById('btnInstalarAgente');
+  var st=document.getElementById('agenteStatus');
+  btn.disabled=true;st.textContent='Conectando via SSH...';st.style.color='#64748b';
+  var csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
+  fetch('/equipe/configuracoes/instalar-agente-email',{method:'POST',headers:{'x-csrf-token':csrf,'Content-Type':'application/json'}})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){st.textContent='✓ '+d.mensagem;st.style.color='#16a34a';}
+    else{st.textContent='✘ '+(d.erro||'Erro');st.style.color='#dc2626';}
+    btn.disabled=false;
+  }).catch(function(){st.textContent='✘ Erro de rede';st.style.color='#dc2626';btn.disabled=false;});
+}
 </script>
 
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>

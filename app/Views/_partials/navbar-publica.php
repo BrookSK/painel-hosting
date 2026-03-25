@@ -15,8 +15,8 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
         <img src="<?php echo View::e($_pn_logo); ?>" alt="<?php echo View::e($_pn_nome); ?>"/>
       <?php else: ?>
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="#4F46E5"/><path d="M7 14h14M14 7v14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <span class="pn-brand-name"><?php echo View::e($_pn_nome); ?></span>
       <?php endif; ?>
-      <span class="pn-brand-name"><?php echo View::e($_pn_nome); ?></span>
     </a>
 
     <div class="pn-links">

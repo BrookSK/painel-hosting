@@ -513,4 +513,84 @@ final class ConfiguracoesController
 
         return Resposta::html($html);
     }
+
+    public function instalarAgenteEmail(Requisicao $req): Resposta
+    {
+        $ip = trim((string) Settings::obter('email.server_ip', ''));
+        $port = (int) Settings::obter('email.server_ssh_port', 22);
+        $user = trim((string) Settings::obter('email.server_ssh_user', 'root'));
+        $senhaCifrada = trim((string) Settings::obter('email.server_ssh_password', ''));
+
+        if ($ip === '' || $senhaCifrada === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'IP ou senha SSH não configurados. Salve as configurações primeiro.'], 422);
+        }
+
+        $senha = \LRV\App\Services\Infra\SshCrypto::decifrar($senhaCifrada);
+        if ($senha === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Não foi possível decifrar a senha SSH.'], 500);
+        }
+
+        // Gerar token de monitoramento se não existir
+        $monitoringToken = trim((string) Settings::obter('monitoring.token', ''));
+        if ($monitoringToken === '') {
+            $monitoringToken = bin2hex(random_bytes(32));
+            Settings::definir('monitoring.token', $monitoringToken);
+        }
+
+        $baseUrl = rtrim(trim((string) Settings::obter('app.url_base', '')), '/');
+
+        // Cadastrar servidor de email na tabela servers se não existir
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $st = $pdo->prepare('SELECT id FROM servers WHERE ip_address = :ip LIMIT 1');
+        $st->execute([':ip' => $ip]);
+        $srv = $st->fetch();
+        $serverId = 0;
+
+        if (is_array($srv)) {
+            $serverId = (int) $srv['id'];
+        } else {
+            $pdo->prepare('INSERT INTO servers (hostname, ip_address, ssh_port, ssh_user, ssh_password, ssh_auth_type, status, created_at) VALUES (:h,:ip,:p,:u,:pw,:at,:s,:c)')
+                ->execute([
+                    ':h' => 'email-server',
+                    ':ip' => $ip,
+                    ':p' => $port,
+                    ':u' => $user,
+                    ':pw' => $senhaCifrada,
+                    ':at' => 'password',
+                    ':s' => 'active',
+                    ':c' => date('Y-m-d H:i:s'),
+                ]);
+            $serverId = (int) $pdo->lastInsertId();
+        }
+
+        // Montar script de monitoramento
+        $monitorScript = "#!/bin/bash\n"
+            . "CPU=\$(top -bn1 | grep 'Cpu(s)' | awk '{print \$2+\$4}' 2>/dev/null || echo 0)\n"
+            . "RAM=\$(free | awk '/Mem:/{printf \"%.1f\", \$3/\$2*100}' 2>/dev/null || echo 0)\n"
+            . "DISK=\$(df / | awk 'NR==2{print \$5}' | tr -d '%' 2>/dev/null || echo 0)\n"
+            . "curl -s -X POST {$baseUrl}/api/metrics/servers \\\n"
+            . "  -H \"Content-Type: application/json\" \\\n"
+            . "  -H \"x-monitoring-token: {$monitoringToken}\" \\\n"
+            . "  -d \"{\\\"server_id\\\":{$serverId},\\\"cpu_usage\\\":\$CPU,\\\"ram_usage\\\":\$RAM,\\\"disk_usage\\\":\$DISK}\" \\\n"
+            . "  >/dev/null 2>&1\n";
+
+        $installCmd = "cat > /usr/local/bin/lrv-monitor << 'LRVEOF'\n{$monitorScript}LRVEOF\n"
+            . "chmod 0755 /usr/local/bin/lrv-monitor && "
+            . "(crontab -l 2>/dev/null | grep -v lrv-monitor; echo '*/5 * * * * /usr/local/bin/lrv-monitor') | crontab - 2>&1 && "
+            . "/usr/local/bin/lrv-monitor && echo lrv-agent-ok";
+
+        try {
+            $exec = new \LRV\App\Services\Infra\SshExecutor();
+            $result = $exec->executarComSenha($ip, $port, $user, $senha, $installCmd, 30);
+            $saida = trim((string) ($result['saida'] ?? ''));
+
+            if (str_contains($saida, 'lrv-agent-ok')) {
+                return Resposta::json(['ok' => true, 'mensagem' => 'Agente instalado e primeira coleta enviada. Servidor #' . $serverId]);
+            }
+
+            return Resposta::json(['ok' => false, 'erro' => 'Comando executou mas sem confirmação: ' . substr($saida, 0, 200)], 500);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => 'Falha SSH: ' . $e->getMessage()], 500);
+        }
+    }
 }
