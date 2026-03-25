@@ -549,7 +549,7 @@ final class ConfiguracoesController
         if (is_array($srv)) {
             $serverId = (int) $srv['id'];
         } else {
-            $pdo->prepare('INSERT INTO servers (hostname, ip_address, ssh_port, ssh_user, ssh_password, ssh_auth_type, status, created_at) VALUES (:h,:ip,:p,:u,:pw,:at,:s,:c)')
+            $pdo->prepare('INSERT INTO servers (hostname, ip_address, ssh_port, ssh_user, ssh_password, ssh_auth_type, status, role, created_at) VALUES (:h,:ip,:p,:u,:pw,:at,:s,:r,:c)')
                 ->execute([
                     ':h' => 'email-server',
                     ':ip' => $ip,
@@ -558,6 +558,7 @@ final class ConfiguracoesController
                     ':pw' => $senhaCifrada,
                     ':at' => 'password',
                     ':s' => 'active',
+                    ':r' => 'email',
                     ':c' => date('Y-m-d H:i:s'),
                 ]);
             $serverId = (int) $pdo->lastInsertId();

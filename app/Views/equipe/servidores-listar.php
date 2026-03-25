@@ -36,7 +36,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           $isOnline   = array_key_exists('is_online', $s) ? (int)($s['is_online'] ?? 0) : null;
         ?>
           <tr id="row-srv-<?php echo $sid; ?>">
-            <td><strong><?php echo View::e($hostname); ?></strong></td>
+            <td>
+              <strong><?php echo View::e($hostname); ?></strong>
+              <?php $role = (string)($s['role'] ?? 'vps'); if ($role !== 'vps'): ?>
+                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#e0e7ff;color:#3730a3;"><?php echo View::e($role); ?></span>
+              <?php endif; ?>
+            </td>
             <td><?php echo View::e((string)($s['ip_address'] ?? '')); ?></td>
             <td><?php echo View::e((string)($s['cpu_used'] ?? 0)); ?>/<?php echo View::e((string)($s['cpu_total'] ?? 0)); ?></td>
             <td><?php echo View::e(formatarGb((int)($s['ram_used'] ?? 0))); ?>/<?php echo View::e(formatarGb((int)($s['ram_total'] ?? 0))); ?></td>

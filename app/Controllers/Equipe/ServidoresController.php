@@ -27,7 +27,7 @@ final class ServidoresController
         try {
             $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_auth_type,
                 terminal_ssh_user, ram_total, ram_used, cpu_total, cpu_used,
-                storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error
+                storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error, role
                 FROM servers ORDER BY id DESC');
             $servidores = $stmt->fetchAll();
         } catch (\Throwable) {

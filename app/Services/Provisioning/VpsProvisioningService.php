@@ -342,6 +342,7 @@ final class VpsProvisioningService
                     FROM servers
                     WHERE status = 'active'
                       AND is_online = 1
+                      AND (role = 'vps' OR role IS NULL)
                       AND COALESCE(ssh_user,'') <> ''
                       AND COALESCE(ssh_key_id,'') <> ''
                       AND (ram_total - ram_used) >= :ram
