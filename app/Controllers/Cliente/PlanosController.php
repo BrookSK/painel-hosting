@@ -19,7 +19,7 @@ final class PlanosController
         $erro = '';
         try {
             try {
-                $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
+                $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
                 $planos = $stmt->fetchAll();
             } catch (\Throwable $e) {
                 $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");

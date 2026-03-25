@@ -29,6 +29,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <option value="inactive" <?php echo ($plano['status']??'')==='inactive'?'selected':''; ?>>Inativo</option>
         </select>
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Destaque</label>
+        <select class="input" name="is_featured">
+          <option value="0" <?php echo ((int)($plano['is_featured']??0))===0?'selected':''; ?>>Normal</option>
+          <option value="1" <?php echo ((int)($plano['is_featured']??0))===1?'selected':''; ?>>⭐ Popular / Destaque</option>
+        </select>
+        <p class="texto" style="font-size:12px;margin-top:4px;">Planos em destaque aparecem com badge "Popular" e borda destacada na página de planos.</p>
+      </div>
     </div>
 
     <div style="margin-top:12px;">

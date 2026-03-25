@@ -27,7 +27,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <div class="grid">
   <?php foreach (($planos ?? []) as $p): ?>
-    <div class="card-new">
+    <?php $featured = (int)($p['is_featured'] ?? 0) === 1; ?>
+    <div class="card-new" style="<?php echo $featured ? 'border:2px solid #4F46E5;position:relative;' : ''; ?>">
+      <?php if ($featured): ?>
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#4F46E5;color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:99px;white-space:nowrap;">⭐ POPULAR</div>
+      <?php endif; ?>
       <h2 class="titulo" style="margin-bottom:6px;"><?php echo View::e((string) ($p['name'] ?? '')); ?></h2>
       <p class="texto" style="margin-bottom:12px;"><?php echo View::e((string) ($p['description'] ?? '')); ?></p>
 
