@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
+use LRV\Core\I18n;
 
 $id = $plano['id']??null;
 $pageTitle = $id?'Editar plano':'Novo plano';
