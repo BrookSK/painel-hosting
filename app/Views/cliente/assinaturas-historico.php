@@ -121,4 +121,31 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
 <?php endif; ?>
 
+<!-- Reembolso — discreto no final -->
+<?php if (!empty($assinaturas)): ?>
+<div style="margin-top:32px;padding-top:16px;border-top:1px solid #f1f5f9;">
+  <details>
+    <summary style="cursor:pointer;font-size:12px;color:#94a3b8;"><?php echo View::e(I18n::t('assinaturas.solicitar_reembolso')); ?></summary>
+    <div style="margin-top:12px;max-width:480px;">
+      <form method="post" action="/cliente/assinaturas/reembolso">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('assinaturas.plano')); ?></label>
+          <select class="input" name="subscription_id" required style="font-size:13px;">
+            <?php foreach ($assinaturas as $a): ?>
+              <option value="<?php echo (int)($a['id'] ?? 0); ?>">#<?php echo (int)($a['id'] ?? 0); ?> — <?php echo View::e((string)($a['plan_name'] ?? '')); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;"><?php echo View::e(I18n::t('assinaturas.motivo')); ?></label>
+          <textarea class="input" name="motivo" rows="3" required placeholder="<?php echo View::e(I18n::t('assinaturas.motivo_placeholder')); ?>" style="font-size:13px;"></textarea>
+        </div>
+        <button class="botao ghost sm" type="submit"><?php echo View::e(I18n::t('assinaturas.enviar_solicitacao')); ?></button>
+      </form>
+    </div>
+  </details>
+</div>
+<?php endif; ?>
+
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>
