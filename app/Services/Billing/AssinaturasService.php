@@ -101,6 +101,12 @@ final class AssinaturasService
 
         $agora = date('Y-m-d H:i:s');
 
+        // Normalizar billing type
+        $billingTypeNorm = strtoupper(trim($billingType));
+        if (!in_array($billingTypeNorm, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
+            $billingTypeNorm = 'PIX';
+        }
+
         $pdo->beginTransaction();
         try {
             try {
@@ -132,7 +138,7 @@ final class AssinaturasService
 
             $respAss = $this->asaas->criarAssinatura([
                 'customer' => $customerId,
-                'billingType' => $billingType,
+                'billingType' => $billingTypeNorm,
                 'value' => $precoTotal,
                 'cycle' => 'MONTHLY',
                 'description' => 'Assinatura ' . (string) $plano['name'] . (!empty($addons) ? ' + addons' : ''),
@@ -145,13 +151,14 @@ final class AssinaturasService
             }
 
             try {
-                $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, asaas_subscription_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, :a, :s, :n, :cr)');
+                $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, asaas_subscription_id, billing_type, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, :a, :bt, :s, :n, :cr)');
                 $insSub->execute([
                     ':c' => $clientId,
                     ':v' => $vpsId,
                     ':p' => (int) $plano['id'],
                     ':aj' => $addonsJson,
                     ':a' => $asaasSubId,
+                    ':bt' => $billingTypeNorm,
                     ':s' => 'PENDING',
                     ':n' => $due,
                     ':cr' => $agora,

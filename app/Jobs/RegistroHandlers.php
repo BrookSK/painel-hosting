@@ -392,6 +392,21 @@ final class RegistroHandlers
             }
         });
 
+        $p->registrar('billing_reminders', static function (array $payload, ContextoJob $ctx): void {
+            $svc = new \LRV\App\Services\Billing\BillingReminderService();
+            $svc->processar(fn (string $m) => $ctx->log($m));
+
+            // Reagendar para o próximo dia às 08:00
+            try {
+                $repo = new RepositorioJobs();
+                $amanha = new \DateTimeImmutable('tomorrow 08:00');
+                $repo->criar('billing_reminders', [], $amanha);
+                $ctx->log('Reagendado billing_reminders para: ' . $amanha->format('Y-m-d H:i:s'));
+            } catch (\Throwable $e) {
+                $ctx->log('Falha ao reagendar: ' . $e->getMessage());
+            }
+        });
+
         $p->registrar('limpar_pendentes_expirados', static function (array $payload, ContextoJob $ctx): void {
             $pdo = BancoDeDados::pdo();
             $horasExpiracao = (int) ($payload['horas'] ?? 48);

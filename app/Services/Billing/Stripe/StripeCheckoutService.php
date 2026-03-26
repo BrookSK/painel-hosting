@@ -88,12 +88,13 @@ final class StripeCheckoutService
 
             $addonsJson = !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null;
 
-            $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, asaas_subscription_id, stripe_subscription_id, stripe_checkout_session_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, NULL, NULL, NULL, :s, :n, :cr)');
+            $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, asaas_subscription_id, stripe_subscription_id, stripe_checkout_session_id, billing_type, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, NULL, NULL, NULL, :bt, :s, :n, :cr)');
             $insSub->execute([
                 ':c' => $clientId,
                 ':v' => $vpsId,
                 ':p' => (int) $plano['id'],
                 ':aj' => $addonsJson,
+                ':bt' => 'CREDIT_CARD',
                 ':s' => 'PENDING',
                 ':n' => $due,
                 ':cr' => $agora,
