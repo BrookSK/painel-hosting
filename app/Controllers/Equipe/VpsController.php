@@ -40,18 +40,30 @@ final class VpsController
         }
 
         $pdo = \LRV\Core\BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, status FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
         $stmt->execute([':id' => $vpsId]);
-        if (!is_array($stmt->fetch())) {
+        $vps = $stmt->fetch();
+        if (!is_array($vps)) {
             return Resposta::texto('VPS não encontrada.', 404);
         }
 
-        // Marcar status imediatamente (job faz o provisionamento real)
-        $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id")
+        // Marcar status imediatamente
+        $pdo->prepare("UPDATE vps SET status = 'provisioning' WHERE id = :id")
             ->execute([':id' => $vpsId]);
 
+        // Enfileirar job
         $repo = new RepositorioJobs();
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
+
+        // Tentar executar o provisionamento direto (sem esperar worker)
+        try {
+            $svc = new \LRV\App\Services\Provisioning\VpsProvisioningService(
+                new \LRV\App\Services\Provisioning\DockerCli()
+            );
+            $svc->provisionar($vpsId, function(string $m) {});
+        } catch (\Throwable) {
+            // Silencioso — o job no worker vai tentar de novo
+        }
 
         (new AuditLogService())->registrar(
             'team',
