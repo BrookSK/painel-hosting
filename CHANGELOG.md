@@ -5,6 +5,39 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [2.2.0] — 2026-03-26
+
+### Adicionado
+- **Wizard de contratação** (`/contratar?plan_id=X`) — fluxo completo em 4 passos sem precisar de login: landing do plano com upsell, configuração (quantidade de servidores, período mensal/semestral/anual, addons), criação de conta, pagamento. Tudo numa única página com stepper visual
+- **Múltiplas assinaturas por cliente** — cada assinatura corresponde a 1 VPS; cliente pode contratar quantas quiser
+- **Descontos por período** — 5% semestral e 10% anual (configuráveis pelo admin em Configurações); addons acompanham o desconto do período
+- **Pagamento inline no wizard** — PIX mostra QR code e copia-cola, Boleto mostra linha digitável e botão de download, Cartão de crédito com campos inline (Asaas), tudo sem sair da página
+- **Seletor de moeda independente** — dropdown R$/$ ao lado do seletor de idioma; moeda e idioma são independentes; cookie `currency` persiste a escolha
+- **Tela de assinaturas reestruturada** — cards por assinatura ativa mostrando VPS vinculada (specs, status), assinaturas encerradas em tabela, botão "Contratar nova VPS"
+- **Histórico de cobranças** — tela separada `/cliente/assinaturas/historico` com todas as faturas e cobranças do Asaas
+- **Dar plano grátis** — na página de detalhes do cliente (equipe), botão "🎁 Dar plano grátis" cria VPS + assinatura ativa sem cobrança
+- **Ocultar/deletar clientes** — botão para ocultar (soft hide com `hidden_at`) e deletar (cascade completo de todos os dados relacionados) na página de detalhes do cliente
+- **Ordenação na listagem de clientes** — por nome, cadastro, última atividade, VPS, assinaturas, uso de recursos
+- **Última atividade do cliente** — coluna `last_login_at` registrada automaticamente a cada login
+- **Máscaras visuais** — CPF/CNPJ, celular, CEP, número do cartão e validade com formatação automática no wizard e em Minha Conta
+- **Addons pré-selecionados** — addons escolhidos na home são passados para o wizard via query string e já vêm marcados
+- **Pop-up de upsell** — entre configuração e dados pessoais, oferece desconto anual ou plano superior
+- Migrations: `0042_billing_discounts`, `0043_client_hidden`, `0044_client_last_login`
+
+### Corrigido
+- **Domínio do sistema no campo de e-mail** — campo de domínio na criação de e-mail mostrava o domínio do sistema ao invés dos domínios do cliente; agora prioriza domínios do cliente (incluindo `pending_dns`)
+- **Nome do cliente no header** — todas as telas mostravam "Área do cliente" ao invés do nome; layout agora busca do banco quando não passado pelo controller
+- **Badge `pending_provisioning`** — status de VPS aparecia em inglês; adicionado ao mapa de tradução
+- **Reembolso escondido** — botão de solicitar reembolso movido para dentro do histórico de cobranças (discreto, dentro de `<details>`)
+- Coluna "Telefone" trocada por "Celular" na listagem de clientes (campo `mobile_phone`)
+
+### Alterado
+- Moeda agora é decidida por `I18n::moedaCodigo()` (cookie `currency`) ao invés de `I18n::idioma()`; gateway de pagamento (Asaas/Stripe) segue a moeda, não o idioma
+- Wizard de contratação usa navbar pública, footer e estilos do site (mesma tipografia, cores, border-radius)
+- Resumo do pedido mostra valores por período (`/mês`, `/sem`, `/ano`) com equivalente mensal e valor total cobrado
+
+---
+
 ## [2.1.0] — 2026-03-25
 
 ### Adicionado

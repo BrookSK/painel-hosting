@@ -176,19 +176,49 @@ details ul{padding-left:18px;}
 
   <details>
     <summary>Como ver minhas assinaturas e cobranças?</summary>
-    <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a> para ver o histórico de cobranças, status de pagamento e solicitar reembolso.</p>
+    <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a> para ver suas assinaturas ativas com a VPS vinculada. Para ver o histórico completo de cobranças e faturas, clique em <a href="/cliente/assinaturas/historico">Histórico de cobranças</a>.</p>
   </details>
 
   <div class="faq-section">Planos e Assinatura</div>
 
   <details>
     <summary>Como contratar um plano?</summary>
-    <p>Acesse <a href="/cliente/planos">Planos</a>, escolha o plano desejado e clique em "Contratar este plano". Na tela de checkout, você pode selecionar serviços adicionais (como Backup diário ou Suporte WhatsApp). O preço total é atualizado em tempo real antes de confirmar.</p>
+    <p>Na página inicial, escolha o plano desejado e clique em "Contratar". Você será levado a um wizard de 4 passos: detalhes do plano, configuração (quantidade de servidores, período, addons), criação de conta e pagamento. Tudo numa única página, sem precisar de cadastro prévio.</p>
+  </details>
+
+  <details>
+    <summary>Posso ter mais de uma VPS?</summary>
+    <p>Sim. Cada assinatura corresponde a uma VPS. Para ter mais servidores, contrate novas assinaturas. No wizard de contratação, você pode escolher a quantidade de servidores de uma vez.</p>
+  </details>
+
+  <details>
+    <summary>Existe desconto para períodos maiores?</summary>
+    <p>Sim. Ao contratar no período semestral ou anual, você recebe um desconto automático. O desconto é aplicado tanto no plano quanto nos serviços adicionais. Os valores exatos são mostrados no wizard antes de confirmar.</p>
   </details>
 
   <details>
     <summary>O que são os serviços adicionais?</summary>
-    <p>São extras opcionais que você pode adicionar ao seu plano na hora de contratar. Cada addon tem um preço mensal adicional que é somado ao valor do plano. Você escolhe quais quer antes de pagar.</p>
+    <p>São extras opcionais (como Backup diário ou Suporte WhatsApp) que você pode adicionar ao seu plano. Se você selecionar addons na página inicial, eles já virão marcados no wizard de contratação. O preço dos addons acompanha o período escolhido (mensal, semestral ou anual).</p>
+  </details>
+
+  <details>
+    <summary>Como ver minhas assinaturas?</summary>
+    <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a>. Você verá cards com cada assinatura ativa, a VPS vinculada, status e próximo vencimento. Para ver o histórico de cobranças e faturas, clique em "Histórico de cobranças".</p>
+  </details>
+
+  <details>
+    <summary>Posso pagar com PIX, Boleto ou Cartão?</summary>
+    <p>Sim. Na etapa de pagamento, escolha o método desejado. Para PIX, o QR code e código copia-cola aparecem na própria página. Para Boleto, a linha digitável e link de download aparecem inline. Para Cartão, preencha os dados ali mesmo. Pagamentos em dólar usam Stripe.</p>
+  </details>
+
+  <details>
+    <summary>Como trocar a moeda de exibição?</summary>
+    <p>No topo de qualquer página, ao lado do seletor de idioma, há um seletor de moeda (R$ ou $). Trocar a moeda não altera o idioma e vice-versa. A moeda escolhida define qual gateway de pagamento será usado (Asaas para BRL, Stripe para USD).</p>
+  </details>
+
+  <details>
+    <summary>Como solicitar reembolso?</summary>
+    <p>Acesse <a href="/cliente/assinaturas/historico">Histórico de cobranças</a>. No final da página, expanda a seção "Solicitar reembolso", selecione a assinatura e descreva o motivo. Um ticket será criado automaticamente para a equipe financeira.</p>
   </details>
 
   <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">

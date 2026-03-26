@@ -33,7 +33,16 @@ mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_21_0029_cookie_conse
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0030_plan_backup_slots.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0031_domain_webmail_subdomain.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0032_roundcube_template.sql
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0033_client_webmail_app.sql</pre>
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0033_client_webmail_app.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0034_server_role.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0035_subscription_addons.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_24_0036_plan_featured_and_seed.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_25_0037_git_deployments.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_25_0038_client_databases.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_25_0041_chat_flows.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0042_billing_discounts.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0043_client_hidden.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0044_client_last_login.sql</pre>
   <p style="font-size:13px;color:#64748b;margin-top:8px;">Ou via painel: <a href="/equipe/inicializacao">/equipe/inicializacao</a> → "Aplicar migrations".</p>
 
   <div class="section-title">2. Worker (Jobs)</div>
@@ -216,6 +225,34 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   Cada passo tem badge de risco: <strong>Sem risco</strong> (verde), <strong>Risco baixo</strong> (amarelo), <strong>Risco alto</strong> (vermelho).<br>
   O UFW (firewall) é marcado como <strong>Risco alto</strong> — não rode em servidores com serviços existentes.<br>
   Passos essenciais: Docker, redes Docker, diretório /vps, usuário terminal, ForceCommand.
+</p>
+
+<div class="section-title">25. Gestão de clientes (v2.2)</div>
+<p style="font-size:14px;color:#475569;">
+  Em <a href="/equipe/clientes">/equipe/clientes</a>, a listagem agora mostra celular, última atividade e uso de recursos.<br>
+  <strong>Ordenação:</strong> clique nos links acima da tabela para ordenar por nome, cadastro, última atividade, VPS, assinaturas ou uso de recursos.<br>
+  <strong>Ocultar cliente:</strong> na página de detalhes, botão "🙈 Ocultar" esconde o cliente da listagem sem deletar dados. Checkbox "Mostrar ocultos" para ver todos.<br>
+  <strong>Deletar cliente:</strong> botão "🗑 Deletar" remove o cliente e todos os dados relacionados (VPS, assinaturas, tickets, chat, emails, domínios, git deploys, databases, notificações, TOTP, trials, terminal, audit logs). Irreversível.<br>
+  <strong>Dar plano grátis:</strong> botão "🎁 Dar plano grátis" cria VPS + assinatura ativa sem cobrança. Útil para contas de teste ou cortesia.
+</p>
+
+<div class="section-title">26. Wizard de contratação (v2.2)</div>
+<p style="font-size:14px;color:#475569;">
+  Rota pública <code>/contratar?plan_id=X</code> — wizard de 4 passos sem login prévio.<br>
+  <strong>Passo 1:</strong> Landing do plano com upsell do próximo plano mais caro.<br>
+  <strong>Passo 2:</strong> Configuração — quantidade de servidores, período (mensal/semestral/anual com desconto), addons. Addons selecionados na home já vêm marcados via <code>&addons=1,2</code>.<br>
+  <strong>Passo 3:</strong> Criação de conta — nome, email, CPF/CNPJ (obrigatório), celular com DDI internacional, senha. Campos com máscara visual.<br>
+  <strong>Passo 4:</strong> Pagamento — PIX (QR code inline), Boleto (linha digitável inline), Cartão (campos inline via Asaas), Stripe (redirect para USD).<br>
+  Pop-up de upsell entre passos 2 e 3 oferecendo desconto anual.<br>
+  Descontos configuráveis em <a href="/equipe/configuracoes">Configurações</a> → "Desconto semestral (%)" e "Desconto anual (%)".
+</p>
+
+<div class="section-title">27. Moeda independente (v2.2)</div>
+<p style="font-size:14px;color:#475569;">
+  Seletor de moeda (R$ / $) ao lado do seletor de idioma em todas as páginas.<br>
+  Moeda e idioma são independentes — trocar um não altera o outro.<br>
+  A moeda define o gateway de pagamento: BRL → Asaas (PIX/Boleto/Cartão), USD → Stripe.<br>
+  Persistido via cookie <code>currency</code> ou query param <code>?currency=BRL</code>.
 </p>
 
 </div>

@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **2.1.0**
+> Versão atual: **2.2.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -59,6 +59,12 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0033_client_webmail_
 mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0034_server_role.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0035_subscription_addons.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_24_0036_plan_featured_and_seed.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_25_0037_git_deployments.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_25_0038_client_databases.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_25_0041_chat_flows.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0042_billing_discounts.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0043_client_hidden.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0044_client_last_login.sql
 ```
 
 ### 3. Configuração do banco
@@ -92,6 +98,8 @@ Configurações principais:
 | `email.alert_ram` | Limite de RAM (%) para alerta |
 | `email.alert_disk` | Limite de disco (%) para alerta |
 | `asaas.mode` | Ambiente ativo: `sandbox` ou `production` |
+| `billing.desconto_6m` | Desconto (%) para contratação semestral (padrão: 5) |
+| `billing.desconto_12m` | Desconto (%) para contratação anual (padrão: 10) |
 | `stripe.mode` | Ambiente ativo: `sandbox` ou `production` |
 | `email.mailcow_key` | API key do Mailcow |
 | `email.webmail_url` | URL do webmail (Roundcube/SOGo) — fallback global |
