@@ -68,6 +68,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
     <p class="texto" style="font-size:13px;margin-top:8px;">Endpoint: <strong>/webhooks/asaas</strong></p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-top:8px;">
+      <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;">Eventos que o sistema processa:</div>
+      <div style="font-size:12px;color:#64748b;font-family:monospace;line-height:2;">
+        <code>PAYMENT_CONFIRMED</code> — pagamento confirmado → ativa VPS<br>
+        <code>PAYMENT_RECEIVED</code> — pagamento recebido → ativa VPS<br>
+        <code>PAYMENT_OVERDUE</code> — pagamento atrasado → suspende VPS após tolerância<br>
+        <code>SUBSCRIPTION_CANCELED</code> — assinatura cancelada → suspende VPS<br>
+        <code>SUBSCRIPTION_DELETED</code> — assinatura removida → suspende VPS<br>
+        <code>SUBSCRIPTION_INACTIVATED</code> — assinatura inativada → suspende VPS
+      </div>
+      <p style="font-size:11px;color:#94a3b8;margin-top:6px;">No painel do Asaas, marque esses 6 eventos ao criar o webhook.</p>
+    </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Stripe</h2>
     <div style="margin-bottom:12px;">
@@ -104,6 +116,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
     <p class="texto" style="font-size:13px;">Endpoint: <strong>/webhooks/stripe</strong></p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-top:8px;">
+      <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;">Eventos que o sistema processa:</div>
+      <div style="font-size:12px;color:#64748b;font-family:monospace;line-height:2;">
+        <code>checkout.session.completed</code> — checkout concluído → ativa assinatura<br>
+        <code>invoice.paid</code> — fatura paga → ativa/reativa VPS<br>
+        <code>invoice.payment_failed</code> — pagamento falhou → suspende VPS após tolerância<br>
+        <code>customer.subscription.created</code> — assinatura criada<br>
+        <code>customer.subscription.updated</code> — assinatura atualizada<br>
+        <code>customer.subscription.deleted</code> — assinatura cancelada → suspende VPS
+      </div>
+      <p style="font-size:11px;color:#94a3b8;margin-top:6px;">No dashboard do Stripe → Developers → Webhooks, marque esses 6 eventos.</p>
+    </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Conversão de Moeda</h2>
     <div class="grid">
