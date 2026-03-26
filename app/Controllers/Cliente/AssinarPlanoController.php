@@ -68,6 +68,11 @@ final class AssinarPlanoController
                 $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados);
             } catch (\Throwable $e) {
                 $erroDetalhe = $e->getMessage();
+                $erroApi = [];
+
+                if ($e instanceof \LRV\App\Services\Billing\Asaas\AsaasExcecao && is_array($e->respostaJson)) {
+                    $erroApi = $e->respostaJson;
+                }
 
                 (new AuditLogService())->registrar(
                     'client',
@@ -75,12 +80,15 @@ final class AssinarPlanoController
                     'billing.subscribe_plan',
                     'plan',
                     $planId,
-                    ['plan_id' => $planId, 'billing_type' => $billingType, 'ok' => false, 'erro' => $erroDetalhe],
+                    ['plan_id' => $planId, 'billing_type' => $billingType, 'ok' => false, 'erro' => $erroDetalhe, 'asaas_response' => $erroApi],
                     $req,
                 );
 
+                // Extrair mensagem legível do Asaas
+                $mensagemUsuario = $this->extrairErroAsaas($erroApi, $erroDetalhe);
+
                 $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                    'erro' => 'Não foi possível criar a assinatura. Verifique as configurações do Asaas e tente novamente.',
+                    'erro' => $mensagemUsuario,
                     'resultado' => null,
                 ]);
                 return Resposta::html($html, 400);
@@ -172,5 +180,42 @@ final class AssinarPlanoController
         }
 
         return Resposta::redirecionar($checkoutUrl);
+    }
+
+    private function extrairErroAsaas(array $respostaJson, string $fallback): string
+    {
+        // Formato Asaas: {"errors": [{"code": "...", "description": "..."}]}
+        $errors = $respostaJson['errors'] ?? null;
+        if (is_array($errors) && !empty($errors)) {
+            $msgs = [];
+            foreach ($errors as $err) {
+                $desc = trim((string) ($err['description'] ?? ''));
+                if ($desc !== '') {
+                    $msgs[] = $desc;
+                }
+            }
+            if (!empty($msgs)) {
+                return implode(' ', $msgs);
+            }
+        }
+
+        // Formato alternativo: {"message": "..."}
+        $msg = trim((string) ($respostaJson['message'] ?? ''));
+        if ($msg !== '') {
+            return $msg;
+        }
+
+        // Mensagens internas conhecidas
+        if (str_contains($fallback, 'Token do Asaas não configurado')) {
+            return 'O gateway Asaas não está configurado. Entre em contato com o suporte.';
+        }
+        if (str_contains($fallback, 'Plano não encontrado')) {
+            return 'Plano não encontrado ou inativo.';
+        }
+        if (str_contains($fallback, 'Cliente não encontrado')) {
+            return 'Erro ao localizar sua conta. Tente novamente.';
+        }
+
+        return 'Não foi possível criar a assinatura: ' . $fallback;
     }
 }
