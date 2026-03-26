@@ -57,18 +57,29 @@ final class AssinarPlanoController
             try {
                 $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados);
             } catch (\Throwable $e) {
+                $erroDetalhe = $e->getMessage();
+
                 (new AuditLogService())->registrar(
                     'client',
                     $clienteId,
                     'billing.subscribe_plan',
                     'plan',
                     $planId,
-                    ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false],
+                    ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false, 'erro' => $erroDetalhe],
                     $req,
                 );
 
+                // Mensagem amigável baseada no erro real
+                $mensagemUsuario = match (true) {
+                    str_contains($erroDetalhe, 'secret key ausente') => 'O gateway Stripe não está configurado. Entre em contato com o suporte.',
+                    str_contains($erroDetalhe, 'stripe_price_id ausente') => 'Este plano ainda não está configurado para pagamento via cartão. Entre em contato com o suporte.',
+                    str_contains($erroDetalhe, 'Plano não encontrado') => 'Plano não encontrado ou inativo.',
+                    str_contains($erroDetalhe, 'Cliente não encontrado') => 'Erro ao localizar sua conta. Tente novamente.',
+                    default => 'Não foi possível iniciar o checkout. Verifique as configurações do Stripe e tente novamente.',
+                };
+
                 $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                    'erro' => 'Não foi possível iniciar o checkout. Verifique as configurações do Stripe e tente novamente.',
+                    'erro' => $mensagemUsuario,
                     'resultado' => null,
                 ]);
                 return Resposta::html($html, 400);

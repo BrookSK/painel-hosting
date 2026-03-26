@@ -30,8 +30,13 @@ final class StripeCheckoutService
         }
 
         $stripePriceId = trim((string) ($plano['stripe_price_id'] ?? ''));
+
+        // Auto-criar Stripe Price se ausente
         if ($stripePriceId === '') {
-            throw new \RuntimeException('Plano não está configurado para Stripe (stripe_price_id ausente).');
+            $stripePriceId = $this->criarStripePriceParaPlano($secretKey, $plano, $pdo);
+            if ($stripePriceId === '') {
+                throw new \RuntimeException('Plano não está configurado para Stripe (stripe_price_id ausente).');
+            }
         }
 
         $clienteStmt = $pdo->prepare('SELECT id, name, email, stripe_customer_id FROM clients WHERE id = :id');
@@ -172,5 +177,43 @@ final class StripeCheckoutService
             $pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Cria produto + price recorrente no Stripe e salva o stripe_price_id no banco.
+     */
+    private function criarStripePriceParaPlano(string $secretKey, array $plano, \PDO $pdo): string
+    {
+        $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
+        $precoBrl = (float) ($plano['price_monthly'] ?? 0);
+        if ($precoBrl <= 0) {
+            return '';
+        }
+
+        $precoUsdCents = (int) round(($precoBrl / $taxaUsd) * 100);
+        if ($precoUsdCents <= 0) {
+            return '';
+        }
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        $product = $stripe->products->create([
+            'name' => (string) ($plano['name'] ?? 'Plano'),
+        ]);
+
+        $price = $stripe->prices->create([
+            'product' => $product->id,
+            'unit_amount' => $precoUsdCents,
+            'currency' => 'usd',
+            'recurring' => ['interval' => 'month'],
+        ]);
+
+        $priceId = (string) ($price->id ?? '');
+        if ($priceId !== '') {
+            $up = $pdo->prepare('UPDATE plans SET stripe_price_id = :sp WHERE id = :id');
+            $up->execute([':sp' => $priceId, ':id' => (int) $plano['id']]);
+        }
+
+        return $priceId;
     }
 }
