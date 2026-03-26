@@ -58,6 +58,10 @@ final class VpsController
         // Tentar executar o provisionamento direto (sem esperar worker)
         $provLog = [];
         try {
+            // Resetar status pra permitir re-provisionamento
+            $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id")
+                ->execute([':id' => $vpsId]);
+
             $svc = new \LRV\App\Services\Provisioning\VpsProvisioningService(
                 new \LRV\App\Services\Provisioning\DockerCli()
             );
@@ -77,7 +81,8 @@ final class VpsController
             $req,
         );
 
-        return Resposta::redirecionar('/equipe/vps');
+        // Redirecionar pra logs pra ver o resultado
+        return Resposta::redirecionar('/equipe/vps/logs?id=' . $vpsId);
     }
 
     public function suspender(Requisicao $req): Resposta
