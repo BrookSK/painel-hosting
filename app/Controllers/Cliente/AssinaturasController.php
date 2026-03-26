@@ -8,7 +8,6 @@ use LRV\App\Services\Billing\Asaas\AsaasApi;
 use LRV\App\Services\Http\ClienteHttp;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
-use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
 use LRV\Core\View;
@@ -16,6 +15,37 @@ use LRV\Core\View;
 final class AssinaturasController
 {
     public function listar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::redirecionar('/cliente/entrar');
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        $stmt = $pdo->prepare(
+            "SELECT s.id, s.status, s.vps_id,
+                    s.asaas_subscription_id, s.stripe_subscription_id,
+                    s.next_due_date, s.created_at,
+                    p.name AS plan_name, p.price_monthly, p.cpu, p.ram, p.storage,
+                    v.status AS vps_status
+             FROM subscriptions s
+             INNER JOIN plans p ON p.id = s.plan_id
+             LEFT JOIN vps v ON v.id = s.vps_id
+             WHERE s.client_id = :c
+             ORDER BY s.id DESC"
+        );
+        $stmt->execute([':c' => $clienteId]);
+        $assinaturas = $stmt->fetchAll() ?: [];
+
+        $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinaturas-listar.php', [
+            'assinaturas' => $assinaturas,
+        ]);
+
+        return Resposta::html($html);
+    }
+
+    public function historico(Requisicao $req): Resposta
     {
         $clienteId = Auth::clienteId();
         if ($clienteId === null) {
@@ -35,10 +65,9 @@ final class AssinaturasController
              ORDER BY s.id DESC"
         );
         $stmt->execute([':c' => $clienteId]);
-        $assinaturas = $stmt->fetchAll();
-        $assinaturas = is_array($assinaturas) ? $assinaturas : [];
+        $assinaturas = $stmt->fetchAll() ?: [];
 
-        // Buscar cobranças Asaas para assinaturas ativas
+        // Buscar cobranças Asaas
         $cobrancas = [];
         foreach ($assinaturas as $a) {
             $asaasSubId = trim((string) ($a['asaas_subscription_id'] ?? ''));
@@ -52,15 +81,17 @@ final class AssinaturasController
                 if (is_array($data)) {
                     foreach ($data as $c) {
                         if (is_array($c)) {
-                            $cobrancas[] = array_merge($c, ['subscription_id' => (int) ($a['id'] ?? 0)]);
+                            $cobrancas[] = array_merge($c, [
+                                'subscription_id' => (int) ($a['id'] ?? 0),
+                                'plan_name' => (string) ($a['plan_name'] ?? ''),
+                            ]);
                         }
                     }
                 }
-            } catch (\Throwable $e) {
-            }
+            } catch (\Throwable) {}
         }
 
-        $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinaturas-listar.php', [
+        $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinaturas-historico.php', [
             'assinaturas' => $assinaturas,
             'cobrancas'   => $cobrancas,
         ]);
@@ -84,7 +115,6 @@ final class AssinaturasController
 
         $pdo = BancoDeDados::pdo();
 
-        // Validar ownership
         $stmt = $pdo->prepare('SELECT id, status FROM subscriptions WHERE id = :id AND client_id = :c LIMIT 1');
         $stmt->execute([':id' => $subscriptionId, ':c' => $clienteId]);
         $sub = $stmt->fetch();
@@ -93,7 +123,6 @@ final class AssinaturasController
             return Resposta::texto('Assinatura não encontrada.', 403);
         }
 
-        // Criar ticket de reembolso automaticamente
         $agora = date('Y-m-d H:i:s');
         $pdo->beginTransaction();
         try {

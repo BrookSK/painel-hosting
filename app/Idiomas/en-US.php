@@ -737,6 +737,18 @@ return [
     'assinaturas.enviar_solicitacao' => 'Submit request',
     'assinaturas.planos_cobrancas' => 'Plans, charges and refunds',
     'assinaturas.mes' => 'mo',
+    'assinaturas.sub_cada_vps' => 'Each subscription corresponds to one VPS',
+    'assinaturas.info_uma_vps' => 'Each subscription is linked to one VPS. To have more servers, subscribe to additional plans.',
+    'assinaturas.contratar_nova' => 'Add new VPS',
+    'assinaturas.contratar_desc' => 'Choose a plan and get a new VPS linked to your subscription.',
+    'assinaturas.gerenciar_vps' => 'Manage VPS',
+    'assinaturas.ativas' => 'Active subscriptions',
+    'assinaturas.encerradas' => 'Ended subscriptions',
+    'assinaturas.criada_em' => 'Created at',
+    'assinaturas.historico' => 'Billing history',
+    'assinaturas.historico_sub' => 'All charges and invoices from your subscriptions',
+    'assinaturas.voltar' => 'Back to subscriptions',
+    'assinaturas.nenhuma_cobranca' => 'No charges recorded yet.',
 
     // ── Help (FAQ) ──
     'ajuda.perguntas_frequentes' => 'Frequently asked questions',

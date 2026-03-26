@@ -3,7 +3,21 @@ declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
 
-function badgeStatusAssinatura(string $st): string {
+$pageTitle = I18n::t('assinaturas.titulo');
+require __DIR__ . '/../_partials/layout-cliente-inicio.php';
+
+$ativas = [];
+$outras = [];
+foreach (($assinaturas ?? []) as $a) {
+    $st = strtoupper((string)($a['status'] ?? ''));
+    if (in_array($st, ['ACTIVE', 'PENDING', 'OVERDUE'], true)) {
+        $ativas[] = $a;
+    } else {
+        $outras[] = $a;
+    }
+}
+
+function _badgeSt(string $st): string {
     $map = [
         'ACTIVE'    => ['Ativa',      '#dcfce7','#166534'],
         'active'    => ['Ativa',      '#dcfce7','#166534'],
@@ -15,32 +29,39 @@ function badgeStatusAssinatura(string $st): string {
         'inactive'  => ['Inativa',    '#f1f5f9','#334155'],
     ];
     $d = $map[$st] ?? [$st,'#f1f5f9','#334155'];
-    return '<span class="badge-new" style="background:' . $d[1] . ';color:' . $d[2] . ';">' . View::e($d[0]) . '</span>';
+    return '<span class="badge-new" style="background:'.$d[1].';color:'.$d[2].';">'.View::e($d[0]).'</span>';
 }
 
-function badgeStatusCobranca(string $st): string {
+function _badgeVps(string $st): string {
     $map = [
-        'RECEIVED'           => ['Pago',         '#dcfce7','#166534'],
-        'CONFIRMED'          => ['Confirmado',    '#dcfce7','#166534'],
-        'PENDING'            => ['Pendente',      '#fef3c7','#92400e'],
-        'OVERDUE'            => ['Vencido',       '#fee2e2','#991b1b'],
-        'REFUNDED'           => ['Estornado',     '#e0e7ff','#1e3a8a'],
-        'PARTIALLY_REFUNDED' => ['Est. parcial',  '#e0e7ff','#1e3a8a'],
-        'CANCELED'           => ['Cancelado',     '#f1f5f9','#334155'],
+        'running'         => ['Rodando',     '#dcfce7','#166534'],
+        'stopped'         => ['Parada',      '#f1f5f9','#334155'],
+        'pending_payment' => ['Aguardando pagamento', '#fef3c7','#92400e'],
+        'provisioning'    => ['Provisionando', '#e0e7ff','#1e3a8a'],
+        'suspended'       => ['Suspensa',    '#fee2e2','#991b1b'],
     ];
     $d = $map[$st] ?? [$st,'#f1f5f9','#334155'];
-    return '<span class="badge-new" style="background:' . $d[1] . ';color:' . $d[2] . ';">' . View::e($d[0]) . '</span>';
+    return '<span class="badge-new" style="background:'.$d[1].';color:'.$d[2].';">'.View::e($d[0]).'</span>';
 }
-
-$pageTitle    = I18n::t('assinaturas.titulo');
-$clienteNome  = (string)($cliente['name'] ?? '');
-$clienteEmail = (string)($cliente['email'] ?? '');
-require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
-<div style="margin-bottom:24px;">
-  <div class="page-title"><?php echo View::e(I18n::t('assinaturas.titulo')); ?></div>
-  <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::t('assinaturas.planos_cobrancas')); ?></div>
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+  <div>
+    <div class="page-title"><?php echo View::e(I18n::t('assinaturas.titulo')); ?></div>
+    <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e(I18n::t('assinaturas.sub_cada_vps')); ?></div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a class="botao ghost sm" href="/cliente/assinaturas/historico"><?php echo View::e(I18n::t('assinaturas.historico')); ?></a>
+    <a class="botao sm" href="/cliente/planos"><?php echo View::e(I18n::t('assinaturas.contratar_nova')); ?></a>
+  </div>
+</div>
+
+<!-- Info box -->
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+  <span style="font-size:18px;">💡</span>
+  <div style="font-size:13px;color:#1e40af;line-height:1.6;">
+    <?php echo View::e(I18n::t('assinaturas.info_uma_vps')); ?>
+  </div>
 </div>
 
 <?php if (empty($assinaturas)): ?>
@@ -51,76 +72,84 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <a class="botao" href="/cliente/planos"><?php echo View::e(I18n::t('assinaturas.ver_planos')); ?></a>
   </div>
 <?php else: ?>
-  <div class="card-new" style="margin-bottom:14px;">
-    <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('assinaturas.titulo')); ?></div>
-    <div style="overflow:auto;">
-      <table style="width:100%;border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">#</th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.plano')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.valor')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.prox_vencimento')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.status')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.acoes')); ?></th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($assinaturas as $a): ?>
-            <tr>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;">#<?php echo (int)($a['id'] ?? 0); ?></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><strong><?php echo View::e((string)($a['plan_name'] ?? '')); ?></strong></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::preco((float)($a['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['next_due_date'] ?? '—')); ?></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAssinatura((string)($a['status'] ?? '')); ?></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
-                <?php $aStatus = strtoupper((string)($a['status'] ?? '')); ?>
-                <?php if ($aStatus === 'PENDING'): ?>
-                  <a class="botao sm" href="/cliente/pagamento?sub=<?php echo (int)($a['id'] ?? 0); ?>">
-                    <?php echo View::e(I18n::t('pagamento.pagar')); ?>
-                  </a>
-                <?php else: ?>
-                  <button class="botao ghost sm" onclick="document.getElementById('modal-reembolso-<?php echo (int)($a['id'] ?? 0); ?>').style.display='flex'">
-                    <?php echo View::e(I18n::t('assinaturas.solicitar_reembolso')); ?>
-                  </button>
-                <?php endif; ?>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <?php if (!empty($cobrancas)): ?>
-    <div class="card-new">
-      <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('assinaturas.cobrancas')); ?></div>
+  <?php if (!empty($ativas)): ?>
+    <div style="margin-bottom:8px;font-size:13px;font-weight:600;color:#334155;"><?php echo View::e(I18n::t('assinaturas.ativas')); ?> (<?php echo count($ativas); ?>)</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:24px;">
+      <?php foreach ($ativas as $a):
+        $subId   = (int)($a['id'] ?? 0);
+        $vpsId   = (int)($a['vps_id'] ?? 0);
+        $vpsSt   = (string)($a['vps_status'] ?? '');
+        $cpu     = (int)($a['cpu'] ?? 0);
+        $ramGb   = round((int)($a['ram'] ?? 0) / 1024);
+        $discoGb = round((int)($a['storage'] ?? 0) / 1024);
+        $preco   = (float)($a['price_monthly'] ?? 0);
+        $proxVenc = (string)($a['next_due_date'] ?? '—');
+        $status  = strtoupper((string)($a['status'] ?? ''));
+      ?>
+        <div class="card-new">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="font-weight:600;font-size:14px;"><?php echo View::e((string)($a['plan_name'] ?? '')); ?></div>
+            <?php echo _badgeSt((string)($a['status'] ?? '')); ?>
+          </div>
+
+          <?php if ($vpsId > 0): ?>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:12px;font-weight:600;color:#475569;">VPS #<?php echo $vpsId; ?></span>
+                <?php echo _badgeVps($vpsSt); ?>
+              </div>
+              <div style="display:flex;gap:12px;font-size:12px;color:#64748b;">
+                <span><?php echo $cpu; ?> vCPU</span>
+                <span><?php echo $ramGb; ?> GB RAM</span>
+                <span><?php echo $discoGb; ?> GB Disco</span>
+              </div>
+            </div>
+          <?php endif; ?>
+
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#64748b;margin-bottom:8px;">
+            <span><?php echo View::e(I18n::preco($preco)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></span>
+            <span><?php echo View::e(I18n::t('assinaturas.prox_vencimento')); ?>: <?php echo View::e($proxVenc); ?></span>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <?php if ($status === 'PENDING'): ?>
+              <a class="botao sm" href="/cliente/pagamento?sub=<?php echo $subId; ?>"><?php echo View::e(I18n::t('pagamento.pagar')); ?></a>
+            <?php endif; ?>
+            <?php if ($vpsId > 0 && $vpsSt === 'running'): ?>
+              <a class="botao ghost sm" href="/cliente/vps"><?php echo View::e(I18n::t('assinaturas.gerenciar_vps')); ?></a>
+            <?php endif; ?>
+            <button class="botao ghost sm" onclick="document.getElementById('modal-reembolso-<?php echo $subId; ?>').style.display='flex'">
+              <?php echo View::e(I18n::t('assinaturas.solicitar_reembolso')); ?>
+            </button>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($outras)): ?>
+    <div style="margin-bottom:8px;font-size:13px;font-weight:600;color:#334155;"><?php echo View::e(I18n::t('assinaturas.encerradas')); ?> (<?php echo count($outras); ?>)</div>
+    <div class="card-new" style="margin-bottom:24px;">
       <div style="overflow:auto;">
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr>
-              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.id')); ?></th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">#</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.plano')); ?></th>
               <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.valor')); ?></th>
-              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.vencimento')); ?></th>
-              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.tipo')); ?></th>
               <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.status')); ?></th>
-              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.link')); ?></th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('assinaturas.criada_em')); ?></th>
             </tr>
           </thead>
           <tbody>
-            <?php foreach ($cobrancas as $c): ?>
+            <?php foreach ($outras as $a): ?>
               <tr>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:12px;"><?php echo View::e((string)($c['id'] ?? '')); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::preco((float)($c['value'] ?? 0))); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($c['dueDate'] ?? '')); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($c['billingType'] ?? '')); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusCobranca((string)($c['status'] ?? '')); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
-                  <?php $url = (string)($c['invoiceUrl'] ?? ($c['bankSlipUrl'] ?? '')); ?>
-                  <?php if ($url !== ''): ?>
-                    <a href="<?php echo View::e($url); ?>" target="_blank" rel="noopener"><?php echo View::e(I18n::t('assinaturas.ver_fatura')); ?></a>
-                  <?php else: ?>—<?php endif; ?>
-                </td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;">#<?php echo (int)($a['id'] ?? 0); ?></td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['plan_name'] ?? '')); ?></td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::preco((float)($a['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo _badgeSt((string)($a['status'] ?? '')); ?></td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['created_at'] ?? '')); ?></td>
               </tr>
             <?php endforeach; ?>
           </tbody>
@@ -128,6 +157,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </div>
     </div>
   <?php endif; ?>
+
+  <!-- Botão contratar nova -->
+  <div class="card-new" style="text-align:center;padding:24px;border:2px dashed #e2e8f0;">
+    <div style="font-size:24px;margin-bottom:8px;">➕</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px;"><?php echo View::e(I18n::t('assinaturas.contratar_nova')); ?></div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:14px;"><?php echo View::e(I18n::t('assinaturas.contratar_desc')); ?></div>
+    <a class="botao" href="/cliente/planos"><?php echo View::e(I18n::t('assinaturas.ver_planos')); ?></a>
+  </div>
+
 <?php endif; ?>
 
 <!-- Modais de reembolso -->

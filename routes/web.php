@@ -233,6 +233,7 @@ $roteador->get('/status/incidentes', [StatusController::class, 'incidentes']);
 
 // Cliente - assinaturas e ajuda
 $roteador->get('/cliente/assinaturas', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/assinaturas/historico', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'historico'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/assinaturas/reembolso', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'solicitarReembolso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 

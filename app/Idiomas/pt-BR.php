@@ -861,6 +861,18 @@ return [
     'assinaturas.enviar_solicitacao' => 'Enviar solicitação',
     'assinaturas.planos_cobrancas' => 'Planos, cobranças e reembolsos',
     'assinaturas.mes' => 'mês',
+    'assinaturas.sub_cada_vps' => 'Cada assinatura corresponde a uma VPS',
+    'assinaturas.info_uma_vps' => 'Cada assinatura está vinculada a uma VPS. Para ter mais servidores, contrate novas assinaturas.',
+    'assinaturas.contratar_nova' => 'Contratar nova VPS',
+    'assinaturas.contratar_desc' => 'Escolha um plano e tenha uma nova VPS vinculada à sua assinatura.',
+    'assinaturas.gerenciar_vps' => 'Gerenciar VPS',
+    'assinaturas.ativas' => 'Assinaturas ativas',
+    'assinaturas.encerradas' => 'Assinaturas encerradas',
+    'assinaturas.criada_em' => 'Criada em',
+    'assinaturas.historico' => 'Histórico de cobranças',
+    'assinaturas.historico_sub' => 'Todas as cobranças e faturas das suas assinaturas',
+    'assinaturas.voltar' => 'Voltar às assinaturas',
+    'assinaturas.nenhuma_cobranca' => 'Nenhuma cobrança registrada ainda.',
 
     // ── Ajuda (FAQ) ──
     'ajuda.perguntas_frequentes' => 'Perguntas frequentes',
