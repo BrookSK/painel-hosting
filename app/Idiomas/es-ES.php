@@ -1276,6 +1276,7 @@ return [
     'eq_chat_ver.chat_encerrado' => 'Este chat fue cerrado.',
     'eq_chat_ver.enviar' => 'Enviar',
     'eq_chat_ver.placeholder' => 'Escribe tu mensaje...',
+    'eq_chat_ver.carregando' => 'Cargando mensajes...',
     'eq_chat_ver.cancelar_arquivo' => 'Cancelar archivo',
     'eq_chat_ver.emojis' => 'Emojis',
     'eq_chat_ver.enviar_arquivo' => 'Enviar archivo',

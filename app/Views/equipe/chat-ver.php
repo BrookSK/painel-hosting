@@ -38,6 +38,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 .msg-file{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.15);border-radius:8px;font-size:13px;margin-top:4px;text-decoration:none;color:inherit;}
 .msg-admin .msg-file{border:1px solid rgba(255,255,255,.3);}
 .msg-client .msg-file{background:rgba(0,0,0,.05);border:1px solid #d1d5db;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 <style>
 .sidebar-info{display:flex;flex-direction:column;gap:16px;}
@@ -68,7 +69,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div class="card-new" style="position:relative;">
       <?php if ($status==='open'): ?>
         <div class="chat-box">
-          <div class="chat-msgs" id="chatMsgs"></div>
+          <div class="chat-msgs" id="chatMsgs">
+            <div id="chatLoading" style="display:flex;align-items:center;justify-content:center;flex:1;gap:8px;color:#94a3b8;font-size:13px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="#cbd5e1" stroke-width="3" fill="none"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#7C3AED" stroke-width="3" stroke-linecap="round" fill="none"/></svg>
+              <?php echo View::e(I18n::t('eq_chat_ver.carregando')); ?>
+            </div>
+          </div>
           <div class="chat-upload-preview" id="uploadPreview">
             <span id="uploadFileName"></span>
             <button id="uploadCancel" title="<?php echo View::e(I18n::t('geral.cancelar')); ?>" aria-label="<?php echo View::e(I18n::t('eq_chat_ver.cancelar_arquivo')); ?>">✕</button>
@@ -260,7 +266,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     div.appendChild(meta);box.appendChild(div);box.scrollTop=box.scrollHeight;
   }
 
-  function loadMessages(msgs){(msgs||[]).forEach(function(m){var id=parseInt(m.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);});}
+  function hideLoading(){var el=document.getElementById('chatLoading');if(el)el.remove();}
+
+  function loadMessages(msgs){hideLoading();(msgs||[]).forEach(function(m){var id=parseInt(m.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);});}
 
   function doUpload(file,cb){
     var fd=new FormData();fd.append('arquivo',file);fd.append('_csrf',CSRF);
@@ -286,7 +294,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       if(!d.ok){wsFails++;checkFallback();return;}
       ws=new WebSocket(WS_URL+'/?token='+encodeURIComponent(d.token));
       ws.onopen=function(){mode='ws';wsFails=0;if(pollTimer){clearInterval(pollTimer);pollTimer=null;}};
-      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';lastMsgId=0;lastDateStr='';loadMessages(msg.messages);}else if(msg.type==='message'){var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name,msg.sender_name||null);}}catch(ex){}};
+      ws.onmessage=function(e){try{var msg=JSON.parse(e.data);if(msg.type==='history'){box.innerHTML='';lastMsgId=0;lastDateStr='';loadMessages(msg.messages);}else if(msg.type==='message'){hideLoading();var id=parseInt(msg.id)||0;if(id>lastMsgId)lastMsgId=id;appendMsg(msg.sender_type,msg.message,msg.created_at,msg.file_url,msg.file_name,msg.sender_name||null);}}catch(ex){}};
       ws.onclose=function(){wsFails++;checkFallback();};
       ws.onerror=function(){try{ws.close();}catch(x){}};
     }).catch(function(){wsFails++;checkFallback();});
