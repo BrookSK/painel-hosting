@@ -25,8 +25,10 @@ $moedaJs = I18n::moedaCodigo();
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title><?php echo View::e((string)($plano['name'] ?? '')); ?> — <?php echo View::e(SistemaConfig::nome()); ?></title>
+  <?php require __DIR__ . '/../_partials/seo.php'; ?>
   <?php require __DIR__ . '/../_partials/estilo.php'; ?>
   <style>
+    body{background:#fff;max-width:100vw}
     .wz-steps{display:flex;gap:0;align-items:center;justify-content:center;padding:28px 16px 8px}
     .wz-step{display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8}
     .wz-step.active{color:#4F46E5;font-weight:600}
@@ -40,13 +42,13 @@ $moedaJs = I18n::moedaCodigo();
     .wz-panel.active{display:block}
     .wz-field{margin-bottom:14px}
     .wz-label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#334155}
-    .periodo-opt{padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;background:#fff}
+    .periodo-opt{padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:16px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;background:#fff}
     .periodo-opt.sel{border-color:#4F46E5;background:#f5f3ff}
     .periodo-opt:hover{border-color:#7C3AED}
-    .desc-badge{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px}
-    .addon-opt{padding:14px;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;background:#fff}
+    .desc-badge{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+    .addon-opt{padding:14px;border:1.5px solid #e2e8f0;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;background:#fff}
     .addon-opt.sel{border-color:#4F46E5;background:#f5f3ff}
-    .gw-opt{padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;text-align:center;font-size:14px;font-weight:600;transition:all .15s;flex:1;background:#fff}
+    .gw-opt{padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:16px;cursor:pointer;text-align:center;font-size:14px;font-weight:600;transition:all .15s;flex:1;background:#fff}
     .gw-opt.sel{border-color:#4F46E5;background:#f5f3ff}
     .gw-opt:hover{border-color:#7C3AED}
     .upsell-card{border:2px solid #4F46E5;background:#f5f3ff;position:relative}
@@ -342,6 +344,61 @@ $moedaJs = I18n::moedaCodigo();
     </div>
   </div>
 </div>
+
+<script>
+// Máscaras visuais
+(function(){
+  function maskCpfCnpj(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'');
+      if(v.length<=11){
+        v=v.replace(/(\d{3})(\d)/,'$1.$2');
+        v=v.replace(/(\d{3})(\d)/,'$1.$2');
+        v=v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+      }else{
+        v=v.substring(0,14);
+        v=v.replace(/^(\d{2})(\d)/,'$1.$2');
+        v=v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+        v=v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+        v=v.replace(/(\d{4})(\d)/,'$1-$2');
+      }
+      this.value=v;
+    });
+  }
+  function maskPhone(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'');
+      if(v.length<=10){
+        v=v.replace(/^(\d{2})(\d)/,'($1) $2');
+        v=v.replace(/(\d{4})(\d)/,'$1-$2');
+      }else{
+        v=v.substring(0,11);
+        v=v.replace(/^(\d{2})(\d)/,'($1) $2');
+        v=v.replace(/(\d{5})(\d)/,'$1-$2');
+      }
+      this.value=v;
+    });
+  }
+  function maskCard(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'').substring(0,16);
+      v=v.replace(/(\d{4})(?=\d)/g,'$1 ');
+      this.value=v;
+    });
+  }
+  function maskExpiry(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'').substring(0,4);
+      if(v.length>=3) v=v.substring(0,2)+'/'+v.substring(2);
+      this.value=v;
+    });
+  }
+  var cpf=document.getElementById('cCpf');if(cpf)maskCpfCnpj(cpf);
+  var cel=document.getElementById('cCelular');if(cel)maskPhone(cel);
+  var ccn=document.getElementById('ccNumero');if(ccn)maskCard(ccn);
+  var ccv=document.getElementById('ccValidade');if(ccv)maskExpiry(ccv);
+})();
+</script>
 
 <script>
 (function(){

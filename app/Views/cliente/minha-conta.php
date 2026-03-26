@@ -190,6 +190,52 @@ document.getElementById('cepInput').addEventListener('blur', function() {
     })
     .catch(function(){});
 });
+
+// Máscaras visuais
+(function(){
+  function maskCpfCnpj(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'');
+      if(v.length<=11){
+        v=v.replace(/(\d{3})(\d)/,'$1.$2');
+        v=v.replace(/(\d{3})(\d)/,'$1.$2');
+        v=v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+      }else{
+        v=v.substring(0,14);
+        v=v.replace(/^(\d{2})(\d)/,'$1.$2');
+        v=v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+        v=v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+        v=v.replace(/(\d{4})(\d)/,'$1-$2');
+      }
+      this.value=v;
+    });
+  }
+  function maskPhone(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'');
+      if(v.length<=10){
+        v=v.replace(/^(\d{2})(\d)/,'($1) $2');
+        v=v.replace(/(\d{4})(\d)/,'$1-$2');
+      }else{
+        v=v.substring(0,11);
+        v=v.replace(/^(\d{2})(\d)/,'($1) $2');
+        v=v.replace(/(\d{5})(\d)/,'$1-$2');
+      }
+      this.value=v;
+    });
+  }
+  function maskCep(el){
+    el.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'').substring(0,8);
+      if(v.length>5) v=v.substring(0,5)+'-'+v.substring(5);
+      this.value=v;
+    });
+  }
+  document.querySelectorAll('input[name="cpf_cnpj"]').forEach(function(el){maskCpfCnpj(el);});
+  document.querySelectorAll('input[name="phone"]').forEach(function(el){maskPhone(el);});
+  document.querySelectorAll('input[name="mobile_phone"]').forEach(function(el){maskPhone(el);});
+  var cepEl=document.getElementById('cepInput');if(cepEl)maskCep(cepEl);
+})();
 </script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>
