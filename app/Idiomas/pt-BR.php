@@ -953,6 +953,14 @@ return [
     'email.bemvindo_assunto' => 'Bem-vindo!',
     'email.bemvindo_corpo' => 'Olá %s, sua conta foi criada com sucesso. Você já pode acessar o painel e gerenciar seus serviços.',
     'email.bemvindo_btn' => 'Acessar Painel',
+    'email.pag_confirmado_assunto' => 'Pagamento confirmado!',
+    'email.pag_confirmado_corpo' => 'Seu pagamento foi confirmado com sucesso.',
+    'email.vps_provisionando_corpo' => 'Sua VPS está sendo preparada e ficará disponível em alguns minutos. Você receberá acesso ao terminal e painel de controle assim que estiver pronta.',
+    'email.ver_vps_btn' => 'Ver minhas VPS',
+    'email.pag_pendente_assunto' => 'Pagamento pendente',
+    'email.pag_pendente_corpo' => 'Seu pagamento está sendo processado. Assim que confirmado, sua VPS será provisionada automaticamente.',
+    'email.seu_login' => 'Seus dados de acesso:',
+    'email.senha_definida_cadastro' => 'Senha: a que você definiu no cadastro.',
 
     // ── Domínios ──
     'sidebar.dominios' => 'Domínios',

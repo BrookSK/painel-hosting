@@ -8,6 +8,7 @@ use LRV\App\Services\Audit\AuditLogService;
 use LRV\Core\BancoDeDados;
 use LRV\Core\Http\Requisicao;
 use LRV\Core\Http\Resposta;
+use LRV\Core\Jobs\RepositorioJobs;
 use LRV\Core\View;
 
 final class ClientesController
@@ -244,6 +245,11 @@ final class ClientesController
             $pdo->rollBack();
             return Resposta::texto('Erro ao dar plano: ' . $e->getMessage(), 500);
         }
+
+        // Enfileirar provisionamento automático
+        try {
+            (new RepositorioJobs())->criar('provisionar_vps', ['vps_id' => $vpsId]);
+        } catch (\Throwable) {}
 
         (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
             'client.grant_plan', 'subscription', $subId,

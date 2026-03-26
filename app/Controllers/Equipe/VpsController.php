@@ -204,4 +204,63 @@ final class VpsController
 
         return Resposta::redirecionar('/equipe/vps');
     }
+
+    public function logs(Requisicao $req): Resposta
+    {
+        $vpsId = (int)($req->query['id'] ?? 0);
+        if ($vpsId <= 0) return Resposta::redirecionar('/equipe/vps');
+
+        $pdo = BancoDeDados::pdo();
+
+        // VPS info
+        $stmt = $pdo->prepare("SELECT v.*, c.name AS client_name, c.email AS client_email FROM vps v INNER JOIN clients c ON c.id = v.client_id WHERE v.id = :id LIMIT 1");
+        $stmt->execute([':id' => $vpsId]);
+        $vps = $stmt->fetch();
+        if (!is_array($vps)) return Resposta::redirecionar('/equipe/vps');
+
+        // Job logs related to this VPS
+        $logs = [];
+        try {
+            $logStmt = $pdo->prepare(
+                "SELECT j.id, j.type, j.status, j.output, j.created_at, j.started_at, j.finished_at
+                 FROM jobs j
+                 WHERE j.payload LIKE :p
+                 ORDER BY j.id DESC LIMIT 50"
+            );
+            $logStmt->execute([':p' => '%"vps_id":' . $vpsId . '%']);
+            $logs = $logStmt->fetchAll() ?: [];
+        } catch (\Throwable) {
+            // Try alternative: payload might use different format
+            try {
+                $logStmt = $pdo->prepare(
+                    "SELECT j.id, j.type, j.status, j.output, j.created_at, j.started_at, j.finished_at
+                     FROM jobs j
+                     WHERE j.payload LIKE :p
+                     ORDER BY j.id DESC LIMIT 50"
+                );
+                $logStmt->execute([':p' => '%vps_id%' . $vpsId . '%']);
+                $logs = $logStmt->fetchAll() ?: [];
+            } catch (\Throwable) {}
+        }
+
+        // Audit logs
+        $auditLogs = [];
+        try {
+            $aStmt = $pdo->prepare(
+                "SELECT action, details, created_at, actor_type, actor_id
+                 FROM audit_logs
+                 WHERE entity_type = 'vps' AND entity_id = :id
+                 ORDER BY id DESC LIMIT 30"
+            );
+            $aStmt->execute([':id' => $vpsId]);
+            $auditLogs = $aStmt->fetchAll() ?: [];
+        } catch (\Throwable) {}
+
+        return Resposta::html(View::renderizar(__DIR__ . '/../../Views/equipe/vps-logs.php', [
+            'vps' => $vps,
+            'logs' => $logs,
+            'audit_logs' => $auditLogs,
+        ]));
+    }
+
 }

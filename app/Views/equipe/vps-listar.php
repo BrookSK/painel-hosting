@@ -43,10 +43,10 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             $vid = (int)($v['id']??0);
             $st  = (string)($v['status']??'');
             // Ações permitidas por status
-            $emTransicao = in_array($st, ['pending_node','pending_provisioning','provisioning'], true);
+            $emTransicao = in_array($st, ['provisioning'], true);
             $acoes = [
                 'provisionar' => [I18n::t('eq_vps.provisionar'), 'btn-primary',
-                    in_array($st, ['pending_payment','pending_node','pending_provisioning','error'], true) && !$emTransicao],
+                    in_array($st, ['pending_payment','pending_node','pending_provisioning','error'], true)],
                 'reativar'    => [I18n::t('eq_vps.reativar'), 'btn-outline',
                     $st === 'suspended_payment'],
                 'reiniciar'   => [I18n::t('eq_vps.reiniciar'), 'btn-outline',
@@ -80,6 +80,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                     <button class="btn-sm <?php echo $cls; ?>" type="submit"<?php echo $habilitado ? '' : ' disabled style="opacity:.4;cursor:not-allowed;"'; ?>><?php echo $label; ?></button>
                   </form>
                 <?php endforeach; ?>
+                <a href="/equipe/vps/logs?id=<?php echo $vid; ?>" class="btn-sm btn-outline" style="text-decoration:none;">📋 Logs</a>
               </div>
             </td>
           </tr>

@@ -116,6 +116,33 @@ final class WebhookAsaasService
                     ]);
                     $repoJobs->criar('reativar_vps', ['vps_id' => $vpsId]);
                     $repoJobs->criar('provisionar_vps', ['vps_id' => $vpsId]);
+
+                    // Notificar cliente por e-mail
+                    try {
+                        $cStmt = $pdo->prepare('SELECT name, email, preferred_lang FROM clients WHERE id = :id');
+                        $cStmt->execute([':id' => $clienteId]);
+                        $cli = $cStmt->fetch();
+                        if (is_array($cli)) {
+                            $lang = trim((string)($cli['preferred_lang'] ?? ''));
+                            $origLang = \LRV\Core\I18n::idioma();
+                            if (in_array($lang, ['pt-BR', 'en-US', 'es-ES'], true)) {
+                                \LRV\Core\I18n::definirIdioma($lang);
+                            }
+                            $nome = (string)($cli['name'] ?? '');
+                            $email = (string)($cli['email'] ?? '');
+                            $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();
+                            $corpo = '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::t('email.pag_confirmado_corpo'), ENT_QUOTES, 'UTF-8') . '</p>'
+                                   . '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::t('email.vps_provisionando_corpo'), ENT_QUOTES, 'UTF-8') . '</p>';
+                            $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                                \LRV\Core\I18n::t('email.pag_confirmado_assunto'),
+                                $corpo,
+                                \LRV\Core\I18n::t('email.ver_vps_btn'),
+                                $appUrl . '/cliente/vps',
+                            );
+                            (new \LRV\App\Services\Email\SmtpMailer())->enviar($email, \LRV\Core\I18n::t('email.pag_confirmado_assunto'), $html, true);
+                            \LRV\Core\I18n::definirIdioma($origLang);
+                        }
+                    } catch (\Throwable) {}
                 }
 
                 $pdo->commit();

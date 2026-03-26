@@ -829,6 +829,14 @@ return [
     'email.bemvindo_assunto' => 'Welcome!',
     'email.bemvindo_corpo' => 'Hello %s, your account has been created successfully. You can now access the panel and manage your services.',
     'email.bemvindo_btn' => 'Access Panel',
+    'email.pag_confirmado_assunto' => 'Payment confirmed!',
+    'email.pag_confirmado_corpo' => 'Your payment has been confirmed successfully.',
+    'email.vps_provisionando_corpo' => 'Your VPS is being prepared and will be available in a few minutes. You will receive access to the terminal and control panel once it is ready.',
+    'email.ver_vps_btn' => 'View my VPS',
+    'email.pag_pendente_assunto' => 'Payment pending',
+    'email.pag_pendente_corpo' => 'Your payment is being processed. Once confirmed, your VPS will be provisioned automatically.',
+    'email.seu_login' => 'Your login details:',
+    'email.senha_definida_cadastro' => 'Password: the one you set during registration.',
 
     // ── Domains ──
     'sidebar.dominios' => 'Domains',

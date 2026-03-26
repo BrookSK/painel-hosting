@@ -227,6 +227,18 @@ final class ContratarController
                             }
                         }
                         if ($i === 0) {
+                            // Cartão pago inline — enfileirar provisionamento direto
+                            $vpsIdLocal = (int)($resultado['local_subscription_id'] ?? 0);
+                            try {
+                                $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE client_id = :c AND status = 'pending_payment' ORDER BY id DESC LIMIT 1")
+                                    ->execute([':c' => $clienteId]);
+                                $vpsRow = $pdo->prepare("SELECT id FROM vps WHERE client_id = :c ORDER BY id DESC LIMIT 1");
+                                $vpsRow->execute([':c' => $clienteId]);
+                                $vr = $vpsRow->fetch();
+                                if (is_array($vr)) {
+                                    (new \LRV\Core\Jobs\RepositorioJobs())->criar('provisionar_vps', ['vps_id' => (int)$vr['id']]);
+                                }
+                            } catch (\Throwable) {}
                             $redirectUrl = '/cliente/assinaturas';
                         }
                     } elseif ($gateway === 'PIX' && $i === 0) {
@@ -317,7 +329,10 @@ final class ContratarController
             $mailer = new \LRV\App\Services\Email\SmtpMailer();
             $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();
             $assunto = \LRV\Core\I18n::t('email.bemvindo_assunto');
-            $corpo = '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::tf('email.bemvindo_corpo', $nome), ENT_QUOTES, 'UTF-8') . '</p>';
+            $corpo = '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::tf('email.bemvindo_corpo', $nome), ENT_QUOTES, 'UTF-8') . '</p>'
+                   . '<p style="margin:0 0 6px;"><strong>' . htmlspecialchars(\LRV\Core\I18n::t('email.seu_login'), ENT_QUOTES, 'UTF-8') . '</strong></p>'
+                   . '<p style="margin:0 0 4px;">E-mail: <code>' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '</code></p>'
+                   . '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::t('email.senha_definida_cadastro'), ENT_QUOTES, 'UTF-8') . '</p>';
             $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
                 $assunto,
                 $corpo,
@@ -325,6 +340,19 @@ final class ContratarController
                 $appUrl . '/cliente/entrar',
             );
             $mailer->enviar($email, $assunto, $html, true);
+
+            // E-mail de pagamento pendente (se não pagou com cartão inline)
+            if ($gateway !== 'CREDIT_CARD') {
+                $assuntoPag = \LRV\Core\I18n::t('email.pag_pendente_assunto');
+                $corpoPag = '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::t('email.pag_pendente_corpo'), ENT_QUOTES, 'UTF-8') . '</p>';
+                $htmlPag = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                    $assuntoPag,
+                    $corpoPag,
+                    \LRV\Core\I18n::t('email.ver_vps_btn'),
+                    $appUrl . '/cliente/vps',
+                );
+                $mailer->enviar($email, $assuntoPag, $htmlPag, true);
+            }
 
             \LRV\Core\I18n::definirIdioma($origLang);
         } catch (\Throwable) {}
