@@ -46,6 +46,10 @@ final class VpsController
             return Resposta::texto('VPS não encontrada.', 404);
         }
 
+        // Marcar status imediatamente (job faz o provisionamento real)
+        $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id")
+            ->execute([':id' => $vpsId]);
+
         $repo = new RepositorioJobs();
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
 
@@ -75,6 +79,10 @@ final class VpsController
         if (!is_array($stmt->fetch())) {
             return Resposta::texto('VPS não encontrada.', 404);
         }
+
+        // Marcar status imediatamente (job faz a suspensão no container)
+        $pdo->prepare("UPDATE vps SET status = 'suspended_payment' WHERE id = :id")
+            ->execute([':id' => $vpsId]);
 
         $repo = new RepositorioJobs();
         $repo->criar('suspender_vps', ['vps_id' => $vpsId]);
@@ -106,6 +114,10 @@ final class VpsController
             return Resposta::texto('VPS não encontrada.', 404);
         }
 
+        // Marcar status imediatamente (job faz a reativação no container)
+        $pdo->prepare("UPDATE vps SET status = 'pending_provisioning' WHERE id = :id")
+            ->execute([':id' => $vpsId]);
+
         $repo = new RepositorioJobs();
         $repo->criar('reativar_vps', ['vps_id' => $vpsId]);
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
@@ -136,6 +148,10 @@ final class VpsController
         if (!is_array($stmt->fetch())) {
             return Resposta::texto('VPS não encontrada.', 404);
         }
+
+        // Marcar status imediatamente (job faz o restart no container)
+        $pdo->prepare("UPDATE vps SET status = 'provisioning' WHERE id = :id")
+            ->execute([':id' => $vpsId]);
 
         $repo = new RepositorioJobs();
         $repo->criar('reiniciar_vps', ['vps_id' => $vpsId]);
