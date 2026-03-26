@@ -156,16 +156,24 @@ final class ChatController
             $link = $base . '/cliente/avaliar?type=chat&id=' . $roomId;
             $nome = trim((string) ($room['client_name'] ?? ''));
 
-            $corpo  = "Olá" . ($nome !== '' ? " {$nome}" : '') . ",\n\n";
-            $corpo .= "Seu atendimento via chat foi encerrado.\n\n";
-            $corpo .= "Gostaríamos de saber como foi sua experiência. Sua avaliação nos ajuda a melhorar nosso suporte.\n\n";
-            $corpo .= "Avalie o atendimento: {$link}\n\n";
-            $corpo .= "Obrigado por utilizar nossos serviços!\n";
+            $saudacao = $nome !== '' ? 'Olá ' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . ',' : 'Olá,';
+            $corpo = '<p style="margin:0 0 12px;">' . $saudacao . '</p>'
+                   . '<p style="margin:0 0 12px;">Seu atendimento via chat foi encerrado.</p>'
+                   . '<p style="margin:0 0 12px;">Gostaríamos de saber como foi sua experiência. Sua avaliação nos ajuda a melhorar nosso suporte.</p>';
+
+            $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                'Avalie seu Atendimento',
+                $corpo,
+                'Avaliar Atendimento',
+                $link,
+                'Obrigado por utilizar nossos serviços!',
+            );
 
             (new \LRV\App\Services\Email\SmtpMailer())->enviar(
                 $email,
                 'Avalie seu atendimento — Chat de Suporte',
-                $corpo
+                $html,
+                true
             );
         } catch (\Throwable) {
             // Falha no envio não deve impedir o encerramento

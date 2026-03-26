@@ -30,7 +30,9 @@ final class NotificacoesService
 
         try {
             $assunto = '[LRV] ' . $titulo;
-            (new SmtpMailer())->enviar($email, $assunto, $mensagem);
+            $corpo = \LRV\App\Services\Email\EmailTemplate::textoParaHtml($mensagem);
+            $html = \LRV\App\Services\Email\EmailTemplate::renderizar($titulo, $corpo);
+            (new SmtpMailer())->enviar($email, $assunto, $html, true);
             return true;
         } catch (\Throwable) {
             return false;

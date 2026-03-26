@@ -191,7 +191,16 @@ final class ContratarController
         // Enviar e-mail de boas-vindas
         try {
             $mailer = new \LRV\App\Services\Email\SmtpMailer();
-            $mailer->enviar($email, 'Bem-vindo!', "Olá {$nome},\n\nSua conta foi criada com sucesso.\n\nAcesse: " . \LRV\Core\ConfiguracoesSistema::appUrlBase() . "/cliente/entrar\n\nObrigado!");
+            $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();
+            $corpo = '<p style="margin:0 0 12px;">Olá ' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . ',</p>'
+                   . '<p style="margin:0 0 12px;">Sua conta foi criada com sucesso. Você já pode acessar o painel e gerenciar seus serviços.</p>';
+            $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                'Bem-vindo!',
+                $corpo,
+                'Acessar Painel',
+                $appUrl . '/cliente/entrar',
+            );
+            $mailer->enviar($email, 'Bem-vindo!', $html, true);
         } catch (\Throwable) {}
 
         return Resposta::json(['ok' => true, 'redirect' => $redirectUrl]);

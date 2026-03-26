@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Services\Errors;
 
+use LRV\App\Services\Email\EmailTemplate;
 use LRV\App\Services\Email\SmtpMailer;
 use LRV\Core\AppLogger;
 use LRV\Core\Auth;
@@ -118,19 +119,32 @@ final class ErrorLogService
             $linkVer = $appUrl . '/equipe/erros/ver?id=' . $id;
 
             $titulo  = "[{$httpCode}] Erro {$errorType} — {$method} {$url}";
-            $corpo   = "Erro #{$id} registrado no sistema.\n\n"
-                     . "Código HTTP : {$httpCode}\n"
-                     . "Tipo        : {$errorType}\n"
-                     . "Método      : {$method}\n"
-                     . "URL         : {$url}\n"
-                     . "Mensagem    : " . substr($message, 0, 300) . "\n\n"
-                     . "Ver detalhes: {$linkVer}";
+            $corpo   = '<p style="margin:0 0 12px;">Erro <strong>#' . $id . '</strong> registrado no sistema.</p>'
+                     . '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+                     . '<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#64748b;width:120px;">Código HTTP</td>'
+                     . '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;">' . $httpCode . '</td></tr>'
+                     . '<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#64748b;">Tipo</td>'
+                     . '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;">' . htmlspecialchars($errorType, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+                     . '<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#64748b;">Método</td>'
+                     . '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;">' . htmlspecialchars($method, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+                     . '<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#64748b;">URL</td>'
+                     . '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;word-break:break-all;">' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+                     . '<tr><td style="padding:8px 12px;font-weight:600;color:#64748b;">Mensagem</td>'
+                     . '<td style="padding:8px 12px;color:#0f172a;">' . htmlspecialchars(substr($message, 0, 300), ENT_QUOTES, 'UTF-8') . '</td></tr>'
+                     . '</table>';
+
+            $htmlEmail = EmailTemplate::renderizar(
+                'Erro no Sistema',
+                $corpo,
+                'Ver Detalhes',
+                $linkVer,
+            );
 
             foreach ($membros as $m) {
                 $email = trim((string) ($m['email'] ?? ''));
                 if ($email === '') continue;
                 try {
-                    (new SmtpMailer())->enviar($email, '[LRV] ' . $titulo, $corpo);
+                    (new SmtpMailer())->enviar($email, '[LRV] ' . $titulo, $htmlEmail, true);
                 } catch (\Throwable) {}
             }
 

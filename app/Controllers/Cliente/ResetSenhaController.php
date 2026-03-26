@@ -111,8 +111,16 @@ final class ResetSenhaController
             $base    = \LRV\Core\ConfiguracoesSistema::appUrlBase();
             $link    = $base . '/cliente/reset-senha/nova?token=' . $token;
             $assunto = 'Redefinição de senha';
-            $corpo   = "Você solicitou a redefinição de senha.\n\nClique no link abaixo (válido por 1 hora):\n{$link}\n\nSe não foi você, ignore este e-mail.";
-            (new \LRV\App\Services\Email\SmtpMailer())->enviar($email, $assunto, $corpo);
+            $corpo   = '<p style="margin:0 0 12px;">Você solicitou a redefinição de senha da sua conta.</p>'
+                     . '<p style="margin:0 0 12px;">Clique no botão abaixo para criar uma nova senha. Este link é válido por 1 hora.</p>';
+            $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                'Redefinição de Senha',
+                $corpo,
+                'Redefinir Senha',
+                $link,
+                'Se você não solicitou esta alteração, ignore este e-mail.',
+            );
+            (new \LRV\App\Services\Email\SmtpMailer())->enviar($email, $assunto, $html, true);
         } catch (\Throwable) {}
     }
 

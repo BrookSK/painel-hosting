@@ -137,10 +137,23 @@ final class InicialController
         try {
             $emailAdmin = trim((string) Settings::obter('alertas.email_admin', ''));
             if ($emailAdmin !== '') {
+                $corpo = '<p style="margin:0 0 12px;"><strong>De:</strong> '
+                       . htmlspecialchars($name, ENT_QUOTES, 'UTF-8')
+                       . ' &lt;' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '&gt;</p>'
+                       . '<p style="margin:0 0 12px;"><strong>Assunto:</strong> '
+                       . htmlspecialchars($subject, ENT_QUOTES, 'UTF-8') . '</p>'
+                       . '<div style="background:#f8fafc;border-left:3px solid #4F46E5;padding:14px 16px;border-radius:0 8px 8px 0;margin:16px 0;">'
+                       . nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'))
+                       . '</div>';
+                $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                    'Nova Mensagem de Contato',
+                    $corpo,
+                );
                 (new \LRV\App\Services\Email\SmtpMailer())->enviar(
                     $emailAdmin,
                     '[LRV] Contato: ' . $subject,
-                    "De: {$name} <{$email}>\n\n{$message}"
+                    $html,
+                    true
                 );
             }
         } catch (\Throwable $e) {
