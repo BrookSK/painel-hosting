@@ -13,9 +13,16 @@ function _nav_ativo(string $path, string $uri): string {
 ?>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <?php $_logo = SistemaConfig::logoUrl(); ?>
+    <?php $_logo = SistemaConfig::logoUrl(); $_favicon = SistemaConfig::faviconUrl(); ?>
     <?php if ($_logo !== ''): ?>
       <img src="<?php echo View::e($_logo); ?>" alt="logo" style="height:32px;width:auto;" />
+      <?php if ($_favicon !== ''): ?>
+        <img src="<?php echo View::e($_favicon); ?>" alt="icon" class="sidebar-favicon" style="display:none;height:28px;width:28px;object-fit:contain;" />
+      <?php else: ?>
+        <div class="sidebar-favicon" style="display:none;width:28px;height:28px;border-radius:8px;background:#4F46E5;display:none;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 28 28" fill="none"><path d="M7 14h14M14 7v14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+      <?php endif; ?>
     <?php else: ?>
       <div class="sidebar-logo-icon">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="#4F46E5"/><path d="M7 14h14M14 7v14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>

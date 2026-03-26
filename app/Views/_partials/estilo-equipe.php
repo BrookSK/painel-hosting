@@ -43,6 +43,10 @@ a:hover { text-decoration: none; }
   overflow: hidden;
 }
 .app-shell.collapsed .sidebar { width: 64px; }
+.app-shell.collapsed .sidebar-logo { justify-content: center; padding: 18px 8px 14px; }
+.app-shell.collapsed .sidebar-logo img:not(.sidebar-favicon) { display: none; }
+.app-shell.collapsed .sidebar-logo .sidebar-favicon { display: block !important; }
+.app-shell.collapsed .sidebar-logo .sidebar-logo-icon { display: none; }
 
 /* Logo */
 .sidebar-logo {
@@ -68,7 +72,7 @@ a:hover { text-decoration: none; }
   opacity: 1;
   transition: opacity .2s;
 }
-.app-shell.collapsed .sidebar-logo-text { opacity: 0; width: 0; }
+.app-shell.collapsed .sidebar-logo-text { opacity: 0; width: 0; overflow: hidden; }
 
 .sidebar-toggle {
   margin-left: auto;
@@ -85,7 +89,7 @@ a:hover { text-decoration: none; }
 }
 .sidebar-toggle:hover { color: #fff; background: rgba(255,255,255,.08); }
 .app-shell.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
-.app-shell.collapsed .sidebar-toggle { display: none; }
+.app-shell.collapsed .sidebar-toggle { position: absolute; right: -12px; top: 20px; width: 24px; height: 24px; border-radius: 50%; background: #1e293b; border: 2px solid #334155; z-index: 10; display: flex; align-items: center; justify-content: center; }
 
 /* Nav */
 .sidebar-nav {
