@@ -7,6 +7,7 @@ namespace LRV\Core;
 final class I18n
 {
     private static string $idioma = 'pt-BR';
+    private static string $moedaCodigo = 'BRL';
     private static array $cache = [];
 
     public static function definirIdioma(string $idioma): void
@@ -14,9 +15,22 @@ final class I18n
         self::$idioma = $idioma;
     }
 
+    public static function definirMoeda(string $moeda): void
+    {
+        $moeda = strtoupper(trim($moeda));
+        if (in_array($moeda, ['BRL', 'USD'], true)) {
+            self::$moedaCodigo = $moeda;
+        }
+    }
+
     public static function idioma(): string
     {
         return self::$idioma;
+    }
+
+    public static function moedaCodigo(): string
+    {
+        return self::$moedaCodigo;
     }
 
     public static function t(string $chave): string
@@ -65,7 +79,7 @@ final class I18n
      */
     public static function preco(float $valorBrl): string
     {
-        if (self::$idioma === 'pt-BR') {
+        if (self::$moedaCodigo === 'BRL') {
             return 'R$ ' . number_format($valorBrl, 2, ',', '.');
         }
         $taxa = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
@@ -78,7 +92,7 @@ final class I18n
      */
     public static function precoValor(float $valorBrl): float
     {
-        if (self::$idioma === 'pt-BR') {
+        if (self::$moedaCodigo === 'BRL') {
             return $valorBrl;
         }
         $taxa = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
@@ -90,7 +104,7 @@ final class I18n
      */
     public static function moeda(): string
     {
-        return self::$idioma === 'pt-BR' ? 'R$' : '$';
+        return self::$moedaCodigo === 'BRL' ? 'R$' : '$';
     }
 
     /**

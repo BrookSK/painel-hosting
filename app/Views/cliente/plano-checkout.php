@@ -92,7 +92,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <input type="hidden" name="plan_id" value="<?php echo $planId; ?>" />
         <input type="hidden" name="addons_ids" id="addons_ids" value="" />
 
-        <?php if (I18n::idioma() === 'pt-BR' && $clienteCpf === ''): ?>
+        <?php if (I18n::moedaCodigo() === 'BRL' && $clienteCpf === ''): ?>
         <div style="margin-bottom:12px;">
           <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.cpf_cnpj')); ?></label>
           <input class="input" type="text" name="cpf_cnpj" placeholder="000.000.000-00" required maxlength="18" inputmode="numeric" style="max-width:240px;" />
@@ -103,7 +103,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <div style="margin-bottom:12px;">
           <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.forma_pagamento')); ?></label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <?php if (I18n::idioma() === 'pt-BR'): ?>
+            <?php if (I18n::moedaCodigo() === 'BRL'): ?>
               <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
                 <input type="radio" name="gateway" value="PIX" checked style="accent-color:#4F46E5;" /> PIX
               </label>
@@ -135,7 +135,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var resumo=document.getElementById('addons-resumo');
   var total=document.getElementById('total-preco');
   var idsInput=document.getElementById('addons_ids');
-  var fmt=<?php echo json_encode(I18n::idioma() === 'pt-BR' ? 'BRL' : 'USD'); ?>;
+  var fmt=<?php echo json_encode(I18n::moedaCodigo() === 'BRL' ? 'BRL' : 'USD'); ?>;
 
   function formatPreco(v){
     if(fmt==='BRL') return 'R$ '+v.toFixed(2).replace('.',',');

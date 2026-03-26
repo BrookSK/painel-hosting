@@ -160,7 +160,7 @@ final class ContratarController
         $ccCvv     = trim((string)($req->post['cc_cvv'] ?? ''));
 
         // Criar assinaturas (uma por servidor)
-        $isBrl = \LRV\Core\I18n::idioma() === 'pt-BR';
+        $isBrl = \LRV\Core\I18n::moedaCodigo() === 'BRL';
         $redirectUrl = '/cliente/painel';
 
         for ($i = 0; $i < $quantidade; $i++) {

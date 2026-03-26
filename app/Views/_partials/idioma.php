@@ -4,6 +4,7 @@ use LRV\Core\I18n;
 use LRV\Core\View;
 
 $idiomaAtual = I18n::idioma();
+$moedaAtual  = I18n::moedaCodigo();
 
 $uri   = (string) ($_SERVER['REQUEST_URI'] ?? '/');
 $parts = parse_url($uri);
@@ -15,11 +16,23 @@ if (isset($parts['query'])) {
     parse_str((string) $parts['query'], $query);
     if (!is_array($query)) $query = [];
 }
-unset($query['lang']);
 
-$makeHref = static function (string $lang) use ($path, $query): string {
-    $q = $query;
+$queryLang = $query;
+unset($queryLang['lang']);
+
+$makeHref = static function (string $lang) use ($path, $queryLang): string {
+    $q = $queryLang;
     $q['lang'] = $lang;
+    $qs = http_build_query($q);
+    return $qs !== '' ? ($path . '?' . $qs) : $path;
+};
+
+$queryCur = $query;
+unset($queryCur['currency']);
+
+$makeCurHref = static function (string $cur) use ($path, $queryCur): string {
+    $q = $queryCur;
+    $q['currency'] = $cur;
     $qs = http_build_query($q);
     return $qs !== '' ? ($path . '?' . $qs) : $path;
 };
@@ -53,6 +66,40 @@ $uid = 'lang_' . substr(md5($path . $idiomaAtual . uniqid()), 0, 8);
       <?php echo $svg; ?>
       <span><?php echo View::e($labels[$codigo]); ?></span>
       <?php if ($ativo): ?>
+        <svg class="lang-check" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      <?php endif; ?>
+    </a>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+<?php
+$cuid = 'cur_' . substr(md5($path . $moedaAtual . uniqid()), 0, 8);
+$moedas = [
+    'BRL' => ['label' => 'R$ Real', 'symbol' => 'R$', 'flag' => '🇧🇷'],
+    'USD' => ['label' => '$ Dollar', 'symbol' => '$', 'flag' => '🇺🇸'],
+];
+?>
+<div class="lang-dropdown" id="<?php echo $cuid; ?>" style="margin-left:4px;">
+  <button class="lang-trigger" onclick="toggleLang('<?php echo $cuid; ?>')" aria-haspopup="true" aria-expanded="false" type="button">
+    <span style="font-size:14px;"><?php echo $moedas[$moedaAtual]['flag'] ?? ''; ?></span>
+    <span class="lang-code"><?php echo View::e($moedas[$moedaAtual]['symbol'] ?? 'R$'); ?></span>
+    <svg class="lang-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="lang-menu" role="menu">
+    <?php foreach ($moedas as $curCode => $curInfo):
+      $curAtivo = $curCode === $moedaAtual;
+    ?>
+    <a href="<?php echo View::e($makeCurHref($curCode)); ?>"
+       class="lang-option<?php echo $curAtivo ? ' lang-option-ativo' : ''; ?>"
+       role="menuitem">
+      <span style="font-size:14px;"><?php echo $curInfo['flag']; ?></span>
+      <span><?php echo View::e($curInfo['label']); ?></span>
+      <?php if ($curAtivo): ?>
         <svg class="lang-check" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>

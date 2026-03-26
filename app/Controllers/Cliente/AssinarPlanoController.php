@@ -59,7 +59,7 @@ final class AssinarPlanoController
                 ->execute([':c' => $cpfEnviado, ':id' => $clienteId]);
         }
 
-        $isBrl = \LRV\Core\I18n::idioma() === 'pt-BR';
+        $isBrl = \LRV\Core\I18n::moedaCodigo() === 'BRL';
 
         // BRL → tudo via Asaas (PIX, BOLETO, CREDIT_CARD)
         // USD → só Stripe (cartão)

@@ -610,8 +610,8 @@ function goToSlide(idx){currentSlide=idx;updateCarousel(true);}
 window.addEventListener('resize',function(){updateCarousel(false);});
 setTimeout(function(){updateCarousel(false);},100);
 
-var _convRate=<?php echo json_encode(I18n::idioma() === 'pt-BR' ? 1.0 : (1.0 / \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd())); ?>;
-var _locale=<?php echo json_encode(I18n::idioma() === 'pt-BR' ? 'pt-BR' : 'en-US'); ?>;
+var _convRate=<?php echo json_encode(I18n::moedaCodigo() === 'BRL' ? 1.0 : (1.0 / \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd())); ?>;
+var _locale=<?php echo json_encode(I18n::moedaCodigo() === 'BRL' ? 'pt-BR' : 'en-US'); ?>;
 var planBase={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:<?php echo (float)$_p['price']; ?>,<?php endforeach; ?>};
 var planAddons={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:[],<?php endforeach; ?>};
 function toggleAddon(el,pid,price){

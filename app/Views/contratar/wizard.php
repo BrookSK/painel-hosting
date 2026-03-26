@@ -15,8 +15,9 @@ $planId  = (int)($plano['id'] ?? 0);
 $cpu     = (int)($plano['cpu'] ?? 0);
 $ramGb   = round((int)($plano['ram'] ?? 0) / 1024);
 $discoGb = round((int)($plano['storage'] ?? 0) / 1024);
-$isBrl   = I18n::idioma() === 'pt-BR';
+$isBrl   = I18n::moedaCodigo() === 'BRL';
 $moeda   = $isBrl ? 'BRL' : 'USD';
+$moedaJs = I18n::moedaCodigo();
 ?>
 <!doctype html>
 <html lang="<?php echo View::e(I18n::idioma()); ?>">

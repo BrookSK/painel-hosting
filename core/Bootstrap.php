@@ -80,6 +80,25 @@ final class Bootstrap
 
         I18n::definirIdioma($idioma);
 
+        // Moeda independente do idioma
+        $moeda = 'BRL';
+        if (PHP_SAPI !== 'cli') {
+            $moedaCand = strtoupper(trim((string) ($_GET['currency'] ?? ($_COOKIE['currency'] ?? ''))));
+            if (in_array($moedaCand, ['BRL', 'USD'], true)) {
+                $moeda = $moedaCand;
+                if (isset($_GET['currency'])) {
+                    setcookie('currency', $moeda, [
+                        'expires' => time() + 31536000,
+                        'path' => '/',
+                        'secure' => $https,
+                        'httponly' => false,
+                        'samesite' => 'Lax',
+                    ]);
+                }
+            }
+        }
+        I18n::definirMoeda($moeda);
+
         date_default_timezone_set('America/Sao_Paulo');
 
         ini_set('display_errors', '0');
