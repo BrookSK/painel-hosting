@@ -34,6 +34,8 @@ final class ConfiguracoesController
             'app_url_base' => ConfiguracoesSistema::appUrlBase(),
             'app_secret_key' => (string) Settings::obter('app.secret_key', ''),
             'tolerancia_dias' => (string) ConfiguracoesSistema::toleranciaPagamentoDias(),
+            'desconto_6m' => (string) Settings::obter('billing.desconto_6m', '5'),
+            'desconto_12m' => (string) Settings::obter('billing.desconto_12m', '10'),
             'evolution_url_base' => ConfiguracoesSistema::evolutionUrlBase(),
             'evolution_token' => ConfiguracoesSistema::evolutionToken(),
             'email_admin' => ConfiguracoesSistema::emailAdmin(),
@@ -131,6 +133,8 @@ final class ConfiguracoesController
         $appSecretKey = $in->postString('app_secret_key', 255, false);
 
         $tolerancia = $in->postInt('tolerancia_dias', 1, 365, false);
+        $desconto6m = max(0, min(50, (int)($req->post['desconto_6m'] ?? 5)));
+        $desconto12m = max(0, min(50, (int)($req->post['desconto_12m'] ?? 10)));
 
         $evoUrl = $in->postUrl('evolution_url_base', 255, false);
         $evoToken = $in->postString('evolution_token', 255, false);
@@ -232,6 +236,8 @@ final class ConfiguracoesController
                 'app_url_base' => $appUrlBase,
                 'app_secret_key' => $appSecretKey,
                 'tolerancia_dias' => $tolerancia > 0 ? (string) $tolerancia : '3',
+                'desconto_6m' => (string) $desconto6m,
+                'desconto_12m' => (string) $desconto12m,
                 'evolution_url_base' => $evoUrl,
                 'evolution_token' => $evoToken,
                 'email_admin' => $emailAdmin,
@@ -329,6 +335,8 @@ final class ConfiguracoesController
         Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
         Settings::definir('app.secret_key', $appSecretKey);
         Settings::definir('cobranca.tolerancia_dias', $tolerancia > 0 ? $tolerancia : 3);
+        Settings::definir('billing.desconto_6m', $desconto6m);
+        Settings::definir('billing.desconto_12m', $desconto12m);
         Settings::definir('whatsapp.evolution.url_base', $evoUrl);
         Settings::definir('whatsapp.evolution.token', $evoToken);
         Settings::definir('alertas.email_admin', $emailAdmin);
@@ -462,6 +470,8 @@ final class ConfiguracoesController
             'app_url_base' => rtrim($appUrlBase, '/'),
             'app_secret_key' => $appSecretKey,
             'tolerancia_dias' => (string) ($tolerancia > 0 ? $tolerancia : 3),
+            'desconto_6m' => (string) $desconto6m,
+            'desconto_12m' => (string) $desconto12m,
             'evolution_url_base' => $evoUrl,
             'evolution_token' => $evoToken,
             'email_admin' => $emailAdmin,

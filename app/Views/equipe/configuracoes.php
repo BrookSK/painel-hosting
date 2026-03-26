@@ -66,6 +66,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:6px;">Tolerancia de inadimplencia (dias)</label>
         <input class="input" type="number" name="tolerancia_dias" value="<?php echo View::e((string)($tolerancia_dias??'3')); ?>" min="1" />
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Desconto semestral (%)</label>
+        <input class="input" type="number" name="desconto_6m" value="<?php echo View::e((string)($desconto_6m??'5')); ?>" min="0" max="50" step="1" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Desconto anual (%)</label>
+        <input class="input" type="number" name="desconto_12m" value="<?php echo View::e((string)($desconto_12m??'10')); ?>" min="0" max="50" step="1" />
+      </div>
     </div>
     <p class="texto" style="font-size:13px;margin-top:8px;">Endpoint: <strong>/webhooks/asaas</strong></p>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-top:8px;">

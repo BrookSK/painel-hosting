@@ -448,7 +448,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
               <div class="total-value"><?php echo View::e(I18n::moeda()); ?> <span id="total-<?php echo $_pid; ?>"><?php echo View::e(I18n::numero(I18n::precoValor($_price), 0)); ?></span></div>
             </div>
             <?php endif; ?>
-            <a href="/cliente/criar-conta?plano=<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
+            <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
           </div>
           <?php endforeach; ?>
           <?php else: ?>

@@ -178,6 +178,8 @@ $roteador->get('/cliente/entrar', [ClienteEntrarController::class, 'formulario']
 $roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_client', 10, 60)]);
 $roteador->get('/cliente/criar-conta', [CriarContaController::class, 'formulario']);
 $roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar']);
+$roteador->get('/contratar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'wizard']);
+$roteador->post('/contratar/finalizar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'finalizar'], [Middlewares::rateLimitIp('contratar', 5, 60)]);
 $roteador->get('/cliente/painel', [ClientePainelController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos', [ClientePlanosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos/checkout', [ClientePlanosController::class, 'checkout'], [Middlewares::exigirLoginCliente()]);
