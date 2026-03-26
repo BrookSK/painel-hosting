@@ -150,7 +150,7 @@ final class EmailController
     private function dominiosAtivos(int $clienteId): array
     {
         $pdo  = \LRV\Core\BancoDeDados::pdo();
-        $stmt = $pdo->prepare("SELECT domain FROM client_domains WHERE client_id = :c AND status = 'active' ORDER BY domain");
+        $stmt = $pdo->prepare("SELECT domain FROM client_domains WHERE client_id = :c AND status IN ('active', 'pending_dns') ORDER BY domain");
         $stmt->execute([':c' => $clienteId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         return is_array($rows) ? $rows : [];
