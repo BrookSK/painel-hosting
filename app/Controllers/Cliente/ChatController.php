@@ -49,18 +49,31 @@ final class ChatController
             return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
         }
 
-        $pdo  = \LRV\Core\BancoDeDados::pdo();
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+
+        // Find the most recent room (open or recently closed)
         $stmt = $pdo->prepare(
-            "SELECT r.id, r.status, r.created_at, r.updated_at,
-                    (SELECT COUNT(*) FROM chat_messages m WHERE m.room_id = r.id) AS total_messages
-             FROM chat_rooms r
-             WHERE r.client_id = :c
-             ORDER BY r.id DESC LIMIT 20"
+            "SELECT id, status FROM chat_rooms WHERE client_id = :c ORDER BY id DESC LIMIT 1"
         );
         $stmt->execute([':c' => $clienteId]);
-        $rooms = $stmt->fetchAll();
+        $room = $stmt->fetch();
 
-        return Resposta::json(['ok' => true, 'rooms' => is_array($rooms) ? $rooms : []]);
+        if (!is_array($room)) {
+            return Resposta::json(['ok' => true, 'messages' => [], 'room_id' => 0, 'status' => 'none']);
+        }
+
+        $roomId = (int) $room['id'];
+        $stmtM = $pdo->prepare(
+            'SELECT m.id, m.sender_type, m.sender_id, m.message, m.file_url, m.file_name, m.created_at,
+                    CASE WHEN m.sender_type = \'admin\' THEN u.name ELSE NULL END AS sender_name
+             FROM chat_messages m
+             LEFT JOIN users u ON m.sender_type = \'admin\' AND u.id = m.sender_id
+             WHERE m.room_id = :r ORDER BY m.id ASC LIMIT 200'
+        );
+        $stmtM->execute([':r' => $roomId]);
+        $msgs = $stmtM->fetchAll() ?: [];
+
+        return Resposta::json(['ok' => true, 'messages' => $msgs, 'room_id' => $roomId, 'status' => (string) $room['status']]);
     }
 
     /** Polling: retorna mensagens após um determinado ID */
@@ -71,22 +84,35 @@ final class ChatController
             return Resposta::json(['ok' => false], 401);
         }
 
-        $room = (new ChatRoomService())->obterOuCriar($clienteId);
-        $roomId = (int) $room['id'];
         $afterId = (int) ($req->query['after'] ?? 0);
-
         $pdo = \LRV\Core\BancoDeDados::pdo();
+
+        // Find the most recent room (open or closed) — do NOT create a new one here
         $stmt = $pdo->prepare(
+            "SELECT id, status FROM chat_rooms WHERE client_id = :c ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->execute([':c' => $clienteId]);
+        $room = $stmt->fetch();
+
+        if (!is_array($room)) {
+            // No room yet — create one
+            $room = (new ChatRoomService())->obterOuCriar($clienteId);
+        }
+
+        $roomId = (int) $room['id'];
+        $status = (string) ($room['status'] ?? 'open');
+
+        $stmtM = $pdo->prepare(
             'SELECT m.id, m.sender_type, m.sender_id, m.message, m.file_url, m.file_name, m.created_at,
                     CASE WHEN m.sender_type = \'admin\' THEN u.name ELSE NULL END AS sender_name
              FROM chat_messages m
              LEFT JOIN users u ON m.sender_type = \'admin\' AND u.id = m.sender_id
              WHERE m.room_id = :r AND m.id > :a ORDER BY m.id ASC LIMIT 50'
         );
-        $stmt->execute([':r' => $roomId, ':a' => $afterId]);
-        $msgs = $stmt->fetchAll() ?: [];
+        $stmtM->execute([':r' => $roomId, ':a' => $afterId]);
+        $msgs = $stmtM->fetchAll() ?: [];
 
-        return Resposta::json(['ok' => true, 'messages' => $msgs, 'room_id' => $roomId, 'status' => (string) ($room['status'] ?? 'open')]);
+        return Resposta::json(['ok' => true, 'messages' => $msgs, 'room_id' => $roomId, 'status' => $status]);
     }
 
     /** Enviar mensagem via HTTP (fallback quando WS não funciona) */

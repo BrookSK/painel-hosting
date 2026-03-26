@@ -643,6 +643,18 @@ function connectLive(ctx){
       liveLoadMsgs(d.messages);
       if(d.room_id) liveRoomId = d.room_id;
     }
+    // If the most recent room is closed, show messages but don't connect WS yet
+    if(d.ok && d.status === 'closed' && d.messages && d.messages.length > 0){
+      liveStatus.textContent='● Chat encerrado';liveStatus.style.color='#ef4444';
+      liveInp.disabled=true;liveSend.disabled=true;
+      // After 8 seconds, allow starting a new chat
+      setTimeout(function(){
+        liveStatus.innerHTML='<a href="#" id="cw-new-chat" style="color:#4F46E5;font-size:12px;">Iniciar novo chat</a>';
+        var nc=document.getElementById('cw-new-chat');
+        if(nc)nc.addEventListener('click',function(ev){ev.preventDefault();liveMsgs.innerHTML='';liveLastId=0;liveLastDate='';liveRenderedIds={};liveLastSender='';liveRoomId=0;liveStatus.textContent='';liveInp.disabled=false;liveSend.disabled=false;tryWsLive(ctx);});
+      },5000);
+      return;
+    }
     tryWsLive(ctx);
   }).catch(function(){ tryWsLive(ctx); });
 }

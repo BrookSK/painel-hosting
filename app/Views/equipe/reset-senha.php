@@ -43,8 +43,8 @@ $token = (string)($token ?? '');
       <img src="<?php echo View::e($_logo); ?>" alt="logo" />
     <?php else: ?>
       <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="7" fill="#4F46E5"/><path d="M6 13h14M13 6v14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <span class="rs-brand-name"><?php echo View::e($_nome); ?></span>
     <?php endif; ?>
-    <span class="rs-brand-name"><?php echo View::e($_nome); ?></span>
   </a>
 
   <?php if ($etapa === 'solicitar'): ?>
