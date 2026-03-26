@@ -162,6 +162,8 @@ $roteador->get('/equipe/clientes/novo', [ClientesController::class, 'novo'], [Mi
 $roteador->get('/equipe/clientes/editar', [ClientesController::class, 'editar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->get('/equipe/clientes/ver', [ClientesController::class, 'ver'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/salvar', [ClientesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/ocultar', [ClientesController::class, 'ocultar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/deletar', [ClientesController::class, 'deletar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/assinar-plano', [ClientesController::class, 'assinarPlano'], [Middlewares::exigirPermissao('manage_billing')]);
 
 // Minha conta

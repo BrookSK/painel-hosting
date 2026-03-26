@@ -81,6 +81,18 @@ if (count($nomePartes) >= 2) {
           <?php echo !empty($cliente['is_tester']) ? '✕ Remover tester' : '🧪 Marcar como tester'; ?>
         </button>
       </form>
+      <form method="post" action="/equipe/clientes/ocultar" style="display:inline;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <button class="botao ghost sm" type="submit">
+          <?php echo ($cliente['hidden_at'] ?? null) !== null ? '👁 Mostrar cliente' : '🙈 Ocultar cliente'; ?>
+        </button>
+      </form>
+      <form method="post" action="/equipe/clientes/deletar" style="display:inline;" onsubmit="return confirm('ATENÇÃO: Isso vai deletar o cliente e TODOS os dados relacionados (VPS, assinaturas, tickets, emails, etc). Essa ação é irreversível. Continuar?')">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <button class="botao danger sm" type="submit">🗑 Deletar cliente</button>
+      </form>
     </div>
   </div>
 </div>

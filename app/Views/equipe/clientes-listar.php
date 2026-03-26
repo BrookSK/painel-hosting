@@ -5,8 +5,9 @@ use LRV\Core\View;
 $pageTitle = 'Clientes';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
-$clientes = $clientes ?? [];
-$busca    = (string)($busca ?? '');
+$clientes    = $clientes ?? [];
+$busca       = (string)($busca ?? '');
+$showHidden  = !empty($showHidden);
 ?>
 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
   <div>
@@ -18,13 +19,17 @@ $busca    = (string)($busca ?? '');
 
 <!-- Busca -->
 <div class="card-new" style="margin-bottom:16px;padding:14px 16px;">
-  <form method="get" action="/equipe/clientes" style="display:flex;gap:10px;align-items:center;">
+  <form method="get" action="/equipe/clientes" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
     <input type="text" name="q" class="input" value="<?php echo View::e($busca); ?>"
            placeholder="Buscar por nome ou e-mail..." style="max-width:340px;" />
     <button class="botao sm" type="submit">Buscar</button>
     <?php if ($busca !== ''): ?>
       <a href="/equipe/clientes" class="botao sm sec">Limpar</a>
     <?php endif; ?>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;margin-left:auto;cursor:pointer;">
+      <input type="checkbox" name="hidden" value="1" <?php echo $showHidden ? 'checked' : ''; ?> onchange="this.form.submit()" style="accent-color:#4F46E5;"/>
+      Mostrar ocultos
+    </label>
   </form>
 </div>
 
@@ -55,7 +60,12 @@ $busca    = (string)($busca ?? '');
           ?>
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td style="padding:10px 16px;color:#94a3b8;font-size:12px;">#<?php echo (int)$c['id']; ?></td>
-            <td style="padding:10px 16px;font-weight:500;color:#0f172a;"><?php echo View::e((string)($c['name'] ?? '')); ?></td>
+            <td style="padding:10px 16px;font-weight:500;color:#0f172a;">
+              <?php echo View::e((string)($c['name'] ?? '')); ?>
+              <?php if (($c['hidden_at'] ?? null) !== null): ?>
+                <span class="badge-new" style="background:#f1f5f9;color:#94a3b8;font-size:10px;margin-left:4px;">oculto</span>
+              <?php endif; ?>
+            </td>
             <td style="padding:10px 16px;color:#475569;"><?php echo View::e((string)($c['email'] ?? '')); ?></td>
             <td style="padding:10px 16px;color:#64748b;"><?php echo View::e((string)($c['phone'] ?? '—')); ?></td>
             <td style="padding:10px 16px;text-align:center;">

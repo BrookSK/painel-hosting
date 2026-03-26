@@ -16,29 +16,32 @@ final class ClientesController
     {
         $pdo    = BancoDeDados::pdo();
         $busca  = trim((string)($req->query['q'] ?? ''));
+        $showHidden = (string)($req->query['hidden'] ?? '') === '1';
+        $hiddenFilter = $showHidden ? '' : ' AND (c.hidden_at IS NULL)';
 
         if ($busca !== '') {
             $s = $pdo->prepare(
-                "SELECT c.id, c.name, c.email, c.phone, c.created_at,
+                "SELECT c.id, c.name, c.email, c.phone, c.created_at, c.hidden_at,
                         COUNT(DISTINCT v.id) AS total_vps,
                         COUNT(DISTINCT sub.id) AS total_assinaturas,
                         SUM(CASE WHEN sub.status='active' THEN 1 ELSE 0 END) AS assinaturas_ativas
                  FROM clients c
                  LEFT JOIN vps v ON v.client_id = c.id AND v.deleted_at IS NULL
                  LEFT JOIN subscriptions sub ON sub.client_id = c.id
-                 WHERE c.name LIKE :q OR c.email LIKE :q
+                 WHERE (c.name LIKE :q OR c.email LIKE :q){$hiddenFilter}
                  GROUP BY c.id ORDER BY c.id DESC LIMIT 200"
             );
             $s->execute([':q' => '%' . $busca . '%']);
         } else {
             $s = $pdo->query(
-                "SELECT c.id, c.name, c.email, c.phone, c.created_at,
+                "SELECT c.id, c.name, c.email, c.phone, c.created_at, c.hidden_at,
                         COUNT(DISTINCT v.id) AS total_vps,
                         COUNT(DISTINCT sub.id) AS total_assinaturas,
                         SUM(CASE WHEN sub.status='active' THEN 1 ELSE 0 END) AS assinaturas_ativas
                  FROM clients c
                  LEFT JOIN vps v ON v.client_id = c.id AND v.deleted_at IS NULL
                  LEFT JOIN subscriptions sub ON sub.client_id = c.id
+                 WHERE 1=1{$hiddenFilter}
                  GROUP BY c.id ORDER BY c.id DESC LIMIT 500"
             );
         }
@@ -46,8 +49,9 @@ final class ClientesController
         $clientes = $s->fetchAll();
 
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/equipe/clientes-listar.php', [
-            'clientes' => is_array($clientes) ? $clientes : [],
-            'busca'    => $busca,
+            'clientes'    => is_array($clientes) ? $clientes : [],
+            'busca'       => $busca,
+            'showHidden'  => $showHidden,
         ]));
     }
 
@@ -224,4 +228,113 @@ final class ClientesController
             'erro'    => $erro,
         ]), 422);
     }
+
+    public function ocultar(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::texto('ID inválido.', 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, hidden_at FROM clients WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $c = $stmt->fetch();
+        if (!is_array($c)) {
+            return Resposta::texto('Cliente não encontrado.', 404);
+        }
+
+        $isHidden = ($c['hidden_at'] ?? null) !== null;
+        if ($isHidden) {
+            $pdo->prepare('UPDATE clients SET hidden_at = NULL WHERE id = :id')->execute([':id' => $id]);
+        } else {
+            $pdo->prepare('UPDATE clients SET hidden_at = :h WHERE id = :id')->execute([':h' => date('Y-m-d H:i:s'), ':id' => $id]);
+        }
+
+        return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+    }
+
+    public function deletar(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::texto('ID inválido.', 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id FROM clients WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        if (!$stmt->fetch()) {
+            return Resposta::texto('Cliente não encontrado.', 404);
+        }
+
+        $pdo->beginTransaction();
+        try {
+            // Deletar em ordem de dependência (filhos primeiro)
+
+            // Terminal sessions e tokens
+            $pdo->prepare('DELETE FROM client_terminal_sessions WHERE client_id = :c')->execute([':c' => $id]);
+            $pdo->prepare('DELETE FROM client_terminal_tokens WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Chat: messages → rooms → tokens
+            $pdo->exec("DELETE cm FROM chat_messages cm INNER JOIN chat_rooms cr ON cr.id = cm.room_id WHERE cr.client_id = {$id}");
+            $pdo->prepare('DELETE FROM chat_tokens WHERE client_id = :c')->execute([':c' => $id]);
+            $pdo->prepare('DELETE FROM chat_rooms WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Satisfaction surveys
+            $pdo->prepare('DELETE FROM satisfaction_surveys WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Tickets: messages → tickets
+            $pdo->exec("DELETE tm FROM ticket_messages tm INNER JOIN tickets t ON t.id = tm.ticket_id WHERE t.client_id = {$id}");
+            $pdo->prepare('DELETE FROM tickets WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Emails e domínios
+            $pdo->prepare('DELETE FROM client_emails WHERE client_id = :c')->execute([':c' => $id]);
+            $pdo->prepare('DELETE FROM client_domains WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Git deployments e databases
+            $pdo->prepare('DELETE FROM git_deployments WHERE client_id = :c')->execute([':c' => $id]);
+            $pdo->prepare('DELETE FROM client_databases WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Notificações
+            $pdo->prepare('DELETE FROM client_notifications WHERE client_id = :c')->execute([':c' => $id]);
+
+            // TOTP
+            $pdo->prepare('DELETE FROM client_totp WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Trials
+            $pdo->prepare('DELETE FROM client_trials WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Status services (nullable client_id)
+            $pdo->prepare('UPDATE status_services SET client_id = NULL WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Subscriptions (depende de vps)
+            $pdo->prepare('DELETE FROM subscriptions WHERE client_id = :c')->execute([':c' => $id]);
+
+            // VPS: applications → ports → vps
+            $vpsIds = $pdo->prepare('SELECT id FROM vps WHERE client_id = :c');
+            $vpsIds->execute([':c' => $id]);
+            $vIds = $vpsIds->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+            if (!empty($vIds)) {
+                $ph = implode(',', $vIds);
+                $pdo->exec("DELETE FROM ports WHERE application_id IN (SELECT id FROM applications WHERE vps_id IN ({$ph}))");
+                $pdo->exec("DELETE FROM applications WHERE vps_id IN ({$ph})");
+            }
+            $pdo->prepare('DELETE FROM vps WHERE client_id = :c')->execute([':c' => $id]);
+
+            // Audit logs
+            $pdo->prepare("DELETE FROM audit_logs WHERE actor_type = 'client' AND actor_id = :c")->execute([':c' => $id]);
+
+            // Finalmente, o cliente
+            $pdo->prepare('DELETE FROM clients WHERE id = :c')->execute([':c' => $id]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            return Resposta::texto('Erro ao deletar: ' . $e->getMessage(), 500);
+        }
+
+        return Resposta::redirecionar('/equipe/clientes');
+    }
+
 }
