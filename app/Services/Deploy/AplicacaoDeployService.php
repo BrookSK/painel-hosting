@@ -111,7 +111,7 @@ final class AplicacaoDeployService
         $cmd = 'docker run -d'
             . ' --name ' . escapeshellarg($nomeContainer)
             . ' --network ' . escapeshellarg($rede)
-            . ' -p ' . (int) $port . ':80'
+            . ' -p 127.0.0.1:' . (int) $port . ':80'
             . ' ' . escapeshellarg($repo);
 
         $rRun = $this->docker->executar($cmd);

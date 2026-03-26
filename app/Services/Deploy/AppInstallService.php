@@ -103,7 +103,7 @@ final class AppInstallService
         $cmd = 'docker run -d'
             . ' --name ' . escapeshellarg($nomeContainer)
             . ' --network ' . escapeshellarg($rede)
-            . ' -p ' . (int) $port . ':' . (int) ($app['default_port'] ?? 80)
+            . ' -p 127.0.0.1:' . (int) $port . ':' . (int) ($app['default_port'] ?? 80)
             . ' --restart unless-stopped'
             . ' --label lrv.app_id=' . $applicationId
             . ' --label lrv.client_id=' . (int) ($app['client_id'] ?? 0);
