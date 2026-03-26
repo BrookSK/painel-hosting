@@ -56,22 +56,24 @@ final class VpsController
         $repo->criar('provisionar_vps', ['vps_id' => $vpsId]);
 
         // Tentar executar o provisionamento direto (sem esperar worker)
+        $provLog = [];
         try {
             $svc = new \LRV\App\Services\Provisioning\VpsProvisioningService(
                 new \LRV\App\Services\Provisioning\DockerCli()
             );
-            $svc->provisionar($vpsId, function(string $m) {});
-        } catch (\Throwable) {
-            // Silencioso — o job no worker vai tentar de novo
+            $svc->provisionar($vpsId, function(string $m) use (&$provLog) { $provLog[] = $m; });
+        } catch (\Throwable $e) {
+            $provLog[] = 'ERRO: ' . $e->getMessage();
         }
 
+        // Salvar log do provisionamento direto no audit
         (new AuditLogService())->registrar(
             'team',
             \LRV\Core\Auth::equipeId(),
             'vps.provision',
             'vps',
             $vpsId,
-            ['vps_id' => $vpsId],
+            ['vps_id' => $vpsId, 'direct_log' => implode("\n", $provLog)],
             $req,
         );
 
@@ -236,13 +238,15 @@ final class VpsController
             $logStmt = $pdo->prepare(
                 "SELECT j.id, j.type, j.status, j.output, j.created_at, j.started_at, j.finished_at
                  FROM jobs j
-                 WHERE j.payload LIKE :p
+                 WHERE (j.payload LIKE :p1 OR j.payload LIKE :p2)
                  ORDER BY j.id DESC LIMIT 50"
             );
-            $logStmt->execute([':p' => '%"vps_id":' . $vpsId . '%']);
+            $logStmt->execute([
+                ':p1' => '%"vps_id":' . $vpsId . '%',
+                ':p2' => '%"vps_id": ' . $vpsId . '%',
+            ]);
             $logs = $logStmt->fetchAll() ?: [];
         } catch (\Throwable) {
-            // Try alternative: payload might use different format
             try {
                 $logStmt = $pdo->prepare(
                     "SELECT j.id, j.type, j.status, j.output, j.created_at, j.started_at, j.finished_at
@@ -250,10 +254,17 @@ final class VpsController
                      WHERE j.payload LIKE :p
                      ORDER BY j.id DESC LIMIT 50"
                 );
-                $logStmt->execute([':p' => '%vps_id%' . $vpsId . '%']);
+                $logStmt->execute([':p' => '%' . $vpsId . '%']);
                 $logs = $logStmt->fetchAll() ?: [];
             } catch (\Throwable) {}
         }
+
+        // Pending jobs count
+        $pendingJobs = 0;
+        try {
+            $pjStmt = $pdo->query("SELECT COUNT(*) FROM jobs WHERE status = 'pending'");
+            $pendingJobs = (int)$pjStmt->fetchColumn();
+        } catch (\Throwable) {}
 
         // Audit logs
         $auditLogs = [];
@@ -272,6 +283,7 @@ final class VpsController
             'vps' => $vps,
             'logs' => $logs,
             'audit_logs' => $auditLogs,
+            'pending_jobs' => $pendingJobs,
         ]));
     }
 

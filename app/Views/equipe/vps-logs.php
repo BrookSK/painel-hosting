@@ -8,6 +8,8 @@ $logs = $logs ?? [];
 $auditLogs = $audit_logs ?? [];
 $vid = (int)($vps['id'] ?? 0);
 
+$pendingJobs = (int)($pending_jobs ?? 0);
+
 $pageTitle = 'Logs VPS #' . $vid;
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 ?>
@@ -18,10 +20,25 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div class="page-subtitle" style="margin-bottom:0;">
       <?php echo View::e((string)($vps['client_name'] ?? '')); ?> · Status: <?php echo View::e((string)($vps['status'] ?? '')); ?>
       · <?php echo (int)($vps['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($vps['ram'] ?? 0) / 1024); ?>GB RAM
+      · Node: <?php echo View::e((string)($vps['server_id'] ?? 'nenhum')); ?>
     </div>
   </div>
-  <a href="/equipe/vps" class="botao ghost sm">← Voltar</a>
+  <div style="display:flex;gap:8px;">
+    <form method="post" action="/equipe/vps/provisionar" style="display:inline;">
+      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
+      <input type="hidden" name="vps_id" value="<?php echo $vid; ?>"/>
+      <button class="botao sm" type="submit">🔄 Reprovisionar</button>
+    </form>
+    <a href="/equipe/vps" class="botao ghost sm">← Voltar</a>
+  </div>
 </div>
+
+<?php if ($pendingJobs > 0): ?>
+<div class="aviso" style="margin-bottom:16px;">
+  Existem <strong><?php echo $pendingJobs; ?></strong> job(s) pendente(s) na fila. O worker (<code>php worker.php</code>) precisa estar rodando para processá-los.
+  <a href="/equipe/jobs">Ver fila de jobs</a>
+</div>
+<?php endif; ?>
 
 <!-- Job logs -->
 <div class="card-new" style="margin-bottom:16px;">
@@ -73,8 +90,16 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <tr>
             <td><code><?php echo View::e((string)($a['action'] ?? '')); ?></code></td>
             <td><?php echo View::e((string)($a['actor_type'] ?? '')); ?> #<?php echo (int)($a['actor_id'] ?? 0); ?></td>
-            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#64748b;">
-              <?php echo View::e(substr((string)($a['details'] ?? ''), 0, 200)); ?>
+            <td style="max-width:400px;overflow:hidden;font-size:11px;color:#64748b;">
+              <?php
+                $details = (string)($a['details'] ?? '');
+                $decoded = json_decode($details, true);
+                if (is_array($decoded) && isset($decoded['direct_log'])) {
+                    echo '<pre style="background:#0b1220;color:#e2e8f0;padding:8px;border-radius:6px;font-size:11px;white-space:pre-wrap;max-height:200px;overflow:auto;margin:0;">' . View::e((string)$decoded['direct_log']) . '</pre>';
+                } else {
+                    echo View::e(substr($details, 0, 300));
+                }
+              ?>
             </td>
             <td style="white-space:nowrap;"><?php echo View::e((string)($a['created_at'] ?? '')); ?></td>
           </tr>
