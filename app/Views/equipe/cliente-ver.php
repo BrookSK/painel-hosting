@@ -143,20 +143,21 @@ if (count($nomePartes) >= 2) {
   <!-- Assinar plano -->
   <?php if (!empty($planos)): ?>
   <div class="card-new">
-    <div class="card-new-title"><?php echo View::e(I18n::t('eq_cliente.assinar_plano')); ?></div>
-    <form method="POST" action="/equipe/clientes/assinar-plano" style="margin-top:12px;">
+    <div class="card-new-title">🎁 Dar plano grátis</div>
+    <p style="font-size:12px;color:#64748b;margin-bottom:10px;">Atribui um plano ao cliente sem cobrança. Cria a VPS e a assinatura como ativa.</p>
+    <form method="POST" action="/equipe/clientes/assinar-plano" style="margin-top:8px;" onsubmit="return confirm('Dar este plano gratuitamente para o cliente?')">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
       <input type="hidden" name="client_id" value="<?php echo (int)$cliente['id']; ?>" />
       <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_cliente.plano')); ?></label>
       <select name="plan_id" class="input" required style="margin-bottom:10px;">
-        <option value="">Selecione...</option>
+        <option value="">Selecione o plano...</option>
         <?php foreach ($planos as $pl): ?>
           <option value="<?php echo (int)$pl['id']; ?>">
-            <?php echo View::e((string)$pl['name']); ?> — <?php echo View::e(I18n::preco((float)$pl['price_monthly'])); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?>
+            <?php echo View::e((string)$pl['name']); ?> — <?php echo (int)($pl['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($pl['ram'] ?? 0) / 1024); ?>GB RAM / <?php echo round((int)($pl['storage'] ?? 0) / 1024); ?>GB SSD — <?php echo View::e(I18n::preco((float)$pl['price_monthly'])); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?>
           </option>
         <?php endforeach; ?>
       </select>
-      <button type="submit" class="botao" style="width:100%;"><?php echo View::e(I18n::t('eq_cliente.assinar')); ?></button>
+      <button type="submit" class="botao" style="width:100%;background:#16a34a;">🎁 Dar plano grátis</button>
     </form>
   </div>
   <?php endif; ?>

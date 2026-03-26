@@ -196,26 +196,58 @@ final class ClientesController
         $planoId   = (int)($req->post['plan_id'] ?? 0);
 
         if ($clienteId <= 0 || $planoId <= 0) {
-            return Resposta::json(['ok' => false, 'erro' => 'Dados inválidos.'], 400);
+            return Resposta::texto('Dados inválidos.', 400);
         }
 
         $pdo = BancoDeDados::pdo();
 
         $c = $pdo->prepare('SELECT id FROM clients WHERE id = :id');
         $c->execute([':id' => $clienteId]);
-        if (!$c->fetch()) return Resposta::json(['ok' => false, 'erro' => 'Cliente não encontrado.'], 404);
+        if (!$c->fetch()) return Resposta::texto('Cliente não encontrado.', 404);
 
-        $p = $pdo->prepare('SELECT id FROM plans WHERE id = :id AND active = 1');
+        $p = $pdo->prepare("SELECT id, name, cpu, ram, storage FROM plans WHERE id = :id AND status = 'active'");
         $p->execute([':id' => $planoId]);
-        if (!$p->fetch()) return Resposta::json(['ok' => false, 'erro' => 'Plano inválido.'], 404);
+        $plano = $p->fetch();
+        if (!is_array($plano)) return Resposta::texto('Plano inválido.', 404);
 
-        $pdo->prepare(
-            'INSERT INTO subscriptions (client_id, plan_id, status, created_at) VALUES (:c, :p, :s, :dt)'
-        )->execute([':c' => $clienteId, ':p' => $planoId, ':s' => 'active', ':dt' => date('Y-m-d H:i:s')]);
+        $agora = date('Y-m-d H:i:s');
+
+        $pdo->beginTransaction();
+        try {
+            // Criar VPS
+            $insVps = $pdo->prepare('INSERT INTO vps (client_id, server_id, container_id, cpu, ram, storage, status, created_at, plan_id) VALUES (:c, NULL, NULL, :cpu, :ram, :st, :s, :cr, :pid)');
+            $insVps->execute([
+                ':c'   => $clienteId,
+                ':cpu' => (int)$plano['cpu'],
+                ':ram' => (int)$plano['ram'],
+                ':st'  => (int)$plano['storage'],
+                ':s'   => 'pending_provisioning',
+                ':cr'  => $agora,
+                ':pid' => $planoId,
+            ]);
+            $vpsId = (int)$pdo->lastInsertId();
+
+            // Criar assinatura gratuita (status active, sem gateway)
+            $insSub = $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, status, next_due_date, created_at) VALUES (:c, :v, :p, :s, :n, :cr)');
+            $insSub->execute([
+                ':c'  => $clienteId,
+                ':v'  => $vpsId,
+                ':p'  => $planoId,
+                ':s'  => 'active',
+                ':n'  => null,
+                ':cr' => $agora,
+            ]);
+            $subId = (int)$pdo->lastInsertId();
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            return Resposta::texto('Erro ao dar plano: ' . $e->getMessage(), 500);
+        }
 
         (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
-            'client.subscribe', 'subscription', (int)$pdo->lastInsertId(),
-            ['client_id' => $clienteId, 'plan_id' => $planoId], $req);
+            'client.grant_plan', 'subscription', $subId,
+            ['client_id' => $clienteId, 'plan_id' => $planoId, 'vps_id' => $vpsId, 'free' => true], $req);
 
         return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&ok=assinatura_criada');
     }
@@ -224,9 +256,14 @@ final class ClientesController
     private function planos(): array
     {
         try {
-            $s = BancoDeDados::pdo()->query('SELECT id, name, price_monthly FROM plans WHERE active = 1 ORDER BY price_monthly ASC');
+            $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
             return $s->fetchAll() ?: [];
-        } catch (\Throwable) { return []; }
+        } catch (\Throwable) {
+            try {
+                $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE active = 1 ORDER BY price_monthly ASC");
+                return $s->fetchAll() ?: [];
+            } catch (\Throwable) { return []; }
+        }
     }
 
     private function renderErro(int $id, string $nome, string $email, string $phone, string $cpf, string $erro): Resposta
