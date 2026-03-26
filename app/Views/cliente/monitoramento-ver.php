@@ -15,7 +15,13 @@ foreach (array_slice($metricasArr, -30) as $m) {
     $diskData[] = round((float)($m['disk_usage'] ?? 0), 2);
 }
 $ultima     = !empty($metricasArr) ? end($metricasArr) : null;
+$fullTimestamps = [];
+foreach (array_slice($metricasArr, -30) as $m) {
+    if (!is_array($m)) continue;
+    $fullTimestamps[] = (string)($m['timestamp'] ?? '');
+}
 $labelsJson = json_encode($labels, JSON_UNESCAPED_UNICODE);
+$fullTsJson = json_encode($fullTimestamps, JSON_UNESCAPED_UNICODE);
 $cpuJson    = json_encode($cpuData);
 $ramJson    = json_encode($ramData);
 $diskJson   = json_encode($diskData);
@@ -124,10 +130,26 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <script>
 (function(){
   var labels=<?php echo $labelsJson; ?>;
+  var fullTs=<?php echo $fullTsJson; ?>;
   var cpu=<?php echo $cpuJson; ?>;
   var ram=<?php echo $ramJson; ?>;
   var disk=<?php echo $diskJson; ?>;
-  var opts={plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'#f1f5f9'},ticks:{callback:function(v){return v+'%';},font:{size:11}}},x:{ticks:{maxTicksLimit:8,font:{size:11}},grid:{display:false}}},animation:{duration:300}};
+  var opts={
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          title:function(ctx){return fullTs[ctx[0].dataIndex]||labels[ctx[0].dataIndex]||'';},
+          label:function(ctx){return ctx.parsed.y.toFixed(1)+'%';}
+        }
+      }
+    },
+    scales:{
+      y:{min:0,max:100,grid:{color:'#f1f5f9'},ticks:{callback:function(v){return v+'%';},font:{size:11}}},
+      x:{ticks:{maxTicksLimit:8,font:{size:11}},grid:{display:false}}
+    },
+    animation:{duration:300}
+  };
   function mkChart(id,data,color){
     var ctx=document.getElementById(id);
     if(!ctx)return;

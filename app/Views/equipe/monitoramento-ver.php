@@ -9,12 +9,14 @@ $total = count($metricas);
 $metricas = array_reverse($metricas);
 
 $labels = [];
+$fullTimestamps = [];
 $cpuData = [];
 $ramData = [];
 $diskData = [];
 foreach ($metricas as $m) {
     $ts = (string)($m['timestamp'] ?? '');
     $labels[] = substr($ts, 11, 5); // HH:MM
+    $fullTimestamps[] = $ts;
     $cpuData[] = round((float)($m['cpu_usage'] ?? 0), 1);
     $ramData[] = round((float)($m['ram_usage'] ?? 0), 1);
     $diskData[] = round((float)($m['disk_usage'] ?? 0), 1);
@@ -106,11 +108,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
 <script>
 var labels=<?php echo json_encode($labels); ?>;
+var fullTs=<?php echo json_encode($fullTimestamps); ?>;
 var cpuD=<?php echo json_encode($cpuData); ?>;
 var ramD=<?php echo json_encode($ramData); ?>;
 var diskD=<?php echo json_encode($diskData); ?>;
 
-function drawChart(canvasId,data,color){
+var chartInstances={};
+
+function drawChart(canvasId,data,color,unit){
   var c=document.getElementById(canvasId);if(!c)return;
   var ctx=c.getContext('2d');
   var dpr=window.devicePixelRatio||1;
@@ -129,12 +134,14 @@ function drawChart(canvasId,data,color){
     ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
     ctx.fillText(Math.round(maxV*i/4)+'%',pad.l-6,y+4);
   }
-  // X labels
+  // X labels — garantir que não ultrapasse o array
   ctx.textAlign='center';ctx.fillStyle='#94a3b8';
   var step=Math.max(1,Math.floor(n/8));
   for(var i=0;i<n;i+=step){
-    var x=pad.l+gW*i/(n-1);
-    ctx.fillText(labels[i],x,H-6);
+    if(i<labels.length){
+      var x=pad.l+gW*i/(n-1);
+      ctx.fillText(labels[i]||'',x,H-6);
+    }
   }
   // Line
   ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';
@@ -147,11 +154,81 @@ function drawChart(canvasId,data,color){
   // Fill
   ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
   ctx.fillStyle=color.replace(')',',0.08)').replace('rgb','rgba');ctx.fill();
+
+  // Guardar metadados para tooltip
+  chartInstances[canvasId]={data:data,color:color,unit:unit||'%',pad:pad,gW:gW,gH:gH,maxV:maxV,n:n,W:W,H:H};
 }
-drawChart('chartCpu',cpuD,'rgb(79,70,229)');
-drawChart('chartRam',ramD,'rgb(16,185,129)');
-drawChart('chartDisk',diskD,'rgb(245,158,11)');
-window.addEventListener('resize',function(){drawChart('chartCpu',cpuD,'rgb(79,70,229)');drawChart('chartRam',ramD,'rgb(16,185,129)');drawChart('chartDisk',diskD,'rgb(245,158,11)');});
+
+// Tooltip
+var tooltip=document.createElement('div');
+tooltip.style.cssText='position:fixed;pointer-events:none;background:#1e293b;color:#fff;font-size:12px;padding:8px 12px;border-radius:6px;display:none;z-index:9999;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,.15);';
+document.body.appendChild(tooltip);
+
+function handleChartHover(e){
+  var c=e.target;
+  var info=chartInstances[c.id];
+  if(!info)return;
+  var rect=c.getBoundingClientRect();
+  var mx=e.clientX-rect.left;
+  var my=e.clientY-rect.top;
+  var p=info.pad;
+  // Verificar se está na área do gráfico
+  if(mx<p.l||mx>p.l+info.gW||my<p.t||my>p.t+info.gH){
+    tooltip.style.display='none';return;
+  }
+  // Encontrar ponto mais próximo
+  var idx=Math.round((mx-p.l)/info.gW*(info.n-1));
+  if(idx<0)idx=0;if(idx>=info.n)idx=info.n-1;
+  var val=info.data[idx];
+  var ts=fullTs[idx]||'';
+  // Posição do ponto
+  var px=p.l+info.gW*idx/(info.n-1);
+  var py=p.t+info.gH-info.gH*(val/info.maxV);
+  // Desenhar indicador (redesenhar gráfico + ponto)
+  drawChart(c.id,info.data,info.color,info.unit);
+  var ctx=c.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  ctx.save();ctx.scale(dpr,dpr);
+  // Linha vertical
+  ctx.beginPath();ctx.strokeStyle='rgba(148,163,184,0.4)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.moveTo(px,p.t);ctx.lineTo(px,p.t+info.gH);ctx.stroke();ctx.setLineDash([]);
+  // Ponto
+  ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fillStyle=info.color;ctx.fill();
+  ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  ctx.restore();
+  // Tooltip
+  tooltip.innerHTML='<div style="font-weight:600;margin-bottom:2px;">'+ts+'</div><div>'+val.toFixed(1)+info.unit+'</div>';
+  tooltip.style.display='block';
+  var tx=e.clientX+14;var ty=e.clientY-50;
+  if(tx+160>window.innerWidth)tx=e.clientX-160;
+  if(ty<0)ty=e.clientY+14;
+  tooltip.style.left=tx+'px';tooltip.style.top=ty+'px';
+}
+
+function handleChartLeave(e){
+  var c=e.target;var info=chartInstances[c.id];
+  if(!info)return;
+  tooltip.style.display='none';
+  drawChart(c.id,info.data,info.color,info.unit);
+}
+
+drawChart('chartCpu',cpuD,'rgb(79,70,229)','%');
+drawChart('chartRam',ramD,'rgb(16,185,129)','%');
+drawChart('chartDisk',diskD,'rgb(245,158,11)','%');
+
+['chartCpu','chartRam','chartDisk'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.cursor='crosshair';
+  el.addEventListener('mousemove',handleChartHover);
+  el.addEventListener('mouseleave',handleChartLeave);
+});
+
+window.addEventListener('resize',function(){
+  drawChart('chartCpu',cpuD,'rgb(79,70,229)','%');
+  drawChart('chartRam',ramD,'rgb(16,185,129)','%');
+  drawChart('chartDisk',diskD,'rgb(245,158,11)','%');
+});
 </script>
 
 <?php else: ?>
