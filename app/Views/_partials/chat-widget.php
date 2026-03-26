@@ -118,7 +118,7 @@ if ($_cwWsUrl === '') {
   background:#fff;border-radius:18px;
   box-shadow:0 16px 56px rgba(15,23,42,.2);
   display:none;flex-direction:column;
-  max-height:500px;overflow:hidden;
+  max-height:580px;overflow:hidden;
   font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
   font-size:14px;color:#0f172a;
 }
@@ -160,10 +160,10 @@ if ($_cwWsUrl === '') {
 }
 .cw-msg-img{max-width:180px;border-radius:8px;margin-top:4px;cursor:pointer;}
 .cw-msg-file{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:12px;margin-top:4px;text-decoration:none;color:inherit;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);}
-.cw-opts{display:flex;flex-direction:column;gap:7px;padding:0 0 4px;}
+.cw-opts{display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;}
 .cw-opt{
   background:#f8fafc;border:1.5px solid #e2e8f0;
-  border-radius:11px;padding:9px 13px;
+  border-radius:11px;padding:12px 14px;
   font-size:13px;font-weight:600;color:#0f172a;
   cursor:pointer;text-align:left;
   transition:border-color .15s,background .15s;
@@ -467,7 +467,7 @@ document.getElementById('cw-live-upload-cancel').addEventListener('click',functi
 function isImgUrl(u){return /\.(png|jpe?g|gif|webp)$/i.test(u||'');}
 function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-var liveLastDate='';
+var liveLastDate='',liveRenderedIds={};
 function liveDaySep(ts){
   if(!ts)return;
   var d=ts.substring(0,10);
@@ -480,11 +480,16 @@ function liveDaySep(ts){
   liveMsgs.appendChild(sep);
 }
 
+var liveLastSender='';
 function addLiveMsg(type,txt,ts,fileUrl,fileName,senderName){
   liveDaySep(ts);
   var d=document.createElement('div');
   d.className=type==='client'?'cw-umsg':'cw-bmsg';
-  if(type==='admin'&&senderName){var nm=document.createElement('div');nm.style.cssText='font-size:10px;font-weight:600;opacity:.7;margin-bottom:2px;';nm.textContent=senderName;d.appendChild(nm);}
+  // Show agent name only when sender changes
+  if(type==='admin'&&senderName&&senderName!==liveLastSender){
+    var nm=document.createElement('div');nm.style.cssText='font-size:10px;font-weight:600;opacity:.7;margin-bottom:2px;';nm.textContent=senderName;d.appendChild(nm);
+  }
+  liveLastSender=type==='admin'?(senderName||''):'';
   if(txt){var sp=document.createElement('span');sp.innerHTML=escH(txt);d.appendChild(sp);}
   if(fileUrl){
     if(isImgUrl(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='cw-msg-img';img.alt=fileName||'';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});d.appendChild(img);}
@@ -497,6 +502,8 @@ function addLiveMsg(type,txt,ts,fileUrl,fileName,senderName){
 function liveLoadMsgs(msgs){
   (msgs||[]).forEach(function(m){
     var id=parseInt(m.id)||0;
+    if(id>0 && liveRenderedIds[id]) return;
+    if(id>0) liveRenderedIds[id]=true;
     if(id>liveLastId)liveLastId=id;
     addLiveMsg(m.sender_type,m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);
   });
@@ -541,7 +548,7 @@ function tryWsLive(ctx){
     };
     liveWs.onmessage=function(e){
       try{var m=JSON.parse(e.data);
-        if(m.type==='history'){liveMsgs.innerHTML='';liveLastId=0;liveLastDate='';liveLoadMsgs(m.messages);}
+        if(m.type==='history'){liveMsgs.innerHTML='';liveLastId=0;liveLastDate='';liveRenderedIds={};liveLastSender='';liveLoadMsgs(m.messages);}
         else if(m.type==='message'||m.type==='system'){var id=parseInt(m.id)||0;if(id>liveLastId)liveLastId=id;addLiveMsg(m.sender_type||'system',m.message,m.created_at,m.file_url,m.file_name,m.sender_name||null);}
       }catch(err){}
     };
@@ -574,7 +581,15 @@ function doLivePoll(){
 
 function connectLive(ctx){
   if(!LOGADO)return;
-  tryWsLive(ctx);
+  // Load existing chat history first
+  liveMsgs.innerHTML='';liveLastId=0;liveLastDate='';liveRenderedIds={};liveLastSender='';
+  fetch('/cliente/chat/historico').then(function(r){return r.json();}).then(function(d){
+    if(d.ok && d.messages && d.messages.length > 0){
+      liveLoadMsgs(d.messages);
+      if(d.room_id) liveRoomId = d.room_id;
+    }
+    tryWsLive(ctx);
+  }).catch(function(){ tryWsLive(ctx); });
 }
 
 function sendLive(){
