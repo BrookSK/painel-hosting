@@ -239,8 +239,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <li>Acesse o servidor via SSH como root</li>
     <li>Instale o Docker: <code>curl -fsSL https://get.docker.com | sh</code></li>
     <li>Clone o Mailcow: <code>cd /opt && git clone https://github.com/mailcow/mailcow-dockerized && cd mailcow-dockerized</code></li>
-    <li>Gere a config: <code>./generate_config.sh</code> — informe o hostname (ex: <code>correio.seudominio.com</code>), timezone <code>America/Sao_Paulo</code>, branch <code>master</code></li>
-    <li>Suba os containers: <code>docker compose pull && docker compose up -d</code></li>
+    <li>Gere a config: <code>cd /opt/mailcow-dockerized && ./generate_config.sh</code> — informe o hostname (ex: <code>correio.seudominio.com</code>), timezone <code>America/Sao_Paulo</code>, branch <code>1</code> (master)</li>
+    <li>Suba os containers: <code>cd /opt/mailcow-dockerized && docker compose pull && docker compose up -d</code></li>
     <li>Acesse <code>https://correio.seudominio.com</code> — login padrão: <code>admin</code> / <code>moohoo</code></li>
     <li>Troque a senha do admin imediatamente</li>
     <li>Vá em Sistema → Configuração → Acesso → API: ative a API Read-Write e copie a chave</li>
