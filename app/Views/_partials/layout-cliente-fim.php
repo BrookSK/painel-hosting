@@ -7,8 +7,16 @@
 <script>
 (function(){
   var s = document.getElementById('appShell');
+  var toggle = document.getElementById('sidebarToggle');
   if (s && localStorage.getItem('lrv_cli_sidebar_collapsed') === '1') {
     s.classList.add('collapsed');
+  }
+  if (toggle && s) {
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      s.classList.toggle('collapsed');
+      localStorage.setItem('lrv_cli_sidebar_collapsed', s.classList.contains('collapsed') ? '1' : '0');
+    });
   }
 })();
 

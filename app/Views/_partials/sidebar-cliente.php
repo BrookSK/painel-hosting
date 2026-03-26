@@ -29,8 +29,7 @@ function _nav_ativo_cli(string $path, string $uri): string {
       </div>
       <span class="sidebar-logo-text"><?php echo View::e(SistemaConfig::nome()); ?></span>
     <?php endif; ?>
-    <button class="sidebar-toggle" id="sidebarToggle" title="<?php echo View::e(I18n::t('geral.recolher_menu')); ?>" aria-label="<?php echo View::e(I18n::t('geral.recolher_menu')); ?>"
-      onclick="(function(){var s=document.getElementById('appShell');if(s){s.classList.toggle('collapsed');localStorage.setItem('lrv_cli_sidebar_collapsed',s.classList.contains('collapsed')?'1':'0');}})()">
+    <button class="sidebar-toggle" id="sidebarToggle" title="<?php echo View::e(I18n::t('geral.recolher_menu')); ?>" aria-label="<?php echo View::e(I18n::t('geral.recolher_menu')); ?>">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
