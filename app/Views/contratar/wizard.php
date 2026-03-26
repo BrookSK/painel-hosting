@@ -63,13 +63,13 @@ $moedaJs = I18n::moedaCodigo();
 <?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
 
 <div class="wz-steps" id="stepsBar">
-  <div class="wz-step active" data-s="0"><div class="wz-step-dot">1</div><span>Plano</span></div>
+  <div class="wz-step active" data-s="0"><div class="wz-step-dot">1</div><span><?php echo View::e(I18n::t('wz.step_plano')); ?></span></div>
   <div class="wz-line"></div>
-  <div class="wz-step" data-s="1"><div class="wz-step-dot">2</div><span>Configuração</span></div>
+  <div class="wz-step" data-s="1"><div class="wz-step-dot">2</div><span><?php echo View::e(I18n::t('wz.step_config')); ?></span></div>
   <div class="wz-line"></div>
-  <div class="wz-step" data-s="2"><div class="wz-step-dot">3</div><span>Dados pessoais</span></div>
+  <div class="wz-step" data-s="2"><div class="wz-step-dot">3</div><span><?php echo View::e(I18n::t('wz.step_dados')); ?></span></div>
   <div class="wz-line"></div>
-  <div class="wz-step" data-s="3"><div class="wz-step-dot">4</div><span>Pagamento</span></div>
+  <div class="wz-step" data-s="3"><div class="wz-step-dot">4</div><span><?php echo View::e(I18n::t('wz.step_pagamento')); ?></span></div>
 </div>
 
 <div class="conteudo" style="max-width:860px;">
@@ -88,18 +88,18 @@ $moedaJs = I18n::moedaCodigo();
       <?php echo View::e(I18n::preco($preco)); ?><span style="font-size:14px;font-weight:400;color:#64748b;">/mês</span>
     </div>
     <ul class="texto" style="padding-left:18px;margin:16px 0;line-height:2.2;">
-      <li>Servidor VPS dedicado com recursos garantidos</li>
-      <li>Painel de controle completo</li>
-      <li>Backups automáticos</li>
-      <li>Monitoramento 24/7</li>
-      <li>Suporte técnico incluso</li>
+      <li><?php echo View::e(I18n::t('wz.vps_dedicado')); ?></li>
+      <li><?php echo View::e(I18n::t('wz.painel_completo')); ?></li>
+      <li><?php echo View::e(I18n::t('wz.backups_auto')); ?></li>
+      <li><?php echo View::e(I18n::t('wz.monitoramento_24')); ?></li>
+      <li><?php echo View::e(I18n::t('wz.suporte_incluso')); ?></li>
     </ul>
-    <button class="botao" style="width:100%;justify-content:center;font-size:15px;padding:14px;" onclick="irPasso(1)">Continuar com este plano</button>
+    <button class="botao" style="width:100%;justify-content:center;font-size:15px;padding:14px;" onclick="irPasso(1)"><?php echo View::e(I18n::t('wz.continuar_plano')); ?></button>
   </div>
 
   <?php if ($upsell): ?>
   <div class="card upsell-card" style="margin-top:8px;">
-    <div class="upsell-badge">⭐ Recomendado</div>
+    <div class="upsell-badge"><?php echo View::e(I18n::t('wz.recomendado')); ?></div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:6px;">
       <div>
         <div class="titulo" style="font-size:18px;margin-bottom:4px;"><?php echo View::e((string)($upsell['name'] ?? '')); ?></div>
@@ -112,7 +112,7 @@ $moedaJs = I18n::moedaCodigo();
       </div>
       <div style="text-align:right;">
         <div style="font-size:22px;font-weight:800;color:#4F46E5;"><?php echo View::e(I18n::preco((float)($upsell['price_monthly'] ?? 0))); ?><span style="font-size:12px;font-weight:400;color:#64748b;">/mês</span></div>
-        <a href="/contratar?plan_id=<?php echo (int)($upsell['id'] ?? 0); ?>" class="botao sm" style="margin-top:8px;">Escolher este</a>
+        <a href="/contratar?plan_id=<?php echo (int)($upsell['id'] ?? 0); ?>" class="botao sm" style="margin-top:8px;"><?php echo View::e(I18n::t('wz.escolher_este')); ?></a>
       </div>
     </div>
   </div>
@@ -122,8 +122,8 @@ $moedaJs = I18n::moedaCodigo();
 <!-- ═══ STEP 1: Configuração ═══ -->
 <div class="wz-panel" id="step1">
   <div class="card">
-    <div class="titulo" style="font-size:18px;">Configuração da VPS</div>
-    <p class="texto">Seu plano <strong><?php echo View::e((string)($plano['name'] ?? '')); ?></strong> inclui:</p>
+    <div class="titulo" style="font-size:18px;"><?php echo View::e(I18n::t('wz.config_vps')); ?></div>
+    <p class="texto"><?php echo View::e(I18n::tf('wz.plano_inclui', (string)($plano['name'] ?? ''))); ?></p>
     <div class="grid-3" style="margin-top:12px;margin-bottom:8px;">
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center;">
         <div style="font-size:24px;font-weight:800;color:#4F46E5;"><?php echo $cpu; ?></div>
@@ -141,8 +141,8 @@ $moedaJs = I18n::moedaCodigo();
   </div>
 
   <div class="card">
-    <div class="subtitulo">Quantidade de servidores</div>
-    <p class="texto" style="font-size:13px;">Cada servidor é uma VPS independente com os recursos do plano.</p>
+    <div class="subtitulo"><?php echo View::e(I18n::t('wz.qtd_servidores')); ?></div>
+    <p class="texto" style="font-size:13px;"><?php echo View::e(I18n::t('wz.qtd_desc')); ?></p>
     <div class="linha" style="gap:12px;margin-top:8px;">
       <button class="botao ghost sm" onclick="alterarQtd(-1)" style="width:40px;padding:8px 0;justify-content:center;font-size:18px;">−</button>
       <input type="number" id="qtdServidores" value="1" min="1" max="20" class="input" style="width:70px;text-align:center;font-size:18px;font-weight:700;" onchange="atualizarResumo()"/>
@@ -151,24 +151,24 @@ $moedaJs = I18n::moedaCodigo();
   </div>
 
   <div class="card">
-    <div class="subtitulo">Período de contratação</div>
+    <div class="subtitulo"><?php echo View::e(I18n::t('wz.periodo')); ?></div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
       <div class="periodo-opt sel" data-periodo="1" onclick="selPeriodo(1)">
-        <div><strong>Mensal</strong><br><span style="font-size:12px;color:#64748b;">Sem compromisso</span></div>
+        <div><strong><?php echo View::e(I18n::t('wz.mensal')); ?></strong><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.sem_compromisso')); ?></span></div>
         <div style="text-align:right;">
-          <div style="font-weight:700;"><?php echo View::e(I18n::preco($preco)); ?>/mês</div>
-          <div style="font-size:11px;color:#94a3b8;">Cobrado <?php echo View::e(I18n::preco($preco)); ?></div>
+          <div style="font-weight:700;"><?php echo View::e(I18n::preco($preco)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></div>
+          <div style="font-size:11px;color:#94a3b8;"><?php echo View::e(I18n::t('wz.cobrado')); ?> <?php echo View::e(I18n::preco($preco)); ?></div>
         </div>
       </div>
       <div class="periodo-opt" data-periodo="6" onclick="selPeriodo(6)">
-        <div><strong>Semestral</strong> <span class="desc-badge"><?php echo $d6; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;">Cobrado a cada 6 meses</span></div>
+        <div><strong><?php echo View::e(I18n::t('wz.semestral')); ?></strong> <span class="desc-badge"><?php echo $d6; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.cobrado_6m')); ?></span></div>
         <div style="text-align:right;">
           <div style="font-weight:700;" id="preco6m"></div>
           <div style="font-size:11px;color:#94a3b8;" id="cobrado6m"></div>
         </div>
       </div>
       <div class="periodo-opt" data-periodo="12" onclick="selPeriodo(12)">
-        <div><strong>Anual</strong> <span class="desc-badge"><?php echo $d12; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;">Cobrado anualmente</span></div>
+        <div><strong><?php echo View::e(I18n::t('wz.anual')); ?></strong> <span class="desc-badge"><?php echo $d12; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.cobrado_anual')); ?></span></div>
         <div style="text-align:right;">
           <div style="font-weight:700;" id="preco12m"></div>
           <div style="font-size:11px;color:#94a3b8;" id="cobrado12m"></div>
@@ -179,8 +179,8 @@ $moedaJs = I18n::moedaCodigo();
 
   <?php if (!empty($addons)): ?>
   <div class="card">
-    <div class="subtitulo">Serviços adicionais</div>
-    <p class="texto" style="font-size:13px;">Opcionais para complementar sua VPS.</p>
+    <div class="subtitulo"><?php echo View::e(I18n::t('wz.addons')); ?></div>
+    <p class="texto" style="font-size:13px;"><?php echo View::e(I18n::t('wz.addons_desc')); ?></p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
       <?php
         $preAddons = is_array($pre_addons ?? null) ? $pre_addons : [];
@@ -205,40 +205,40 @@ $moedaJs = I18n::moedaCodigo();
   <?php endif; ?>
 
   <div class="card" style="background:#f8fafc;">
-    <div class="subtitulo">Resumo</div>
+    <div class="subtitulo"><?php echo View::e(I18n::t('wz.resumo')); ?></div>
     <div id="resumoConfig" style="font-size:14px;line-height:2;"></div>
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:8px;display:flex;justify-content:space-between;font-size:20px;font-weight:800;">
-      <span>Total</span>
+      <span><?php echo View::e(I18n::t('wz.total')); ?></span>
       <span id="resumoTotal" style="color:#4F46E5;"></span>
     </div>
   </div>
 
   <div class="linha" style="gap:8px;margin-top:16px;">
-    <button class="botao ghost" onclick="irPasso(0)">← Voltar</button>
-    <button class="botao" style="flex:1;justify-content:center;" onclick="avancarStep1()">Próximo</button>
+    <button class="botao ghost" onclick="irPasso(0)"><?php echo View::e(I18n::t('wz.voltar')); ?></button>
+    <button class="botao" style="flex:1;justify-content:center;" onclick="avancarStep1()"><?php echo View::e(I18n::t('wz.proximo')); ?></button>
   </div>
 </div>
 
 <!-- ═══ STEP 2: Dados pessoais ═══ -->
 <div class="wz-panel" id="step2">
   <div class="card">
-    <div class="titulo" style="font-size:18px;">Crie sua conta</div>
-    <p class="texto">Preencha seus dados para criar sua conta e acessar o painel.</p>
+    <div class="titulo" style="font-size:18px;"><?php echo View::e(I18n::t('wz.crie_conta')); ?></div>
+    <p class="texto"><?php echo View::e(I18n::t('wz.crie_conta_desc')); ?></p>
     <div id="erroConta" class="erro-msg"></div>
     <div class="wz-field">
-      <label class="wz-label">Nome completo *</label>
-      <input class="input" type="text" id="cNome" required placeholder="Seu nome"/>
+      <label class="wz-label"><?php echo View::e(I18n::t('wz.nome_completo')); ?> *</label>
+      <input class="input" type="text" id="cNome" required placeholder="<?php echo View::e(I18n::t('wz.nome_completo')); ?>"/>
     </div>
     <div class="wz-field">
       <label class="wz-label">E-mail *</label>
       <input class="input" type="email" id="cEmail" required placeholder="seu@email.com"/>
     </div>
     <div class="wz-field">
-      <label class="wz-label">CPF ou CNPJ *</label>
+      <label class="wz-label"><?php echo View::e(I18n::t('wz.cpf_cnpj')); ?> *</label>
       <input class="input" type="text" id="cCpf" required placeholder="000.000.000-00" maxlength="18" inputmode="numeric"/>
     </div>
     <div class="wz-field">
-      <label class="wz-label">Celular</label>
+      <label class="wz-label"><?php echo View::e(I18n::t('wz.celular')); ?></label>
       <div class="linha" style="gap:8px;">
         <select class="input" id="cDdi" style="width:110px;flex-shrink:0;">
           <option value="+55">🇧🇷 +55</option>
@@ -262,26 +262,56 @@ $moedaJs = I18n::moedaCodigo();
         <input class="input" type="tel" id="cCelular" placeholder="(11) 99999-0000" style="flex:1;"/>
       </div>
     </div>
+    <div class="linha" style="gap:8px;">
+      <div class="wz-field" style="flex:1;">
+        <label class="wz-label"><?php echo View::e(I18n::t('wz.pais')); ?></label>
+        <select class="input" id="cPais">
+          <option value="BR">🇧🇷 Brasil</option>
+          <option value="US">🇺🇸 United States</option>
+          <option value="PT">🇵🇹 Portugal</option>
+          <option value="ES">🇪🇸 España</option>
+          <option value="AR">🇦🇷 Argentina</option>
+          <option value="CL">🇨🇱 Chile</option>
+          <option value="CO">🇨🇴 Colombia</option>
+          <option value="MX">🇲🇽 México</option>
+          <option value="UY">🇺🇾 Uruguay</option>
+          <option value="PY">🇵🇾 Paraguay</option>
+          <option value="DE">🇩🇪 Deutschland</option>
+          <option value="FR">🇫🇷 France</option>
+          <option value="GB">🇬🇧 United Kingdom</option>
+          <option value="IT">🇮🇹 Italia</option>
+          <option value="JP">🇯🇵 日本</option>
+        </select>
+      </div>
+      <div class="wz-field" style="flex:1;">
+        <label class="wz-label"><?php echo View::e(I18n::t('wz.idioma_preferido')); ?></label>
+        <select class="input" id="cIdioma">
+          <option value="pt-BR" <?php echo I18n::idioma() === 'pt-BR' ? 'selected' : ''; ?>>🇧🇷 Português</option>
+          <option value="en-US" <?php echo I18n::idioma() === 'en-US' ? 'selected' : ''; ?>>🇺🇸 English</option>
+          <option value="es-ES" <?php echo I18n::idioma() === 'es-ES' ? 'selected' : ''; ?>>🇪🇸 Español</option>
+        </select>
+      </div>
+    </div>
     <div class="wz-field">
-      <label class="wz-label">Senha * <span style="font-size:11px;color:#94a3b8;">(mínimo 8 caracteres)</span></label>
+      <label class="wz-label"><?php echo View::e(I18n::t('wz.senha')); ?> * <span style="font-size:11px;color:#94a3b8;">(<?php echo View::e(I18n::t('wz.senha_min')); ?>)</span></label>
       <input class="input" type="password" id="cSenha" required minlength="8" placeholder="••••••••"/>
     </div>
     <div class="wz-field">
-      <label class="wz-label">Confirmar senha *</label>
+      <label class="wz-label"><?php echo View::e(I18n::t('wz.confirmar_senha')); ?> *</label>
       <input class="input" type="password" id="cSenha2" required minlength="8" placeholder="••••••••"/>
     </div>
   </div>
   <div class="linha" style="gap:8px;margin-top:16px;">
-    <button class="botao ghost" onclick="irPasso(1)">← Voltar</button>
-    <button class="botao" style="flex:1;justify-content:center;" onclick="avancarStep2()">Próximo</button>
+    <button class="botao ghost" onclick="irPasso(1)"><?php echo View::e(I18n::t('wz.voltar')); ?></button>
+    <button class="botao" style="flex:1;justify-content:center;" onclick="avancarStep2()"><?php echo View::e(I18n::t('wz.proximo')); ?></button>
   </div>
 </div>
 
 <!-- ═══ STEP 3: Pagamento ═══ -->
 <div class="wz-panel" id="step3">
   <div class="card">
-    <div class="titulo" style="font-size:18px;">Forma de pagamento</div>
-    <p class="texto">Escolha como deseja pagar sua assinatura.</p>
+    <div class="titulo" style="font-size:18px;"><?php echo View::e(I18n::t('wz.forma_pagamento')); ?></div>
+    <p class="texto"><?php echo View::e(I18n::t('wz.forma_pagamento_desc')); ?></p>
     <div id="erroPayment" class="erro-msg"></div>
     <?php if ($isBrl): ?>
     <div class="linha" style="gap:8px;">
@@ -292,16 +322,16 @@ $moedaJs = I18n::moedaCodigo();
     <!-- Campos cartão de crédito -->
     <div id="ccFields" style="display:none;margin-top:16px;">
       <div class="wz-field">
-        <label class="wz-label">Nome no cartão *</label>
+        <label class="wz-label"><?php echo View::e(I18n::t('wz.nome_cartao')); ?> *</label>
         <input class="input" type="text" id="ccNome" placeholder="Como está no cartão" autocomplete="cc-name"/>
       </div>
       <div class="wz-field">
-        <label class="wz-label">Número do cartão *</label>
+        <label class="wz-label"><?php echo View::e(I18n::t('wz.numero_cartao')); ?> *</label>
         <input class="input" type="text" id="ccNumero" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric" autocomplete="cc-number"/>
       </div>
       <div class="linha" style="gap:8px;">
         <div class="wz-field" style="flex:1;">
-          <label class="wz-label">Validade *</label>
+          <label class="wz-label"><?php echo View::e(I18n::t('wz.validade')); ?> *</label>
           <input class="input" type="text" id="ccValidade" placeholder="MM/AA" maxlength="5" inputmode="numeric" autocomplete="cc-exp"/>
         </div>
         <div class="wz-field" style="flex:1;">
@@ -318,17 +348,17 @@ $moedaJs = I18n::moedaCodigo();
   </div>
 
   <div class="card" style="background:#f8fafc;">
-    <div class="subtitulo">Resumo do pedido</div>
+    <div class="subtitulo"><?php echo View::e(I18n::t('wz.resumo_pedido')); ?></div>
     <div id="resumoFinal" style="font-size:14px;line-height:2;"></div>
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:8px;display:flex;justify-content:space-between;font-size:20px;font-weight:800;">
-      <span>Total</span>
+      <span><?php echo View::e(I18n::t('wz.total')); ?></span>
       <span id="resumoFinalTotal" style="color:#4F46E5;"></span>
     </div>
   </div>
 
   <div class="linha" style="gap:8px;margin-top:16px;">
-    <button class="botao ghost" onclick="irPasso(2)">← Voltar</button>
-    <button class="botao sec" style="flex:1;justify-content:center;font-size:15px;padding:14px;" id="btnFinalizar" onclick="finalizar()">Finalizar contratação</button>
+    <button class="botao ghost" onclick="irPasso(2)"><?php echo View::e(I18n::t('wz.voltar')); ?></button>
+    <button class="botao sec" style="flex:1;justify-content:center;font-size:15px;padding:14px;" id="btnFinalizar" onclick="finalizar()"><?php echo View::e(I18n::t('wz.finalizar')); ?></button>
   </div>
 </div>
 
@@ -344,7 +374,7 @@ $moedaJs = I18n::moedaCodigo();
       <div class="titulo" style="font-size:18px;" id="upsellTitulo"></div>
       <p class="texto" id="upsellDesc"></p>
       <div class="linha" style="gap:8px;justify-content:center;margin-top:16px;">
-        <button class="botao ghost" onclick="fecharUpsell()">Não, obrigado</button>
+        <button class="botao ghost" onclick="fecharUpsell()"><?php echo View::e(I18n::t('wz.nao_obrigado')); ?></button>
         <button class="botao" id="upsellAceitar" onclick="aceitarUpsell()">Aceitar oferta</button>
       </div>
     </div>
@@ -416,6 +446,23 @@ $moedaJs = I18n::moedaCodigo();
   var csrf=<?php echo json_encode(Csrf::token()); ?>;
   var upsell=<?php echo $upsell ? json_encode(['id'=>(int)$upsell['id'],'name'=>$upsell['name'],'price'=>(float)$upsell['price_monthly']]) : 'null'; ?>;
   var passo=0,periodo=1,gateway=<?php echo json_encode($isBrl?'PIX':'stripe'); ?>,addonsIds=<?php echo json_encode(array_values($preAddons)); ?>;
+  var T=<?php echo json_encode([
+    'mes'=>I18n::t('assinaturas.mes'),'sem'=>'sem','ano'=>'ano',
+    'equiv'=>I18n::t('wz.equiv_mensal'),'cobrado_por'=>I18n::t('wz.cobrado_por'),
+    'com_desc'=>I18n::t('wz.com_desconto'),'desconto'=>I18n::t('wz.desconto'),
+    'aplicado'=>I18n::t('wz.aplicado'),'addons'=>I18n::t('wz.addons'),
+    'finalizar'=>I18n::t('wz.finalizar'),'processando'=>I18n::t('wz.processando'),
+    'erro_campos'=>I18n::t('wz.erro_campos'),'erro_senha_min'=>I18n::t('wz.erro_senha_min'),
+    'erro_senha_diff'=>I18n::t('wz.erro_senha_diff'),'erro_cartao'=>I18n::t('wz.erro_cartao'),
+    'erro_conexao'=>I18n::t('wz.erro_conexao'),'erro_processar'=>I18n::t('wz.erro_processar'),
+    'pix_titulo'=>I18n::t('wz.pix_titulo'),'pix_desc'=>I18n::t('wz.pix_desc'),
+    'pix_copiar'=>I18n::t('wz.pix_copiar'),'pix_copiado'=>I18n::t('wz.pix_copiado'),
+    'boleto_titulo'=>I18n::t('wz.boleto_titulo'),'boleto_desc'=>I18n::t('wz.boleto_desc'),
+    'boleto_copiar'=>I18n::t('wz.boleto_copiar'),'boleto_baixar'=>I18n::t('wz.boleto_baixar'),
+    'ir_assinaturas'=>I18n::t('wz.ir_assinaturas'),
+    'upsell_titulo'=>I18n::t('wz.upsell_desconto'),'upsell_desc_tpl'=>I18n::t('wz.upsell_desc'),
+    'quero_desconto'=>I18n::t('wz.quero_desconto'),'nao_obrigado'=>I18n::t('wz.nao_obrigado'),
+  ]); ?>;
 
   function fmt(v){
     if(moeda==='BRL') return 'R$ '+v.toFixed(2).replace('.',',');
@@ -466,21 +513,21 @@ $moedaJs = I18n::moedaCodigo();
     var addonsMes=addonsTotal*(periodo>1?(periodo===6?(1-d6/100):(1-d12/100)):1);
     var totalMes=(precoUnit+addonsMes)*qtd;
     var totalPeriodo=totalMes*periodo;
-    var perSuffix=periodo===1?'/mês':periodo===6?'/sem':'/ano';
-    var perLabel=periodo===1?'mês':periodo===6?'semestre':'ano';
+    var perSuffix=periodo===1?'/'+T.mes:periodo===6?'/'+T.sem:'/'+T.ano;
+    var perLabel=periodo===1?T.mes:periodo===6?T.sem:T.ano;
 
     var planoPeriodo=precoUnit*qtd*periodo;
     var addonsPeriodo=addonsMes*qtd*periodo;
 
     var html='<div style="display:flex;justify-content:space-between;"><span>'+qtd+'x <?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(planoPeriodo)+perSuffix+'</span></div>';
     if(addonsTotal>0){
-      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>Addons'+( periodo>1?' (c/ desconto)':'' )+'</span><span>+'+fmt(addonsPeriodo)+perSuffix+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+T.addons+( periodo>1?' ('+T.com_desc+')':'' )+'</span><span>+'+fmt(addonsPeriodo)+perSuffix+'</span></div>';
     }
     if(periodo>1){
-      html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>Desconto '+(periodo===6?d6:d12)+'%</span><span>aplicado</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>'+T.desconto+' '+(periodo===6?d6:d12)+'%</span><span>'+T.aplicado+'</span></div>';
     }
-    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;color:#64748b;"><span><b>Equivalente mensal</b></span><span>'+fmt(totalMes)+'/mês</span></div>';
-    html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-top:2px;"><span>Cobrado por '+perLabel+'</span><span>'+fmt(totalPeriodo)+'</span></div>';
+    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;color:#64748b;"><span><b>'+T.equiv+'</b></span><span>'+fmt(totalMes)+'/'+T.mes+'</span></div>';
+    html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-top:2px;"><span>'+T.cobrado_por+' '+perLabel+'</span><span>'+fmt(totalPeriodo)+'</span></div>';
 
     document.getElementById('resumoConfig').innerHTML=html;
     document.getElementById('resumoTotal').textContent=fmt(totalPeriodo);
@@ -501,9 +548,9 @@ $moedaJs = I18n::moedaCodigo();
   var upsellShown=false;
   window.avancarStep1=function(){
     if(!upsellShown&&periodo===1){
-      document.getElementById('upsellTitulo').textContent='Economize '+d12+'% no plano anual!';
-      document.getElementById('upsellDesc').textContent='Contratando o período anual, você paga '+fmt(precoComDesconto(precoBase,12))+'/mês ao invés de '+fmt(precoBase)+'/mês.';
-      document.getElementById('upsellAceitar').textContent='Quero o desconto anual';
+      document.getElementById('upsellTitulo').textContent=T.upsell_titulo.replace('%s',d12);
+      document.getElementById('upsellDesc').textContent=T.upsell_desc_tpl.replace('%s',fmt(precoComDesconto(precoBase,12))).replace('%s',fmt(precoBase));
+      document.getElementById('upsellAceitar').textContent=T.quero_desconto;
       document.getElementById('upsellAceitar').onclick=function(){selPeriodo(12);fecharUpsell();irPasso(2);};
       document.getElementById('modalUpsell').classList.add('show');
       upsellShown=true;return;
@@ -517,9 +564,9 @@ $moedaJs = I18n::moedaCodigo();
     var nome=document.getElementById('cNome').value.trim(),email=document.getElementById('cEmail').value.trim(),
         cpf=document.getElementById('cCpf').value.trim(),senha=document.getElementById('cSenha').value,
         senha2=document.getElementById('cSenha2').value,errEl=document.getElementById('erroConta');
-    if(!nome||!email||!cpf||!senha){errEl.textContent='Preencha todos os campos obrigatórios.';errEl.style.display='block';return;}
-    if(senha.length<8){errEl.textContent='Senha mínima: 8 caracteres.';errEl.style.display='block';return;}
-    if(senha!==senha2){errEl.textContent='As senhas não coincidem.';errEl.style.display='block';return;}
+    if(!nome||!email||!cpf||!senha){errEl.textContent=T.erro_campos;errEl.style.display='block';return;}
+    if(senha.length<8){errEl.textContent=T.erro_senha_min;errEl.style.display='block';return;}
+    if(senha!==senha2){errEl.textContent=T.erro_senha_diff;errEl.style.display='block';return;}
     errEl.style.display='none';atualizarResumo();irPasso(3);
   };
 
@@ -534,11 +581,11 @@ $moedaJs = I18n::moedaCodigo();
       var ccVal=document.getElementById('ccValidade').value.trim();
       var ccCvv=document.getElementById('ccCvv').value.trim();
       if(!ccNome||ccNum.length<13||!ccVal||ccCvv.length<3){
-        errEl.textContent='Preencha todos os dados do cartão de crédito.';errEl.style.display='block';return;
+        errEl.textContent=T.erro_cartao;errEl.style.display='block';return;
       }
     }
 
-    btn.disabled=true;btn.textContent='Processando...';
+    btn.disabled=true;btn.textContent=T.processando;
     var body=new FormData();
     body.append('_csrf',csrf);body.append('plan_id',planId);
     body.append('nome',document.getElementById('cNome').value.trim());
@@ -547,6 +594,8 @@ $moedaJs = I18n::moedaCodigo();
     body.append('ddi',document.getElementById('cDdi').value);
     body.append('celular',document.getElementById('cCelular').value.trim());
     body.append('senha',document.getElementById('cSenha').value);
+    body.append('country',document.getElementById('cPais').value);
+    body.append('preferred_lang',document.getElementById('cIdioma').value);
     body.append('gateway',gateway);body.append('periodo',periodo);
     body.append('quantidade',document.getElementById('qtdServidores').value);
     body.append('addons_ids',addonsIds.join(','));
@@ -565,37 +614,37 @@ $moedaJs = I18n::moedaCodigo();
           // Mostrar PIX inline
           var html='<div class="card" style="text-align:center;padding:28px;">';
           html+='<div style="font-size:32px;margin-bottom:8px;">✅</div>';
-          html+='<div class="titulo" style="font-size:18px;">Conta criada! Pague via PIX</div>';
-          html+='<p class="texto">Escaneie o QR Code ou copie o código abaixo.</p>';
+          html+='<div class="titulo" style="font-size:18px;">'+T.pix_titulo+'</div>';
+          html+='<p class="texto">'+T.pix_desc+'</p>';
           if(data.pix_image) html+='<img src="data:image/png;base64,'+data.pix_image+'" style="max-width:220px;margin:16px auto;display:block;border-radius:12px;"/>';
           if(data.pix_payload){
             html+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all;font-size:12px;font-family:monospace;">'+data.pix_payload+'</div>';
-            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.pix_payload.replace(/'/g,"\\'")+'\');this.textContent=\'Copiado!\'">Copiar código PIX</button>';
+            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.pix_payload.replace(/'/g,"\\'")+'\');this.textContent=\''+T.pix_copiado+'\'">'+T.pix_copiar+'</button>';
           }
-          html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">Ir para minhas assinaturas</a></div>';
+          html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">'+T.ir_assinaturas+'</a></div>';
           html+='</div>';
           document.getElementById('step3').innerHTML=html;
         } else if(data.ok&&data.payment_type==='boleto'){
           // Mostrar Boleto inline
           var html='<div class="card" style="text-align:center;padding:28px;">';
           html+='<div style="font-size:32px;margin-bottom:8px;">✅</div>';
-          html+='<div class="titulo" style="font-size:18px;">Conta criada! Pague o boleto</div>';
-          html+='<p class="texto">Copie a linha digitável ou baixe o boleto.</p>';
+          html+='<div class="titulo" style="font-size:18px;">'+T.boleto_titulo+'</div>';
+          html+='<p class="texto">'+T.boleto_desc+'</p>';
           if(data.boleto_linha){
             html+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all;font-size:13px;font-family:monospace;">'+data.boleto_linha+'</div>';
-            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.boleto_linha.replace(/'/g,"\\'")+'\');this.textContent=\'Copiado!\'">Copiar linha digitável</button>';
+            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.boleto_linha.replace(/'/g,"\\'")+'\');this.textContent=\''+T.pix_copiado+'\'">'+T.boleto_copiar+'</button>';
           }
-          if(data.boleto_url) html+=' <a href="'+data.boleto_url+'" target="_blank" class="botao sm" style="margin-left:8px;">Baixar boleto</a>';
-          html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">Ir para minhas assinaturas</a></div>';
+          if(data.boleto_url) html+=' <a href="'+data.boleto_url+'" target="_blank" class="botao sm" style="margin-left:8px;">'+T.boleto_baixar+'</a>';
+          html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">'+T.ir_assinaturas+'</a></div>';
           html+='</div>';
           document.getElementById('step3').innerHTML=html;
         } else if(data.ok&&data.redirect){
           window.location.href=data.redirect;
         } else{
-          errEl.textContent=data.erro||'Erro ao processar. Tente novamente.';errEl.style.display='block';btn.disabled=false;btn.textContent='Finalizar contratação';
+          errEl.textContent=data.erro||T.erro_processar;errEl.style.display='block';btn.disabled=false;btn.textContent=T.finalizar;
         }
       })
-      .catch(function(){errEl.textContent='Erro de conexão. Tente novamente.';errEl.style.display='block';btn.disabled=false;btn.textContent='Finalizar contratação';});
+      .catch(function(){errEl.textContent=T.erro_conexao;errEl.style.display='block';btn.disabled=false;btn.textContent=T.finalizar;});
   };
 })();
 </script>

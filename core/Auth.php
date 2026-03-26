@@ -80,7 +80,7 @@ final class Auth
     public static function entrarCliente(string $email, string $senha): bool
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, password FROM clients WHERE email = :email LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, password, preferred_lang FROM clients WHERE email = :email LIMIT 1');
         $stmt->execute([':email' => $email]);
         $c = $stmt->fetch();
 
@@ -104,6 +104,20 @@ final class Auth
             $pdo->prepare('UPDATE clients SET last_login_at = :t WHERE id = :id')
                 ->execute([':t' => date('Y-m-d H:i:s'), ':id' => (int) $c['id']]);
         } catch (\Throwable) {}
+
+        // Aplicar idioma preferido do cliente
+        $prefLang = trim((string) ($c['preferred_lang'] ?? ''));
+        if ($prefLang !== '' && in_array($prefLang, ['pt-BR', 'en-US', 'es-ES'], true)) {
+            I18n::definirIdioma($prefLang);
+            if (PHP_SAPI !== 'cli') {
+                setcookie('lang', $prefLang, [
+                    'expires' => time() + 31536000,
+                    'path' => '/',
+                    'httponly' => true,
+                    'samesite' => 'Lax',
+                ]);
+            }
+        }
 
         return true;
     }

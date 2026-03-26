@@ -57,6 +57,8 @@ final class MinhaContaController
         $state  = strtoupper(trim((string)($req->post['address_state'] ?? '')));
         $zip    = preg_replace('/\D/', '', (string)($req->post['address_zip'] ?? ''));
         $country= strtoupper(trim((string)($req->post['address_country'] ?? 'BR')));
+        $clientCountry = strtoupper(trim((string)($req->post['country'] ?? '')));
+        $prefLang = trim((string)($req->post['preferred_lang'] ?? ''));
 
         if ($nome === '') {
             return $this->renderErro($id, 'Nome é obrigatório.');
@@ -66,12 +68,15 @@ final class MinhaContaController
         $pdo->prepare(
             'UPDATE clients SET
                 name=:n, phone=:p, mobile_phone=:m, cpf_cnpj=:c,
+                country=:cc, preferred_lang=:pl,
                 address_street=:st, address_number=:nu, address_complement=:co,
                 address_district=:di, address_city=:ci, address_state=:s,
                 address_zip=:z, address_country=:ct
              WHERE id=:id'
         )->execute([
             ':n' => $nome, ':p' => $phone ?: null, ':m' => $mobile ?: null, ':c' => $cpf ?: null,
+            ':cc' => $clientCountry !== '' ? substr($clientCountry, 0, 2) : null,
+            ':pl' => in_array($prefLang, ['pt-BR', 'en-US', 'es-ES'], true) ? $prefLang : null,
             ':st' => $street ?: null, ':nu' => $number ?: null, ':co' => $comp ?: null,
             ':di' => $dist ?: null, ':ci' => $city ?: null, ':s' => $state ?: null,
             ':z' => $zip ?: null, ':ct' => $country ?: 'BR',

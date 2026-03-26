@@ -78,6 +78,24 @@ if (count($partes) >= 2) {
             <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;">CPF / CNPJ</label>
             <input class="input" type="text" name="cpf_cnpj" value="<?php echo View::e((string)($cliente['cpf_cnpj'] ?? '')); ?>" placeholder="000.000.000-00" />
           </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('wz.pais')); ?></label>
+            <select class="input" name="country">
+              <?php $cc = strtoupper(trim((string)($cliente['country'] ?? 'BR'))); ?>
+              <?php foreach (['BR'=>'🇧🇷 Brasil','US'=>'🇺🇸 United States','PT'=>'🇵🇹 Portugal','ES'=>'🇪🇸 España','AR'=>'🇦🇷 Argentina','CL'=>'🇨🇱 Chile','CO'=>'🇨🇴 Colombia','MX'=>'🇲🇽 México','UY'=>'🇺🇾 Uruguay','PY'=>'🇵🇾 Paraguay','DE'=>'🇩🇪 Deutschland','FR'=>'🇫🇷 France','GB'=>'🇬🇧 United Kingdom','IT'=>'🇮🇹 Italia','JP'=>'🇯🇵 日本'] as $code => $label): ?>
+                <option value="<?php echo $code; ?>" <?php echo $cc === $code ? 'selected' : ''; ?>><?php echo $label; ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:5px;"><?php echo View::e(I18n::t('wz.idioma_preferido')); ?></label>
+            <select class="input" name="preferred_lang">
+              <?php $pl = trim((string)($cliente['preferred_lang'] ?? I18n::idioma())); ?>
+              <option value="pt-BR" <?php echo $pl === 'pt-BR' ? 'selected' : ''; ?>>🇧🇷 Português</option>
+              <option value="en-US" <?php echo $pl === 'en-US' ? 'selected' : ''; ?>>🇺🇸 English</option>
+              <option value="es-ES" <?php echo $pl === 'es-ES' ? 'selected' : ''; ?>>🇪🇸 Español</option>
+            </select>
+          </div>
         </div>
 
         <button type="submit" class="botao"><?php echo View::e(I18n::t('geral.salvar')); ?></button>

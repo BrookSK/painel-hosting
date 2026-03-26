@@ -88,6 +88,8 @@ final class ContratarController
         $periodo    = (int)($req->post['periodo'] ?? 1);
         $quantidade = max(1, (int)($req->post['quantidade'] ?? 1));
         $addonsIds  = trim((string)($req->post['addons_ids'] ?? ''));
+        $country    = trim((string)($req->post['country'] ?? ''));
+        $prefLang   = trim((string)($req->post['preferred_lang'] ?? ''));
 
         if ($in->temErros() || $nome === '' || $email === '' || $senha === '' || $cpfCnpj === '') {
             return Resposta::json(['ok' => false, 'erro' => 'Preencha todos os campos obrigatórios. CPF/CNPJ é obrigatório.'], 422);
@@ -116,12 +118,14 @@ final class ContratarController
         }
 
         try {
-            $ins = $pdo->prepare('INSERT INTO clients (name, email, cpf_cnpj, mobile_phone, password, created_at) VALUES (:n, :e, :cpf, :mph, :p, :c)');
+            $ins = $pdo->prepare('INSERT INTO clients (name, email, cpf_cnpj, mobile_phone, country, preferred_lang, password, created_at) VALUES (:n, :e, :cpf, :mph, :co, :pl, :p, :c)');
             $ins->execute([
                 ':n'   => $nome,
                 ':e'   => $email,
                 ':cpf' => preg_replace('/\D/', '', $cpfCnpj),
                 ':mph' => $mobilePhone !== '' ? $mobilePhone : null,
+                ':co'  => $country !== '' ? strtoupper(substr($country, 0, 2)) : null,
+                ':pl'  => in_array($prefLang, ['pt-BR', 'en-US', 'es-ES'], true) ? $prefLang : null,
                 ':p'   => $hash,
                 ':c'   => $agora,
             ]);
@@ -303,19 +307,26 @@ final class ContratarController
             }
         }
 
-        // Enviar e-mail de boas-vindas
+        // Enviar e-mail de boas-vindas (traduzido)
         try {
+            // Usar idioma preferido do cliente para o e-mail
+            $emailLang = in_array($prefLang, ['pt-BR', 'en-US', 'es-ES'], true) ? $prefLang : \LRV\Core\I18n::idioma();
+            $origLang = \LRV\Core\I18n::idioma();
+            \LRV\Core\I18n::definirIdioma($emailLang);
+
             $mailer = new \LRV\App\Services\Email\SmtpMailer();
             $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();
-            $corpo = '<p style="margin:0 0 12px;">Olá ' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . ',</p>'
-                   . '<p style="margin:0 0 12px;">Sua conta foi criada com sucesso. Você já pode acessar o painel e gerenciar seus serviços.</p>';
+            $assunto = \LRV\Core\I18n::t('email.bemvindo_assunto');
+            $corpo = '<p style="margin:0 0 12px;">' . htmlspecialchars(\LRV\Core\I18n::tf('email.bemvindo_corpo', $nome), ENT_QUOTES, 'UTF-8') . '</p>';
             $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
-                'Bem-vindo!',
+                $assunto,
                 $corpo,
-                'Acessar Painel',
+                \LRV\Core\I18n::t('email.bemvindo_btn'),
                 $appUrl . '/cliente/entrar',
             );
-            $mailer->enviar($email, 'Bem-vindo!', $html, true);
+            $mailer->enviar($email, $assunto, $html, true);
+
+            \LRV\Core\I18n::definirIdioma($origLang);
         } catch (\Throwable) {}
 
         return Resposta::json(['ok' => true, 'redirect' => $redirectUrl]);
