@@ -99,6 +99,12 @@ final class Auth
         $_SESSION[self::SESSAO_CLIENTE_ID] = (int) $c['id'];
         unset($_SESSION[self::SESSAO_EQUIPE_ID]);
 
+        // Registrar último login
+        try {
+            $pdo->prepare('UPDATE clients SET last_login_at = :t WHERE id = :id')
+                ->execute([':t' => date('Y-m-d H:i:s'), ':id' => (int) $c['id']]);
+        } catch (\Throwable) {}
+
         return true;
     }
 

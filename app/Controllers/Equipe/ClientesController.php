@@ -19,30 +19,39 @@ final class ClientesController
         $showHidden = (string)($req->query['hidden'] ?? '') === '1';
         $hiddenFilter = $showHidden ? '' : ' AND (c.hidden_at IS NULL)';
 
+        $sortMap = [
+            'nome'       => 'c.name ASC',
+            'cadastro'   => 'c.created_at DESC',
+            'atividade'  => 'c.last_login_at DESC',
+            'vps'        => 'total_vps DESC',
+            'assinaturas'=> 'assinaturas_ativas DESC, total_assinaturas DESC',
+            'recursos'   => 'total_cpu DESC, total_ram DESC',
+        ];
+        $sort = trim((string)($req->query['sort'] ?? ''));
+        $orderBy = $sortMap[$sort] ?? 'c.id DESC';
+
+        $baseSelect = "SELECT c.id, c.name, c.email, c.mobile_phone, c.created_at, c.hidden_at, c.last_login_at,
+                        COUNT(DISTINCT v.id) AS total_vps,
+                        COALESCE(SUM(DISTINCT v.cpu), 0) AS total_cpu,
+                        COALESCE(SUM(DISTINCT v.ram), 0) AS total_ram,
+                        COUNT(DISTINCT sub.id) AS total_assinaturas,
+                        SUM(CASE WHEN sub.status IN ('active','ACTIVE') THEN 1 ELSE 0 END) AS assinaturas_ativas
+                 FROM clients c
+                 LEFT JOIN vps v ON v.client_id = c.id
+                 LEFT JOIN subscriptions sub ON sub.client_id = c.id";
+
         if ($busca !== '') {
             $s = $pdo->prepare(
-                "SELECT c.id, c.name, c.email, c.phone, c.created_at, c.hidden_at,
-                        COUNT(DISTINCT v.id) AS total_vps,
-                        COUNT(DISTINCT sub.id) AS total_assinaturas,
-                        SUM(CASE WHEN sub.status='active' THEN 1 ELSE 0 END) AS assinaturas_ativas
-                 FROM clients c
-                 LEFT JOIN vps v ON v.client_id = c.id AND v.deleted_at IS NULL
-                 LEFT JOIN subscriptions sub ON sub.client_id = c.id
+                "{$baseSelect}
                  WHERE (c.name LIKE :q OR c.email LIKE :q){$hiddenFilter}
-                 GROUP BY c.id ORDER BY c.id DESC LIMIT 200"
+                 GROUP BY c.id ORDER BY {$orderBy} LIMIT 200"
             );
             $s->execute([':q' => '%' . $busca . '%']);
         } else {
             $s = $pdo->query(
-                "SELECT c.id, c.name, c.email, c.phone, c.created_at, c.hidden_at,
-                        COUNT(DISTINCT v.id) AS total_vps,
-                        COUNT(DISTINCT sub.id) AS total_assinaturas,
-                        SUM(CASE WHEN sub.status='active' THEN 1 ELSE 0 END) AS assinaturas_ativas
-                 FROM clients c
-                 LEFT JOIN vps v ON v.client_id = c.id AND v.deleted_at IS NULL
-                 LEFT JOIN subscriptions sub ON sub.client_id = c.id
+                "{$baseSelect}
                  WHERE 1=1{$hiddenFilter}
-                 GROUP BY c.id ORDER BY c.id DESC LIMIT 500"
+                 GROUP BY c.id ORDER BY {$orderBy} LIMIT 500"
             );
         }
 
@@ -52,6 +61,7 @@ final class ClientesController
             'clientes'    => is_array($clientes) ? $clientes : [],
             'busca'       => $busca,
             'showHidden'  => $showHidden,
+            'sort'        => $sort,
         ]));
     }
 
