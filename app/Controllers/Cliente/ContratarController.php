@@ -153,6 +153,12 @@ final class ContratarController
             }
         }
 
+        // Dados do cartão (se CREDIT_CARD)
+        $ccNome    = trim((string)($req->post['cc_nome'] ?? ''));
+        $ccNumero  = trim((string)($req->post['cc_numero'] ?? ''));
+        $ccValidade= trim((string)($req->post['cc_validade'] ?? ''));
+        $ccCvv     = trim((string)($req->post['cc_cvv'] ?? ''));
+
         // Criar assinaturas (uma por servidor)
         $isBrl = \LRV\Core\I18n::idioma() === 'pt-BR';
         $redirectUrl = '/cliente/painel';
@@ -165,12 +171,53 @@ final class ContratarController
                         'CREDIT_CARD' => 'CREDIT_CARD',
                         default => 'PIX',
                     };
-                    $service = new \LRV\App\Services\Billing\AssinaturasService(
-                        new \LRV\App\Services\Billing\Asaas\AsaasApi(new \LRV\App\Services\Http\ClienteHttp())
-                    );
+                    $asaasApi = new \LRV\App\Services\Billing\Asaas\AsaasApi(new \LRV\App\Services\Http\ClienteHttp());
+                    $service = new \LRV\App\Services\Billing\AssinaturasService($asaasApi);
                     $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados);
                     $localSubId = (int)($resultado['local_subscription_id'] ?? 0);
-                    if ($i === 0 && $localSubId > 0) {
+
+                    // Pagar com cartão inline se CREDIT_CARD
+                    if ($gateway === 'CREDIT_CARD' && $ccNumero !== '') {
+                        $cobrancas = $resultado['cobrancas'] ?? [];
+                        $payments = $cobrancas['data'] ?? [];
+                        $firstPaymentId = '';
+                        if (is_array($payments)) {
+                            foreach ($payments as $pay) {
+                                if (is_array($pay) && isset($pay['id'])) {
+                                    $firstPaymentId = (string)$pay['id'];
+                                    break;
+                                }
+                            }
+                        }
+                        if ($firstPaymentId !== '') {
+                            $valParts = explode('/', $ccValidade);
+                            $ccMes = (string)($valParts[0] ?? '');
+                            $ccAno = (string)($valParts[1] ?? '');
+                            if (strlen($ccAno) === 2) $ccAno = '20' . $ccAno;
+
+                            try {
+                                $asaasApi->pagarComCartao($firstPaymentId, [
+                                    'holderName' => $ccNome,
+                                    'number' => $ccNumero,
+                                    'expiryMonth' => $ccMes,
+                                    'expiryYear' => $ccAno,
+                                    'ccv' => $ccCvv,
+                                ], [
+                                    'name' => $nome,
+                                    'email' => $email,
+                                    'cpfCnpj' => preg_replace('/\D/', '', $cpfCnpj),
+                                    'phone' => $mobilePhone !== '' ? $mobilePhone : null,
+                                ]);
+                            } catch (\Throwable $cardErr) {
+                                if ($i === 0) {
+                                    return Resposta::json(['ok' => false, 'erro' => 'Assinatura criada, mas erro no pagamento: ' . $cardErr->getMessage()], 400);
+                                }
+                            }
+                        }
+                        if ($i === 0) {
+                            $redirectUrl = '/cliente/assinaturas';
+                        }
+                    } elseif ($i === 0 && $localSubId > 0) {
                         $redirectUrl = '/cliente/pagamento?sub=' . $localSubId;
                     }
                 } else {

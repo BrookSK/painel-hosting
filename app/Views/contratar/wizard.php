@@ -280,6 +280,27 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
       <div class="gw-opt" data-gw="BOLETO" onclick="selGateway('BOLETO')">📄 Boleto</div>
       <div class="gw-opt" data-gw="CREDIT_CARD" onclick="selGateway('CREDIT_CARD')">💳 Cartão</div>
     </div>
+    <!-- Campos cartão de crédito -->
+    <div id="ccFields" style="display:none;margin-top:16px;">
+      <div class="wz-field">
+        <label class="wz-label">Nome no cartão *</label>
+        <input class="input" type="text" id="ccNome" placeholder="Como está no cartão" autocomplete="cc-name"/>
+      </div>
+      <div class="wz-field">
+        <label class="wz-label">Número do cartão *</label>
+        <input class="input" type="text" id="ccNumero" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric" autocomplete="cc-number"/>
+      </div>
+      <div class="linha" style="gap:8px;">
+        <div class="wz-field" style="flex:1;">
+          <label class="wz-label">Validade *</label>
+          <input class="input" type="text" id="ccValidade" placeholder="MM/AA" maxlength="5" inputmode="numeric" autocomplete="cc-exp"/>
+        </div>
+        <div class="wz-field" style="flex:1;">
+          <label class="wz-label">CVV *</label>
+          <input class="input" type="text" id="ccCvv" placeholder="000" maxlength="4" inputmode="numeric" autocomplete="cc-csc"/>
+        </div>
+      </div>
+    </div>
     <?php else: ?>
     <div class="linha" style="gap:8px;">
       <div class="gw-opt sel" data-gw="stripe" onclick="selGateway('stripe')">💳 Card (Stripe)</div>
@@ -368,6 +389,8 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
   window.selGateway=function(gw){
     gateway=gw;
     document.querySelectorAll('.gw-opt').forEach(function(el){el.classList.toggle('sel',el.dataset.gw===gw);});
+    var ccf=document.getElementById('ccFields');
+    if(ccf) ccf.style.display=(gw==='CREDIT_CARD')?'block':'none';
   };
 
   window.atualizarResumo=function(){
@@ -438,8 +461,20 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
 
   window.finalizar=function(){
     var btn=document.getElementById('btnFinalizar');
-    btn.disabled=true;btn.textContent='Processando...';
     var errEl=document.getElementById('erroPayment');errEl.style.display='none';
+
+    // Validar cartão se selecionado
+    if(gateway==='CREDIT_CARD'){
+      var ccNome=document.getElementById('ccNome').value.trim();
+      var ccNum=document.getElementById('ccNumero').value.replace(/\s/g,'');
+      var ccVal=document.getElementById('ccValidade').value.trim();
+      var ccCvv=document.getElementById('ccCvv').value.trim();
+      if(!ccNome||ccNum.length<13||!ccVal||ccCvv.length<3){
+        errEl.textContent='Preencha todos os dados do cartão de crédito.';errEl.style.display='block';return;
+      }
+    }
+
+    btn.disabled=true;btn.textContent='Processando...';
     var body=new FormData();
     body.append('_csrf',csrf);body.append('plan_id',planId);
     body.append('nome',document.getElementById('cNome').value.trim());
@@ -451,6 +486,14 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
     body.append('gateway',gateway);body.append('periodo',periodo);
     body.append('quantidade',document.getElementById('qtdServidores').value);
     body.append('addons_ids',addonsIds.join(','));
+
+    if(gateway==='CREDIT_CARD'){
+      body.append('cc_nome',document.getElementById('ccNome').value.trim());
+      body.append('cc_numero',document.getElementById('ccNumero').value.replace(/\s/g,''));
+      body.append('cc_validade',document.getElementById('ccValidade').value.trim());
+      body.append('cc_cvv',document.getElementById('ccCvv').value.trim());
+    }
+
     fetch('/contratar/finalizar',{method:'POST',body:body,credentials:'same-origin'})
       .then(function(r){return r.json();})
       .then(function(data){
