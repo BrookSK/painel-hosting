@@ -61,7 +61,7 @@ final class VpsProvisioningService
 
         $serverId = (int) ($vps['server_id'] ?? 0);
         if ($serverId <= 0) {
-            $serverId = $this->selecionarNodeDisponivel((int) $vps['cpu'], (int) $vps['ram'], (int) $vps['storage']);
+            $serverId = $this->selecionarNodeDisponivel((int) $vps['cpu'], (int) $vps['ram'], (int) $vps['storage'], (int) ($vps['client_id'] ?? 0));
             if ($serverId <= 0) {
                 $this->notificarSemNode($vpsId, (int) $vps['cpu'], (int) $vps['ram'], (int) $vps['storage']);
                 $this->atualizarStatusVps($vpsId, 'pending_node');
@@ -329,11 +329,26 @@ final class VpsProvisioningService
         $up->execute([':s' => $status, ':id' => $vpsId]);
     }
 
-    private function selecionarNodeDisponivel(int $cpu, int $ram, int $storage): int
+    private function selecionarNodeDisponivel(int $cpu, int $ram, int $storage, int $clientId = 0): int
     {
         $pdo = BancoDeDados::pdo();
 
         $maxUtil = ConfiguracoesSistema::infraNodeMaxUtilPercent();
+
+        // Verificar se o cliente é tester
+        $isTester = false;
+        if ($clientId > 0) {
+            try {
+                $ct = $pdo->prepare('SELECT is_tester FROM clients WHERE id = :id LIMIT 1');
+                $ct->execute([':id' => $clientId]);
+                $row = $ct->fetch();
+                $isTester = is_array($row) && (int)($row['is_tester'] ?? 0) === 1;
+            } catch (\Throwable) {}
+        }
+
+        // Tester → só servidores de teste
+        // Normal → só servidores que NÃO são de teste
+        $testFilter = $isTester ? 'AND is_test = 1' : 'AND (is_test = 0 OR is_test IS NULL)';
 
         $candidatos = [];
 
@@ -343,6 +358,7 @@ final class VpsProvisioningService
                     WHERE status = 'active'
                       AND is_online = 1
                       AND (role = 'vps' OR role IS NULL)
+                      {$testFilter}
                       AND COALESCE(ssh_user,'') <> ''
                       AND COALESCE(ssh_key_id,'') <> ''
                       AND (ram_total - ram_used) >= :ram

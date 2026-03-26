@@ -65,11 +65,22 @@ if (count($nomePartes) >= 2) {
           <span class="badge-new badge-<?php echo count(array_filter($assinaturas, fn($s) => ($s['status']??'') === 'active')) > 0 ? 'green' : 'gray'; ?>">
             <?php echo count(array_filter($assinaturas, fn($s) => ($s['status']??'') === 'active')); ?> <?php echo View::e(I18n::t('eq_cliente.assinaturas_ativas')); ?>
           </span>
+          <?php if (!empty($cliente['is_tester'])): ?>
+            <span class="badge-new" style="background:#fef3c7;color:#92400e;">🧪 Tester</span>
+          <?php endif; ?>
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <a href="/equipe/clientes/editar?id=<?php echo (int)$cliente['id']; ?>" class="botao sec sm"><?php echo View::e(I18n::t('eq_cliente.editar_dados')); ?></a>
+      <form method="post" action="/equipe/clientes/salvar" style="display:inline;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <input type="hidden" name="toggle_tester" value="1" />
+        <button class="botao sm <?php echo !empty($cliente['is_tester']) ? 'ghost' : ''; ?>" type="submit" style="<?php echo !empty($cliente['is_tester']) ? '' : 'background:#f59e0b;'; ?>">
+          <?php echo !empty($cliente['is_tester']) ? '✕ Remover tester' : '🧪 Marcar como tester'; ?>
+        </button>
+      </form>
     </div>
   </div>
 </div>

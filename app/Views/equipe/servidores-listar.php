@@ -41,6 +41,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <?php $role = (string)($s['role'] ?? 'vps'); if ($role !== 'vps'): ?>
                 <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#e0e7ff;color:#3730a3;"><?php echo View::e($role); ?></span>
               <?php endif; ?>
+              <?php if (!empty($s['is_test'])): ?>
+                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#fef3c7;color:#92400e;">🧪 teste</span>
+              <?php endif; ?>
             </td>
             <td><?php echo View::e((string)($s['ip_address'] ?? '')); ?></td>
             <td><?php echo View::e((string)($s['cpu_used'] ?? 0)); ?>/<?php echo View::e((string)($s['cpu_total'] ?? 0)); ?></td>

@@ -118,6 +118,14 @@ final class ClientesController
     public function salvar(Requisicao $req): Resposta
     {
         $id     = (int)($req->post['id'] ?? 0);
+
+        // Toggle tester flag (from cliente-ver page)
+        if (!empty($req->post['toggle_tester']) && $id > 0) {
+            $pdo = BancoDeDados::pdo();
+            $pdo->prepare('UPDATE clients SET is_tester = IF(is_tester = 1, 0, 1) WHERE id = :id')->execute([':id' => $id]);
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+        }
+
         $nome   = trim((string)($req->post['name'] ?? ''));
         $email  = trim(strtolower((string)($req->post['email'] ?? '')));
         $phone  = trim((string)($req->post['phone'] ?? ''));

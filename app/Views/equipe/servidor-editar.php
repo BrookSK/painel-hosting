@@ -78,6 +78,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <div style="margin-top:12px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+        <input type="checkbox" name="is_test" value="1" <?php echo !empty($servidor['is_test']) ? 'checked' : ''; ?> style="accent-color:#f59e0b;width:16px;height:16px;" />
+        <span>🧪 Servidor de teste</span>
+      </label>
+      <p class="texto" style="font-size:12px;margin-top:4px;">Servidores de teste só são usados por clientes marcados como "tester". Clientes normais nunca recebem VPS neste servidor.</p>
+    </div>
+
     <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.ip')); ?></label>

@@ -27,7 +27,7 @@ final class ServidoresController
         try {
             $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_auth_type,
                 terminal_ssh_user, ram_total, ram_used, cpu_total, cpu_used,
-                storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error, role
+                storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error, role, is_test
                 FROM servers ORDER BY id DESC');
             $servidores = $stmt->fetchAll();
         } catch (\Throwable) {
@@ -184,6 +184,12 @@ final class ServidoresController
         if ($savedId === 0) {
             return $this->renderizarComDados($dados, 'Não foi possível salvar o servidor.');
         }
+
+        // Salvar flag de teste
+        $isTest = (int)($req->post['is_test'] ?? 0) === 1 ? 1 : 0;
+        try {
+            BancoDeDados::pdo()->prepare('UPDATE servers SET is_test = :t WHERE id = :id')->execute([':t' => $isTest, ':id' => $savedId]);
+        } catch (\Throwable) {}
 
         // Marca online
         try {
