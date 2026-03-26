@@ -10,6 +10,8 @@ use LRV\App\Services\Alertas\NotificacoesService;
 use LRV\App\Services\Backup\VpsBackupService;
 use LRV\App\Services\Provisioning\DockerCli;
 use LRV\App\Services\Provisioning\VpsProvisioningService;
+use LRV\App\Services\Chat\ChatFlowExecutionService;
+use LRV\App\Services\Chat\ChatFlowService;
 use LRV\App\Services\Status\StatusCollectorService;
 use LRV\App\Services\Http\ClienteHttp;
 use LRV\Core\BancoDeDados;
@@ -307,6 +309,86 @@ final class RegistroHandlers
                 $ctx->log('Reagendado coletar_status para: ' . $quando->format('Y-m-d H:i:s'));
             } catch (\Throwable $e) {
                 $ctx->log('Falha ao reagendar coletar_status: ' . $e->getMessage());
+            }
+        });
+
+        $p->registrar('flow_cron', static function (array $payload, ContextoJob $ctx): void {
+            $pdo = BancoDeDados::pdo();
+            $execSvc = new ChatFlowExecutionService();
+            $flowSvc = new ChatFlowService();
+
+            // 1. Resume pending executions (delay steps with next_run_at <= NOW)
+            try {
+                $stmt = $pdo->prepare(
+                    "SELECT id FROM chat_flow_executions WHERE status = 'running' AND next_run_at IS NOT NULL AND next_run_at <= NOW()"
+                );
+                $stmt->execute();
+                $pending = $stmt->fetchAll() ?: [];
+                foreach ($pending as $row) {
+                    try {
+                        $execSvc->processarProximoPasso((int) $row['id']);
+                        $ctx->log('Retomada execução #' . $row['id']);
+                    } catch (\Throwable $e) {
+                        $ctx->log('Erro ao retomar execução #' . $row['id'] . ': ' . $e->getMessage());
+                    }
+                }
+            } catch (\Throwable $e) {
+                $ctx->log('Erro ao buscar execuções pendentes: ' . $e->getMessage());
+            }
+
+            // 2. Check for inactive rooms and trigger client_inactive flows
+            try {
+                $inactiveFlows = $flowSvc->listarPorTrigger('client_inactive');
+                if (!empty($inactiveFlows)) {
+                    $timeoutMin = (int) Settings::obter('chat_flow.inactivity_minutes', 10);
+                    if ($timeoutMin < 1) $timeoutMin = 10;
+
+                    $stmt = $pdo->prepare(
+                        "SELECT r.id AS room_id
+                         FROM chat_rooms r
+                         INNER JOIN (
+                             SELECT room_id, MAX(id) AS last_msg_id
+                             FROM chat_messages
+                             GROUP BY room_id
+                         ) lm ON lm.room_id = r.id
+                         INNER JOIN chat_messages m ON m.id = lm.last_msg_id
+                         WHERE r.status = 'open'
+                           AND m.sender_type = 'admin'
+                           AND m.created_at <= DATE_SUB(NOW(), INTERVAL :mins MINUTE)"
+                    );
+                    $stmt->execute([':mins' => $timeoutMin]);
+                    $inactiveRooms = $stmt->fetchAll() ?: [];
+
+                    foreach ($inactiveRooms as $room) {
+                        $roomId = (int) $room['room_id'];
+                        foreach ($inactiveFlows as $flow) {
+                            $flowId = (int) $flow['id'];
+                            if ($execSvc->jaDisparadoNaSessao($roomId, $flowId)) {
+                                continue;
+                            }
+                            try {
+                                $execSvc->iniciar($flowId, $roomId, 'cron');
+                                $ctx->log("Fluxo #{$flowId} disparado para sala #{$roomId}");
+                            } catch (\Throwable $e) {
+                                $ctx->log("Erro ao disparar fluxo #{$flowId} para sala #{$roomId}: " . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                $ctx->log('Erro na detecção de inatividade: ' . $e->getMessage());
+            }
+
+            // 3. Re-schedule self
+            try {
+                $interval = (int) Settings::obter('chat_flow.cron_interval_seconds', 60);
+                if ($interval < 10) $interval = 60;
+                $repo = new RepositorioJobs();
+                $quando = new \DateTimeImmutable('now +' . $interval . ' seconds');
+                $repo->criar('flow_cron', [], $quando);
+                $ctx->log('Reagendado flow_cron para: ' . $quando->format('Y-m-d H:i:s'));
+            } catch (\Throwable $e) {
+                $ctx->log('Falha ao reagendar flow_cron: ' . $e->getMessage());
             }
         });
     }

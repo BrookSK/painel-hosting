@@ -158,6 +158,12 @@ if ($_cwWsUrl === '') {
   padding:10px 13px;font-size:13px;line-height:1.5;
   max-width:88%;align-self:flex-end;word-break:break-word;
 }
+.cw-sysmsg{
+  background:#f1f5f9;border-radius:10px;
+  padding:8px 12px;font-size:12px;line-height:1.5;
+  color:#64748b;text-align:center;align-self:center;
+  max-width:90%;font-style:italic;
+}
 .cw-msg-img{max-width:180px;border-radius:8px;margin-top:4px;cursor:pointer;}
 .cw-msg-file{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:12px;margin-top:4px;text-decoration:none;color:inherit;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);}
 .cw-opts{display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;}
@@ -484,7 +490,8 @@ var liveLastSender='';
 function addLiveMsg(type,txt,ts,fileUrl,fileName,senderName){
   liveDaySep(ts);
   var d=document.createElement('div');
-  d.className=type==='client'?'cw-umsg':'cw-bmsg';
+  if(type==='system'){d.className='cw-sysmsg';}
+  else{d.className=type==='client'?'cw-umsg':'cw-bmsg';}
   // Show agent name only when sender changes
   if(type==='admin'&&senderName&&senderName!==liveLastSender){
     var nm=document.createElement('div');nm.style.cssText='font-size:10px;font-weight:600;opacity:.7;margin-bottom:2px;';nm.textContent=senderName;d.appendChild(nm);

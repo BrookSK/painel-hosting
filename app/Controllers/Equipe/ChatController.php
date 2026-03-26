@@ -117,6 +117,25 @@ final class ChatController
         $room = (new ChatRoomService())->buscarPorId($roomId);
         (new ChatRoomService())->fechar($roomId);
 
+        // Trigger active chat_closed flow
+        try {
+            $flowSvc = new \LRV\App\Services\Chat\ChatFlowService();
+            $closedFlows = $flowSvc->listarPorTrigger('chat_closed');
+            if (!empty($closedFlows)) {
+                $execSvc = new \LRV\App\Services\Chat\ChatFlowExecutionService();
+                foreach ($closedFlows as $flow) {
+                    $fid = (int) ($flow['id'] ?? 0);
+                    if ($fid > 0 && !$execSvc->jaDisparadoNaSessao($roomId, $fid)) {
+                        try {
+                            $execSvc->iniciar($fid, $roomId, 'event');
+                        } catch (\Throwable) {}
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // No active chat_closed flow — close normally
+        }
+
         // Enviar e-mail de pesquisa de satisfação ao cliente
         if ($room !== null) {
             $this->enviarPesquisaSatisfacao($room, $roomId);

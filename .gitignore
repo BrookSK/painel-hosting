@@ -3,6 +3,7 @@
 /logs/
 /public/uploads/
 /config/instalacao.php
+/.kiro
 .DS_Store
 Thumbs.db
 

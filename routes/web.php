@@ -335,5 +335,16 @@ $roteador->post('/cliente/avaliar', [AvaliacaoController::class, 'salvar'], [Mid
 $roteador->post('/cookies/consent', [\LRV\App\Controllers\CookieConsentController::class, 'salvar'], [Middlewares::rateLimitIp('cookie_consent', 20, 60)]);
 $roteador->get('/cookies/consent', [\LRV\App\Controllers\CookieConsentController::class, 'obter']);
 
+// Chat Flows (equipe)
+$roteador->get('/equipe/chat-flows', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->get('/equipe/chat-flows/novo', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'novo'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/chat-flows/salvar', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->get('/equipe/chat-flows/editar', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'editar'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/chat-flows/excluir', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'excluir'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/chat-flows/passo/salvar', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'salvarPasso'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/chat-flows/passo/remover', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'removerPasso'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/chat-flows/passo/reordenar', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'reordenarPassos'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/chat-flows/dispatch', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'dispatch'], [Middlewares::exigirPermissao('reply_tickets')]);
+
 // API — Métricas de monitoramento (recebe dados dos servidores)
 $roteador->post('/api/metrics/servers', [\LRV\App\Controllers\Api\MetricsController::class, 'registrarServidor'], [Middlewares::rateLimitIp('metrics_push', 30, 60)]);

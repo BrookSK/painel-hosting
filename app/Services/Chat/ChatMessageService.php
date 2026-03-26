@@ -18,7 +18,7 @@ final class ChatMessageService
             throw new \InvalidArgumentException('Mensagem muito longa.');
         }
 
-        if (!in_array($senderType, ['client', 'admin'], true)) {
+        if (!in_array($senderType, ['client', 'admin', 'system'], true)) {
             throw new \InvalidArgumentException('Tipo de remetente inválido.');
         }
 

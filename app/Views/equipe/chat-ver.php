@@ -32,6 +32,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 .msg-bubble{max-width:72%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.4;word-break:break-word;}
 .msg-admin{align-self:flex-end;background:#4F46E5;color:#fff;border-bottom-right-radius:4px;}
 .msg-client{align-self:flex-start;background:#e2e8f0;color:#1e293b;border-bottom-left-radius:4px;}
+.msg-system{align-self:center;background:#f1f5f9;color:#64748b;border-radius:10px;text-align:center;font-style:italic;font-size:13px;max-width:85%;}
 .msg-meta{font-size:11px;opacity:.65;margin-top:3px;}
 .msg-img{max-width:220px;border-radius:8px;margin-top:4px;cursor:pointer;}
 .msg-file{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.15);border-radius:8px;font-size:13px;margin-top:4px;text-decoration:none;color:inherit;}
@@ -86,7 +87,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <form method="post" action="/equipe/chat/fechar" style="margin-top:12px;">
           <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
           <input type="hidden" name="room_id" value="<?php echo $roomId; ?>" />
-          <button class="botao danger sm" type="submit" onclick="return confirm('<?php echo View::e(I18n::t('eq_chat_ver.confirmar_encerrar')); ?>')"><?php echo View::e(I18n::t('eq_chat_ver.encerrar')); ?></button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="botao danger sm" type="submit" onclick="return confirm('<?php echo View::e(I18n::t('eq_chat_ver.confirmar_encerrar')); ?>')"><?php echo View::e(I18n::t('eq_chat_ver.encerrar')); ?></button>
+            <div style="position:relative;display:inline-block;">
+              <button type="button" class="botao sec sm" id="btnFlows"><?php echo View::e(I18n::t('chat_flows.fluxos')); ?> ▾</button>
+              <div id="flowsDropdown" style="display:none;position:absolute;bottom:100%;left:0;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:220px;z-index:20;padding:6px;margin-bottom:4px;">
+                <div style="font-size:12px;font-weight:600;color:#64748b;padding:6px 8px;"><?php echo View::e(I18n::t('chat_flows.disparar_fluxo')); ?></div>
+                <div id="flowsList" style="max-height:200px;overflow-y:auto;"></div>
+                <div id="flowsEmpty" style="font-size:12px;color:#94a3b8;padding:6px 8px;display:none;"><?php echo View::e(I18n::t('geral.nenhum_resultado')); ?></div>
+              </div>
+            </div>
+            <span id="flowMsg" style="font-size:12px;color:#22c55e;display:none;"></span>
+          </div>
         </form>
       <?php else: ?>
         <div class="chat-box">
@@ -110,9 +122,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               $st = (string)($m['sender_type']??'');
               $sn = (string)($m['sender_name']??'');
             ?>
-              <div class="msg-bubble <?php echo $st==='admin'?'msg-admin':'msg-client'; ?>">
+              <div class="msg-bubble <?php echo $st==='admin'?'msg-admin':($st==='system'?'msg-system':'msg-client'); ?>">
                 <?php if ($st==='admin' && $sn !== ''): ?>
                   <div style="font-size:11px;font-weight:600;opacity:.7;margin-bottom:2px;"><?php echo View::e($sn); ?></div>
+                <?php endif; ?>
+                <?php if ($st==='system'): ?>
+                  <span style="font-size:11px;">⚙️ <?php echo View::e(I18n::t('chat_flows.sistema')); ?></span><br/>
                 <?php endif; ?>
                 <?php if (($m['message']??'') !== ''): ?>
                   <?php echo View::e((string)$m['message']); ?>
@@ -132,6 +147,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                     $metaParts = [];
                     if ($st === 'admin' && $sn !== '') $metaParts[] = $sn;
                     elseif ($st === 'client') $metaParts[] = 'Cliente';
+                    elseif ($st === 'system') $metaParts[] = 'Sistema';
                     if ($ts !== '') $metaParts[] = substr($ts, 11, 5);
                     echo View::e(implode(' · ', $metaParts));
                   ?>
@@ -228,10 +244,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   function appendMsg(sender,text,ts,fu,fn,sn){
     maybeDaySep(ts);
     var div=document.createElement('div'),meta=document.createElement('div');
-    div.className='msg-bubble '+(sender==='admin'?'msg-admin':'msg-client');
+    div.className='msg-bubble '+(sender==='admin'?'msg-admin':(sender==='system'?'msg-system':'msg-client'));
     meta.className='msg-meta';
     var parts=[];
     if(sender==='admin')parts.push(sn||'Você');
+    else if(sender==='system')parts.push('Sistema');
     else parts.push('Cliente');
     if(ts)parts.push(ts.substring(11,16));
     meta.textContent=parts.join(' · ');
@@ -286,6 +303,60 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   document.getElementById('chatEnviar').addEventListener('click',enviar);
   inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
   connectWs();
+
+  // Flows dropdown
+  var btnFlows=document.getElementById('btnFlows'),flowsDd=document.getElementById('flowsDropdown'),flowsList=document.getElementById('flowsList'),flowsEmpty=document.getElementById('flowsEmpty'),flowMsg=document.getElementById('flowMsg');
+  var flowsLoaded=false;
+  btnFlows.addEventListener('click',function(ev){
+    ev.stopPropagation();
+    var open=flowsDd.style.display==='block';
+    flowsDd.style.display=open?'none':'block';
+    if(!open&&!flowsLoaded){
+      flowsLoaded=true;
+      fetch('/equipe/chat-flows/dispatch',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&flow_id=0&room_id=0'})
+      .catch(function(){});
+      // Load manual flows via a simple GET to the list page and parse, or use a dedicated endpoint
+      // For simplicity, we'll fetch the flows list from the page data
+      loadManualFlows();
+    }
+  });
+  document.addEventListener('click',function(){flowsDd.style.display='none';});
+  flowsDd.addEventListener('click',function(ev){ev.stopPropagation();});
+
+  function loadManualFlows(){
+    // Fetch flows list page and extract manual flows
+    fetch('/equipe/chat-flows').then(function(r){return r.text();}).then(function(html){
+      // Parse manual flows from the page - but this is fragile
+      // Instead, let's use a simpler approach: embed the flows data
+      flowsList.innerHTML='';
+      var flows=<?php
+        $manualFlows = (new \LRV\App\Services\Chat\ChatFlowService())->listarPorTrigger('manual');
+        echo json_encode(array_map(function($f) {
+            return ['id' => (int)$f['id'], 'name' => (string)$f['name'], 'description' => (string)($f['description'] ?? '')];
+        }, $manualFlows));
+      ?>;
+      if(!flows.length){flowsEmpty.style.display='block';return;}
+      flows.forEach(function(f){
+        var btn=document.createElement('button');
+        btn.style.cssText='display:block;width:100%;text-align:left;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-family:inherit;color:#1e293b;';
+        btn.textContent=f.name;
+        if(f.description)btn.title=f.description;
+        btn.addEventListener('mouseover',function(){btn.style.background='#f1f5f9';});
+        btn.addEventListener('mouseout',function(){btn.style.background='none';});
+        btn.addEventListener('click',function(){
+          flowsDd.style.display='none';
+          fetch('/equipe/chat-flows/dispatch',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&flow_id='+f.id+'&room_id='+ROOM_ID})
+          .then(function(r){return r.json();}).then(function(d){
+            flowMsg.style.display='inline';
+            if(d.ok){flowMsg.style.color='#22c55e';flowMsg.textContent='✓ Fluxo disparado!';}
+            else{flowMsg.style.color='#ef4444';flowMsg.textContent=d.erro||'Erro';}
+            setTimeout(function(){flowMsg.style.display='none';},4000);
+          }).catch(function(){flowMsg.style.display='inline';flowMsg.style.color='#ef4444';flowMsg.textContent='Erro de rede';setTimeout(function(){flowMsg.style.display='none';},4000);});
+        });
+        flowsList.appendChild(btn);
+      });
+    }).catch(function(){});
+  }
 })();
 </script>
 <?php endif; ?>

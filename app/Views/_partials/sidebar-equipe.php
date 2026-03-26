@@ -80,9 +80,14 @@ function _nav_ativo(string $path, string $uri): string {
       <?php endif; ?>
     </a>
 
-    <a href="/equipe/chat" class="nav-item<?php echo _nav_ativo('/equipe/chat', $_seg); ?>">
+    <a href="/equipe/chat" class="nav-item<?php echo _nav_ativo('/equipe/chat', $_seg); if (str_starts_with($_seg, '/equipe/chat-flows')) echo ' '; ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h3l3 3 3-3h5a1 1 0 001-1V4a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('equipe.chat')); ?></span>
+    </a>
+
+    <a href="/equipe/chat-flows" class="nav-item<?php echo _nav_ativo('/equipe/chat-flows', $_seg); ?>" style="padding-left:36px;font-size:13px;">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><path d="M3 4h14M3 8h10M3 12h14M3 16h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span><?php echo View::e(I18n::t('equipe.chat_flows')); ?></span>
     </a>
 
     <a href="/equipe/satisfacao" class="nav-item<?php echo _nav_ativo('/equipe/satisfacao', $_seg); ?>">
