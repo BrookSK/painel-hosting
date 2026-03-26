@@ -400,7 +400,7 @@ final class VpsProvisioningService
                       AND (role = 'vps' OR role IS NULL)
                       {$testFilter}
                       AND COALESCE(ssh_user,'') <> ''
-                      AND COALESCE(ssh_key_id,'') <> ''
+                      AND (COALESCE(ssh_key_id,'') <> '' OR COALESCE(ssh_password,'') <> '')
                       AND (ram_total - ram_used) >= :ram
                       AND (cpu_total - cpu_used) >= :cpu
                       AND (storage_total - storage_used) >= :st";
@@ -418,7 +418,7 @@ final class VpsProvisioningService
                         FROM servers
                         WHERE status = 'active'
                           AND COALESCE(ssh_user,'') <> ''
-                          AND COALESCE(ssh_key_id,'') <> ''
+                          AND (COALESCE(ssh_key_id,'') <> '' OR COALESCE(ssh_password,'') <> '')
                           AND (ram_total - ram_used) >= :ram
                           AND (cpu_total - cpu_used) >= :cpu
                           AND (storage_total - storage_used) >= :st";
@@ -618,11 +618,11 @@ final class VpsProvisioningService
 
         try {
             try {
-                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status, is_online FROM servers WHERE id = :id LIMIT 1');
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ssh_password, ssh_auth_type, status, is_online FROM servers WHERE id = :id LIMIT 1');
                 $stmt->execute([':id' => $serverId]);
                 $srv = $stmt->fetch();
             } catch (\Throwable $e) {
-                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, status FROM servers WHERE id = :id LIMIT 1');
+                $stmt = $pdo->prepare('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_key_id, ssh_password, ssh_auth_type, status FROM servers WHERE id = :id LIMIT 1');
                 $stmt->execute([':id' => $serverId]);
                 $srv = $stmt->fetch();
             }
@@ -653,9 +653,29 @@ final class VpsProvisioningService
         $porta = (int) ($srv['ssh_port'] ?? 22);
         $usuario = trim((string) ($srv['ssh_user'] ?? ''));
         $keyId = trim((string) ($srv['ssh_key_id'] ?? ''));
+        $sshPassword = '';
+        try { $sshPassword = trim((string) ($srv['ssh_password'] ?? '')); } catch (\Throwable) {}
+        $authType = trim((string) ($srv['ssh_auth_type'] ?? 'key'));
 
-        if ($host === '' || $porta <= 0 || $usuario === '' || $keyId === '') {
-            $log('Node sem dados de SSH completos (host/porta/usuário/chave).');
+        if ($host === '' || $porta <= 0 || $usuario === '') {
+            $log('Node sem dados de SSH completos (host/porta/usuário).');
+            return false;
+        }
+
+        if ($authType === 'password' && $sshPassword !== '') {
+            // Autenticação por senha
+            try {
+                $decrypted = \LRV\App\Services\Infra\SshCrypto::decifrar($sshPassword);
+                $this->docker->definirRemotoComSenha($host, $porta, $usuario, $decrypted);
+            } catch (\Throwable $e) {
+                $log('Falha ao configurar SSH com senha: ' . $e->getMessage());
+                return false;
+            }
+            return true;
+        }
+
+        if ($keyId === '') {
+            $log('Node sem chave SSH nem senha configurada.');
             return false;
         }
 
