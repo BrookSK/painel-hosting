@@ -18,6 +18,17 @@
       localStorage.setItem('lrv_cli_sidebar_collapsed', s.classList.contains('collapsed') ? '1' : '0');
     });
   }
+  // Click on logo area to expand when collapsed
+  var logoArea = document.querySelector('.sidebar-logo');
+  if (logoArea && s) {
+    logoArea.addEventListener('click', function(e) {
+      if (s.classList.contains('collapsed') && e.target.closest('.sidebar-toggle') === null) {
+        e.stopPropagation();
+        s.classList.toggle('collapsed');
+        localStorage.setItem('lrv_cli_sidebar_collapsed', s.classList.contains('collapsed') ? '1' : '0');
+      }
+    });
+  }
 })();
 
 function abrirSidebarCli() {
