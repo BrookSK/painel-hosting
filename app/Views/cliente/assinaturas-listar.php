@@ -10,6 +10,7 @@ function badgeStatusAssinatura(string $st): string {
         'PENDING'   => ['Pendente',   '#fef3c7','#92400e'],
         'OVERDUE'   => ['Em atraso',  '#fee2e2','#991b1b'],
         'SUSPENDED' => ['Suspensa',   '#fee2e2','#991b1b'],
+        'EXPIRED'   => ['Expirada',   '#f1f5f9','#64748b'],
         'CANCELED'  => ['Cancelada',  '#f1f5f9','#334155'],
         'inactive'  => ['Inativa',    '#f1f5f9','#334155'],
     ];

@@ -123,6 +123,27 @@ final class WebhookAsaasService
             }
 
             if ($tipo === 'PAYMENT_OVERDUE') {
+                $statusAnterior = strtoupper(trim((string) ($sub['status'] ?? '')));
+
+                // Se a assinatura nunca foi paga (PENDING), expirar direto
+                if ($statusAnterior === 'PENDING') {
+                    $this->atualizarAssinatura($pdo, $subId, 'EXPIRED', $nextDueDate);
+
+                    if ($vpsId > 0) {
+                        $pdo->prepare("UPDATE vps SET status = 'expired' WHERE id = :id AND status = 'pending_payment'")
+                            ->execute([':id' => $vpsId]);
+
+                        $repoJobs = new RepositorioJobs();
+                        $repoJobs->criar('alerta_billing', [
+                            'titulo' => 'Assinatura expirada (nunca paga)',
+                            'mensagem' => "Primeira cobrança venceu sem pagamento.\n\nCliente: #{$clienteId}\nAssinatura: #{$subId}\nVPS: #{$vpsId}",
+                        ]);
+                    }
+
+                    $pdo->commit();
+                    return;
+                }
+
                 $this->marcarAssinaturaOverdue($subId, $nextDueDate);
 
                 if ($vpsId > 0) {

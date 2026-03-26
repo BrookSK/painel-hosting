@@ -20,7 +20,7 @@ final class VpsController
         }
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, server_id, container_id, cpu, ram, storage, status, created_at FROM vps WHERE client_id = :c ORDER BY id DESC');
+        $stmt = $pdo->prepare("SELECT id, server_id, container_id, cpu, ram, storage, status, created_at FROM vps WHERE client_id = :c AND status NOT IN ('expired','removed') ORDER BY id DESC");
         $stmt->execute([':c' => $clienteId]);
         $vps = $stmt->fetchAll();
 

@@ -391,5 +391,54 @@ final class RegistroHandlers
                 $ctx->log('Falha ao reagendar flow_cron: ' . $e->getMessage());
             }
         });
+
+        $p->registrar('limpar_pendentes_expirados', static function (array $payload, ContextoJob $ctx): void {
+            $pdo = BancoDeDados::pdo();
+            $horasExpiracao = (int) ($payload['horas'] ?? 48);
+            if ($horasExpiracao < 1) $horasExpiracao = 48;
+
+            // Buscar assinaturas PENDING criadas há mais de X horas
+            $stmt = $pdo->prepare(
+                "SELECT s.id AS sub_id, s.vps_id, s.client_id
+                 FROM subscriptions s
+                 WHERE s.status = 'PENDING'
+                   AND s.created_at <= DATE_SUB(NOW(), INTERVAL :h HOUR)"
+            );
+            $stmt->execute([':h' => $horasExpiracao]);
+            $expiradas = $stmt->fetchAll() ?: [];
+
+            $count = 0;
+            foreach ($expiradas as $row) {
+                $subId = (int) ($row['sub_id'] ?? 0);
+                $vpsId = (int) ($row['vps_id'] ?? 0);
+
+                try {
+                    $pdo->prepare("UPDATE subscriptions SET status = 'EXPIRED' WHERE id = :id AND status = 'PENDING'")
+                        ->execute([':id' => $subId]);
+
+                    if ($vpsId > 0) {
+                        $pdo->prepare("UPDATE vps SET status = 'expired' WHERE id = :id AND status = 'pending_payment'")
+                            ->execute([':id' => $vpsId]);
+                    }
+
+                    $count++;
+                    $ctx->log("Expirada: assinatura #{$subId}, VPS #{$vpsId}");
+                } catch (\Throwable $e) {
+                    $ctx->log("Erro ao expirar assinatura #{$subId}: " . $e->getMessage());
+                }
+            }
+
+            $ctx->log("Total expiradas: {$count}");
+
+            // Reagendar
+            try {
+                $repo = new RepositorioJobs();
+                $quando = new \DateTimeImmutable('now +1 hour');
+                $repo->criar('limpar_pendentes_expirados', ['horas' => $horasExpiracao], $quando);
+                $ctx->log('Reagendado para: ' . $quando->format('Y-m-d H:i:s'));
+            } catch (\Throwable $e) {
+                $ctx->log('Falha ao reagendar: ' . $e->getMessage());
+            }
+        });
     }
 }
