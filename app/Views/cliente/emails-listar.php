@@ -15,9 +15,11 @@ $cotaUsada      = (int)($cota_usada ?? 0);
 $cotaDisponivel = max(0, $cotaTotal - $cotaUsada);
 
 $dominiosSelect = [];
-if ($dominioPadrao !== '') $dominiosSelect[] = $dominioPadrao;
 foreach ($dominiosAtivos as $d) {
     if (!in_array($d, $dominiosSelect, true)) $dominiosSelect[] = $d;
+}
+if (empty($dominiosSelect) && $dominioPadrao !== '') {
+    $dominiosSelect[] = $dominioPadrao;
 }
 
 $pageTitle    = I18n::t('emails.titulo');
