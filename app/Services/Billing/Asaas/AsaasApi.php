@@ -19,6 +19,11 @@ final class AsaasApi
         return $this->post('/customers', $dados);
     }
 
+    public function atualizarCliente(string $customerId, array $dados): array
+    {
+        return $this->post('/customers/' . rawurlencode($customerId), $dados);
+    }
+
     public function criarAssinatura(array $dados): array
     {
         return $this->post('/subscriptions', $dados);

@@ -35,6 +35,15 @@ final class AssinaturasService
 
         $asaasId = (string) ($c['asaas_customer_id'] ?? '');
         if ($asaasId !== '') {
+            // Atualizar CPF/CNPJ no Asaas se temos localmente mas pode não ter sido enviado antes
+            $cpf = trim((string) ($c['cpf_cnpj'] ?? ''));
+            if ($cpf !== '') {
+                try {
+                    $this->asaas->atualizarCliente($asaasId, ['cpfCnpj' => $cpf]);
+                } catch (\Throwable) {
+                    // Silencioso — pode já estar atualizado
+                }
+            }
             return $asaasId;
         }
 
