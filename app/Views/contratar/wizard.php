@@ -152,15 +152,24 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
       <div class="periodo-opt sel" data-periodo="1" onclick="selPeriodo(1)">
         <div><strong>Mensal</strong><br><span style="font-size:12px;color:#64748b;">Sem compromisso</span></div>
-        <div style="font-weight:700;" id="preco1m"><?php echo View::e(I18n::preco($preco)); ?>/mês</div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;"><?php echo View::e(I18n::preco($preco)); ?>/mês</div>
+          <div style="font-size:11px;color:#94a3b8;">Cobrado <?php echo View::e(I18n::preco($preco)); ?></div>
+        </div>
       </div>
       <div class="periodo-opt" data-periodo="6" onclick="selPeriodo(6)">
         <div><strong>Semestral</strong> <span class="desc-badge"><?php echo $d6; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;">Cobrado a cada 6 meses</span></div>
-        <div style="font-weight:700;" id="preco6m"></div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;" id="preco6m"></div>
+          <div style="font-size:11px;color:#94a3b8;" id="cobrado6m"></div>
+        </div>
       </div>
       <div class="periodo-opt" data-periodo="12" onclick="selPeriodo(12)">
         <div><strong>Anual</strong> <span class="desc-badge"><?php echo $d12; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;">Cobrado anualmente</span></div>
-        <div style="font-weight:700;" id="preco12m"></div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;" id="preco12m"></div>
+          <div style="font-size:11px;color:#94a3b8;" id="cobrado12m"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -295,6 +304,8 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
 
 </div><!-- /conteudo -->
 
+<?php require __DIR__ . '/../_partials/footer.php'; ?>
+
 <!-- Modal upsell -->
 <div class="overlay" id="modalUpsell">
   <div class="modal">
@@ -332,7 +343,9 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
   }
 
   document.getElementById('preco6m').textContent=fmt(precoComDesconto(precoBase,6))+'/mês';
+  document.getElementById('cobrado6m').textContent='Cobrado '+fmt(precoComDesconto(precoBase,6)*6);
   document.getElementById('preco12m').textContent=fmt(precoComDesconto(precoBase,12))+'/mês';
+  document.getElementById('cobrado12m').textContent='Cobrado '+fmt(precoComDesconto(precoBase,12)*12);
 
   window.selPeriodo=function(p){
     periodo=p;
@@ -362,17 +375,26 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
     var precoUnit=precoComDesconto(precoBase,periodo);
     var addonsTotal=0;
     document.querySelectorAll('.addon-opt').forEach(function(el){if(el.classList.contains('sel'))addonsTotal+=parseFloat(el.dataset.addonPrice)||0;});
-    var totalMes=(precoUnit+addonsTotal)*qtd;
+    // Addons também recebem desconto do período
+    var addonsMes=addonsTotal*(periodo>1?(periodo===6?(1-d6/100):(1-d12/100)):1);
+    var totalMes=(precoUnit+addonsMes)*qtd;
     var totalPeriodo=totalMes*periodo;
     var perLabel=periodo===1?'mês':periodo===6?'semestre':'ano';
+
     var html='<div style="display:flex;justify-content:space-between;"><span>'+qtd+'x <?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(precoUnit*qtd)+'/mês</span></div>';
-    if(addonsTotal>0) html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>Addons</span><span>+'+fmt(addonsTotal*qtd)+'/mês</span></div>';
-    if(periodo>1) html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>Desconto '+(periodo===6?d6:d12)+'%</span><span>aplicado</span></div>';
-    html+='<div style="font-size:12px;color:#94a3b8;margin-top:4px;">Cobrado: '+fmt(totalPeriodo)+' por '+perLabel+'</div>';
+    if(addonsTotal>0){
+      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>Addons'+( periodo>1?' (c/ desconto)':'' )+'</span><span>+'+fmt(addonsMes*qtd)+'/mês</span></div>';
+    }
+    if(periodo>1){
+      html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>Desconto '+(periodo===6?d6:d12)+'%</span><span>aplicado</span></div>';
+    }
+    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-weight:700;font-size:15px;"><span>Equivalente mensal</span><span style="color:#4F46E5;">'+fmt(totalMes)+'/mês</span></div>';
+    html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-top:2px;"><span>Valor cobrado ('+perLabel+')</span><span>'+fmt(totalPeriodo)+'</span></div>';
+
     document.getElementById('resumoConfig').innerHTML=html;
-    document.getElementById('resumoTotal').textContent=fmt(totalMes)+'/mês';
+    document.getElementById('resumoTotal').textContent=fmt(totalPeriodo);
     document.getElementById('resumoFinal').innerHTML=html;
-    document.getElementById('resumoFinalTotal').textContent=fmt(totalMes)+'/mês';
+    document.getElementById('resumoFinalTotal').textContent=fmt(totalPeriodo);
   };
   atualizarResumo();
 
