@@ -379,17 +379,21 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
     var addonsMes=addonsTotal*(periodo>1?(periodo===6?(1-d6/100):(1-d12/100)):1);
     var totalMes=(precoUnit+addonsMes)*qtd;
     var totalPeriodo=totalMes*periodo;
+    var perSuffix=periodo===1?'/mês':periodo===6?'/sem':'/ano';
     var perLabel=periodo===1?'mês':periodo===6?'semestre':'ano';
 
-    var html='<div style="display:flex;justify-content:space-between;"><span>'+qtd+'x <?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(precoUnit*qtd)+'/mês</span></div>';
+    var planoPeriodo=precoUnit*qtd*periodo;
+    var addonsPeriodo=addonsMes*qtd*periodo;
+
+    var html='<div style="display:flex;justify-content:space-between;"><span>'+qtd+'x <?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(planoPeriodo)+perSuffix+'</span></div>';
     if(addonsTotal>0){
-      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>Addons'+( periodo>1?' (c/ desconto)':'' )+'</span><span>+'+fmt(addonsMes*qtd)+'/mês</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>Addons'+( periodo>1?' (c/ desconto)':'' )+'</span><span>+'+fmt(addonsPeriodo)+perSuffix+'</span></div>';
     }
     if(periodo>1){
       html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>Desconto '+(periodo===6?d6:d12)+'%</span><span>aplicado</span></div>';
     }
-    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-weight:700;font-size:15px;"><span>Equivalente mensal</span><span style="color:#4F46E5;">'+fmt(totalMes)+'/mês</span></div>';
-    html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-top:2px;"><span>Valor cobrado ('+perLabel+')</span><span>'+fmt(totalPeriodo)+'</span></div>';
+    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;color:#64748b;"><span>Equivalente mensal</span><span>'+fmt(totalMes)+'/mês</span></div>';
+    html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-top:2px;"><span>Cobrado por '+perLabel+'</span><span>'+fmt(totalPeriodo)+'</span></div>';
 
     document.getElementById('resumoConfig').innerHTML=html;
     document.getElementById('resumoTotal').textContent=fmt(totalPeriodo);
