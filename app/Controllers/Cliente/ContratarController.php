@@ -217,6 +217,66 @@ final class ContratarController
                         if ($i === 0) {
                             $redirectUrl = '/cliente/assinaturas';
                         }
+                    } elseif ($gateway === 'PIX' && $i === 0) {
+                        // Buscar QR code PIX inline
+                        $cobrancas = $resultado['cobrancas'] ?? [];
+                        $payments = $cobrancas['data'] ?? [];
+                        $firstPaymentId = '';
+                        if (is_array($payments)) {
+                            foreach ($payments as $pay) {
+                                if (is_array($pay) && isset($pay['id'])) {
+                                    $firstPaymentId = (string)$pay['id'];
+                                    break;
+                                }
+                            }
+                        }
+                        if ($firstPaymentId !== '') {
+                            try {
+                                $pixData = $asaasApi->buscarPixQrCode($firstPaymentId);
+                                $pixPayload = (string)($pixData['payload'] ?? '');
+                                $pixImage = (string)($pixData['encodedImage'] ?? '');
+                                if ($pixPayload !== '') {
+                                    return Resposta::json([
+                                        'ok' => true,
+                                        'payment_type' => 'pix',
+                                        'pix_payload' => $pixPayload,
+                                        'pix_image' => $pixImage,
+                                        'redirect' => '/cliente/assinaturas',
+                                    ]);
+                                }
+                            } catch (\Throwable) {}
+                        }
+                        $redirectUrl = '/cliente/pagamento?sub=' . $localSubId;
+                    } elseif ($gateway === 'BOLETO' && $i === 0) {
+                        // Buscar linha digitável inline
+                        $cobrancas = $resultado['cobrancas'] ?? [];
+                        $payments = $cobrancas['data'] ?? [];
+                        $firstPayment = null;
+                        if (is_array($payments)) {
+                            foreach ($payments as $pay) {
+                                if (is_array($pay) && isset($pay['id'])) {
+                                    $firstPayment = $pay;
+                                    break;
+                                }
+                            }
+                        }
+                        if ($firstPayment) {
+                            try {
+                                $boletoData = $asaasApi->buscarLinhaDigitavel((string)$firstPayment['id']);
+                                $linhaDigitavel = (string)($boletoData['identificationField'] ?? '');
+                                $bankSlipUrl = (string)($firstPayment['bankSlipUrl'] ?? '');
+                                if ($linhaDigitavel !== '') {
+                                    return Resposta::json([
+                                        'ok' => true,
+                                        'payment_type' => 'boleto',
+                                        'boleto_linha' => $linhaDigitavel,
+                                        'boleto_url' => $bankSlipUrl,
+                                        'redirect' => '/cliente/assinaturas',
+                                    ]);
+                                }
+                            } catch (\Throwable) {}
+                        }
+                        $redirectUrl = '/cliente/pagamento?sub=' . $localSubId;
                     } elseif ($i === 0 && $localSubId > 0) {
                         $redirectUrl = '/cliente/pagamento?sub=' . $localSubId;
                     }

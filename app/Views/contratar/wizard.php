@@ -497,8 +497,39 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
     fetch('/contratar/finalizar',{method:'POST',body:body,credentials:'same-origin'})
       .then(function(r){return r.json();})
       .then(function(data){
-        if(data.ok&&data.redirect){window.location.href=data.redirect;}
-        else{errEl.textContent=data.erro||'Erro ao processar. Tente novamente.';errEl.style.display='block';btn.disabled=false;btn.textContent='Finalizar contratação';}
+        if(data.ok&&data.payment_type==='pix'){
+          // Mostrar PIX inline
+          var html='<div class="card" style="text-align:center;padding:28px;">';
+          html+='<div style="font-size:32px;margin-bottom:8px;">✅</div>';
+          html+='<div class="titulo" style="font-size:18px;">Conta criada! Pague via PIX</div>';
+          html+='<p class="texto">Escaneie o QR Code ou copie o código abaixo.</p>';
+          if(data.pix_image) html+='<img src="data:image/png;base64,'+data.pix_image+'" style="max-width:220px;margin:16px auto;display:block;border-radius:12px;"/>';
+          if(data.pix_payload){
+            html+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all;font-size:12px;font-family:monospace;">'+data.pix_payload+'</div>';
+            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.pix_payload.replace(/'/g,"\\'")+'\');this.textContent=\'Copiado!\'">Copiar código PIX</button>';
+          }
+          html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">Ir para minhas assinaturas</a></div>';
+          html+='</div>';
+          document.getElementById('step3').innerHTML=html;
+        } else if(data.ok&&data.payment_type==='boleto'){
+          // Mostrar Boleto inline
+          var html='<div class="card" style="text-align:center;padding:28px;">';
+          html+='<div style="font-size:32px;margin-bottom:8px;">✅</div>';
+          html+='<div class="titulo" style="font-size:18px;">Conta criada! Pague o boleto</div>';
+          html+='<p class="texto">Copie a linha digitável ou baixe o boleto.</p>';
+          if(data.boleto_linha){
+            html+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all;font-size:13px;font-family:monospace;">'+data.boleto_linha+'</div>';
+            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.boleto_linha.replace(/'/g,"\\'")+'\');this.textContent=\'Copiado!\'">Copiar linha digitável</button>';
+          }
+          if(data.boleto_url) html+=' <a href="'+data.boleto_url+'" target="_blank" class="botao sm" style="margin-left:8px;">Baixar boleto</a>';
+          html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">Ir para minhas assinaturas</a></div>';
+          html+='</div>';
+          document.getElementById('step3').innerHTML=html;
+        } else if(data.ok&&data.redirect){
+          window.location.href=data.redirect;
+        } else{
+          errEl.textContent=data.erro||'Erro ao processar. Tente novamente.';errEl.style.display='block';btn.disabled=false;btn.textContent='Finalizar contratação';
+        }
       })
       .catch(function(){errEl.textContent='Erro de conexão. Tente novamente.';errEl.style.display='block';btn.disabled=false;btn.textContent='Finalizar contratação';});
   };
