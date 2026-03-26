@@ -178,24 +178,17 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Servidor Proxy (Domínios Temporários)</h2>
-    <p class="texto" style="font-size:13px;margin-bottom:12px;">Servidor onde o Nginx será configurado para fazer proxy reverso dos domínios temporários. Se não preenchido, usa as credenciais do servidor de e-mail.</p>
+    <p class="texto" style="font-size:13px;margin-bottom:12px;">Domínios temporários são criados via Cloudflare DNS API. Configure o token e o Zone ID do domínio base.</p>
     <div class="grid">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">IP do servidor proxy</label>
-        <input class="input" type="text" name="proxy_server_ip" value="<?php echo View::e((string)($proxy_server_ip??'')); ?>" placeholder="84.247.143.165" />
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Cloudflare API Token</label>
+        <input class="input" type="password" name="cloudflare_api_token" value="<?php echo View::e((string)($cloudflare_api_token??'')); ?>" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Token com permissão Zone:DNS:Edit. Crie em <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener">Cloudflare → API Tokens</a>.</p>
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Porta SSH</label>
-        <input class="input" type="number" name="proxy_server_ssh_port" value="<?php echo View::e((string)($proxy_server_ssh_port??'22')); ?>" min="1" max="65535" />
-      </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário SSH</label>
-        <input class="input" type="text" name="proxy_server_ssh_user" value="<?php echo View::e((string)($proxy_server_ssh_user??'root')); ?>" />
-      </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Senha SSH</label>
-        <input class="input" type="password" name="proxy_server_ssh_password" value="" autocomplete="new-password" />
-        <p class="texto" style="font-size:12px;margin-top:4px;">Deixe em branco para manter a senha atual.</p>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Cloudflare Zone ID</label>
+        <input class="input" type="text" name="cloudflare_zone_id" value="<?php echo View::e((string)($cloudflare_zone_id??'')); ?>" placeholder="abc123..." />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Zone ID do domínio base (ex: lrvweb.com.br). Encontre no dashboard do Cloudflare → Overview → API.</p>
       </div>
     </div>
 
