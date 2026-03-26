@@ -279,6 +279,15 @@ $roteador->get('/cliente/emails/dominios/instrucoes', [ClienteDominiosEmailContr
 $roteador->post('/cliente/emails/dominios/webmail-ativar', [ClienteDominiosEmailController::class, 'ativarWebmail'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('webmail_activate', 10, 60)]);
 $roteador->post('/cliente/emails/dominios/webmail-verificar', [ClienteDominiosEmailController::class, 'verificarWebmail'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('webmail_verify', 10, 60)]);
 
+// Domínios centralizados (subdomínios + raiz)
+$roteador->get('/cliente/dominios', [\LRV\App\Controllers\Cliente\DominiosController::class, 'index'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/dominios/adicionar-raiz', [\LRV\App\Controllers\Cliente\DominiosController::class, 'adicionarRaiz'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_add', 5, 60)]);
+$roteador->post('/cliente/dominios/adicionar-sub', [\LRV\App\Controllers\Cliente\DominiosController::class, 'adicionarSub'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_add', 5, 60)]);
+$roteador->post('/cliente/dominios/verificar-txt', [\LRV\App\Controllers\Cliente\DominiosController::class, 'verificarTxt'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
+$roteador->post('/cliente/dominios/verificar-cname', [\LRV\App\Controllers\Cliente\DominiosController::class, 'verificarCname'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
+$roteador->post('/cliente/dominios/remover-raiz', [\LRV\App\Controllers\Cliente\DominiosController::class, 'removerRaiz'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/dominios/remover-sub', [\LRV\App\Controllers\Cliente\DominiosController::class, 'removerSub'], [Middlewares::exigirLoginCliente()]);
+
 // Reset de senha — cliente
 $roteador->get('/cliente/reset-senha', [ClienteResetSenhaController::class, 'formulario']);
 $roteador->post('/cliente/reset-senha/solicitar', [ClienteResetSenhaController::class, 'solicitar'], [Middlewares::rateLimitIp('reset_cliente', 5, 300)]);

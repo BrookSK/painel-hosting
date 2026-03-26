@@ -255,5 +255,16 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   Persistido via cookie <code>currency</code> ou query param <code>?currency=BRL</code>.
 </p>
 
+<div class="section-title">28. Gerenciamento de subdomínios (v2.3)</div>
+<p style="font-size:14px;color:#475569;">
+  Tela centralizada <code>/cliente/dominios</code> para gerenciar domínios raiz (email) e subdomínios (apps/deploy).<br>
+  Subdomínios usam verificação em 2 passos: TXT (prova de propriedade) + CNAME (apontamento seguro).<br>
+  O IP do servidor nunca é exposto ao cliente — CNAMEs apontam para subdomínios do sistema com proxy Cloudflare.<br>
+  Subdomínio automático <code>vpsN.clientes.DOMINIO</code> criado no Cloudflare ao provisionar VPS.<br>
+  Aplicações e Git Deploy agora usam select de subdomínios verificados (não aceita domínio raiz).<br>
+  Containers Docker bindam em <code>127.0.0.1</code> — portas não ficam expostas pro mundo.<br>
+  Migration: <code>0047_client_subdomains</code>.
+</p>
+
 </div>
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>

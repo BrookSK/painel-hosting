@@ -94,6 +94,15 @@ final class GitDeployController
         if ($branch === '') $branch = 'main';
         if ($deployPath === '') $deployPath = '/var/www/html';
 
+        // Validar que subdomínio pertence ao cliente e está ativo
+        if ($subdomain !== '') {
+            $subCheck = $pdo->prepare("SELECT id FROM client_subdomains WHERE client_id = :c AND subdomain = :s AND status = 'active' LIMIT 1");
+            $subCheck->execute([':c' => $clienteId, ':s' => $subdomain]);
+            if (!$subCheck->fetch()) {
+                return $this->renderizarErro($clienteId, $id, 'Subdomínio inválido ou não verificado. Cadastre e verifique em Domínios.');
+            }
+        }
+
         if ($id > 0) {
             $pdo->prepare('UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo WHERE id=:id AND client_id=:c')
                 ->execute([':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':id'=>$id,':c'=>$clienteId]);

@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **2.2.0**
+> Versão atual: **2.3.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -65,6 +65,9 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_25_0041_chat_flows.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0042_billing_discounts.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0043_client_hidden.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0044_client_last_login.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0045_client_lang_country.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0046_subscription_billing_type.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0047_client_subdomains.sql
 ```
 
 ### 3. Configuração do banco

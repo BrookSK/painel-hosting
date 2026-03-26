@@ -64,7 +64,12 @@ final class AplicacoesController
 
         return Resposta::html(View::renderizar(
             __DIR__ . '/../../Views/cliente/aplicacoes-catalogo.php',
-            ['templates' => $templates, 'vpsList' => $vpsList, 'cliente' => $cliente]
+            [
+                'templates' => $templates,
+                'vpsList' => $vpsList,
+                'cliente' => $cliente,
+                'subdomains_disponiveis' => (new \LRV\App\Services\Infra\SubdomainVerificationService())->listarAtivosDisponiveis($clienteId),
+            ]
         ));
     }
 

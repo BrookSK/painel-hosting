@@ -140,6 +140,9 @@ final class VpsProvisioningService
 
         $this->atualizarStatusVps($vpsId, 'running');
         $log('VPS provisionada e em execução.');
+
+        // Criar subdomínio automático no Cloudflare
+        $this->criarSubdominioAutomatico($vpsId, $serverId, $log);
     }
 
     public function suspenderPorPagamento(int $vpsId, callable $log): void
@@ -320,6 +323,43 @@ final class VpsProvisioningService
 
         $this->atualizarStatusVps($vpsId, 'running');
         $log('VPS reativada.');
+    }
+
+    private function criarSubdominioAutomatico(int $vpsId, int $serverId, callable $log): void
+    {
+        try {
+            $tempBase = trim((string) Settings::obter('infra.temp_domain_base', ''));
+            if ($tempBase === '') return;
+
+            $pdo = BancoDeDados::pdo();
+
+            // Verificar se já tem subdomínio
+            $check = $pdo->prepare('SELECT temp_subdomain FROM vps WHERE id = :id');
+            $check->execute([':id' => $vpsId]);
+            $row = $check->fetch();
+            if (is_array($row) && trim((string)($row['temp_subdomain'] ?? '')) !== '') return;
+
+            // Buscar IP do servidor
+            $srvStmt = $pdo->prepare('SELECT ip_address FROM servers WHERE id = :id');
+            $srvStmt->execute([':id' => $serverId]);
+            $srv = $srvStmt->fetch();
+            $ip = is_array($srv) ? trim((string)($srv['ip_address'] ?? '')) : '';
+            if ($ip === '') return;
+
+            $subdomain = 'vps' . $vpsId . '.' . $tempBase;
+
+            // Criar registro A no Cloudflare com proxy ativado
+            $proxy = new \LRV\App\Services\Infra\NginxProxyService();
+            $proxy->criarProxy($subdomain, $ip);
+
+            // Salvar no banco
+            $pdo->prepare('UPDATE vps SET temp_subdomain = :s WHERE id = :id')
+                ->execute([':s' => $subdomain, ':id' => $vpsId]);
+
+            $log('Subdomínio automático criado: ' . $subdomain);
+        } catch (\Throwable $e) {
+            $log('Aviso: não foi possível criar subdomínio automático: ' . $e->getMessage());
+        }
     }
 
     private function atualizarStatusVps(int $vpsId, string $status): void

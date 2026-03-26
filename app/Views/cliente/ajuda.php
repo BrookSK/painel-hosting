@@ -116,6 +116,28 @@ details ul{padding-left:18px;}
     <p>Abra um <a href="/cliente/tickets/novo">ticket de suporte</a> com o assunto "Cancelamento". O cancelamento é processado em até 1 dia útil.</p>
   </details>
 
+  <div class="faq-section">Domínios e Subdomínios</div>
+
+  <details>
+    <summary>Como funciona o sistema de domínios?</summary>
+    <p>Acesse <a href="/cliente/dominios">Domínios</a>. Existem dois tipos: domínios raiz (para e-mail, ex: seudominio.com) e subdomínios (para aplicações e deploys, ex: app.seudominio.com). Primeiro cadastre o domínio raiz, depois adicione subdomínios.</p>
+  </details>
+
+  <details>
+    <summary>Como verificar um subdomínio?</summary>
+    <p>São 2 passos: primeiro crie um registro TXT no seu DNS para provar que o domínio é seu. Depois crie um CNAME apontando para o endereço que o sistema indicar. O IP do servidor nunca é exposto — tudo passa pelo proxy.</p>
+  </details>
+
+  <details>
+    <summary>Posso usar domínio raiz nas aplicações?</summary>
+    <p>Não. Aplicações e deploys usam apenas subdomínios verificados. Isso garante segurança e esconde o IP do servidor. Domínios raiz são usados apenas para criar contas de e-mail.</p>
+  </details>
+
+  <details>
+    <summary>Onde uso meus subdomínios?</summary>
+    <p>Subdomínios verificados aparecem como opção ao instalar aplicações no <a href="/cliente/aplicacoes/catalogo">Catálogo</a> e ao configurar <a href="/cliente/git-deploy">Git Deploy</a>. Cada subdomínio só pode ser usado em um lugar por vez.</p>
+  </details>
+
   <div class="faq-section"><?php echo View::e(I18n::t('ajuda.secao_apps')); ?></div>
 
   <details>

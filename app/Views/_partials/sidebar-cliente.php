@@ -59,6 +59,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.emails')); ?></span>
     </a>
+    <a href="/cliente/dominios" class="nav-item<?php echo _nav_ativo_cli('/cliente/dominios', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.dominios')); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h14M10 3c-2 2.5-2 11 0 14M10 3c2 2.5 2 11 0 14" stroke="currentColor" stroke-width="1.4"/></svg>
+      <span><?php echo View::e(I18n::t('sidebar.dominios')); ?></span>
+    </a>
     <a href="/cliente/aplicacoes" class="nav-item<?php echo _nav_ativo_cli('/cliente/aplicacoes', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.aplicacoes')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 4l4 4-4 4M10 16h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.aplicacoes')); ?></span>

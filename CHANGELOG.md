@@ -5,6 +5,27 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [2.3.0] — 2026-03-26
+
+### Adicionado
+- **Gerenciamento centralizado de domínios** (`/cliente/dominios`) — tela única para domínios raiz (email) e subdomínios (apps/deploy), com fluxo de verificação TXT + CNAME
+- **Verificação de subdomínio em 2 passos** — passo 1: registro TXT `_lrv-verify.sub.dominio.com` para provar propriedade; passo 2: CNAME apontando para subdomínio do sistema com proxy Cloudflare. IP nunca exposto
+- **Subdomínio automático da VPS** — ao provisionar, o sistema cria `vpsN.clientes.DOMINIO` no Cloudflare com proxy ativado e salva em `vps.temp_subdomain`
+- **Select de subdomínios** — catálogo de aplicações e Git Deploy agora usam select de subdomínios verificados ao invés de campo de texto livre
+- **Bind em 127.0.0.1** — containers Docker agora bindam portas em localhost, impedindo acesso direto via IP:porta sem SSL
+- Tabela `client_subdomains` com campos: subdomain, root_domain, verify_token, cname_target, status, used_by_type/id
+- `SubdomainVerificationService` com verificação TXT/CNAME, controle de uso e listagem de disponíveis
+- Item "Domínios" na sidebar do cliente entre E-mails e Aplicações
+- FAQ de domínios na ajuda do cliente
+- Migration: `0047_client_subdomains`
+
+### Alterado
+- Aplicações e Git Deploy não aceitam mais domínio raiz — apenas subdomínios verificados
+- Links de "Domínios de E-mail" redirecionam para a tela centralizada `/cliente/dominios`
+- `AppInstallService` e `AplicacaoDeployService` bindam em `127.0.0.1:PORTA` ao invés de `0.0.0.0:PORTA`
+
+---
+
 ## [2.2.0] — 2026-03-26
 
 ### Adicionado

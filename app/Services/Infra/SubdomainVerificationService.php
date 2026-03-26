@@ -1,0 +1,229 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LRV\App\Services\Infra;
+
+use LRV\Core\BancoDeDados;
+use LRV\Core\Settings;
+
+final class SubdomainVerificationService
+{
+    public function adicionarSubdominio(int $clientId, string $subdomain): array
+    {
+        $subdomain = strtolower(trim($subdomain));
+        if (!$this->validarFormato($subdomain)) {
+            throw new \InvalidArgumentException('Formato de subdomínio inválido. Use algo como app.seudominio.com.br');
+        }
+
+        $root = $this->extrairRaiz($subdomain);
+        if ($root === '' || $root === $subdomain) {
+            throw new \InvalidArgumentException('Informe um subdomínio, não o domínio raiz. Ex: app.seudominio.com.br');
+        }
+
+        // Verificar se o domínio raiz pertence ao cliente
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT id FROM client_domains WHERE client_id = :c AND domain = :d LIMIT 1");
+        $stmt->execute([':c' => $clientId, ':d' => $root]);
+        if (!$stmt->fetch()) {
+            throw new \RuntimeException('O domínio raiz "' . $root . '" não está cadastrado. Adicione-o primeiro.');
+        }
+
+        // Verificar duplicata
+        $dup = $pdo->prepare('SELECT id, client_id FROM client_subdomains WHERE subdomain = :s LIMIT 1');
+        $dup->execute([':s' => $subdomain]);
+        $existing = $dup->fetch();
+        if (is_array($existing)) {
+            if ((int)$existing['client_id'] === $clientId) {
+                throw new \RuntimeException('Você já cadastrou este subdomínio.');
+            }
+            throw new \RuntimeException('Este subdomínio já está em uso por outro cliente.');
+        }
+
+        $token = bin2hex(random_bytes(16));
+
+        // Determinar CNAME target baseado na VPS do cliente
+        $cnameTarget = $this->gerarCnameTarget($clientId);
+
+        $pdo->prepare(
+            'INSERT INTO client_subdomains (client_id, subdomain, root_domain, type, verify_token, cname_target, status, created_at)
+             VALUES (:c, :s, :r, :t, :vt, :ct, :st, :cr)'
+        )->execute([
+            ':c'  => $clientId,
+            ':s'  => $subdomain,
+            ':r'  => $root,
+            ':t'  => 'subdomain',
+            ':vt' => $token,
+            ':ct' => $cnameTarget,
+            ':st' => 'pending_txt',
+            ':cr' => date('Y-m-d H:i:s'),
+        ]);
+
+        return [
+            'id' => (int)$pdo->lastInsertId(),
+            'subdomain' => $subdomain,
+            'verify_token' => $token,
+            'cname_target' => $cnameTarget,
+        ];
+    }
+
+    public function verificarTxt(int $clientId, int $subId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT * FROM client_subdomains WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $subId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('Subdomínio não encontrado.');
+        }
+
+        $subdomain = (string)$row['subdomain'];
+        $token = (string)$row['verify_token'];
+        $txtHost = '_lrv-verify.' . $subdomain;
+        $expected = 'lrv-verify=' . $token;
+
+        $records = @dns_get_record($txtHost, DNS_TXT);
+        $found = false;
+        if (is_array($records)) {
+            foreach ($records as $r) {
+                $txt = (string)($r['txt'] ?? '');
+                if (str_contains($txt, $expected)) {
+                    $found = true;
+                    break;
+                }
+            }
+        }
+
+        if ($found) {
+            $pdo->prepare("UPDATE client_subdomains SET status = 'pending_cname', error_msg = NULL WHERE id = :id")
+                ->execute([':id' => $subId]);
+            return ['ok' => true, 'status' => 'pending_cname'];
+        }
+
+        $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
+            ->execute([':e' => 'Registro TXT não encontrado em ' . $txtHost, ':id' => $subId]);
+        return ['ok' => false, 'erro' => 'Registro TXT não encontrado. Verifique se criou _lrv-verify.' . $subdomain . ' com valor "' . $expected . '"'];
+    }
+
+    public function verificarCname(int $clientId, int $subId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT * FROM client_subdomains WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $subId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('Subdomínio não encontrado.');
+        }
+
+        $subdomain = (string)$row['subdomain'];
+        $cnameTarget = strtolower(trim((string)$row['cname_target']));
+
+        $records = @dns_get_record($subdomain, DNS_CNAME);
+        $found = false;
+        if (is_array($records)) {
+            foreach ($records as $r) {
+                $target = strtolower(trim((string)($r['target'] ?? '')));
+                if ($target === $cnameTarget || $target === $cnameTarget . '.') {
+                    $found = true;
+                    break;
+                }
+            }
+        }
+
+        if ($found) {
+            $pdo->prepare("UPDATE client_subdomains SET status = 'active', error_msg = NULL WHERE id = :id")
+                ->execute([':id' => $subId]);
+            return ['ok' => true, 'status' => 'active'];
+        }
+
+        $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
+            ->execute([':e' => 'CNAME não encontrado apontando para ' . $cnameTarget, ':id' => $subId]);
+        return ['ok' => false, 'erro' => 'CNAME não encontrado. Aponte ' . $subdomain . ' para ' . $cnameTarget];
+    }
+
+    public function removerSubdominio(int $clientId, int $subId): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, used_by_type FROM client_subdomains WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $subId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('Subdomínio não encontrado.');
+        }
+
+        if (($row['used_by_type'] ?? null) !== null) {
+            throw new \RuntimeException('Este subdomínio está em uso. Remova a associação antes de deletar.');
+        }
+
+        $pdo->prepare('DELETE FROM client_subdomains WHERE id = :id AND client_id = :c')
+            ->execute([':id' => $subId, ':c' => $clientId]);
+    }
+
+    public function listar(int $clientId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT * FROM client_subdomains WHERE client_id = :c ORDER BY root_domain, subdomain');
+        $stmt->execute([':c' => $clientId]);
+        return $stmt->fetchAll() ?: [];
+    }
+
+    public function listarAtivosDisponiveis(int $clientId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT id, subdomain, root_domain FROM client_subdomains WHERE client_id = :c AND status = 'active' AND used_by_type IS NULL ORDER BY subdomain");
+        $stmt->execute([':c' => $clientId]);
+        return $stmt->fetchAll() ?: [];
+    }
+
+    public function marcarEmUso(int $subId, string $type, int $entityId): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $pdo->prepare('UPDATE client_subdomains SET used_by_type = :t, used_by_id = :eid WHERE id = :id')
+            ->execute([':t' => $type, ':eid' => $entityId, ':id' => $subId]);
+    }
+
+    public function liberarUso(string $type, int $entityId): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $pdo->prepare('UPDATE client_subdomains SET used_by_type = NULL, used_by_id = NULL WHERE used_by_type = :t AND used_by_id = :eid')
+            ->execute([':t' => $type, ':eid' => $entityId]);
+    }
+
+    private function gerarCnameTarget(int $clientId): string
+    {
+        $tempBase = trim((string)Settings::obter('infra.temp_domain_base', ''));
+        if ($tempBase === '') return '';
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT id, temp_subdomain FROM vps WHERE client_id = :c AND status IN ('running','pending_provisioning','provisioning') ORDER BY id DESC LIMIT 1");
+        $stmt->execute([':c' => $clientId]);
+        $vps = $stmt->fetch();
+
+        if (!is_array($vps)) return 'vps0.' . $tempBase;
+
+        $existing = trim((string)($vps['temp_subdomain'] ?? ''));
+        if ($existing !== '') return $existing;
+
+        return 'vps' . (int)$vps['id'] . '.' . $tempBase;
+    }
+
+    private function validarFormato(string $s): bool
+    {
+        return preg_match('/^[a-z0-9][a-z0-9.\-]*\.[a-z]{2,}$/', $s) === 1 && strlen($s) <= 253;
+    }
+
+    private function extrairRaiz(string $subdomain): string
+    {
+        $parts = explode('.', $subdomain);
+        if (count($parts) < 3) return $subdomain;
+        // Handle .com.br, .co.uk etc
+        $tld = $parts[count($parts) - 1];
+        if (strlen($tld) <= 3 && count($parts) >= 4) {
+            return implode('.', array_slice($parts, -3));
+        }
+        return implode('.', array_slice($parts, -2));
+    }
+}

@@ -144,7 +144,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <input class="input" type="text" name="domain" value="<?php echo View::e($dominiosSelect[0]); ?>" readonly style="background:#f8fafc;" />
           <?php else: ?>
             <input class="input" type="text" name="domain" placeholder="seudominio.com" required />
-            <p style="font-size:12px;color:#94a3b8;margin-top:4px;">Nenhum domínio configurado. <a href="/cliente/emails/dominios">Adicione seu domínio</a>.</p>
+            <p style="font-size:12px;color:#94a3b8;margin-top:4px;">Nenhum domínio configurado. <a href="/cliente/dominios">Adicione seu domínio</a>.</p>
           <?php endif; ?>
         </div>
         <div style="margin-bottom:10px;">
@@ -166,7 +166,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </form>
 
       <div style="border-top:1px solid #f1f5f9;padding-top:12px;margin-top:12px;">
-        <a href="/cliente/emails/dominios" class="botao ghost sm"><?php echo View::e(I18n::t('emails.dominios')); ?></a>
+        <a href="/cliente/dominios" class="botao ghost sm"><?php echo View::e(I18n::t('emails.dominios')); ?></a>
       </div>
     </div>
   </div>

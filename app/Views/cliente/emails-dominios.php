@@ -26,7 +26,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="page-title"><?php echo View::e(I18n::t('emails.dominios')); ?></div>
     <div class="page-subtitle" style="margin-bottom:0;">Use seu próprio domínio para criar e-mails profissionais</div>
   </div>
-  <a href="/cliente/emails" class="botao ghost sm">← <?php echo View::e(I18n::t('emails.titulo')); ?></a>
+  <a href="/cliente/dominios" class="botao ghost sm">← <?php echo View::e(I18n::t('dominios.titulo')); ?></a>
 </div>
 
 <?php if (!empty($erro)): ?>

@@ -59,9 +59,22 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <input class="input" type="text" name="branch" value="<?php echo View::e((string)($dep['branch'] ?? 'main')); ?>" placeholder="main" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:5px;">Domínio de acesso <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
-        <input class="input" type="text" name="subdomain" value="<?php echo View::e((string)($dep['subdomain'] ?? '')); ?>" placeholder="app.meudominio.com ou meusite.com.br" />
-        <p style="font-size:12px;color:#64748b;margin-top:4px;">Domínio completo (ex: <code>meusite.com.br</code>) ou subdomínio (ex: <code>app.meudominio.com</code>). O apontamento DNS precisa ser feito no seu provedor.</p>
+        <label style="display:block;font-size:13px;margin-bottom:5px;">Subdomínio <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
+        <select class="input" name="subdomain">
+          <option value="">Nenhum (usar domínio temporário)</option>
+          <?php
+            $subSvc = new \LRV\App\Services\Infra\SubdomainVerificationService();
+            $subDisp = $subSvc->listarAtivosDisponiveis(LRV\Core\Auth::clienteId() ?? 0);
+            foreach ($subDisp as $sd):
+          ?>
+            <option value="<?php echo View::e((string)($sd['subdomain'] ?? '')); ?>" <?php echo ((string)($dep['subdomain'] ?? '')) === (string)($sd['subdomain'] ?? '') ? 'selected' : ''; ?>>
+              <?php echo View::e((string)($sd['subdomain'] ?? '')); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+        <?php if (empty($subDisp)): ?>
+          <p style="font-size:12px;color:#f59e0b;margin-top:4px;">Nenhum subdomínio disponível. <a href="/cliente/dominios">Cadastre um</a>.</p>
+        <?php endif; ?>
       </div>
     </div>
 
