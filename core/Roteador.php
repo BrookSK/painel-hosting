@@ -39,6 +39,11 @@ final class Roteador
         $rota = $this->rotas[$metodo][$caminho] ?? null;
 
         if ($rota === null) {
+            // Ignorar rotas automáticas de browsers/OS que geram ruído
+            if (str_starts_with($caminho, '/.well-known/') || $caminho === '/favicon.ico' || $caminho === '/robots.txt') {
+                Resposta::texto('', 404)->enviar();
+                return;
+            }
             \LRV\App\Services\Errors\ErrorLogService::registrar(
                 404,
                 'not_found',
@@ -129,6 +134,20 @@ final class Roteador
         if (str_contains($accept, 'application/json')) {
             return Resposta::json(['ok' => false, 'erro' => 'csrf_invalid'], 419);
         }
+
+        // Para formulários de login/autenticação, redirecionar de volta
+        // em vez de mostrar erro genérico (sessão expirada é comum em mobile)
+        $caminho = $this->normalizarCaminho($req->caminho);
+        $rotasRedirect = [
+            '/cliente/entrar'       => '/cliente/entrar',
+            '/equipe/entrar'        => '/equipe/entrar',
+            '/cliente/reset-senha'  => '/cliente/reset-senha',
+            '/equipe/reset-senha'   => '/equipe/reset-senha',
+        ];
+        if (isset($rotasRedirect[$caminho])) {
+            return Resposta::redirecionar($rotasRedirect[$caminho]);
+        }
+
         \LRV\App\Services\Errors\ErrorLogService::registrar(
             419,
             'csrf',
