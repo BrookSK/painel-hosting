@@ -118,12 +118,8 @@ final class AssinarPlanoController
                 $req,
             );
 
-            $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                'erro' => '',
-                'resultado' => $resultado,
-            ]);
-
-            return Resposta::html($html);
+            $localSubId = (int) ($resultado['local_subscription_id'] ?? 0);
+            return Resposta::redirecionar('/cliente/pagamento?sub=' . $localSubId);
         }
 
         // USD → Stripe checkout

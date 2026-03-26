@@ -159,6 +159,8 @@ final class AssinaturasService
                 ]);
             }
 
+            $localSubId = (int) $pdo->lastInsertId();
+
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -170,6 +172,7 @@ final class AssinaturasService
         return [
             'assinatura' => $respAss,
             'cobrancas' => $cobrancas,
+            'local_subscription_id' => $localSubId,
         ];
     }
 }

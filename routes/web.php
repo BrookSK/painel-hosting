@@ -184,6 +184,9 @@ $roteador->get('/cliente/planos/checkout', [ClientePlanosController::class, 'che
 $roteador->post('/cliente/assinar', [AssinarPlanoController::class, 'assinar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('subscribe', 5, 60)]);
 $roteador->get('/cliente/stripe/sucesso', [StripeCheckoutController::class, 'sucesso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/stripe/cancelado', [StripeCheckoutController::class, 'cancelado'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/pagamento', [\LRV\App\Controllers\Cliente\PagamentoController::class, 'aguardando'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/pagamento/status', [\LRV\App\Controllers\Cliente\PagamentoController::class, 'statusApi'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/pagamento/cartao', [\LRV\App\Controllers\Cliente\PagamentoController::class, 'pagarCartao'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('pay_card', 5, 60)]);
 $roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/aplicacoes/catalogo', [ClienteAplicacoesController::class, 'catalogo'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/aplicacoes/instalar', [ClienteAplicacoesController::class, 'instalar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('app_install', 10, 60)]);

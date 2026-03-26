@@ -29,6 +29,29 @@ final class AsaasApi
         return $this->get('/subscriptions/' . rawurlencode($subscriptionId) . '/payments');
     }
 
+    public function buscarCobranca(string $paymentId): array
+    {
+        return $this->get('/payments/' . rawurlencode($paymentId));
+    }
+
+    public function buscarPixQrCode(string $paymentId): array
+    {
+        return $this->get('/payments/' . rawurlencode($paymentId) . '/pixQrCode');
+    }
+
+    public function buscarLinhaDigitavel(string $paymentId): array
+    {
+        return $this->get('/payments/' . rawurlencode($paymentId) . '/identificationField');
+    }
+
+    public function pagarComCartao(string $paymentId, array $cartao, array $holder): array
+    {
+        return $this->post('/payments/' . rawurlencode($paymentId) . '/payWithCreditCard', [
+            'creditCard' => $cartao,
+            'creditCardHolderInfo' => $holder,
+        ]);
+    }
+
     private function get(string $path): array
     {
         return $this->request('GET', $path, null);

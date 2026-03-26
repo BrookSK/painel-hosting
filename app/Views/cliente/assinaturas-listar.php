@@ -73,9 +73,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['next_due_date'] ?? '—')); ?></td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAssinatura((string)($a['status'] ?? '')); ?></td>
               <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
-                <button class="botao ghost sm" onclick="document.getElementById('modal-reembolso-<?php echo (int)($a['id'] ?? 0); ?>').style.display='flex'">
-                  <?php echo View::e(I18n::t('assinaturas.solicitar_reembolso')); ?>
-                </button>
+                <?php $aStatus = strtoupper((string)($a['status'] ?? '')); ?>
+                <?php if ($aStatus === 'PENDING'): ?>
+                  <a class="botao sm" href="/cliente/pagamento?sub=<?php echo (int)($a['id'] ?? 0); ?>">
+                    <?php echo View::e(I18n::t('pagamento.pagar')); ?>
+                  </a>
+                <?php else: ?>
+                  <button class="botao ghost sm" onclick="document.getElementById('modal-reembolso-<?php echo (int)($a['id'] ?? 0); ?>').style.display='flex'">
+                    <?php echo View::e(I18n::t('assinaturas.solicitar_reembolso')); ?>
+                  </button>
+                <?php endif; ?>
               </td>
             </tr>
           <?php endforeach; ?>
