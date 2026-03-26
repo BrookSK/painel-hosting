@@ -54,12 +54,20 @@ final class ContratarController
         $desconto6m  = (float) Settings::obter('billing.desconto_6m', 5);
         $desconto12m = (float) Settings::obter('billing.desconto_12m', 10);
 
+        // Addons pré-selecionados da home
+        $preSelectedAddons = [];
+        $addonsParam = trim((string)($req->query['addons'] ?? ''));
+        if ($addonsParam !== '') {
+            $preSelectedAddons = array_filter(array_map('intval', explode(',', $addonsParam)));
+        }
+
         $html = View::renderizar(__DIR__ . '/../../Views/contratar/wizard.php', [
             'plano'       => $plano,
             'addons'      => $addons,
             'upsell'      => $upsell,
             'desconto_6m' => $desconto6m,
             'desconto_12m'=> $desconto12m,
+            'pre_addons'  => $preSelectedAddons,
         ]);
 
         return Resposta::html($html);

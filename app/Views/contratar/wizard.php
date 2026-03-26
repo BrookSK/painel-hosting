@@ -182,9 +182,15 @@ $moedaJs = I18n::moedaCodigo();
     <div class="subtitulo">Serviços adicionais</div>
     <p class="texto" style="font-size:13px;">Opcionais para complementar sua VPS.</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-      <?php foreach ($addons as $a): ?>
-      <div class="addon-opt" data-addon-id="<?php echo (int)($a['id'] ?? 0); ?>" data-addon-price="<?php echo (float)($a['price'] ?? 0); ?>" onclick="toggleAddon(this)">
-        <input type="checkbox" style="accent-color:#4F46E5;width:18px;height:18px;pointer-events:none;"/>
+      <?php
+        $preAddons = is_array($pre_addons ?? null) ? $pre_addons : [];
+      ?>
+      <?php foreach ($addons as $a):
+        $aId = (int)($a['id'] ?? 0);
+        $aPreSel = in_array($aId, $preAddons, true);
+      ?>
+      <div class="addon-opt<?php echo $aPreSel ? ' sel' : ''; ?>" data-addon-id="<?php echo $aId; ?>" data-addon-price="<?php echo (float)($a['price'] ?? 0); ?>" onclick="toggleAddon(this)">
+        <input type="checkbox" <?php echo $aPreSel ? 'checked' : ''; ?> style="accent-color:#4F46E5;width:18px;height:18px;pointer-events:none;"/>
         <div style="flex:1;">
           <div style="font-weight:600;font-size:14px;"><?php echo View::e((string)($a['name'] ?? '')); ?></div>
           <?php if (($a['description'] ?? '') !== ''): ?>
@@ -409,7 +415,7 @@ $moedaJs = I18n::moedaCodigo();
   var moeda=<?php echo json_encode($moeda); ?>;
   var csrf=<?php echo json_encode(Csrf::token()); ?>;
   var upsell=<?php echo $upsell ? json_encode(['id'=>(int)$upsell['id'],'name'=>$upsell['name'],'price'=>(float)$upsell['price_monthly']]) : 'null'; ?>;
-  var passo=0,periodo=1,gateway=<?php echo json_encode($isBrl?'PIX':'stripe'); ?>,addonsIds=[];
+  var passo=0,periodo=1,gateway=<?php echo json_encode($isBrl?'PIX':'stripe'); ?>,addonsIds=<?php echo json_encode(array_values($preAddons)); ?>;
 
   function fmt(v){
     if(moeda==='BRL') return 'R$ '+v.toFixed(2).replace('.',',');

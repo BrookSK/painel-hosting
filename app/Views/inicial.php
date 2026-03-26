@@ -432,8 +432,8 @@ $_trial_dias  = (int)($trial_dias ?? 7);
             <?php if (!empty($_addons)): ?>
             <div class="addons-sec">
               <h3><?php echo View::e(I18n::t('home.plans_addons')); ?></h3>
-              <?php foreach ($_addons as $_a): $_aprice = (float)$_a['price']; ?>
-              <div class="addon-item" onclick="toggleAddon(this,<?php echo $_pid; ?>,<?php echo $_aprice; ?>)">
+              <?php foreach ($_addons as $_a): $_aprice = (float)$_a['price']; $_aid = (int)$_a['id']; ?>
+              <div class="addon-item" data-addon-id="<?php echo $_aid; ?>" onclick="toggleAddon(this,<?php echo $_pid; ?>,<?php echo $_aprice; ?>,<?php echo $_aid; ?>)">
                 <div class="addon-check"></div>
                 <div class="addon-info">
                   <div class="addon-name"><?php echo View::e((string)$_a['name']); ?></div>
@@ -448,7 +448,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
               <div class="total-value"><?php echo View::e(I18n::moeda()); ?> <span id="total-<?php echo $_pid; ?>"><?php echo View::e(I18n::numero(I18n::precoValor($_price), 0)); ?></span></div>
             </div>
             <?php endif; ?>
-            <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
+            <a href="/contratar?plan_id=<?php echo $_pid; ?>" id="cta-<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
           </div>
           <?php endforeach; ?>
           <?php else: ?>
@@ -614,14 +614,23 @@ var _convRate=<?php echo json_encode(I18n::moedaCodigo() === 'BRL' ? 1.0 : (1.0 
 var _locale=<?php echo json_encode(I18n::moedaCodigo() === 'BRL' ? 'pt-BR' : 'en-US'); ?>;
 var planBase={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:<?php echo (float)$_p['price']; ?>,<?php endforeach; ?>};
 var planAddons={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:[],<?php endforeach; ?>};
-function toggleAddon(el,pid,price){
+var planAddonIds={<?php foreach($_planos as $_p): ?><?php echo (int)$_p['id']; ?>:[],<?php endforeach; ?>};
+function toggleAddon(el,pid,price,addonId){
   el.classList.toggle('selected');
   var sel=el.classList.contains('selected');
   el.querySelector('.addon-check').innerHTML=sel?'✓':'';
-  if(sel){planAddons[pid].push(price);}else{var i=planAddons[pid].indexOf(price);if(i>-1)planAddons[pid].splice(i,1);}
+  if(sel){planAddons[pid].push(price);planAddonIds[pid].push(addonId);}
+  else{var i=planAddons[pid].indexOf(price);if(i>-1)planAddons[pid].splice(i,1);var j=planAddonIds[pid].indexOf(addonId);if(j>-1)planAddonIds[pid].splice(j,1);}
   var total=((planBase[pid]||0)+planAddons[pid].reduce(function(s,p){return s+p;},0))*_convRate;
   var el2=document.getElementById('total-'+pid);
   if(el2)el2.textContent=Math.round(total).toLocaleString(_locale);
+  // Atualizar link CTA com addons selecionados
+  var cta=document.getElementById('cta-'+pid);
+  if(cta){
+    var url='/contratar?plan_id='+pid;
+    if(planAddonIds[pid].length>0) url+='&addons='+planAddonIds[pid].join(',');
+    cta.href=url;
+  }
 }
 function openCompareModal(){document.getElementById('compareModal').classList.add('active');document.body.style.overflow='hidden';}
 function closeCompareModal(){document.getElementById('compareModal').classList.remove('active');document.body.style.overflow='';}
