@@ -392,7 +392,7 @@ $moeda   = $isBrl ? 'BRL' : 'USD';
     if(periodo>1){
       html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>Desconto '+(periodo===6?d6:d12)+'%</span><span>aplicado</span></div>';
     }
-    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;color:#64748b;"><span>Equivalente mensal</span><span>'+fmt(totalMes)+'/mês</span></div>';
+    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;color:#64748b;"><span><b>Equivalente mensal</b></span><span>'+fmt(totalMes)+'/mês</span></div>';
     html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-top:2px;"><span>Cobrado por '+perLabel+'</span><span>'+fmt(totalPeriodo)+'</span></div>';
 
     document.getElementById('resumoConfig').innerHTML=html;
