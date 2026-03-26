@@ -300,7 +300,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     }).catch(function(){wsFails++;checkFallback();});
   }
 
-  function checkFallback(){if(wsFails>=2){startPolling();}else{setTimeout(connectWs,3000);}}
+  function checkFallback(){if(wsFails>=1){startPolling();}else{setTimeout(connectWs,2000);}}
 
   function startPolling(){mode='poll';doPoll();if(!pollTimer)pollTimer=setInterval(doPoll,3000);}
 
