@@ -39,7 +39,24 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </thead>
       <tbody>
         <?php foreach (($vps ?? []) as $v): ?>
-          <?php $vid = (int)($v['id']??0); ?>
+          <?php
+            $vid = (int)($v['id']??0);
+            $st  = (string)($v['status']??'');
+            // Ações permitidas por status
+            $emTransicao = in_array($st, ['pending_node','pending_provisioning','provisioning'], true);
+            $acoes = [
+                'provisionar' => [I18n::t('eq_vps.provisionar'), 'btn-primary',
+                    in_array($st, ['pending_payment','pending_node','pending_provisioning','error'], true) && !$emTransicao],
+                'reativar'    => [I18n::t('eq_vps.reativar'), 'btn-outline',
+                    $st === 'suspended_payment'],
+                'reiniciar'   => [I18n::t('eq_vps.reiniciar'), 'btn-outline',
+                    $st === 'running'],
+                'suspender'   => [I18n::t('eq_vps.suspender'), 'btn-outline',
+                    $st === 'running'],
+                'remover'     => [I18n::t('eq_vps.remover'), 'btn-outline',
+                    !$emTransicao],
+            ];
+          ?>
           <tr>
             <td>
               <strong>#<?php echo $vid; ?></strong>
@@ -52,15 +69,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <div style="font-size:12px;opacity:.8;"><?php echo View::e((string)($v['client_email']??'')); ?></div>
             </td>
             <td><?php echo View::e((string)($v['cpu']??'')); ?> vCPU / <?php echo View::e(gb((int)($v['ram']??0))); ?> / <?php echo View::e(gb((int)($v['storage']??0))); ?></td>
-            <td><?php echo badgeStatusVpsEquipe((string)($v['status']??'')); ?></td>
+            <td><?php echo badgeStatusVpsEquipe($st); ?></td>
             <td><?php echo View::e((string)($v['server_id']??'')); ?></td>
             <td>
               <div class="linha" style="gap:4px;flex-wrap:wrap;">
-                <?php foreach ([['provisionar',I18n::t('eq_vps.provisionar'),'btn-primary'],['reativar',I18n::t('eq_vps.reativar'),'btn-outline'],['reiniciar',I18n::t('eq_vps.reiniciar'),'btn-outline'],['suspender',I18n::t('eq_vps.suspender'),'btn-outline'],['remover',I18n::t('eq_vps.remover'),'btn-outline']] as [$acao,$label,$cls]): ?>
+                <?php foreach ($acoes as $acao => [$label, $cls, $habilitado]): ?>
                   <form method="post" action="/equipe/vps/<?php echo $acao; ?>"<?php echo $acao==='remover' ? ' data-confirm="Remover VPS #'.$vid.'?"' : ''; ?>>
                     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
-                    <button class="btn-sm <?php echo $cls; ?>" type="submit"><?php echo $label; ?></button>
+                    <button class="btn-sm <?php echo $cls; ?>" type="submit"<?php echo $habilitado ? '' : ' disabled style="opacity:.4;cursor:not-allowed;"'; ?>><?php echo $label; ?></button>
                   </form>
                 <?php endforeach; ?>
               </div>
