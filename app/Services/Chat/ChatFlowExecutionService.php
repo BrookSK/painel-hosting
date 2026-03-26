@@ -154,7 +154,8 @@ final class ChatFlowExecutionService
         } elseif ($actionType === 'send_satisfaction_link') {
             $base = \LRV\Core\ConfiguracoesSistema::appUrlBase();
             $link = $base . '/cliente/avaliar?type=chat&id=' . $roomId;
-            $msg = 'Avalie seu atendimento: ' . $link;
+            // Send a special message format that the widget renders as inline rating
+            $msg = '{{satisfaction:' . $roomId . ':' . $link . '}}';
             $this->inserirMensagemSistema($roomId, $msg);
         }
     }

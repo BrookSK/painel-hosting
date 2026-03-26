@@ -115,9 +115,8 @@ final class ChatController
         }
 
         $room = (new ChatRoomService())->buscarPorId($roomId);
-        (new ChatRoomService())->fechar($roomId);
 
-        // Trigger active chat_closed flow
+        // Trigger active chat_closed flow BEFORE closing (so messages reach the client)
         try {
             $flowSvc = new \LRV\App\Services\Chat\ChatFlowService();
             $closedFlows = $flowSvc->listarPorTrigger('chat_closed');
@@ -132,9 +131,10 @@ final class ChatController
                     }
                 }
             }
-        } catch (\Throwable) {
-            // No active chat_closed flow — close normally
-        }
+        } catch (\Throwable) {}
+
+        // Now close the room
+        (new ChatRoomService())->fechar($roomId);
 
         // Enviar e-mail de pesquisa de satisfação ao cliente
         if ($room !== null) {

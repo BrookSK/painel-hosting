@@ -497,7 +497,50 @@ function addLiveMsg(type,txt,ts,fileUrl,fileName,senderName){
     var nm=document.createElement('div');nm.style.cssText='font-size:10px;font-weight:600;opacity:.7;margin-bottom:2px;';nm.textContent=senderName;d.appendChild(nm);
   }
   liveLastSender=type==='admin'?(senderName||''):'';
-  if(txt){var sp=document.createElement('span');sp.innerHTML=escH(txt);d.appendChild(sp);}
+  // Check for satisfaction rating widget
+  var satMatch = txt ? txt.match(/\{\{satisfaction:(\d+):(https?:\/\/[^\}]+)\}\}/) : null;
+  if(satMatch){
+    var satRoomId=satMatch[1],satLink=satMatch[2];
+    var satDiv=document.createElement('div');
+    satDiv.className='cw-satisfaction';
+    satDiv.innerHTML='<div style="text-align:center;padding:12px;">'
+      +'<div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:8px;">Como foi seu atendimento?</div>'
+      +'<div class="cw-stars" style="display:flex;justify-content:center;gap:4px;margin-bottom:10px;">'
+      +'<span data-star="1" style="font-size:28px;cursor:pointer;color:#e2e8f0;">★</span>'
+      +'<span data-star="2" style="font-size:28px;cursor:pointer;color:#e2e8f0;">★</span>'
+      +'<span data-star="3" style="font-size:28px;cursor:pointer;color:#e2e8f0;">★</span>'
+      +'<span data-star="4" style="font-size:28px;cursor:pointer;color:#e2e8f0;">★</span>'
+      +'<span data-star="5" style="font-size:28px;cursor:pointer;color:#e2e8f0;">★</span>'
+      +'</div>'
+      +'<textarea class="cw-input cw-sat-comment" placeholder="Deixe um comentário (opcional)" rows="2" style="width:100%;resize:none;margin-bottom:8px;font-size:12px;"></textarea>'
+      +'<button class="cw-sendbtn cw-sat-submit" style="width:100%;border-radius:8px;padding:8px;font-size:13px;">Enviar avaliação</button>'
+      +'<div class="cw-sat-done" style="display:none;color:#10b981;font-size:13px;font-weight:600;padding:8px;">✓ Obrigado pela avaliação!</div>'
+      +'</div>';
+    d.appendChild(satDiv);
+    // Star hover/click
+    setTimeout(function(){
+      var stars=satDiv.querySelectorAll('[data-star]');var rating=0;
+      stars.forEach(function(s){
+        s.addEventListener('mouseenter',function(){var v=parseInt(this.dataset.star);stars.forEach(function(x){x.style.color=parseInt(x.dataset.star)<=v?'#f59e0b':'#e2e8f0';});});
+        s.addEventListener('mouseleave',function(){stars.forEach(function(x){x.style.color=parseInt(x.dataset.star)<=rating?'#f59e0b':'#e2e8f0';});});
+        s.addEventListener('click',function(){rating=parseInt(this.dataset.star);stars.forEach(function(x){x.style.color=parseInt(x.dataset.star)<=rating?'#f59e0b':'#e2e8f0';});});
+      });
+      var submitBtn=satDiv.querySelector('.cw-sat-submit');
+      var commentEl=satDiv.querySelector('.cw-sat-comment');
+      var doneEl=satDiv.querySelector('.cw-sat-done');
+      submitBtn.addEventListener('click',function(){
+        if(rating<=0)return;
+        submitBtn.disabled=true;submitBtn.textContent='Enviando...';
+        var body='_csrf='+encodeURIComponent(CSRF)+'&type=chat&reference_id='+satRoomId+'&rating='+rating+'&comment='+encodeURIComponent(commentEl.value);
+        fetch('/cliente/avaliar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
+        .then(function(r){return r.json();}).then(function(d){
+          submitBtn.style.display='none';commentEl.style.display='none';
+          satDiv.querySelector('.cw-stars').style.pointerEvents='none';
+          doneEl.style.display='block';
+        }).catch(function(){submitBtn.disabled=false;submitBtn.textContent='Enviar avaliação';});
+      });
+    },0);
+  } else if(txt){var sp=document.createElement('span');sp.innerHTML=escH(txt);d.appendChild(sp);}
   if(fileUrl){
     if(isImgUrl(fileUrl)){var img=document.createElement('img');img.src=fileUrl;img.className='cw-msg-img';img.alt=fileName||'';img.addEventListener('click',function(){window.open(fileUrl,'_blank');});d.appendChild(img);}
     else{var a=document.createElement('a');a.href=fileUrl;a.target='_blank';a.className='cw-msg-file';a.textContent='📄 '+(fileName||'arquivo');d.appendChild(a);}
@@ -581,7 +624,12 @@ function doLivePoll(){
   fetch('/cliente/chat/poll?after='+liveLastId).then(function(r){return r.json();}).then(function(d){
     if(!d.ok)return;
     if(d.room_id)liveRoomId=d.room_id;
-    if(d.status==='closed'){liveStatus.textContent='● Chat encerrado';liveStatus.style.color='#ef4444';liveInp.disabled=true;liveSend.disabled=true;if(livePollTimer){clearInterval(livePollTimer);livePollTimer=null;}return;}
+    if(d.status==='closed'){
+      liveLoadMsgs(d.messages); // Load final messages (including satisfaction flow)
+      liveStatus.textContent='● Chat encerrado';liveStatus.style.color='#ef4444';liveInp.disabled=true;liveSend.disabled=true;
+      if(livePollTimer){clearInterval(livePollTimer);livePollTimer=null;}
+      return;
+    }
     liveLoadMsgs(d.messages);
   }).catch(function(){});
 }
