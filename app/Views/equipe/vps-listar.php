@@ -57,7 +57,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <td>
               <div class="linha" style="gap:4px;flex-wrap:wrap;">
                 <?php foreach ([['provisionar',I18n::t('eq_vps.provisionar'),'btn-primary'],['reativar',I18n::t('eq_vps.reativar'),'btn-outline'],['reiniciar',I18n::t('eq_vps.reiniciar'),'btn-outline'],['suspender',I18n::t('eq_vps.suspender'),'btn-outline'],['remover',I18n::t('eq_vps.remover'),'btn-outline']] as [$acao,$label,$cls]): ?>
-                  <form method="post" action="/equipe/vps/<?php echo $acao; ?>"<?php echo $acao==='remover' ? ' onsubmit="return confirm(\'Remover VPS #'.$vid.'?\')"' : ''; ?>>
+                  <form method="post" action="/equipe/vps/<?php echo $acao; ?>"<?php echo $acao==='remover' ? ' data-confirm="Remover VPS #'.$vid.'?"' : ''; ?>>
                     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
                     <button class="btn-sm <?php echo $cls; ?>" type="submit"><?php echo $label; ?></button>
@@ -75,6 +75,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   </div>
 </div>
 <script>
-document.querySelectorAll('form').forEach(function(f){f.addEventListener('submit',function(){var b=f.querySelector('button[type="submit"]');if(b&&!b.disabled){b.disabled=true;b.innerHTML='<span class="loading"></span>';}});});
+document.querySelectorAll('form').forEach(function(f){
+  f.addEventListener('submit',function(e){
+    var msg=f.getAttribute('data-confirm');
+    if(msg&&!confirm(msg)){e.preventDefault();return;}
+    var b=f.querySelector('button[type="submit"]');
+    if(b&&!b.disabled){
+      setTimeout(function(){b.disabled=true;b.innerHTML='<span class="loading"></span>';},0);
+    }
+  });
+});
 </script>
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
