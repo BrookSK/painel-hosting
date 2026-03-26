@@ -10,6 +10,19 @@ $_cliId   = Auth::clienteId() ?? 0;
 $_cliNome = (string)($clienteNome ?? $cliente['name'] ?? '');
 $_cliEmail= (string)($clienteEmail ?? $cliente['email'] ?? '');
 
+// Buscar nome/email do banco se não foram passados pelo controller
+if ($_cliId > 0 && ($_cliNome === '' || $_cliEmail === '')) {
+    try {
+        $_cliStmt = \LRV\Core\BancoDeDados::pdo()->prepare('SELECT name, email FROM clients WHERE id = :id');
+        $_cliStmt->execute([':id' => $_cliId]);
+        $_cliRow = $_cliStmt->fetch();
+        if (is_array($_cliRow)) {
+            if ($_cliNome === '') $_cliNome = (string)($_cliRow['name'] ?? '');
+            if ($_cliEmail === '') $_cliEmail = (string)($_cliRow['email'] ?? '');
+        }
+    } catch (\Throwable) {}
+}
+
 $_initials = '';
 foreach (explode(' ', trim($_cliNome)) as $_w) {
     $_initials .= strtoupper(substr($_w, 0, 1));
