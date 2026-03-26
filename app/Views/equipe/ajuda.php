@@ -64,12 +64,14 @@ php worker.php --once   # processa um job e sai</pre>
 
   <div class="section-title">6. Billing — Asaas (BRL)</div>
   <p style="font-size:14px;color:#475569;">Campos separados para <strong>Sandbox</strong> e <strong>Produção</strong>. Selecione o ambiente ativo no seletor. As keys legadas são atualizadas automaticamente ao salvar.</p>
+  <p style="font-size:13px;color:#475569;">Para clientes em BRL (pt-BR), todos os métodos de pagamento (PIX, Boleto e Cartão) são processados via Asaas.</p>
   <pre>Webhook endpoint: POST /webhooks/asaas
 Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   <p style="font-size:13px;color:#64748b;">Acompanhe eventos em <a href="/equipe/asaas-eventos">/equipe/asaas-eventos</a>.</p>
 
   <div class="section-title">7. Billing — Stripe (USD)</div>
   <p style="font-size:14px;color:#475569;">Campos separados para <strong>Sandbox (Test)</strong> e <strong>Produção (Live)</strong>. Selecione o ambiente ativo no seletor.</p>
+  <p style="font-size:13px;color:#475569;">Para clientes em USD (en-US/es-ES), o pagamento é feito exclusivamente via Stripe (cartão).</p>
   <pre>Webhook endpoint: POST /webhooks/stripe</pre>
 
   <div class="section-title">8. Nodes / Servidores</div>

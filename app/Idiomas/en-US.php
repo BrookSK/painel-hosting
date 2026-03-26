@@ -1679,6 +1679,10 @@ return [
     'stripe.escolher_plano' => 'Choose another plan',
     'stripe.voltar_planos' => 'View plans',
 
+    // ── Checkout ──
+    'checkout.forma_pagamento' => 'Payment method',
+    'checkout.cartao' => 'Card',
+
     // ── Chat Flows ──
     'chat_flows.titulo' => 'Chat Flows',
     'chat_flows.subtitulo' => 'Manage automated message sequences',

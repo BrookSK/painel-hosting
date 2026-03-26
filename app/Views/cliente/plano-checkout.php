@@ -92,17 +92,24 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <input type="hidden" name="addons_ids" id="addons_ids" value="" />
 
         <div style="margin-bottom:12px;">
-          <label style="display:block;font-size:13px;margin-bottom:6px;">Forma de pagamento</label>
-          <div style="display:flex;gap:8px;">
-            <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
-              <input type="radio" name="gateway" value="PIX" checked style="accent-color:#4F46E5;" /> PIX
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
-              <input type="radio" name="gateway" value="BOLETO" style="accent-color:#4F46E5;" /> Boleto
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
-              <input type="radio" name="gateway" value="stripe" style="accent-color:#4F46E5;" /> Cartão
-            </label>
+          <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.forma_pagamento')); ?></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <?php if (I18n::idioma() === 'pt-BR'): ?>
+              <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
+                <input type="radio" name="gateway" value="PIX" checked style="accent-color:#4F46E5;" /> PIX
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
+                <input type="radio" name="gateway" value="BOLETO" style="accent-color:#4F46E5;" /> Boleto
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="gw-label">
+                <input type="radio" name="gateway" value="CREDIT_CARD" style="accent-color:#4F46E5;" /> <?php echo View::e(I18n::t('checkout.cartao')); ?>
+              </label>
+            <?php else: ?>
+              <input type="hidden" name="gateway" value="stripe" />
+              <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;">
+                💳 <?php echo View::e(I18n::t('checkout.cartao')); ?> (Stripe)
+              </label>
+            <?php endif; ?>
           </div>
         </div>
 
@@ -155,8 +162,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     });
   });
   // Init
-  document.querySelector('.gw-label').style.borderColor='#4F46E5';
-  document.querySelector('.gw-label').style.background='#f5f3ff';
+  var firstGw=document.querySelector('.gw-label');
+  if(firstGw){firstGw.style.borderColor='#4F46E5';firstGw.style.background='#f5f3ff';}
 })();
 </script>
 

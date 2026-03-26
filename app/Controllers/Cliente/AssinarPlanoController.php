@@ -47,15 +47,25 @@ final class AssinarPlanoController
             }
         }
 
-        if ($gateway === 'stripe') {
-            if ($in->temErros() || $planId <= 0) {
-                return Resposta::texto('Plano inválido.', 400);
-            }
+        if ($in->temErros() || $planId <= 0) {
+            return Resposta::texto('Plano inválido.', 400);
+        }
 
-            $service = new StripeCheckoutService();
+        $isBrl = \LRV\Core\I18n::idioma() === 'pt-BR';
+
+        // BRL → tudo via Asaas (PIX, BOLETO, CREDIT_CARD)
+        // USD → só Stripe (cartão)
+        if ($isBrl) {
+            $billingType = match ($gateway) {
+                'BOLETO' => 'BOLETO',
+                'CREDIT_CARD', 'stripe' => 'CREDIT_CARD',
+                default => 'PIX',
+            };
+
+            $service = new AssinaturasService(new AsaasApi(new ClienteHttp()));
 
             try {
-                $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados);
+                $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados);
             } catch (\Throwable $e) {
                 $erroDetalhe = $e->getMessage();
 
@@ -65,88 +75,91 @@ final class AssinarPlanoController
                     'billing.subscribe_plan',
                     'plan',
                     $planId,
-                    ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false, 'erro' => $erroDetalhe],
+                    ['plan_id' => $planId, 'billing_type' => $billingType, 'ok' => false, 'erro' => $erroDetalhe],
                     $req,
                 );
 
-                // Mensagem amigável baseada no erro real
-                $mensagemUsuario = match (true) {
-                    str_contains($erroDetalhe, 'secret key ausente') => 'O gateway Stripe não está configurado. Entre em contato com o suporte.',
-                    str_contains($erroDetalhe, 'stripe_price_id ausente') => 'Este plano ainda não está configurado para pagamento via cartão. Entre em contato com o suporte.',
-                    str_contains($erroDetalhe, 'Plano não encontrado') => 'Plano não encontrado ou inativo.',
-                    str_contains($erroDetalhe, 'Cliente não encontrado') => 'Erro ao localizar sua conta. Tente novamente.',
-                    default => 'Não foi possível iniciar o checkout. Verifique as configurações do Stripe e tente novamente.',
-                };
-
                 $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                    'erro' => $mensagemUsuario,
+                    'erro' => 'Não foi possível criar a assinatura. Verifique as configurações do Asaas e tente novamente.',
                     'resultado' => null,
                 ]);
                 return Resposta::html($html, 400);
             }
 
-            $checkoutUrl = is_array($resultado) ? (string) ($resultado['checkout_url'] ?? '') : '';
-
-            (new AuditLogService())->registrar(
-                'client',
-                $clienteId,
-                'billing.subscribe_plan',
-                'plan',
-                $planId,
-                ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => true, 'checkout_url_set' => $checkoutUrl !== ''],
-                $req,
-            );
-
-            if ($checkoutUrl === '') {
-                return Resposta::texto('Falha ao iniciar checkout.', 500);
+            $asaasSubId = '';
+            $cobrancasCount = 0;
+            if (is_array($resultado)) {
+                $ass = $resultado['assinatura'] ?? null;
+                if (is_array($ass)) {
+                    $asaasSubId = (string) ($ass['id'] ?? '');
+                }
+                $cobr = $resultado['cobrancas'] ?? null;
+                if (is_array($cobr)) {
+                    $data = $cobr['data'] ?? null;
+                    if (is_array($data)) {
+                        $cobrancasCount = count($data);
+                    }
+                }
             }
 
-            return Resposta::redirecionar($checkoutUrl);
-        }
-
-        $billingType = (in_array($gateway, ['PIX', 'BOLETO'], true)) ? $gateway : 'PIX';
-
-        if ($in->temErros() || $planId <= 0) {
-            return Resposta::texto('Plano inválido.', 400);
-        }
-
-        $service = new AssinaturasService(new AsaasApi(new ClienteHttp()));
-
-        try {
-            $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados);
-        } catch (\Throwable $e) {
             (new AuditLogService())->registrar(
                 'client',
                 $clienteId,
                 'billing.subscribe_plan',
                 'plan',
                 $planId,
-                ['plan_id' => $planId, 'billing_type' => $billingType, 'ok' => false],
+                [
+                    'plan_id' => $planId,
+                    'billing_type' => $billingType,
+                    'ok' => true,
+                    'asaas_subscription_id_set' => $asaasSubId !== '',
+                    'cobrancas_count' => $cobrancasCount,
+                ],
                 $req,
             );
 
             $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                'erro' => 'Não foi possível criar a assinatura. Verifique as configurações do Asaas e tente novamente.',
+                'erro' => '',
+                'resultado' => $resultado,
+            ]);
+
+            return Resposta::html($html);
+        }
+
+        // USD → Stripe checkout
+        $service = new StripeCheckoutService();
+
+        try {
+            $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados);
+        } catch (\Throwable $e) {
+            $erroDetalhe = $e->getMessage();
+
+            (new AuditLogService())->registrar(
+                'client',
+                $clienteId,
+                'billing.subscribe_plan',
+                'plan',
+                $planId,
+                ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false, 'erro' => $erroDetalhe],
+                $req,
+            );
+
+            $mensagemUsuario = match (true) {
+                str_contains($erroDetalhe, 'secret key ausente') => 'Stripe is not configured. Please contact support.',
+                str_contains($erroDetalhe, 'stripe_price_id ausente') => 'This plan is not yet configured for card payment. Please contact support.',
+                str_contains($erroDetalhe, 'Plano não encontrado') => 'Plan not found or inactive.',
+                str_contains($erroDetalhe, 'Cliente não encontrado') => 'Could not locate your account. Please try again.',
+                default => 'Could not start checkout. Please try again later.',
+            };
+
+            $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
+                'erro' => $mensagemUsuario,
                 'resultado' => null,
             ]);
             return Resposta::html($html, 400);
         }
 
-        $asaasSubId = '';
-        $cobrancasCount = 0;
-        if (is_array($resultado)) {
-            $ass = $resultado['assinatura'] ?? null;
-            if (is_array($ass)) {
-                $asaasSubId = (string) ($ass['id'] ?? '');
-            }
-            $cobr = $resultado['cobrancas'] ?? null;
-            if (is_array($cobr)) {
-                $data = $cobr['data'] ?? null;
-                if (is_array($data)) {
-                    $cobrancasCount = count($data);
-                }
-            }
-        }
+        $checkoutUrl = is_array($resultado) ? (string) ($resultado['checkout_url'] ?? '') : '';
 
         (new AuditLogService())->registrar(
             'client',
@@ -154,21 +167,14 @@ final class AssinarPlanoController
             'billing.subscribe_plan',
             'plan',
             $planId,
-            [
-                'plan_id' => $planId,
-                'billing_type' => $billingType,
-                'ok' => true,
-                'asaas_subscription_id_set' => $asaasSubId !== '',
-                'cobrancas_count' => $cobrancasCount,
-            ],
+            ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => true, 'checkout_url_set' => $checkoutUrl !== ''],
             $req,
         );
 
-        $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-            'erro' => '',
-            'resultado' => $resultado,
-        ]);
+        if ($checkoutUrl === '') {
+            return Resposta::texto('Failed to start checkout.', 500);
+        }
 
-        return Resposta::html($html);
+        return Resposta::redirecionar($checkoutUrl);
     }
 }
