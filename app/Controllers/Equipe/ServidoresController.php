@@ -185,10 +185,12 @@ final class ServidoresController
             return $this->renderizarComDados($dados, 'Não foi possível salvar o servidor.');
         }
 
-        // Salvar flag de teste
+        // Salvar flag de teste e role
         $isTest = (int)($req->post['is_test'] ?? 0) === 1 ? 1 : 0;
+        $role = (string)($req->post['role'] ?? 'vps');
+        if (!in_array($role, ['vps', 'email'], true)) $role = 'vps';
         try {
-            BancoDeDados::pdo()->prepare('UPDATE servers SET is_test = :t WHERE id = :id')->execute([':t' => $isTest, ':id' => $savedId]);
+            BancoDeDados::pdo()->prepare('UPDATE servers SET is_test = :t, role = :r WHERE id = :id')->execute([':t' => $isTest, ':r' => $role, ':id' => $savedId]);
         } catch (\Throwable) {}
 
         // Marca online

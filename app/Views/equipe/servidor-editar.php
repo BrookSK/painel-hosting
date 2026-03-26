@@ -76,6 +76,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <option value="inactive"    <?php echo ($servidor['status'] ?? '') === 'inactive'    ? 'selected' : ''; ?>><?php echo View::e(I18n::t('eq_srv_edit.inativo')); ?></option>
         </select>
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Função</label>
+        <?php $srvRole = (string)($servidor['role'] ?? 'vps'); ?>
+        <select class="input" name="role" id="srv-role" onchange="toggleEmailTutorial()">
+          <option value="vps" <?php echo $srvRole === 'vps' ? 'selected' : ''; ?>>🖥️ VPS (clientes)</option>
+          <option value="email" <?php echo $srvRole === 'email' ? 'selected' : ''; ?>>📧 E-mail (Mailcow)</option>
+        </select>
+        <p class="texto" style="font-size:12px;margin-top:4px;">Servidores de e-mail não recebem VPS de clientes.</p>
+      </div>
     </div>
 
     <div style="margin-top:12px;">
@@ -222,9 +231,29 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   </form>
 </div>
 
+<!-- Tutorial Mailcow (visível quando role=email) -->
+<div id="email-tutorial" class="card-new" style="margin-top:16px;max-width:920px;display:<?php echo $srvRole === 'email' ? 'block' : 'none'; ?>;">
+  <div class="card-new-title" style="margin-bottom:8px;">📧 Configuração do servidor de e-mail (Mailcow)</div>
+  <p class="texto" style="margin:0 0 12px;font-size:13px;">Siga estes passos para instalar o Mailcow neste servidor:</p>
+  <ol style="padding-left:18px;font-size:13px;color:#475569;line-height:2.2;">
+    <li>Acesse o servidor via SSH como root</li>
+    <li>Instale o Docker: <code>curl -fsSL https://get.docker.com | sh</code></li>
+    <li>Clone o Mailcow: <code>cd /opt && git clone https://github.com/mailcow/mailcow-dockerized && cd mailcow-dockerized</code></li>
+    <li>Gere a config: <code>./generate_config.sh</code> — informe o hostname (ex: <code>correio.seudominio.com</code>), timezone <code>America/Sao_Paulo</code>, branch <code>master</code></li>
+    <li>Suba os containers: <code>docker compose pull && docker compose up -d</code></li>
+    <li>Acesse <code>https://correio.seudominio.com</code> — login padrão: <code>admin</code> / <code>moohoo</code></li>
+    <li>Troque a senha do admin imediatamente</li>
+    <li>Vá em Sistema → Configuração → Acesso → API: ative a API Read-Write e copie a chave</li>
+    <li>No painel LRV em <a href="/equipe/configuracoes">Configurações</a>, preencha URL do Mailcow, API Key e URL do Webmail</li>
+  </ol>
+  <div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:8px;font-size:12px;margin-top:10px;">
+    Portas necessárias: 25, 80, 110, 143, 443, 465, 587, 993, 995. Certifique-se de que não há outros serviços usando essas portas.
+  </div>
+</div>
+
 <?php if (!empty($servidor['id']) && !empty($passos_detalhados)): ?>
 <!-- Inicialização parcial (passo a passo) -->
-<div class="card-new" style="margin-top:16px;">
+<div class="card-new" style="margin-top:16px;max-width:920px;">
   <div class="card-new-title" style="margin-bottom:6px;">Inicialização parcial</div>
   <p class="texto" style="margin:0 0 14px;font-size:13px;">Execute cada passo individualmente. Ideal para servidores que já têm serviços rodando.</p>
 
@@ -423,6 +452,12 @@ function executarSetup(retomar) {
 </script>
 
 <script>
+function toggleEmailTutorial() {
+  var role = document.getElementById('srv-role');
+  var tut = document.getElementById('email-tutorial');
+  if (role && tut) tut.style.display = role.value === 'email' ? 'block' : 'none';
+}
+
 function executarPassoParcial(serverId, stepName, idx) {
   var btn = document.getElementById('passo-btn-' + idx);
   var icon = document.getElementById('passo-icon-' + idx);
