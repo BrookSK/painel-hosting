@@ -34,11 +34,12 @@ function _badgeSt(string $st): string {
 
 function _badgeVps(string $st): string {
     $map = [
-        'running'         => ['Rodando',     '#dcfce7','#166534'],
-        'stopped'         => ['Parada',      '#f1f5f9','#334155'],
-        'pending_payment' => ['Aguardando pagamento', '#fef3c7','#92400e'],
-        'provisioning'    => ['Provisionando', '#e0e7ff','#1e3a8a'],
-        'suspended'       => ['Suspensa',    '#fee2e2','#991b1b'],
+        'running'              => ['Rodando',     '#dcfce7','#166534'],
+        'stopped'              => ['Parada',      '#f1f5f9','#334155'],
+        'pending_payment'      => ['Aguardando pagamento', '#fef3c7','#92400e'],
+        'pending_provisioning' => ['Provisionando', '#e0e7ff','#1e3a8a'],
+        'provisioning'         => ['Provisionando', '#e0e7ff','#1e3a8a'],
+        'suspended'            => ['Suspensa',    '#fee2e2','#991b1b'],
     ];
     $d = $map[$st] ?? [$st,'#f1f5f9','#334155'];
     return '<span class="badge-new" style="background:'.$d[1].';color:'.$d[2].';">'.View::e($d[0]).'</span>';
