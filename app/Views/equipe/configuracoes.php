@@ -177,6 +177,28 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Servidor Proxy (Domínios Temporários)</h2>
+    <p class="texto" style="font-size:13px;margin-bottom:12px;">Servidor onde o Nginx será configurado para fazer proxy reverso dos domínios temporários. Se não preenchido, usa as credenciais do servidor de e-mail.</p>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">IP do servidor proxy</label>
+        <input class="input" type="text" name="proxy_server_ip" value="<?php echo View::e((string)($proxy_server_ip??'')); ?>" placeholder="84.247.143.165" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Porta SSH</label>
+        <input class="input" type="number" name="proxy_server_ssh_port" value="<?php echo View::e((string)($proxy_server_ssh_port??'22')); ?>" min="1" max="65535" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Usuário SSH</label>
+        <input class="input" type="text" name="proxy_server_ssh_user" value="<?php echo View::e((string)($proxy_server_ssh_user??'root')); ?>" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Senha SSH</label>
+        <input class="input" type="password" name="proxy_server_ssh_password" value="" autocomplete="new-password" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Deixe em branco para manter a senha atual.</p>
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Terminal (Admin)</h2>
     <div class="grid">
       <div>

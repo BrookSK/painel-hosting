@@ -43,6 +43,10 @@ final class ConfiguracoesController
             'monitoring_token' => ConfiguracoesSistema::monitoringToken(),
             'infra_node_max_util_percent' => (string) ConfiguracoesSistema::infraNodeMaxUtilPercent(),
             'infra_temp_domain_base' => (string) Settings::obter('infra.temp_domain_base', ''),
+            'proxy_server_ip' => (string) Settings::obter('proxy.server_ip', ''),
+            'proxy_server_ssh_port' => (string) Settings::obter('proxy.server_ssh_port', '22'),
+            'proxy_server_ssh_user' => (string) Settings::obter('proxy.server_ssh_user', 'root'),
+            'proxy_server_ssh_password' => '',
             'terminal_ws_internal_port' => (string) ConfiguracoesSistema::terminalWsInternalPort(),
             'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
             'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
@@ -141,6 +145,10 @@ final class ConfiguracoesController
 
         $infraNodeMaxUtilPercent = $in->postInt('infra_node_max_util_percent', 50, 100, false);
         $tempDomainBase = $in->postString('infra_temp_domain_base', 253, false);
+        $proxyServerIp = $in->postString('proxy_server_ip', 45, false);
+        $proxyServerSshPort = $in->postInt('proxy_server_ssh_port', 1, 65535, false);
+        $proxyServerSshUser = $in->postString('proxy_server_ssh_user', 64, false);
+        $proxyServerSshPass = $in->postString('proxy_server_ssh_password', 255, false);
         $terminalPorta = $in->postInt('terminal_ws_internal_port', 1, 65535, false);
         $terminalTokenTtl = $in->postInt('terminal_token_ttl_seconds', 10, 86400, false);
         $terminalIdleTimeout = $in->postInt('terminal_idle_timeout_seconds', 60, 604800, false);
@@ -233,6 +241,10 @@ final class ConfiguracoesController
                 'monitoring_token' => $monitoringToken,
                 'infra_node_max_util_percent' => $infraNodeMaxUtilPercent > 0 ? (string) $infraNodeMaxUtilPercent : '85',
                 'infra_temp_domain_base' => $tempDomainBase,
+                'proxy_server_ip' => $proxyServerIp,
+                'proxy_server_ssh_port' => $proxyServerSshPort > 0 ? (string)$proxyServerSshPort : '22',
+                'proxy_server_ssh_user' => $proxyServerSshUser !== '' ? $proxyServerSshUser : 'root',
+                'proxy_server_ssh_password' => '',
                 'terminal_ws_internal_port' => $terminalPorta > 0 ? (string) $terminalPorta : '8081',
                 'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
                 'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
@@ -328,6 +340,12 @@ final class ConfiguracoesController
         Settings::definir('monitoring.token', $monitoringToken);
         Settings::definir('infra.node_max_util_percent', $infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85);
         Settings::definir('infra.temp_domain_base', trim($tempDomainBase, '.'));
+        Settings::definir('proxy.server_ip', $proxyServerIp);
+        Settings::definir('proxy.server_ssh_port', $proxyServerSshPort > 0 ? $proxyServerSshPort : 22);
+        Settings::definir('proxy.server_ssh_user', $proxyServerSshUser !== '' ? $proxyServerSshUser : 'root');
+        if ($proxyServerSshPass !== '') {
+            Settings::definir('proxy.server_ssh_password', \LRV\App\Services\Infra\SshCrypto::cifrar($proxyServerSshPass));
+        }
         Settings::definir('terminal.ws_internal_port', $terminalPorta > 0 ? $terminalPorta : 8081);
         Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl > 0 ? $terminalTokenTtl : 60);
         Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900);
@@ -457,6 +475,10 @@ final class ConfiguracoesController
             'monitoring_token' => $monitoringToken,
             'infra_node_max_util_percent' => (string) ($infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85),
             'infra_temp_domain_base' => $tempDomainBase,
+            'proxy_server_ip' => $proxyServerIp,
+            'proxy_server_ssh_port' => (string)($proxyServerSshPort > 0 ? $proxyServerSshPort : 22),
+            'proxy_server_ssh_user' => $proxyServerSshUser !== '' ? $proxyServerSshUser : 'root',
+            'proxy_server_ssh_password' => '',
             'terminal_ws_internal_port' => (string) ($terminalPorta > 0 ? $terminalPorta : 8081),
             'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
             'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),

@@ -106,6 +106,19 @@ final class GitDeployController
                     $slug = strtolower(preg_replace('/[^a-z0-9]/', '', $name));
                     $slug = substr($slug, 0, 8) ?: 'app';
                     $tempDomain = $slug . substr(bin2hex(random_bytes(3)), 0, 4) . '.' . $tempBase;
+
+                    // Configurar proxy Nginx no servidor principal
+                    try {
+                        $vpsIpStmt = $pdo->prepare('SELECT s.ip_address FROM vps v JOIN servers s ON s.id = v.server_id WHERE v.id = :v AND v.client_id = :c LIMIT 1');
+                        $vpsIpStmt->execute([':v' => $vpsId, ':c' => $clienteId]);
+                        $vpsRow = $vpsIpStmt->fetch();
+                        $vpsIp = is_array($vpsRow) ? (string)($vpsRow['ip_address'] ?? '') : '';
+                        if ($vpsIp !== '') {
+                            (new \LRV\App\Services\Infra\NginxProxyService())->criarProxy($tempDomain, $vpsIp, 80);
+                        }
+                    } catch (\Throwable) {
+                        // Silencioso — domínio é criado mesmo se proxy falhar
+                    }
                 }
             }
             $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:b,:s,:td,:dp,:fo,:st,:cr)')
@@ -209,6 +222,17 @@ final class GitDeployController
 
         $id = (int)($req->post['id'] ?? 0);
         $pdo = BancoDeDados::pdo();
+
+        // Remove proxy Nginx se tinha domínio temporário
+        $st = $pdo->prepare('SELECT temp_domain FROM git_deployments WHERE id = :id AND client_id = :c LIMIT 1');
+        $st->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $st->fetch();
+        if (is_array($dep) && !empty($dep['temp_domain'])) {
+            try {
+                (new \LRV\App\Services\Infra\NginxProxyService())->removerProxy((string)$dep['temp_domain']);
+            } catch (\Throwable) {}
+        }
+
         $pdo->prepare('DELETE FROM git_deploy_logs WHERE deployment_id = :id')->execute([':id' => $id]);
         $pdo->prepare('DELETE FROM git_deployments WHERE id = :id AND client_id = :c')->execute([':id' => $id, ':c' => $clienteId]);
 
