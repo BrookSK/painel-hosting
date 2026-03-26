@@ -296,6 +296,14 @@ $roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitD
 $roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
 $roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente()]);
+
+// Bancos de Dados
+$roteador->get('/cliente/banco-dados', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/banco-dados/criar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'criar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/banco-dados/salvar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('db_create', 5, 60)]);
+$roteador->get('/cliente/banco-dados/ver', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/banco-dados/sql', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'executarSql'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('db_sql', 30, 60)]);
+$roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'excluir'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
 // Soluções (landing pages públicas)

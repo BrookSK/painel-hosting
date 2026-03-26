@@ -72,6 +72,7 @@ final class GitDeployController
         $subdomain = trim((string)($req->post['subdomain'] ?? ''));
         $deployPath = trim((string)($req->post['deploy_path'] ?? '/var/www/html'));
         $forceOverwrite = (int)($req->post['force_overwrite'] ?? 1) === 1 ? 1 : 0;
+        $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
 
         if ($name === '' || $repoUrl === '' || $vpsId <= 0) {
             return $this->renderizarErro($clienteId, $id, 'Preencha nome, repositório e VPS.');
@@ -97,8 +98,18 @@ final class GitDeployController
             $pdo->prepare('UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo WHERE id=:id AND client_id=:c')
                 ->execute([':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':id'=>$id,':c'=>$clienteId]);
         } else {
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, branch, subdomain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:b,:s,:dp,:fo,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+            // Gerar domínio temporário se solicitado
+            $tempDomain = null;
+            if ($gerarTempDomain) {
+                $tempBase = trim((string)\LRV\Core\Settings::obter('infra.temp_domain_base', ''));
+                if ($tempBase !== '') {
+                    $slug = strtolower(preg_replace('/[^a-z0-9]/', '', $name));
+                    $slug = substr($slug, 0, 8) ?: 'app';
+                    $tempDomain = $slug . substr(bin2hex(random_bytes(3)), 0, 4) . '.' . $tempBase;
+                }
+            }
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:b,:s,:td,:dp,:fo,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
         }
 
         return Resposta::redirecionar('/cliente/git-deploy');

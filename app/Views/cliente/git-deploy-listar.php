@@ -41,7 +41,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
       <div>
         <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:2px;"><?php echo View::e((string)($d['name'] ?? '')); ?></div>
-        <div style="font-size:12px;color:#64748b;font-family:monospace;"><?php echo View::e((string)($d['repo_url'] ?? '')); ?> <span style="color:#4F46E5;">@<?php echo View::e((string)($d['branch'] ?? 'main')); ?></span></div>
+        <div style="font-size:12px;color:#64748b;font-family:monospace;"><?php echo View::e((string)($d['repo_url'] ?? '')); ?> <span style="color:#4F46E5;">@<?php echo View::e((string)($d['branch'] ?? 'main')); ?></span>
+          <?php if (!empty($d['subdomain'])): ?>
+            · <a href="https://<?php echo View::e((string)$d['subdomain']); ?>" target="_blank" rel="noopener" style="color:#10b981;font-family:system-ui;">🌐 <?php echo View::e((string)$d['subdomain']); ?></a>
+          <?php endif; ?>
+        </div>
       </div>
       <span style="font-size:11px;padding:3px 10px;border-radius:99px;background:<?php echo $statusColor; ?>20;color:<?php echo $statusColor; ?>;font-weight:600;"><?php echo $statusLabel; ?></span>
     </div>

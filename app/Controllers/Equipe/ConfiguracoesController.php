@@ -42,6 +42,7 @@ final class ConfiguracoesController
             'ssh_key_dir' => ConfiguracoesSistema::sshKeyDir(),
             'monitoring_token' => ConfiguracoesSistema::monitoringToken(),
             'infra_node_max_util_percent' => (string) ConfiguracoesSistema::infraNodeMaxUtilPercent(),
+            'infra_temp_domain_base' => (string) Settings::obter('infra.temp_domain_base', ''),
             'terminal_ws_internal_port' => (string) ConfiguracoesSistema::terminalWsInternalPort(),
             'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
             'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
@@ -139,6 +140,7 @@ final class ConfiguracoesController
         $monitoringToken = $in->postString('monitoring_token', 255, false);
 
         $infraNodeMaxUtilPercent = $in->postInt('infra_node_max_util_percent', 50, 100, false);
+        $tempDomainBase = $in->postString('infra_temp_domain_base', 253, false);
         $terminalPorta = $in->postInt('terminal_ws_internal_port', 1, 65535, false);
         $terminalTokenTtl = $in->postInt('terminal_token_ttl_seconds', 10, 86400, false);
         $terminalIdleTimeout = $in->postInt('terminal_idle_timeout_seconds', 60, 604800, false);
@@ -230,6 +232,7 @@ final class ConfiguracoesController
                 'ssh_key_dir' => $sshKeyDir,
                 'monitoring_token' => $monitoringToken,
                 'infra_node_max_util_percent' => $infraNodeMaxUtilPercent > 0 ? (string) $infraNodeMaxUtilPercent : '85',
+                'infra_temp_domain_base' => $tempDomainBase,
                 'terminal_ws_internal_port' => $terminalPorta > 0 ? (string) $terminalPorta : '8081',
                 'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
                 'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
@@ -324,6 +327,7 @@ final class ConfiguracoesController
         Settings::definir('infra.ssh_key_dir', $sshKeyDir);
         Settings::definir('monitoring.token', $monitoringToken);
         Settings::definir('infra.node_max_util_percent', $infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85);
+        Settings::definir('infra.temp_domain_base', trim($tempDomainBase, '.'));
         Settings::definir('terminal.ws_internal_port', $terminalPorta > 0 ? $terminalPorta : 8081);
         Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl > 0 ? $terminalTokenTtl : 60);
         Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900);
@@ -452,6 +456,7 @@ final class ConfiguracoesController
             'ssh_key_dir' => $sshKeyDir,
             'monitoring_token' => $monitoringToken,
             'infra_node_max_util_percent' => (string) ($infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85),
+            'infra_temp_domain_base' => $tempDomainBase,
             'terminal_ws_internal_port' => (string) ($terminalPorta > 0 ? $terminalPorta : 8081),
             'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
             'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),

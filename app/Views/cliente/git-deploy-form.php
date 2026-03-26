@@ -59,10 +59,30 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <input class="input" type="text" name="branch" value="<?php echo View::e((string)($dep['branch'] ?? 'main')); ?>" placeholder="main" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:5px;">Subdomínio (opcional)</label>
-        <input class="input" type="text" name="subdomain" value="<?php echo View::e((string)($dep['subdomain'] ?? '')); ?>" placeholder="app.meudominio.com" />
+        <label style="display:block;font-size:13px;margin-bottom:5px;">Domínio de acesso <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
+        <input class="input" type="text" name="subdomain" value="<?php echo View::e((string)($dep['subdomain'] ?? '')); ?>" placeholder="app.meudominio.com ou meusite.com.br" />
+        <p style="font-size:12px;color:#64748b;margin-top:4px;">Domínio completo (ex: <code>meusite.com.br</code>) ou subdomínio (ex: <code>app.meudominio.com</code>). O apontamento DNS precisa ser feito no seu provedor.</p>
       </div>
     </div>
+
+    <?php
+      $tempBase = trim((string)\LRV\Core\Settings::obter('infra.temp_domain_base', ''));
+      $existingTemp = (string)($dep['temp_domain'] ?? '');
+    ?>
+    <?php if ($tempBase !== '' || $existingTemp !== ''): ?>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:#166534;margin-bottom:6px;">🌐 Domínio temporário</div>
+      <?php if ($existingTemp !== ''): ?>
+        <div style="font-size:13px;color:#475569;">Seu domínio temporário: <a href="http://<?php echo View::e($existingTemp); ?>" target="_blank" rel="noopener" style="color:#4F46E5;font-weight:600;"><?php echo View::e($existingTemp); ?></a></div>
+      <?php else: ?>
+        <div style="font-size:13px;color:#475569;margin-bottom:8px;">Não tem domínio próprio? Gere um domínio temporário gratuito (ex: <code>abc123.<?php echo View::e($tempBase); ?></code>).</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" name="gerar_temp_domain" value="1" style="accent-color:#4F46E5;" />
+          Gerar domínio temporário para este projeto
+        </label>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <div style="margin-bottom:14px;">
       <label style="display:block;font-size:13px;margin-bottom:5px;">Caminho de deploy no servidor</label>
