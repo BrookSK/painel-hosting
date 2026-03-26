@@ -20,6 +20,7 @@ final class VpsController
                        c.name AS client_name, c.email AS client_email
                 FROM vps v
                 INNER JOIN clients c ON c.id = v.client_id
+                WHERE v.deleted_at IS NULL
                 ORDER BY v.id DESC";
         $stmt = $pdo->query($sql);
         $vps = $stmt->fetchAll();
@@ -170,6 +171,10 @@ final class VpsController
 
         $repo = new RepositorioJobs();
         $repo->criar('remover_vps', ['vps_id' => $vpsId]);
+
+        // Marcar como removida imediatamente (job cuida da limpeza do container)
+        $pdo->prepare('UPDATE vps SET status = :s, deleted_at = :d WHERE id = :id')
+            ->execute([':s' => 'removed', ':d' => date('Y-m-d H:i:s'), ':id' => $vpsId]);
 
         (new AuditLogService())->registrar(
             'team',

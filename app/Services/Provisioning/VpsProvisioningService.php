@@ -224,7 +224,7 @@ final class VpsProvisioningService
     public function remover(int $vpsId, callable $log): void
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, client_id, server_id, container_id, cpu, ram, storage, status FROM vps WHERE id = :id AND deleted_at IS NULL');
+        $stmt = $pdo->prepare('SELECT id, client_id, server_id, container_id, cpu, ram, storage, status FROM vps WHERE id = :id');
         $stmt->execute([':id' => $vpsId]);
         $vps = $stmt->fetch();
 
