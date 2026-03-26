@@ -1682,6 +1682,8 @@ return [
     // ── Checkout ──
     'checkout.forma_pagamento' => 'Forma de pago',
     'checkout.cartao' => 'Tarjeta',
+    'checkout.cpf_cnpj' => 'CPF o CNPJ',
+    'checkout.cpf_obrigatorio' => 'Obligatorio para la emisión del cobro.',
 
     // ── Pagamento ──
     'pagamento.titulo' => 'Pago',

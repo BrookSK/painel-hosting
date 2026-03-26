@@ -8,6 +8,7 @@ $plano = is_array($plano ?? null) ? $plano : [];
 $addons = is_array($addons ?? null) ? $addons : [];
 $precoBase = (float)($plano['price_monthly'] ?? 0);
 $planId = (int)($plano['id'] ?? 0);
+$clienteCpf = trim((string)($cliente['cpf_cnpj'] ?? ''));
 
 $pageTitle = 'Configurar plano';
 $clienteNome = (string)($cliente['name'] ?? '');
@@ -90,6 +91,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="plan_id" value="<?php echo $planId; ?>" />
         <input type="hidden" name="addons_ids" id="addons_ids" value="" />
+
+        <?php if (I18n::idioma() === 'pt-BR' && $clienteCpf === ''): ?>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.cpf_cnpj')); ?></label>
+          <input class="input" type="text" name="cpf_cnpj" placeholder="000.000.000-00" required maxlength="18" inputmode="numeric" style="max-width:240px;" />
+          <p style="font-size:11px;color:#94a3b8;margin-top:4px;"><?php echo View::e(I18n::t('checkout.cpf_obrigatorio')); ?></p>
+        </div>
+        <?php endif; ?>
 
         <div style="margin-bottom:12px;">
           <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.forma_pagamento')); ?></label>

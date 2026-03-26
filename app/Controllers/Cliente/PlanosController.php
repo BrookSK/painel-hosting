@@ -87,7 +87,7 @@ final class PlanosController
             $addons = $aStmt->fetchAll() ?: [];
         } catch (\Throwable) {}
 
-        $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = ?');
+        $cStmt = $pdo->prepare('SELECT name, email, cpf_cnpj FROM clients WHERE id = ?');
         $cStmt->execute([$clienteId]);
         $cliente = $cStmt->fetch() ?: [];
 

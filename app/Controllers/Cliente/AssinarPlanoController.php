@@ -51,6 +51,14 @@ final class AssinarPlanoController
             return Resposta::texto('Plano inválido.', 400);
         }
 
+        // Salvar CPF/CNPJ se enviado e cliente não tem
+        $cpfEnviado = preg_replace('/\D/', '', trim((string)($req->post['cpf_cnpj'] ?? '')));
+        if ($cpfEnviado !== '') {
+            $pdo = \LRV\Core\BancoDeDados::pdo();
+            $pdo->prepare('UPDATE clients SET cpf_cnpj = :c WHERE id = :id AND (cpf_cnpj IS NULL OR cpf_cnpj = \'\')')
+                ->execute([':c' => $cpfEnviado, ':id' => $clienteId]);
+        }
+
         $isBrl = \LRV\Core\I18n::idioma() === 'pt-BR';
 
         // BRL → tudo via Asaas (PIX, BOLETO, CREDIT_CARD)
