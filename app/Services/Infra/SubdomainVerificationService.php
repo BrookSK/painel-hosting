@@ -83,6 +83,7 @@ final class SubdomainVerificationService
         $txtHost = '_lrv-verify.' . $subdomain;
         $expected = 'lrv-verify=' . $token;
 
+        // Tentar via dns_get_record
         $records = @dns_get_record($txtHost, DNS_TXT);
         $found = false;
         if (is_array($records)) {
@@ -95,15 +96,52 @@ final class SubdomainVerificationService
             }
         }
 
+        // Fallback: tentar via shell dig/nslookup
+        if (!$found) {
+            $digOutput = @shell_exec('dig +short TXT ' . escapeshellarg($txtHost) . ' 2>/dev/null') ?? '';
+            if (str_contains($digOutput, $expected)) {
+                $found = true;
+            }
+        }
+
+        // Fallback 2: tentar sem o subdomínio completo (caso o provedor adicione a zona automaticamente)
+        if (!$found) {
+            $parts = explode('.', $subdomain);
+            $subPart = $parts[0] ?? '';
+            $altHost = '_lrv-verify.' . $subPart;
+            $rootDomain = (string)$row['root_domain'];
+            $altFull = $altHost . '.' . $rootDomain;
+            if ($altFull !== $txtHost) {
+                $altRecords = @dns_get_record($altFull, DNS_TXT);
+                if (is_array($altRecords)) {
+                    foreach ($altRecords as $r) {
+                        if (str_contains((string)($r['txt'] ?? ''), $expected)) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         if ($found) {
             $pdo->prepare("UPDATE client_subdomains SET status = 'pending_cname', error_msg = NULL WHERE id = :id")
                 ->execute([':id' => $subId]);
             return ['ok' => true, 'status' => 'pending_cname'];
         }
 
+        // Coletar o que foi encontrado pra debug
+        $foundTxts = [];
+        if (is_array($records)) {
+            foreach ($records as $r) {
+                $foundTxts[] = (string)($r['txt'] ?? '');
+            }
+        }
+        $debugInfo = $foundTxts ? 'Encontrado: ' . implode(', ', $foundTxts) : 'Nenhum registro TXT encontrado';
+
         $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
-            ->execute([':e' => 'Registro TXT não encontrado em ' . $txtHost, ':id' => $subId]);
-        return ['ok' => false, 'erro' => 'Registro TXT não encontrado. Verifique se criou _lrv-verify.' . $subdomain . ' com valor "' . $expected . '"'];
+            ->execute([':e' => 'TXT não encontrado em ' . $txtHost . '. ' . $debugInfo, ':id' => $subId]);
+        return ['ok' => false, 'erro' => 'Registro TXT não encontrado. Verifique se criou _lrv-verify.' . $subdomain . ' com valor "' . $expected . '". ' . $debugInfo . '. A propagação DNS pode levar alguns minutos.'];
     }
 
     public function verificarCname(int $clientId, int $subId): array
