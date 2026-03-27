@@ -63,6 +63,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var urlParams = new URLSearchParams(window.location.search);
   var initialPath = urlParams.get('path') || '/';
   var initialVps = urlParams.get('vps_id') || '';
+  var appIdParam = urlParams.get('app_id') || '';
   var currentPath=initialPath;
   var vpsSelect = document.getElementById('vpsSelect');
 
@@ -78,14 +79,24 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var currentVps=vpsSelect.value;
   var csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
 
+  // Build query string with either app_id or vps_id
+  function qsRead() {
+    if (appIdParam) return 'app_id=' + appIdParam;
+    return 'vps_id=' + currentVps;
+  }
+  function qsPost(body) {
+    if (appIdParam) body.set('app_id', appIdParam);
+    else body.set('vps_id', currentVps);
+  }
+
   document.getElementById('vpsSelect').addEventListener('change',function(){
-    currentVps=this.value;currentPath='/';loadFiles();
+    currentVps=this.value;currentPath='/';appIdParam='';loadFiles();
   });
 
   function loadFiles(){
     document.getElementById('breadcrumb').textContent=currentPath;
     document.getElementById('fileList').innerHTML='<p style="color:#94a3b8;font-size:13px;">Carregando...</p>';
-    fetch('/cliente/arquivos/listar?vps_id='+currentVps+'&path='+encodeURIComponent(currentPath))
+    fetch('/cliente/arquivos/listar?'+qsRead()+'&path='+encodeURIComponent(currentPath))
       .then(function(r){return r.json();})
       .then(function(d){
         if(!d.ok){document.getElementById('fileList').innerHTML='<p class="erro">'+d.erro+'</p>';return;}
@@ -135,7 +146,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   };
   window.openFile=function(name){
     var fullPath=currentPath.replace(/\/$/,'')+'/'+name;
-    fetch('/cliente/arquivos/ler?vps_id='+currentVps+'&path='+encodeURIComponent(fullPath))
+    fetch('/cliente/arquivos/ler?'+qsRead()+'&path='+encodeURIComponent(fullPath))
       .then(function(r){return r.json();})
       .then(function(d){
         if(!d.ok){alert(d.erro||'Erro');return;}
@@ -150,7 +161,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     var path=document.getElementById('editorModal')._path;
     var content=document.getElementById('editorContent').value;
     var body=new URLSearchParams();
-    body.set('vps_id',currentVps);body.set('path',path);body.set('content',content);
+    qsPost(body);body.set('path',path);body.set('content',content);
     fetch('/cliente/arquivos/salvar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf},body:body})
       .then(function(r){return r.json();})
       .then(function(d){if(d.ok)closeEditor();else alert(d.erro||'Erro');});
@@ -159,7 +170,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     var name=prompt('Nome da pasta:');
     if(!name)return;
     var path=currentPath.replace(/\/$/,'')+'/'+name;
-    var body=new URLSearchParams();body.set('vps_id',currentVps);body.set('path',path);
+    var body=new URLSearchParams();qsPost(body);body.set('path',path);
     fetch('/cliente/arquivos/criar-pasta',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf},body:body})
       .then(function(r){return r.json();}).then(function(){loadFiles();});
   };
@@ -167,14 +178,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     var name=prompt('Nome do arquivo:');
     if(!name)return;
     var path=currentPath.replace(/\/$/,'')+'/'+name;
-    var body=new URLSearchParams();body.set('vps_id',currentVps);body.set('path',path);body.set('content','');
+    var body=new URLSearchParams();qsPost(body);body.set('path',path);body.set('content','');
     fetch('/cliente/arquivos/salvar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf},body:body})
       .then(function(r){return r.json();}).then(function(){loadFiles();});
   };
   window.deleteItem=function(name){
     if(!confirm('Deletar "'+name+'"?'))return;
     var path=currentPath.replace(/\/$/,'')+'/'+name;
-    var body=new URLSearchParams();body.set('vps_id',currentVps);body.set('path',path);
+    var body=new URLSearchParams();qsPost(body);body.set('path',path);
     fetch('/cliente/arquivos/deletar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf},body:body})
       .then(function(r){return r.json();}).then(function(){loadFiles();});
   };

@@ -54,7 +54,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
               <div style="display:flex;gap:4px;flex-wrap:wrap;">
                 <?php if ($appSt === 'running' || $appSt === 'active'): ?>
-                  <a href="/cliente/arquivos?vps_id=<?php echo (int)($a['vps_id'] ?? 0); ?>&path=/var/www/html" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Arquivos">📁</a>
+                  <a href="/cliente/arquivos?app_id=<?php echo $appId; ?>&path=/var/www/html" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Arquivos">📁</a>
                   <?php if (!empty($a['db_id'])): ?>
                     <a href="/cliente/banco-dados/ver?id=<?php echo (int)$a['db_id']; ?>" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Banco de dados">🗄️</a>
                   <?php endif; ?>

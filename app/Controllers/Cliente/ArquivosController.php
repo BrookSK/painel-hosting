@@ -36,10 +36,15 @@ final class ArquivosController
         if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
 
         $vpsId = (int)($req->query['vps_id'] ?? 0);
+        $appId = (int)($req->query['app_id'] ?? 0);
         $path = (string)($req->query['path'] ?? '/');
         if ($path === '') $path = '/';
 
-        $result = $this->execInContainer($clienteId, $vpsId, 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1');
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1');
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1');
+        }
         if (!$result['ok']) return Resposta::json($result);
 
         $lines = explode("\n", trim($result['output']));
@@ -73,11 +78,15 @@ final class ArquivosController
         if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
 
         $vpsId = (int)($req->query['vps_id'] ?? 0);
+        $appId = (int)($req->query['app_id'] ?? 0);
         $path = (string)($req->query['path'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
-        // Limitar tamanho do arquivo (100KB)
-        $result = $this->execInContainer($clienteId, $vpsId, 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1');
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1');
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1');
+        }
         if (!$result['ok']) return Resposta::json($result);
 
         return Resposta::json(['ok' => true, 'content' => $result['output'], 'path' => $path]);
@@ -89,12 +98,18 @@ final class ArquivosController
         if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $appId = (int)($req->post['app_id'] ?? 0);
         $path = (string)($req->post['path'] ?? '');
         $content = (string)($req->post['content'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
         $b64 = base64_encode($content);
-        $result = $this->execInContainer($clienteId, $vpsId, 'echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($path) . ' 2>&1 && echo OK');
+        $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($path) . ' 2>&1 && echo OK';
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
+        }
         return Resposta::json($result);
     }
 
@@ -104,10 +119,16 @@ final class ArquivosController
         if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $appId = (int)($req->post['app_id'] ?? 0);
         $path = (string)($req->post['path'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
-        $result = $this->execInContainer($clienteId, $vpsId, 'mkdir -p ' . escapeshellarg($path) . ' 2>&1 && echo OK');
+        $cmd = 'mkdir -p ' . escapeshellarg($path) . ' 2>&1 && echo OK';
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
+        }
         return Resposta::json($result);
     }
 
@@ -117,10 +138,16 @@ final class ArquivosController
         if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $appId = (int)($req->post['app_id'] ?? 0);
         $path = (string)($req->post['path'] ?? '');
         if ($path === '' || $path === '/') return Resposta::json(['ok' => false, 'erro' => 'Não é possível deletar este caminho.']);
 
-        $result = $this->execInContainer($clienteId, $vpsId, 'rm -rf ' . escapeshellarg($path) . ' 2>&1 && echo OK');
+        $cmd = 'rm -rf ' . escapeshellarg($path) . ' 2>&1 && echo OK';
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
+        }
         return Resposta::json($result);
     }
 
@@ -164,6 +191,71 @@ final class ArquivosController
 
         $output = (string)($result['saida'] ?? '');
         // Filtrar warnings SSH
+        $lines = explode("\n", $output);
+        $clean = [];
+        foreach ($lines as $l) {
+            if (str_contains($l, 'Warning:') || str_contains($l, 'Permanently added') || str_contains($l, 'known_hosts')) continue;
+            $clean[] = $l;
+        }
+
+        return ['ok' => true, 'output' => implode("\n", $clean)];
+    }
+
+    /**
+     * Executa comando dentro do container de uma aplicação (WordPress, Laravel, etc).
+     */
+    private function execInAppContainer(int $clienteId, int $appId, string $cmd): array
+    {
+        if ($appId <= 0) return ['ok' => false, 'erro' => 'Aplicação inválida.'];
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            "SELECT a.id, a.container_id, a.status, a.type,
+                    t.slug,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password
+             FROM applications a
+             INNER JOIN vps v ON v.id = a.vps_id
+             INNER JOIN servers s ON s.id = v.server_id
+             LEFT JOIN app_templates t ON t.id = a.template_id
+             WHERE a.id = :id AND v.client_id = :c LIMIT 1"
+        );
+        $stmt->execute([':id' => $appId, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) return ['ok' => false, 'erro' => 'Aplicação não encontrada.'];
+        if (!in_array((string)($row['status'] ?? ''), ['running', 'active'], true)) return ['ok' => false, 'erro' => 'Aplicação não está em execução.'];
+
+        $containerId = trim((string)($row['container_id'] ?? ''));
+        $slug = (string)($row['slug'] ?? 'app');
+        $containerName = 'app_' . $slug . '_' . $appId;
+
+        // Tentar pelo nome do container, fallback pelo container_id
+        $dockerCmd = 'docker exec ' . escapeshellarg($containerName) . ' bash -c ' . escapeshellarg($cmd)
+            . ' 2>&1 || docker exec ' . escapeshellarg($containerName) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
+        if ($containerId !== '') {
+            $dockerCmd .= ' || docker exec ' . escapeshellarg($containerId) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
+        }
+
+        $ssh = new SshExecutor();
+        $ip = (string)($row['ip_address'] ?? '');
+        $porta = (int)($row['ssh_port'] ?? 22);
+        $usuario = (string)($row['ssh_user'] ?? 'root');
+        $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+        try {
+            if ($authType === 'password') {
+                $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $dockerCmd, 15);
+            } else {
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 15);
+            }
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'erro' => $e->getMessage()];
+        }
+
+        $output = (string)($result['saida'] ?? '');
         $lines = explode("\n", $output);
         $clean = [];
         foreach ($lines as $l) {
