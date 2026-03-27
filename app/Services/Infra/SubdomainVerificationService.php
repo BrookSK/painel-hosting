@@ -19,6 +19,9 @@ final class SubdomainVerificationService
         $root = $this->extrairRaiz($subdomain);
         $isRootDomain = ($root === '' || $root === $subdomain);
 
+        // Debug temporário
+        error_log("[DOMINIOS] subdomain={$subdomain} root={$root} isRoot=" . ($isRootDomain ? 'SIM' : 'NAO'));
+
         $pdo = BancoDeDados::pdo();
 
         // Subdomínios não precisam mais de domínio raiz cadastrado em client_domains
