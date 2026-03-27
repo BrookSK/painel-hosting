@@ -813,6 +813,8 @@ return [
     'wz.pix_desc' => 'Scan the QR Code or copy the code below.',
     'wz.pix_copiar' => 'Copy PIX code',
     'wz.pix_copiado' => 'Copied!',
+    'wz.pix_aguardando' => 'Waiting for payment confirmation...',
+    'wz.pix_confirmado' => '✅ Payment confirmed! Redirecting...',
     'wz.boleto_titulo' => 'Account created! Pay the boleto',
     'wz.boleto_desc' => 'Copy the barcode or download the boleto.',
     'wz.boleto_copiar' => 'Copy barcode',

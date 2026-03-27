@@ -56,6 +56,8 @@ $moedaJs = I18n::moedaCodigo();
     .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center}
     .overlay.show{display:flex}
     .erro-msg{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:12px 14px;border-radius:12px;font-size:13px;margin-bottom:12px;display:none}
+    .spinner-sm{display:inline-block;width:14px;height:14px;border:2px solid #e2e8f0;border-top-color:#4F46E5;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
     @media(max-width:600px){.wz-step span{display:none}.wz-line{width:24px}}
   </style>
 </head>
@@ -460,6 +462,8 @@ $moedaJs = I18n::moedaCodigo();
     'boleto_titulo'=>I18n::t('wz.boleto_titulo'),'boleto_desc'=>I18n::t('wz.boleto_desc'),
     'boleto_copiar'=>I18n::t('wz.boleto_copiar'),'boleto_baixar'=>I18n::t('wz.boleto_baixar'),
     'ir_assinaturas'=>I18n::t('wz.ir_assinaturas'),
+    'pix_aguardando'=>I18n::t('wz.pix_aguardando'),
+    'pix_confirmado'=>I18n::t('wz.pix_confirmado'),
     'upsell_titulo'=>I18n::t('wz.upsell_desconto'),'upsell_desc_tpl'=>I18n::t('wz.upsell_desc'),
     'quero_desconto'=>I18n::t('wz.quero_desconto'),'nao_obrigado'=>I18n::t('wz.nao_obrigado'),
   ]); ?>;
@@ -619,11 +623,27 @@ $moedaJs = I18n::moedaCodigo();
           if(data.pix_image) html+='<img src="data:image/png;base64,'+data.pix_image+'" style="max-width:220px;margin:16px auto;display:block;border-radius:12px;"/>';
           if(data.pix_payload){
             html+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all;font-size:12px;font-family:monospace;">'+data.pix_payload+'</div>';
-            html+='<button class="botao ghost sm" onclick="navigator.clipboard.writeText(\''+data.pix_payload.replace(/'/g,"\\'")+'\');this.textContent=\''+T.pix_copiado+'\'">'+T.pix_copiar+'</button>';
+            html+='<button class="botao ghost sm" id="btnCopiarPix" onclick="navigator.clipboard.writeText(\''+data.pix_payload.replace(/'/g,"\\'")+'\');this.textContent=\''+T.pix_copiado+'\'">'+T.pix_copiar+'</button>';
           }
+          html+='<div id="pixStatusMsg" style="margin-top:16px;font-size:13px;color:#64748b;"><span class="spinner-sm"></span> '+T.pix_aguardando+'</div>';
           html+='<div style="margin-top:16px;"><a href="'+data.redirect+'" class="botao">'+T.ir_assinaturas+'</a></div>';
           html+='</div>';
           document.getElementById('step3').innerHTML=html;
+          // Polling para detectar pagamento confirmado
+          if(data.sub_id){
+            var pixPollId=setInterval(function(){
+              fetch('/cliente/pagamento/status?sub='+data.sub_id,{credentials:'same-origin'})
+                .then(function(r){return r.json();})
+                .then(function(st){
+                  if(st.ok&&st.pago){
+                    clearInterval(pixPollId);
+                    var msg=document.getElementById('pixStatusMsg');
+                    if(msg) msg.innerHTML='<div style="color:#16a34a;font-weight:600;font-size:15px;">'+T.pix_confirmado+'</div>';
+                    setTimeout(function(){window.location.href='/cliente/assinaturas';},2000);
+                  }
+                }).catch(function(){});
+            },5000);
+          }
         } else if(data.ok&&data.payment_type==='boleto'){
           // Mostrar Boleto inline
           var html='<div class="card" style="text-align:center;padding:28px;">';

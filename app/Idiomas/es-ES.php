@@ -813,6 +813,8 @@ return [
     'wz.pix_desc' => 'Escanee el código QR o copie el código abajo.',
     'wz.pix_copiar' => 'Copiar código PIX',
     'wz.pix_copiado' => '¡Copiado!',
+    'wz.pix_aguardando' => 'Esperando confirmación del pago...',
+    'wz.pix_confirmado' => '✅ ¡Pago confirmado! Redirigiendo...',
     'wz.boleto_titulo' => '¡Cuenta creada! Pague el boleto',
     'wz.boleto_desc' => 'Copie la línea digitada o descargue el boleto.',
     'wz.boleto_copiar' => 'Copiar línea digitada',

@@ -265,6 +265,7 @@ final class ContratarController
                                         'payment_type' => 'pix',
                                         'pix_payload' => $pixPayload,
                                         'pix_image' => $pixImage,
+                                        'sub_id' => $localSubId,
                                         'redirect' => '/cliente/assinaturas',
                                     ]);
                                 }

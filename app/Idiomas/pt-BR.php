@@ -937,6 +937,8 @@ return [
     'wz.pix_desc' => 'Escaneie o QR Code ou copie o código abaixo.',
     'wz.pix_copiar' => 'Copiar código PIX',
     'wz.pix_copiado' => 'Copiado!',
+    'wz.pix_aguardando' => 'Aguardando confirmação do pagamento...',
+    'wz.pix_confirmado' => '✅ Pagamento confirmado! Redirecionando...',
     'wz.boleto_titulo' => 'Conta criada! Pague o boleto',
     'wz.boleto_desc' => 'Copie a linha digitável ou baixe o boleto.',
     'wz.boleto_copiar' => 'Copiar linha digitável',
