@@ -625,4 +625,79 @@ final class ConfiguracoesController
             return Resposta::json(['ok' => false, 'erro' => 'Falha SSH: ' . $e->getMessage()], 500);
         }
     }
+
+    public function setupDaemons(Requisicao $req): Resposta
+    {
+        $projectDir = dirname(__DIR__, 3);
+        $termPort = (int) Settings::obter('terminal.ws_internal_port', 8081);
+        $chatPort = (int) Settings::obter('chat.ws_port', 8082);
+        $phpBin = PHP_BINARY ?: '/usr/bin/php';
+        $user = function_exists('posix_getpwuid') ? (posix_getpwuid(posix_geteuid())['name'] ?? 'www-data') : 'www-data';
+
+        $logs = [];
+
+        // 1. Criar serviço systemd para terminal
+        $termService = "[Unit]\nDescription=LRV Terminal WebSocket\nAfter=network.target\n\n[Service]\nType=simple\nUser={$user}\nWorkingDirectory={$projectDir}\nExecStart={$phpBin} terminal-ws.php\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target\n";
+
+        $chatService = "[Unit]\nDescription=LRV Chat WebSocket\nAfter=network.target\n\n[Service]\nType=simple\nUser={$user}\nWorkingDirectory={$projectDir}\nExecStart={$phpBin} chat-ws.php\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target\n";
+
+        try {
+            file_put_contents('/tmp/lrv-terminal.service', $termService);
+            file_put_contents('/tmp/lrv-chat.service', $chatService);
+
+            // Copiar e ativar (precisa de sudo ou rodar como root)
+            $cmds = [
+                'cp /tmp/lrv-terminal.service /etc/systemd/system/lrv-terminal.service 2>&1',
+                'cp /tmp/lrv-chat.service /etc/systemd/system/lrv-chat.service 2>&1',
+                'systemctl daemon-reload 2>&1',
+                'systemctl enable lrv-terminal lrv-chat 2>&1',
+                'systemctl restart lrv-terminal lrv-chat 2>&1',
+            ];
+
+            foreach ($cmds as $cmd) {
+                $out = shell_exec($cmd) ?? '';
+                $logs[] = "$ {$cmd}\n{$out}";
+            }
+        } catch (\Throwable $e) {
+            $logs[] = 'Erro systemd: ' . $e->getMessage();
+        }
+
+        // 2. Configurar proxy reverso no Apache
+        try {
+            // Habilitar módulos
+            shell_exec('a2enmod proxy proxy_wstunnel proxy_http 2>&1');
+
+            // Criar config de proxy
+            $apacheConf = "<IfModule mod_proxy.c>\n"
+                . "  ProxyPass /ws/terminal ws://127.0.0.1:{$termPort}/\n"
+                . "  ProxyPassReverse /ws/terminal ws://127.0.0.1:{$termPort}/\n"
+                . "  ProxyPass /ws/chat ws://127.0.0.1:{$chatPort}/\n"
+                . "  ProxyPassReverse /ws/chat ws://127.0.0.1:{$chatPort}/\n"
+                . "</IfModule>\n";
+
+            file_put_contents('/tmp/lrv-websocket.conf', $apacheConf);
+            $out = shell_exec('cp /tmp/lrv-websocket.conf /etc/apache2/conf-available/lrv-websocket.conf 2>&1') ?? '';
+            $logs[] = "Apache conf: {$out}";
+            $out = shell_exec('a2enconf lrv-websocket 2>&1') ?? '';
+            $logs[] = "a2enconf: {$out}";
+            $out = shell_exec('systemctl reload apache2 2>&1') ?? '';
+            $logs[] = "Apache reload: {$out}";
+        } catch (\Throwable $e) {
+            $logs[] = 'Erro Apache: ' . $e->getMessage();
+        }
+
+        // Verificar se os daemons estão rodando
+        $termStatus = trim(shell_exec('systemctl is-active lrv-terminal 2>&1') ?? '');
+        $chatStatus = trim(shell_exec('systemctl is-active lrv-chat 2>&1') ?? '');
+
+        $ok = ($termStatus === 'active' || $chatStatus === 'active');
+        $msg = "Terminal: {$termStatus}, Chat: {$chatStatus}";
+
+        return Resposta::json([
+            'ok' => $ok,
+            'mensagem' => $ok ? "Daemons instalados. {$msg}" : "Setup executado mas verifique: {$msg}",
+            'erro' => $ok ? null : "Verifique permissões. {$msg}",
+            'logs' => implode("\n", $logs),
+        ]);
+    }
 }

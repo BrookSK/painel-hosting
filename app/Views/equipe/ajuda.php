@@ -51,8 +51,68 @@ php worker.php --once   # processa um job e sai</pre>
   <p style="font-size:13px;color:#64748b;">Acompanhe a fila em <a href="/equipe/jobs">/equipe/jobs</a>.</p>
 
   <div class="section-title">3. Terminal WebSocket</div>
+  <p style="font-size:14px;color:#475569;margin-bottom:10px;">O terminal do cliente funciona via WebSocket. São necessários 2 passos:</p>
+
+  <p style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:4px;">Passo 1: Iniciar o daemon</p>
   <pre>php terminal-ws.php</pre>
-  <p style="font-size:13px;color:#64748b;">Porta configurável em <a href="/equipe/configuracoes">Configurações</a> → <span class="badge-cmd">terminal.ws_internal_port</span> (padrão: <strong>8081</strong>).<br>Configure o proxy reverso: <code>/ws/terminal</code> → <code>127.0.0.1:8081</code>.</p>
+  <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Recomendado rodar via systemd ou supervisor para manter ativo. Porta configurável em <a href="/equipe/configuracoes">Configurações</a> → <span class="badge-cmd">terminal.ws_internal_port</span> (padrão: <strong>8081</strong>).</p>
+
+  <p style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:4px;">Passo 2: Configurar proxy reverso</p>
+  <p style="font-size:12px;color:#64748b;margin-bottom:6px;">O navegador conecta em <code>wss://seudominio.com/ws/terminal</code> e o proxy redireciona para <code>127.0.0.1:8081</code>.</p>
+
+  <p style="font-size:12px;font-weight:600;color:#475569;margin:8px 0 4px;">Nginx:</p>
+  <pre>location /ws/terminal {
+    proxy_pass http://127.0.0.1:8081;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_read_timeout 86400;
+}
+
+location /ws/chat {
+    proxy_pass http://127.0.0.1:8082;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_read_timeout 86400;
+}</pre>
+
+  <p style="font-size:12px;font-weight:600;color:#475569;margin:8px 0 4px;">Apache (mod_proxy_wstunnel):</p>
+  <pre>a2enmod proxy proxy_wstunnel proxy_http
+
+# No VirtualHost:
+ProxyPass /ws/terminal ws://127.0.0.1:8081/
+ProxyPassReverse /ws/terminal ws://127.0.0.1:8081/
+
+ProxyPass /ws/chat ws://127.0.0.1:8082/
+ProxyPassReverse /ws/chat ws://127.0.0.1:8082/</pre>
+
+  <p style="font-size:12px;font-weight:600;color:#475569;margin:8px 0 4px;">systemd (manter daemon ativo):</p>
+  <pre># /etc/systemd/system/lrv-terminal.service
+[Unit]
+Description=LRV Terminal WebSocket
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/caminho/do/projeto
+ExecStart=/usr/bin/php terminal-ws.php
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+# Ativar:
+systemctl enable lrv-terminal
+systemctl start lrv-terminal</pre>
+
+  <p style="font-size:12px;color:#64748b;margin-top:6px;">Faça o mesmo para o chat: crie <code>lrv-chat.service</code> com <code>ExecStart=/usr/bin/php chat-ws.php</code>.</p>
 
   <div class="section-title">4. Chat WebSocket</div>
   <pre>php chat-ws.php</pre>

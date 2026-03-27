@@ -248,6 +248,16 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <!-- Botões de setup dos daemons WebSocket -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:16px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;">⚙️ Setup dos daemons e proxy</div>
+      <p style="font-size:12px;color:#64748b;margin-bottom:12px;">Instala os serviços systemd (terminal + chat) e configura o proxy reverso no Apache. Executa no servidor local.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="botao sm" type="button" id="btnSetupDaemons" onclick="setupDaemons()">🚀 Instalar daemons + proxy</button>
+        <span id="setupDaemonsStatus" style="font-size:13px;align-self:center;"></span>
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">SMTP (envio de e-mails do sistema)</h2>
     <p class="texto" style="font-size:13px;margin-bottom:12px;">Usado para reset de senha, alertas e notificações. Se não configurado, o sistema usa o <code>mail()</code> nativo do PHP.</p>
     <div class="grid">
@@ -647,6 +657,21 @@ function instalarAgenteEmail(){
     else{st.textContent='✘ '+(d.erro||'Erro');st.style.color='#dc2626';}
     btn.disabled=false;
   }).catch(function(){st.textContent='✘ Erro de rede';st.style.color='#dc2626';btn.disabled=false;});
+}
+</script>
+
+<script>
+function setupDaemons(){
+  var btn=document.getElementById('btnSetupDaemons');
+  var st=document.getElementById('setupDaemonsStatus');
+  btn.disabled=true;st.textContent='Executando...';st.style.color='#64748b';
+  var csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
+  fetch('/equipe/configuracoes/setup-daemons',{method:'POST',headers:{'x-csrf-token':csrf,'Content-Type':'application/json'}})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){st.textContent='✓ '+d.mensagem;st.style.color='#16a34a';}
+    else{st.textContent='✗ '+(d.erro||'Erro');st.style.color='#dc2626';}
+    btn.disabled=false;
+  }).catch(function(e){st.textContent='✗ Erro de rede';st.style.color='#dc2626';btn.disabled=false;});
 }
 </script>
 

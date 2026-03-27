@@ -98,6 +98,7 @@ $roteador->post('/equipe/inicializacao/terminal/parar-daemon', [InicializacaoCon
 $roteador->get('/equipe/configuracoes', [ConfiguracoesController::class, 'formulario'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes', [ConfiguracoesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes/instalar-agente-email', [ConfiguracoesController::class, 'instalarAgenteEmail'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/configuracoes/setup-daemons', [ConfiguracoesController::class, 'setupDaemons'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/configuracoes/upload-imagem', [ImagemUploadController::class, 'upload'], [Middlewares::exigirPermissao('manage_billing'), Middlewares::rateLimitEquipe('img_upload', 20, 60)]);
 $roteador->get('/equipe/assinaturas', [AssinaturasController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->get('/equipe/asaas-eventos', [AsaasEventosController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
