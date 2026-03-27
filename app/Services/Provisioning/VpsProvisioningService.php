@@ -309,6 +309,26 @@ final class VpsProvisioningService
             }
         }
 
+        // Remover registro DNS do Cloudflare (subdomínio temporário da VPS)
+        try {
+            $tempSub = '';
+            $tsStmt = $pdo->prepare('SELECT temp_subdomain FROM vps WHERE id = :id');
+            $tsStmt->execute([':id' => $vpsId]);
+            $tsRow = $tsStmt->fetch();
+            $tempSub = is_array($tsRow) ? trim((string)($tsRow['temp_subdomain'] ?? '')) : '';
+
+            if ($tempSub !== '') {
+                $cf = new \LRV\App\Services\Cloudflare\CloudflareService();
+                $zoneId = $cf->obterZoneIdDoTempDomain();
+                if ($zoneId !== '') {
+                    $cf->removerRegistroPorNome($zoneId, $tempSub);
+                    $log('Registro DNS removido do Cloudflare: ' . $tempSub);
+                }
+            }
+        } catch (\Throwable $e) {
+            $log('Aviso ao remover DNS do Cloudflare: ' . $e->getMessage());
+        }
+
         // Soft delete
         $up = $pdo->prepare('UPDATE vps SET status = :s, deleted_at = :d WHERE id = :id');
         $up->execute([':s' => 'removed', ':d' => date('Y-m-d H:i:s'), ':id' => $vpsId]);
