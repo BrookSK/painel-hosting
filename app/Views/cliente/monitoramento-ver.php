@@ -44,11 +44,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <p style="font-size:12px;color:#94a3b8;margin-bottom:16px;">Dados coletados em tempo real do container Docker. Recarregue a página para atualizar.</p>
 <?php else: ?>
+<?php $statsErro = (string)($stats_erro ?? ''); ?>
 <div class="aviso" style="margin-bottom:16px;">
   <?php if ((string)($vps['status'] ?? '') !== 'running'): ?>
     VPS não está em execução. Inicie a VPS para ver as métricas.
   <?php else: ?>
-    Não foi possível coletar métricas do container. Tente recarregar a página.
+    Não foi possível coletar métricas do container.
+    <?php if ($statsErro !== ''): ?>
+      <details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;">Detalhes do erro</summary>
+      <pre style="font-size:11px;margin-top:4px;white-space:pre-wrap;color:#92400e;"><?php echo View::e($statsErro); ?></pre></details>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <?php endif; ?>

@@ -71,36 +71,49 @@ final class MonitoramentoController
 
         // Coletar métricas do container Docker em tempo real
         $containerStats = null;
+        $statsErro = '';
         $containerId = trim((string)($vps['container_id'] ?? ''));
         if ($containerId !== '' && (string)($vps['status'] ?? '') === 'running') {
             try {
-                $dockerCmd = 'docker stats ' . escapeshellarg($containerId) . ' --no-stream --format "{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.BlockIO}}"';
+                $dockerCmd = 'docker stats ' . escapeshellarg($containerId) . ' --no-stream --format "{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.BlockIO}}" 2>&1';
                 $ssh = new \LRV\App\Services\Infra\SshExecutor();
                 $ip = (string)($vps['ip_address'] ?? '');
                 $porta = (int)($vps['ssh_port'] ?? 22);
                 $usuario = (string)($vps['ssh_user'] ?? 'root');
                 $authType = (string)($vps['ssh_auth_type'] ?? 'key');
 
-                if ($authType === 'password') {
-                    $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
-                    $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $dockerCmd, 15);
+                if ($ip === '') {
+                    $statsErro = 'Servidor sem IP configurado.';
                 } else {
-                    $keyDir = rtrim(\LRV\Core\ConfiguracoesSistema::sshKeyDir(), "/\\");
-                    $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
-                    $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 15);
-                }
+                    if ($authType === 'password') {
+                        $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
+                        $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $dockerCmd, 15);
+                    } else {
+                        $keyDir = rtrim(\LRV\Core\ConfiguracoesSistema::sshKeyDir(), "/\\");
+                        $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
+                        $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 15);
+                    }
 
-                $output = trim((string)($result['saida'] ?? ''));
-                if ($output !== '' && (int)($result['codigo'] ?? -1) === 0) {
-                    $parts = explode('|', $output);
-                    $containerStats = [
-                        'cpu_percent' => (float)str_replace('%', '', $parts[0] ?? '0'),
-                        'mem_usage'   => trim($parts[1] ?? '0'),
-                        'mem_percent' => (float)str_replace('%', '', $parts[2] ?? '0'),
-                        'block_io'    => trim($parts[3] ?? '0'),
-                    ];
+                    $output = trim((string)($result['saida'] ?? ''));
+                    $exitCode = (int)($result['codigo'] ?? -1);
+
+                    if ($output !== '' && $exitCode === 0 && str_contains($output, '|')) {
+                        $parts = explode('|', $output);
+                        $containerStats = [
+                            'cpu_percent' => (float)str_replace('%', '', $parts[0] ?? '0'),
+                            'mem_usage'   => trim($parts[1] ?? '0'),
+                            'mem_percent' => (float)str_replace('%', '', $parts[2] ?? '0'),
+                            'block_io'    => trim($parts[3] ?? '0'),
+                        ];
+                    } else {
+                        $statsErro = $output !== '' ? $output : 'Sem resposta do docker stats (exit: ' . $exitCode . ')';
+                    }
                 }
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                $statsErro = $e->getMessage();
+            }
+        } elseif ($containerId === '') {
+            $statsErro = 'Container não atribuído.';
         }
 
         // Métricas históricas do servidor (limitadas a 12)
@@ -121,6 +134,7 @@ final class MonitoramentoController
                 'status' => (string)($vps['status'] ?? ''),
             ],
             'container_stats' => $containerStats,
+            'stats_erro' => $statsErro,
             'metricas' => $metricas,
         ]);
 
