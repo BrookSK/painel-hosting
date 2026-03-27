@@ -1,0 +1,126 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LRV\App\Services\Infra;
+
+use LRV\Core\BancoDeDados;
+use LRV\Core\ConfiguracoesSistema;
+
+/**
+ * Gerencia vhosts Nginx e certificados SSL nos nodes.
+ * Cria configuração de reverse proxy para aplicações dos clientes.
+ */
+final class NginxVhostService
+{
+    public function criarVhost(int $serverId, string $domain, int $port, bool $ssl = true): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $logs = [];
+
+        // 1. Criar config Nginx
+        $vhostName = str_replace('.', '_', $domain);
+        $config = $this->gerarConfig($domain, $port);
+
+        $ssh = new SshExecutor();
+        $this->configurarSsh($ssh, $srv);
+
+        // Escrever config
+        $b64 = base64_encode($config);
+        $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok';
+
+        $result = $this->exec($ssh, $srv, $cmd);
+        $logs[] = 'Vhost: ' . trim($result['saida'] ?? '');
+
+        if (!str_contains($result['saida'] ?? '', 'lrv-vhost-ok')) {
+            return ['ok' => false, 'erro' => 'Falha ao criar vhost Nginx.', 'logs' => $logs];
+        }
+
+        // 2. Gerar SSL com Certbot (se solicitado)
+        if ($ssl) {
+            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --email admin@' . escapeshellarg($domain) . ' --redirect 2>&1 || certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --redirect 2>&1; echo lrv-cert-done';
+            $certResult = $this->exec($ssh, $srv, $certCmd);
+            $certOutput = trim($certResult['saida'] ?? '');
+            $logs[] = 'SSL: ' . $certOutput;
+
+            $sslOk = str_contains($certOutput, 'Successfully') || str_contains($certOutput, 'Certificate not yet due for renewal') || str_contains($certOutput, 'Congratulations');
+            if (!$sslOk) {
+                $logs[] = 'Aviso: SSL pode não ter sido gerado. O site funciona em HTTP.';
+            }
+        }
+
+        return ['ok' => true, 'logs' => $logs];
+    }
+
+    public function removerVhost(int $serverId, string $domain): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return;
+
+        $vhostName = str_replace('.', '_', $domain);
+        $ssh = new SshExecutor();
+        $this->configurarSsh($ssh, $srv);
+
+        $cmd = 'rm -f /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . ' /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1';
+
+        try { $this->exec($ssh, $srv, $cmd); } catch (\Throwable) {}
+    }
+
+    private function gerarConfig(string $domain, int $port): string
+    {
+        return "server {\n"
+            . "    listen 80;\n"
+            . "    server_name {$domain};\n"
+            . "\n"
+            . "    location / {\n"
+            . "        proxy_pass http://127.0.0.1:{$port};\n"
+            . "        proxy_set_header Host \$host;\n"
+            . "        proxy_set_header X-Real-IP \$remote_addr;\n"
+            . "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n"
+            . "        proxy_set_header X-Forwarded-Proto \$scheme;\n"
+            . "        proxy_http_version 1.1;\n"
+            . "        proxy_set_header Upgrade \$http_upgrade;\n"
+            . "        proxy_set_header Connection \"upgrade\";\n"
+            . "        proxy_read_timeout 86400;\n"
+            . "    }\n"
+            . "}\n";
+    }
+
+    private function getServer(\PDO $pdo, int $id): ?array
+    {
+        $stmt = $pdo->prepare('SELECT id, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password FROM servers WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $id]);
+        $srv = $stmt->fetch();
+        return is_array($srv) ? $srv : null;
+    }
+
+    private function configurarSsh(SshExecutor $ssh, array $srv): void
+    {
+        // SSH config is handled per-call in exec
+    }
+
+    private function exec(SshExecutor $ssh, array $srv, string $cmd): array
+    {
+        $ip = (string)($srv['ip_address'] ?? '');
+        $porta = (int)($srv['ssh_port'] ?? 22);
+        $usuario = (string)($srv['ssh_user'] ?? 'root');
+        $authType = (string)($srv['ssh_auth_type'] ?? 'key');
+
+        if ($authType === 'password') {
+            $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
+            return $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 60);
+        }
+
+        $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+        $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($srv['ssh_key_id'] ?? '');
+        return $ssh->executar($ip, $porta, $usuario, $keyPath, $cmd, 60);
+    }
+}

@@ -583,6 +583,41 @@ final class ServerSetupService
                 'risco'          => 'nenhum',
                 'descricao'      => 'Agenda a coleta de métricas a cada 5 minutos via cron.',
             ],
+
+            // ── 9. Nginx reverse proxy + Let's Encrypt ──
+            [
+                'name'           => 'Instalar Nginx',
+                'cmd'            => 'which nginx >/dev/null 2>&1 && echo "already exists" || (export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq nginx 2>&1 && systemctl enable nginx 2>&1 && echo lrv-nginx-ok)',
+                'ok_if_contains' => 'lrv-nginx-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 180,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala o Nginx como reverse proxy para as aplicações dos clientes.',
+            ],
+            [
+                'name'           => 'Instalar Certbot (Let\'s Encrypt)',
+                'cmd'            => 'which certbot >/dev/null 2>&1 && echo "already exists" || (export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq certbot python3-certbot-nginx 2>&1 && echo lrv-certbot-ok)',
+                'ok_if_contains' => 'lrv-certbot-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 180,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala o Certbot para gerar certificados SSL gratuitos via Let\'s Encrypt.',
+            ],
+            [
+                'name'           => 'Criar diretório de vhosts LRV',
+                'cmd'            => 'mkdir -p /etc/nginx/sites-available/lrv /etc/nginx/sites-enabled && grep -q "include /etc/nginx/sites-enabled" /etc/nginx/nginx.conf || sed -i "/http {/a\\    include /etc/nginx/sites-enabled/*;" /etc/nginx/nginx.conf && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-dir-ok',
+                'ok_if_contains' => 'lrv-vhost-dir-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 30,
+                'essencial'      => true,
+                'risco'          => 'baixo',
+                'descricao'      => 'Prepara o Nginx para receber vhosts das aplicações dos clientes.',
+            ],
         ];
     }
 

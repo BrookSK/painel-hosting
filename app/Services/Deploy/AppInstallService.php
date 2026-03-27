@@ -247,6 +247,29 @@ final class AppInstallService
 
         $log('Instalação concluída. Container: ' . $containerId);
 
+        // Criar vhost Nginx + SSL se tem domínio
+        $appDomain = trim((string)($app['domain'] ?? ''));
+        if ($appDomain !== '' && $port > 0) {
+            $appServerId = (int)($app['server_id'] ?? 0);
+            if ($appServerId > 0) {
+                $log('Configurando Nginx + SSL para ' . $appDomain . '...');
+                try {
+                    $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
+                    $vhostResult = $vhostSvc->criarVhost($appServerId, $appDomain, $port, true);
+                    foreach (($vhostResult['logs'] ?? []) as $vl) {
+                        $log($vl);
+                    }
+                    if ($vhostResult['ok']) {
+                        $log('Nginx + SSL configurado para ' . $appDomain);
+                    } else {
+                        $log('Aviso: ' . ($vhostResult['erro'] ?? 'Falha no vhost'));
+                    }
+                } catch (\Throwable $e) {
+                    $log('Aviso SSL: ' . $e->getMessage());
+                }
+            }
+        }
+
         // Site Estático: criar HTML padrão dentro do container
         if ($slug === 'static-site') {
             $title = $siteTitle ?? 'Meu Site';
