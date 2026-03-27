@@ -43,7 +43,7 @@ final class PainelController
         $totalVps = 0;
         $vpsRunning = 0;
         try {
-            $stmtV = $pdo->prepare('SELECT status FROM vps WHERE client_id = :c');
+            $stmtV = $pdo->prepare("SELECT status FROM vps WHERE client_id = :c AND status NOT IN ('expired','removed') AND deleted_at IS NULL");
             $stmtV->execute([':c' => $id]);
             $vpsList = $stmtV->fetchAll() ?: [];
             $totalVps = count($vpsList);
