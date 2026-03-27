@@ -60,13 +60,9 @@ function _tipoBadge(string $tipo): string {
 <?php endif; ?>
 
 <?php if ($vpsIp !== ''): ?>
-<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-  <span style="font-size:18px;">🖥️</span>
-  <div style="flex:1;min-width:200px;">
-    <div style="font-size:13px;font-weight:600;color:#166534;margin-bottom:2px;">IP do seu servidor</div>
-    <div style="font-size:13px;color:#166534;">Para domínios raiz, crie um registro <strong>A</strong> apontando para este IP. Para subdomínios, use <strong>CNAME</strong>.</div>
-  </div>
-  <code style="background:#dcfce7;padding:8px 16px;border-radius:8px;font-size:15px;font-weight:700;color:#166534;letter-spacing:.5px;cursor:pointer;" onclick="navigator.clipboard.writeText('<?php echo View::e($vpsIp); ?>');this.textContent='Copiado!';setTimeout(()=>this.textContent='<?php echo View::e($vpsIp); ?>',1500)" title="Clique para copiar"><?php echo View::e($vpsIp); ?></code>
+<div style="font-size:12px;color:#64748b;margin-bottom:16px;display:flex;align-items:center;gap:6px;">
+  🖥️ IP do servidor: <code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:12px;cursor:pointer;color:#0f172a;" onclick="navigator.clipboard.writeText('<?php echo View::e($vpsIp); ?>');this.textContent='Copiado!';setTimeout(()=>this.textContent='<?php echo View::e($vpsIp); ?>',1500)" title="Clique para copiar"><?php echo View::e($vpsIp); ?></code>
+  <span style="opacity:.6;">— use registro A para domínios raiz</span>
 </div>
 <?php endif; ?>
 

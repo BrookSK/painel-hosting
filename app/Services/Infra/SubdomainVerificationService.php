@@ -21,14 +21,7 @@ final class SubdomainVerificationService
 
         $pdo = BancoDeDados::pdo();
 
-        if (!$isRootDomain) {
-            // Subdomínio: verificar se o domínio raiz pertence ao cliente
-            $stmt = $pdo->prepare("SELECT id FROM client_domains WHERE client_id = :c AND domain = :d LIMIT 1");
-            $stmt->execute([':c' => $clientId, ':d' => $root]);
-            if (!$stmt->fetch()) {
-                throw new \RuntimeException('O domínio raiz "' . $root . '" não está cadastrado. Adicione-o primeiro.');
-            }
-        }
+        // Subdomínios não precisam mais de domínio raiz cadastrado em client_domains
 
         // Verificar duplicata
         $dup = $pdo->prepare('SELECT id, client_id FROM client_subdomains WHERE subdomain = :s LIMIT 1');
