@@ -134,7 +134,6 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais'],
     ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real'],
     ['/cliente/tickets',      '🎫',  'Tickets',       'Suporte técnico e solicitações'],
-    ['/cliente/chat',         '💬',  'Chat ao vivo',  'Fale com nossa equipe agora'],
     ['/cliente/emails',       '📧',  'E-mails',       'Gerenciar caixas de entrada'],
     ['/cliente/aplicacoes',   '🚀',  'Aplicações',    'Deploy e gerenciamento de apps'],
     ['/cliente/assinaturas',  '💳',  'Assinaturas',   'Planos e histórico de pagamentos'],

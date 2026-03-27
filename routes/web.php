@@ -255,12 +255,11 @@ $roteador->get('/cliente/assinaturas/historico', [\LRV\App\Controllers\Cliente\A
 $roteador->post('/cliente/assinaturas/reembolso', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'solicitarReembolso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 
-// Chat cliente
-$roteador->get('/cliente/chat', [ClienteChatController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
-$roteador->get('/cliente/chat/historico', [ClienteChatController::class, 'historico'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/chat/poll', [ClienteChatController::class, 'poll'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/chat/enviar', [ClienteChatController::class, 'enviar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('chat_send', 30, 60)]);
+// Chat cliente — página removida (cliente usa widget flutuante), mas endpoints de API mantidos para o widget
+$roteador->post('/cliente/chat/token', [ClienteChatController::class, 'token'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_token', 10, 60)]);
+$roteador->get('/cliente/chat/historico', [ClienteChatController::class, 'historico'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/chat/poll', [ClienteChatController::class, 'poll'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/chat/enviar', [ClienteChatController::class, 'enviar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_send', 30, 60)]);
 
 // Upload de arquivo no chat (cliente ou equipe)
 $roteador->post('/chat/upload', [\LRV\App\Controllers\Api\ChatUploadController::class, 'upload']);

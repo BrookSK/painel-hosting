@@ -56,10 +56,6 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <span><?php echo View::e(I18n::t('sidebar.tickets')); ?></span>
     </a>
     <?php if (!$_isManaged): ?>
-    <a href="/cliente/chat" class="nav-item<?php echo _nav_ativo_cli('/cliente/chat', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.chat')); ?>">
-      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h3l3 3 3-3h5a1 1 0 001-1V4a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      <span><?php echo View::e(I18n::t('sidebar.chat')); ?></span>
-    </a>
     <a href="/cliente/emails" class="nav-item<?php echo _nav_ativo_cli('/cliente/emails', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.emails')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.emails')); ?></span>
