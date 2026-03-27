@@ -144,6 +144,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   $_isManagedPainel = \LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando();
   if ($_isManagedPainel) {
     $navCards = [
+      ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais'],
       ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real'],
       ['/cliente/tickets',     '🎫',  'Tickets',      'Suporte técnico e solicitações'],
       ['/cliente/assinaturas', '💳',  'Assinaturas',  'Planos e histórico de pagamentos'],

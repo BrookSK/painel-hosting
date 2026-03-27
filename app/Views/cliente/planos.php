@@ -96,4 +96,23 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php endif; ?>
 </div>
 
+<?php if (\LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando()): ?>
+<div class="card-new" style="margin-top:20px;border-left:4px solid #4F46E5;">
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div style="width:48px;height:48px;border-radius:12px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">💬</div>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:4px;">Precisa de mais recursos?</div>
+      <p style="font-size:13px;color:#64748b;margin:0;line-height:1.6;">
+        Seu plano é personalizado. Para alterar recursos, limites ou valores, entre em contato conosco e revisaremos seu plano sob medida.
+      </p>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+    <a href="/cliente/tickets/novo" class="botao sm" style="background:#4F46E5;">🎫 Abrir ticket</a>
+    <a href="mailto:<?php echo View::e(\LRV\Core\ConfiguracoesSistema::emailAdmin()); ?>" class="botao sm sec">📧 E-mail</a>
+    <a href="https://wa.me/5517988093160" target="_blank" class="botao sm" style="background:#25D366;color:#fff;">💬 WhatsApp</a>
+  </div>
+</div>
+<?php endif; ?>
+
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

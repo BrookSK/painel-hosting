@@ -43,12 +43,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="2" fill="currentColor" opacity=".9"/><rect x="11" y="2" width="7" height="7" rx="2" fill="currentColor" opacity=".5"/><rect x="2" y="11" width="7" height="7" rx="2" fill="currentColor" opacity=".5"/><rect x="11" y="11" width="7" height="7" rx="2" fill="currentColor" opacity=".9"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.painel')); ?></span>
     </a>
-    <?php if (!$_isManaged): ?>
     <a href="/cliente/vps" class="nav-item<?php echo _nav_ativo_cli('/cliente/vps', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.vps')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.vps')); ?></span>
     </a>
-    <?php endif; ?>
     <a href="/cliente/monitoramento" class="nav-item<?php echo _nav_ativo_cli('/cliente/monitoramento', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.monitoramento')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 13l4-4 3 3 4-5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.monitoramento')); ?></span>
