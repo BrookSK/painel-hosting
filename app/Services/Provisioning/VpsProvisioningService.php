@@ -49,14 +49,30 @@ final class VpsProvisioningService
         }
 
         $containerIdExistente = (string) ($vps['container_id'] ?? '');
-        if ($statusAtual === 'provisioning') {
-            $log('VPS já está em status provisioning.');
+
+        // Se já tem container e está rodando, só criar subdomínio se necessário
+        if ($statusAtual === 'running' && $containerIdExistente !== '') {
+            $log('VPS já está em execução. Verificando subdomínio...');
+            $this->criarSubdominioAutomatico($vpsId, (int)($vps['server_id'] ?? 0), $log);
             return;
         }
 
-        if ($statusAtual === 'running' && $containerIdExistente !== '') {
-            $log('VPS já está em execução.');
-            return;
+        // Se tem container mas não está rodando, iniciar
+        if ($containerIdExistente !== '' && in_array($statusAtual, ['pending_provisioning', 'provisioning', 'stopped'], true)) {
+            $serverId = (int) ($vps['server_id'] ?? 0);
+            if ($serverId > 0 && $this->configurarDockerParaNode($serverId, $log)) {
+                $log('VPS já possui container_id. Iniciando container...');
+                try {
+                    $out = $this->docker->iniciar($containerIdExistente);
+                    $log('Saída: ' . $out);
+                } catch (\Throwable $e) {
+                    $log('Erro ao iniciar: ' . $e->getMessage());
+                }
+                $this->atualizarStatusVps($vpsId, 'running');
+                $this->criarSubdominioAutomatico($vpsId, $serverId, $log);
+                $log('VPS reiniciada.');
+                return;
+            }
         }
 
         $serverId = (int) ($vps['server_id'] ?? 0);
@@ -81,18 +97,14 @@ final class VpsProvisioningService
 
         $containerId = $containerIdExistente;
         if ($containerId !== '') {
-            if (!$this->docker->disponivel()) {
-                $this->atualizarStatusVps($vpsId, 'pending_provisioning');
-                $log('Docker CLI indisponível. VPS marcada como pending_provisioning.');
+            // Container já existe mas não foi pego pelo bloco anterior — tentar iniciar
+            if ($this->configurarDockerParaNode($serverId, $log)) {
+                $log('Iniciando container existente...');
+                try { $out = $this->docker->iniciar($containerId); $log('Saída: ' . $out); } catch (\Throwable) {}
+                $this->atualizarStatusVps($vpsId, 'running');
+                $this->criarSubdominioAutomatico($vpsId, $serverId, $log);
                 return;
             }
-
-            $log('VPS já possui container_id. Iniciando container...');
-            $out = $this->docker->iniciar($containerId);
-            $log('Saída: ' . $out);
-
-            $this->atualizarStatusVps($vpsId, 'running');
-            return;
         }
 
         $this->atualizarStatusVps($vpsId, 'provisioning');
