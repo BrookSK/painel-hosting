@@ -3,165 +3,129 @@ declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
 
-$metricasArr = is_array($metricas ?? null) ? $metricas : [];
-$vpsId       = (int)($vps['id'] ?? 0);
+$vps = is_array($vps ?? null) ? $vps : [];
+$stats = is_array($container_stats ?? null) ? $container_stats : null;
+$metricas = is_array($metricas ?? null) ? $metricas : [];
+$vpsId = (int)($vps['id'] ?? 0);
+$cpuTotal = (int)($vps['cpu'] ?? 0);
+$ramMb = (int)($vps['ram'] ?? 0);
+$ramGb = round($ramMb / 1024, 1);
+$discoMb = (int)($vps['storage'] ?? 0);
+$discoGb = round($discoMb / 1024);
 
-$labels = []; $cpuData = []; $ramData = []; $diskData = [];
-foreach (array_slice($metricasArr, -30) as $m) {
-    if (!is_array($m)) continue;
-    $labels[]   = substr((string)($m['timestamp'] ?? ''), 11, 5);
-    $cpuData[]  = round((float)($m['cpu_usage']  ?? 0), 2);
-    $ramData[]  = round((float)($m['ram_usage']  ?? 0), 2);
-    $diskData[] = round((float)($m['disk_usage'] ?? 0), 2);
-}
-$ultima     = !empty($metricasArr) ? end($metricasArr) : null;
-$fullTimestamps = [];
-foreach (array_slice($metricasArr, -30) as $m) {
-    if (!is_array($m)) continue;
-    $fullTimestamps[] = (string)($m['timestamp'] ?? '');
-}
-$labelsJson = json_encode($labels, JSON_UNESCAPED_UNICODE);
-$fullTsJson = json_encode($fullTimestamps, JSON_UNESCAPED_UNICODE);
-$cpuJson    = json_encode($cpuData);
-$ramJson    = json_encode($ramData);
-$diskJson   = json_encode($diskData);
-
-function pctColor(float $v): string {
-    if ($v >= 90) return '#ef4444';
-    if ($v >= 70) return '#f59e0b';
-    return '#10b981';
-}
-
-$pageTitle    = I18n::tf('monitoramento.titulo_vps', $vpsId);
-$clienteNome  = (string)($cliente['name'] ?? '');
-$clienteEmail = (string)($cliente['email'] ?? '');
+$pageTitle = 'Monitoramento VPS #' . $vpsId;
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
   <div>
-    <div class="page-title"><?php echo View::e(I18n::t('monitoramento.titulo')); ?></div>
-    <div class="page-subtitle" style="margin-bottom:0;">VPS #<?php echo $vpsId; ?></div>
+    <div class="page-title">Monitoramento</div>
+    <div class="page-subtitle" style="margin-bottom:0;">VPS #<?php echo $vpsId; ?> · <?php echo $cpuTotal; ?> vCPU · <?php echo $ramGb; ?> GB RAM · <?php echo $discoGb; ?> GB Disco</div>
   </div>
-  <a href="/cliente/monitoramento" class="botao ghost sm">← <?php echo View::e(I18n::t('geral.voltar')); ?></a>
+  <a href="/cliente/vps" class="botao ghost sm">← Voltar</a>
 </div>
 
-<?php if (empty($servidor)): ?>
-  <div class="card-new"><p style="margin:0;color:#64748b;"><?php echo View::e(I18n::t('monitoramento.sem_node')); ?></p></div>
+<?php if ($stats): ?>
+<!-- Métricas em tempo real do container -->
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="stat-card roxo">
+    <div class="stat-val"><?php echo number_format($stats['cpu_percent'], 1); ?>%</div>
+    <div class="stat-label">CPU agora</div>
+  </div>
+  <div class="stat-card verde">
+    <div class="stat-val"><?php echo number_format($stats['mem_percent'], 1); ?>%</div>
+    <div class="stat-label">RAM agora · <?php echo View::e($stats['mem_usage']); ?></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="font-size:18px;"><?php echo View::e($stats['block_io']); ?></div>
+    <div class="stat-label">I/O Disco</div>
+  </div>
+</div>
+
+<p style="font-size:12px;color:#94a3b8;margin-bottom:16px;">Dados coletados em tempo real do container Docker. Recarregue a página para atualizar.</p>
 <?php else: ?>
-
-  <div class="card-new" style="margin-bottom:14px;">
-    <div class="grid">
-      <div>
-        <div style="font-size:13px;margin-bottom:4px;"><strong><?php echo View::e(I18n::t('monitoramento.servidor')); ?>:</strong> <?php echo View::e((string)($servidor['hostname'] ?? '')); ?></div>
-        <div style="font-size:13px;"><strong><?php echo View::e(I18n::t('monitoramento.ip')); ?>:</strong> <?php echo View::e((string)($servidor['ip_address'] ?? '')); ?></div>
-      </div>
-      <div>
-        <div style="font-size:13px;margin-bottom:4px;"><strong><?php echo View::e(I18n::t('geral.status')); ?>:</strong> <?php echo View::e((string)($servidor['status'] ?? '')); ?></div>
-        <div style="font-size:13px;"><strong><?php echo View::e(I18n::t('monitoramento.coletas')); ?>:</strong> <?php echo count($metricasArr); ?></div>
-      </div>
-    </div>
-  </div>
-
-  <?php if ($ultima !== null):
-    $cv = (float)($ultima['cpu_usage'] ?? 0);
-    $rv = (float)($ultima['ram_usage'] ?? 0);
-    $dv = (float)($ultima['disk_usage'] ?? 0);
-  ?>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;">
-      <?php foreach ([[I18n::t('monitoramento.cpu_agora'), $cv], [I18n::t('monitoramento.ram_agora'), $rv], [I18n::t('monitoramento.disco_agora'), $dv]] as [$lbl, $val]): ?>
-        <div class="card-new" style="text-align:center;">
-          <div style="font-size:28px;font-weight:700;line-height:1;margin-bottom:4px;color:<?php echo pctColor($val); ?>;"><?php echo number_format($val, 1); ?>%</div>
-          <div style="font-size:12px;color:#64748b;"><?php echo View::e($lbl); ?></div>
-        </div>
-      <?php endforeach; ?>
-    </div>
+<div class="aviso" style="margin-bottom:16px;">
+  <?php if ((string)($vps['status'] ?? '') !== 'running'): ?>
+    VPS não está em execução. Inicie a VPS para ver as métricas.
+  <?php else: ?>
+    Não foi possível coletar métricas do container. Tente recarregar a página.
   <?php endif; ?>
-
-  <?php if (!empty($cpuData)): ?>
-    <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;"><?php echo View::e(I18n::t('monitoramento.atualizacao_auto')); ?> <span id="lastRefresh"><?php echo View::e(I18n::t('monitoramento.agora')); ?></span></p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px;">
-      <?php foreach ([['chartCpu',I18n::t('monitoramento.cpu') . ' (%)','#4F46E5'],['chartRam',I18n::t('monitoramento.ram') . ' (%)','#7C3AED'],['chartDisk',I18n::t('monitoramento.disco') . ' (%)','#0ea5e9']] as [$cid,$clbl,$ccol]): ?>
-        <div class="card-new">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:<?php echo $ccol; ?>;"><?php echo View::e($clbl); ?></div>
-          <canvas id="<?php echo $cid; ?>" height="110"></canvas>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
-
-  <div class="card-new">
-    <div class="card-new-title" style="margin-bottom:12px;"><?php echo View::e(I18n::t('monitoramento.historico')); ?></div>
-    <div style="overflow:auto;">
-      <table style="width:100%;border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.data_hora')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.cpu')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.ram')); ?></th>
-            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('monitoramento.disco')); ?></th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach (array_reverse($metricasArr) as $m):
-            $cv2 = (float)($m['cpu_usage'] ?? 0);
-            $rv2 = (float)($m['ram_usage'] ?? 0);
-            $dv2 = (float)($m['disk_usage'] ?? 0);
-          ?>
-            <tr>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:13px;"><?php echo View::e((string)($m['timestamp'] ?? '')); ?></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><span style="color:<?php echo pctColor($cv2); ?>;font-weight:600;"><?php echo number_format($cv2, 2); ?>%</span></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><span style="color:<?php echo pctColor($rv2); ?>;font-weight:600;"><?php echo number_format($rv2, 2); ?>%</span></td>
-              <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><span style="color:<?php echo pctColor($dv2); ?>;font-weight:600;"><?php echo number_format($dv2, 2); ?>%</span></td>
-            </tr>
-          <?php endforeach; ?>
-          <?php if (empty($metricasArr)): ?>
-            <tr><td colspan="4" style="padding:12px;color:#94a3b8;"><?php echo View::e(I18n::t('monitoramento.sem_metricas')); ?></td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
+</div>
 <?php endif; ?>
 
-<?php if (!empty($cpuData)): ?>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<!-- Gráficos -->
+<?php if (!empty($metricas)): ?>
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="card">
+    <div style="font-weight:600;font-size:13px;color:#4F46E5;margin-bottom:8px;">CPU (%)</div>
+    <canvas id="chartCpu" height="120"></canvas>
+  </div>
+  <div class="card">
+    <div style="font-weight:600;font-size:13px;color:#16a34a;margin-bottom:8px;">RAM (%)</div>
+    <canvas id="chartRam" height="120"></canvas>
+  </div>
+  <div class="card">
+    <div style="font-weight:600;font-size:13px;color:#f59e0b;margin-bottom:8px;">Disco (%)</div>
+    <canvas id="chartDisco" height="120"></canvas>
+  </div>
+</div>
+
+<!-- Histórico (últimas 12 coletas) -->
+<div class="card">
+  <div style="font-weight:600;font-size:14px;margin-bottom:12px;">Histórico</div>
+  <div style="overflow:auto;">
+    <table style="font-size:13px;">
+      <thead>
+        <tr><th>Data/Hora</th><th>CPU</th><th>RAM</th><th>Disco</th></tr>
+      </thead>
+      <tbody>
+        <?php foreach ($metricas as $m): ?>
+        <tr>
+          <td><?php echo View::e((string)($m['timestamp'] ?? '')); ?></td>
+          <td style="color:#4F46E5;"><?php echo number_format((float)($m['cpu_usage'] ?? 0), 2); ?>%</td>
+          <td style="color:#16a34a;"><?php echo number_format((float)($m['ram_usage'] ?? 0), 2); ?>%</td>
+          <td style="color:#f59e0b;"><?php echo number_format((float)($m['disk_usage'] ?? 0), 2); ?>%</td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <script>
 (function(){
-  var labels=<?php echo $labelsJson; ?>;
-  var fullTs=<?php echo $fullTsJson; ?>;
-  var cpu=<?php echo $cpuJson; ?>;
-  var ram=<?php echo $ramJson; ?>;
-  var disk=<?php echo $diskJson; ?>;
-  var opts={
-    plugins:{
-      legend:{display:false},
-      tooltip:{
-        callbacks:{
-          title:function(ctx){return fullTs[ctx[0].dataIndex]||labels[ctx[0].dataIndex]||'';},
-          label:function(ctx){return ctx.parsed.y.toFixed(1)+'%';}
-        }
-      }
-    },
-    scales:{
-      y:{min:0,max:100,grid:{color:'#f1f5f9'},ticks:{callback:function(v){return v+'%';},font:{size:11}}},
-      x:{ticks:{maxTicksLimit:8,font:{size:11}},grid:{display:false}}
-    },
-    animation:{duration:300}
-  };
-  function mkChart(id,data,color){
-    var ctx=document.getElementById(id);
-    if(!ctx)return;
-    new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:color,backgroundColor:color+'18',borderWidth:2,pointRadius:2,pointHoverRadius:4,tension:0.35,fill:true}]},options:opts});
+  var data=<?php echo json_encode(array_reverse($metricas)); ?>;
+  function drawChart(canvasId,dataKey,color){
+    var canvas=document.getElementById(canvasId);
+    if(!canvas)return;
+    var ctx=canvas.getContext('2d');
+    var w=canvas.width=canvas.offsetWidth;
+    var h=canvas.height=120;
+    var vals=data.map(function(d){return parseFloat(d[dataKey])||0;});
+    var max=Math.max(100,Math.max.apply(null,vals));
+    var step=w/(vals.length-1||1);
+
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=2;
+    for(var i=0;i<vals.length;i++){
+      var x=i*step;
+      var y=h-(vals[i]/max)*h;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // Fill
+    ctx.lineTo((vals.length-1)*step,h);
+    ctx.lineTo(0,h);
+    ctx.closePath();
+    ctx.fillStyle=color.replace(')',',0.1)').replace('rgb','rgba');
+    ctx.fill();
   }
-  mkChart('chartCpu',cpu,'#4F46E5');
-  mkChart('chartRam',ram,'#7C3AED');
-  mkChart('chartDisk',disk,'#0ea5e9');
-  setTimeout(function(){
-    document.getElementById('lastRefresh').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    location.reload();
-  },30000);
+  drawChart('chartCpu','cpu_usage','rgb(79,70,229)');
+  drawChart('chartRam','ram_usage','rgb(22,163,74)');
+  drawChart('chartDisco','disk_usage','rgb(245,158,11)');
 })();
 </script>
 <?php endif; ?>

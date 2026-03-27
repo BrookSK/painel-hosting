@@ -21,11 +21,9 @@ final class MonitoramentoController
 
         $pdo = BancoDeDados::pdo();
 
-        $sql = "SELECT v.id AS vps_id, v.server_id,
-                       s.hostname, s.ip_address,
+        $sql = "SELECT v.id AS vps_id, v.server_id, v.cpu, v.ram, v.storage, v.status,
                        m.cpu_usage, m.ram_usage, m.disk_usage, m.timestamp
                 FROM vps v
-                LEFT JOIN servers s ON s.id = v.server_id
                 LEFT JOIN (
                     SELECT sm.*
                     FROM server_metrics sm
@@ -35,7 +33,7 @@ final class MonitoramentoController
                         GROUP BY server_id
                     ) ult ON ult.server_id = sm.server_id AND ult.ts = sm.timestamp
                 ) m ON m.server_id = v.server_id
-                WHERE v.client_id = :c
+                WHERE v.client_id = :c AND v.status NOT IN ('expired','removed')
                 ORDER BY v.id DESC";
 
         $stmt = $pdo->prepare($sql);
@@ -63,7 +61,7 @@ final class MonitoramentoController
 
         $pdo = BancoDeDados::pdo();
 
-        $stmt = $pdo->prepare('SELECT id, server_id FROM vps WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt = $pdo->prepare('SELECT v.id, v.server_id, v.container_id, v.cpu, v.ram, v.storage, v.status, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v LEFT JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1');
         $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
         $vps = $stmt->fetch();
 
@@ -71,28 +69,59 @@ final class MonitoramentoController
             return Resposta::texto('Acesso negado.', 403);
         }
 
-        $serverId = (int) ($vps['server_id'] ?? 0);
-        if ($serverId <= 0) {
-            $html = View::renderizar(__DIR__ . '/../../Views/cliente/monitoramento-ver.php', [
-                'vps' => $vps,
-                'servidor' => null,
-                'metricas' => [],
-            ]);
-            return Resposta::html($html);
+        // Coletar métricas do container Docker em tempo real
+        $containerStats = null;
+        $containerId = trim((string)($vps['container_id'] ?? ''));
+        if ($containerId !== '' && (string)($vps['status'] ?? '') === 'running') {
+            try {
+                $dockerCmd = 'docker stats ' . escapeshellarg($containerId) . ' --no-stream --format "{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.BlockIO}}"';
+                $ssh = new \LRV\App\Services\Infra\SshExecutor();
+                $ip = (string)($vps['ip_address'] ?? '');
+                $porta = (int)($vps['ssh_port'] ?? 22);
+                $usuario = (string)($vps['ssh_user'] ?? 'root');
+                $authType = (string)($vps['ssh_auth_type'] ?? 'key');
+
+                if ($authType === 'password') {
+                    $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
+                    $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $dockerCmd, 15);
+                } else {
+                    $keyDir = rtrim(\LRV\Core\ConfiguracoesSistema::sshKeyDir(), "/\\");
+                    $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
+                    $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 15);
+                }
+
+                $output = trim((string)($result['saida'] ?? ''));
+                if ($output !== '' && (int)($result['codigo'] ?? -1) === 0) {
+                    $parts = explode('|', $output);
+                    $containerStats = [
+                        'cpu_percent' => (float)str_replace('%', '', $parts[0] ?? '0'),
+                        'mem_usage'   => trim($parts[1] ?? '0'),
+                        'mem_percent' => (float)str_replace('%', '', $parts[2] ?? '0'),
+                        'block_io'    => trim($parts[3] ?? '0'),
+                    ];
+                }
+            } catch (\Throwable) {}
         }
 
-        $stmt = $pdo->prepare('SELECT id, hostname, ip_address, status FROM servers WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $serverId]);
-        $servidor = $stmt->fetch();
-
-        $stmt = $pdo->prepare('SELECT cpu_usage, ram_usage, disk_usage, timestamp FROM server_metrics WHERE server_id = :id ORDER BY timestamp DESC LIMIT 200');
-        $stmt->execute([':id' => $serverId]);
-        $metricas = $stmt->fetchAll();
+        // Métricas históricas do servidor (limitadas a 12)
+        $serverId = (int)($vps['server_id'] ?? 0);
+        $metricas = [];
+        if ($serverId > 0) {
+            $stmt = $pdo->prepare('SELECT cpu_usage, ram_usage, disk_usage, timestamp FROM server_metrics WHERE server_id = :id ORDER BY timestamp DESC LIMIT 12');
+            $stmt->execute([':id' => $serverId]);
+            $metricas = $stmt->fetchAll() ?: [];
+        }
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/monitoramento-ver.php', [
-            'vps' => $vps,
-            'servidor' => is_array($servidor) ? $servidor : null,
-            'metricas' => is_array($metricas) ? $metricas : [],
+            'vps' => [
+                'id' => (int)$vps['id'],
+                'cpu' => (int)($vps['cpu'] ?? 0),
+                'ram' => (int)($vps['ram'] ?? 0),
+                'storage' => (int)($vps['storage'] ?? 0),
+                'status' => (string)($vps['status'] ?? ''),
+            ],
+            'container_stats' => $containerStats,
+            'metricas' => $metricas,
         ]);
 
         return Resposta::html($html);
