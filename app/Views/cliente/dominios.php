@@ -7,7 +7,10 @@ use LRV\Core\I18n;
 $dominiosRaiz = is_array($dominios_raiz ?? null) ? $dominios_raiz : [];
 $subdomains   = is_array($subdomains ?? null) ? $subdomains : [];
 $vpsIp        = (string)($vps_ip ?? '');
-$erro         = (string)($erro ?? ($_SESSION['_dominios_erro'] ?? ''));
+$erro         = (string)($erro ?? '');
+if ($erro === '' && !empty($_SESSION['_dominios_erro'])) {
+    $erro = (string)$_SESSION['_dominios_erro'];
+}
 unset($_SESSION['_dominios_erro']);
 $sucesso      = (string)($sucesso ?? '');
 

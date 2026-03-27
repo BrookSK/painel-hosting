@@ -256,17 +256,17 @@ final class SubdomainVerificationService
     public function removerSubdominio(int $clientId, int $subId): void
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, used_by_type FROM client_subdomains WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id FROM client_subdomains WHERE id = :id AND client_id = :c LIMIT 1');
         $stmt->execute([':id' => $subId, ':c' => $clientId]);
         $row = $stmt->fetch();
 
         if (!is_array($row)) {
-            throw new \RuntimeException('Subdomínio não encontrado.');
+            throw new \RuntimeException('Domínio não encontrado.');
         }
 
-        if (($row['used_by_type'] ?? null) !== null) {
-            throw new \RuntimeException('Este subdomínio está em uso. Remova a associação antes de deletar.');
-        }
+        // Liberar uso se estava em uso
+        $pdo->prepare("UPDATE client_subdomains SET used_by_type = NULL, used_by_id = NULL WHERE id = :id")
+            ->execute([':id' => $subId]);
 
         $pdo->prepare('DELETE FROM client_subdomains WHERE id = :id AND client_id = :c')
             ->execute([':id' => $subId, ':c' => $clientId]);
