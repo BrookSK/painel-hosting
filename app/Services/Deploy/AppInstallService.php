@@ -96,7 +96,6 @@ final class AppInstallService
             $dbPass = bin2hex(random_bytes(12));
             $dbContainer = 'app_mysql_wp_' . $applicationId;
 
-            // Criar container MySQL
             $log('Criando MySQL para WordPress...');
             try { $this->docker->removerContainer($dbContainer); } catch (\Throwable) {}
             $mysqlCmd = 'docker run -d'
@@ -110,21 +109,64 @@ final class AppInstallService
                 . ' mysql:8';
             $rMysql = $this->docker->executar($mysqlCmd);
             $log('MySQL: ' . trim((string)($rMysql['saida'] ?? '')));
-
-            // Aguardar MySQL iniciar
             $log('Aguardando MySQL iniciar (10s)...');
             sleep(10);
 
-            // Configurar variáveis do WordPress
             $envVars['WORDPRESS_DB_HOST'] = $dbContainer;
             $envVars['WORDPRESS_DB_USER'] = $dbUser;
             $envVars['WORDPRESS_DB_PASSWORD'] = $dbPass;
             $envVars['WORDPRESS_DB_NAME'] = $dbName;
+            foreach ($envVars as $k => $v) { if ($v === '__AUTO__') unset($envVars[$k]); }
+        }
 
-            // Remover marcadores __AUTO__
-            foreach ($envVars as $k => $v) {
-                if ($v === '__AUTO__') unset($envVars[$k]);
-            }
+        // Laravel: criar MySQL automaticamente
+        if ($slug === 'php-laravel') {
+            $dbName = 'laravel_' . $applicationId;
+            $dbUser = 'laravel_' . $applicationId;
+            $dbPass = bin2hex(random_bytes(12));
+            $dbContainer = 'app_mysql_laravel_' . $applicationId;
+
+            $log('Criando MySQL para Laravel...');
+            try { $this->docker->removerContainer($dbContainer); } catch (\Throwable) {}
+            $mysqlCmd = 'docker run -d'
+                . ' --name ' . escapeshellarg($dbContainer)
+                . ' --network ' . escapeshellarg($rede)
+                . ' --restart unless-stopped'
+                . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
+                . ' -e MYSQL_DATABASE=' . escapeshellarg($dbName)
+                . ' -e MYSQL_USER=' . escapeshellarg($dbUser)
+                . ' -e MYSQL_PASSWORD=' . escapeshellarg($dbPass)
+                . ' mysql:8';
+            $this->docker->executar($mysqlCmd);
+            $log('Aguardando MySQL (10s)...');
+            sleep(10);
+
+            $envVars['DB_CONNECTION'] = 'mysql';
+            $envVars['DB_HOST'] = $dbContainer;
+            $envVars['DB_PORT'] = '3306';
+            $envVars['DB_DATABASE'] = $dbName;
+            $envVars['DB_USERNAME'] = $dbUser;
+            $envVars['DB_PASSWORD'] = $dbPass;
+            $envVars['APP_KEY'] = 'base64:' . base64_encode(random_bytes(32));
+            foreach ($envVars as $k => $v) { if ($v === '__AUTO__') unset($envVars[$k]); }
+        }
+
+        // Node.js: criar projeto básico
+        if ($slug === 'nodejs') {
+            $projectName = trim($envVars['NODE_PROJECT_NAME'] ?? 'app');
+            $appPort = trim($envVars['APP_PORT'] ?? '3000');
+            unset($envVars['NODE_PROJECT_NAME'], $envVars['NODE_VERSION'], $envVars['APP_PORT']);
+            $envVars['PORT'] = $appPort;
+
+            // O docker command vai criar o projeto se não existir
+            $dockerCmd = 'sh -c "if [ ! -f /app/package.json ]; then mkdir -p /app && cd /app && npm init -y && echo \'const http=require(\"http\");const s=http.createServer((q,r)=>{r.writeHead(200);r.end(\"Hello from ' . addslashes($projectName) . '!\");});s.listen(process.env.PORT||3000,()=>console.log(\"Running on port \"+(process.env.PORT||3000)));\' > index.js; fi && cd /app && npm start 2>/dev/null || node /app/index.js"';
+            $dockerCmd = trim($dockerCmd);
+        }
+
+        // Site Estático: criar HTML padrão
+        if ($slug === 'static-site') {
+            $siteTitle = trim($envVars['SITE_TITLE'] ?? 'Meu Site');
+            unset($envVars['SITE_TITLE']);
         }
 
         // Roundcube: injetar host do Mailcow das configurações do sistema
@@ -168,10 +210,14 @@ final class AppInstallService
         }
 
         // Docker command override
-        $dockerCmd = trim((string) ($app['docker_command'] ?? ''));
+        $templateDockerCmd = trim((string) ($app['docker_command'] ?? ''));
+        // Slug-specific command overrides
+        if ($slug === 'nodejs' && isset($dockerCmd) && $dockerCmd !== '') {
+            $templateDockerCmd = $dockerCmd;
+        }
         $cmd .= ' ' . escapeshellarg($image);
-        if ($dockerCmd !== '') {
-            $cmd .= ' ' . $dockerCmd;
+        if ($templateDockerCmd !== '') {
+            $cmd .= ' ' . $templateDockerCmd;
         }
 
         $log('Iniciando container...');
@@ -200,6 +246,16 @@ final class AppInstallService
         }
 
         $log('Instalação concluída. Container: ' . $containerId);
+
+        // Site Estático: criar HTML padrão dentro do container
+        if ($slug === 'static-site') {
+            $title = $siteTitle ?? 'Meu Site';
+            $htmlContent = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . htmlspecialchars($title, ENT_QUOTES) . '</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh}div{text-align:center;padding:40px}h1{font-size:2rem;color:#1e293b;margin-bottom:8px}p{color:#64748b}</style></head><body><div><h1>' . htmlspecialchars($title, ENT_QUOTES) . '</h1><p>Seu site está no ar! Edite os arquivos pelo gerenciador de arquivos.</p></div></body></html>';
+            try {
+                $this->docker->executar('docker exec ' . escapeshellarg($nomeContainer) . ' sh -c ' . escapeshellarg('echo ' . escapeshellarg($htmlContent) . ' > /usr/share/nginx/html/index.html'));
+                $log('HTML padrão criado.');
+            } catch (\Throwable) {}
+        }
     }
 
     private function configurarSsh(array $srv): void

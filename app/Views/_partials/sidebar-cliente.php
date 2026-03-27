@@ -79,6 +79,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><ellipse cx="10" cy="5" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 5v5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5V5" stroke="currentColor" stroke-width="1.5"/><path d="M3 10v5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5v-5" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Bancos de Dados</span>
     </a>
+    <a href="/cliente/arquivos" class="nav-item<?php echo _nav_ativo_cli('/cliente/arquivos', $_seg); ?>" data-tooltip="Arquivos">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 6V4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span>Arquivos</span>
+    </a>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.assinaturas')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>

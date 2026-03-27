@@ -1,0 +1,176 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LRV\App\Controllers\Cliente;
+
+use LRV\App\Services\Infra\SshCrypto;
+use LRV\App\Services\Infra\SshExecutor;
+use LRV\Core\Auth;
+use LRV\Core\BancoDeDados;
+use LRV\Core\ConfiguracoesSistema;
+use LRV\Core\Http\Requisicao;
+use LRV\Core\Http\Resposta;
+use LRV\Core\View;
+
+final class ArquivosController
+{
+    public function index(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT id, cpu, ram, storage, status FROM vps WHERE client_id = :c AND status IN ('running','active') ORDER BY id DESC");
+        $stmt->execute([':c' => $clienteId]);
+        $vpsList = $stmt->fetchAll() ?: [];
+
+        return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/arquivos.php', [
+            'vpsList' => $vpsList,
+        ]));
+    }
+
+    public function listar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $vpsId = (int)($req->query['vps_id'] ?? 0);
+        $path = (string)($req->query['path'] ?? '/');
+        if ($path === '') $path = '/';
+
+        $result = $this->execInContainer($clienteId, $vpsId, 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1');
+        if (!$result['ok']) return Resposta::json($result);
+
+        $lines = explode("\n", trim($result['output']));
+        $files = [];
+        foreach ($lines as $line) {
+            if (str_starts_with($line, 'total') || trim($line) === '') continue;
+            $parts = preg_split('/\s+/', $line, 8);
+            if (count($parts) < 8) continue;
+            $name = $parts[7];
+            if ($name === '.' || $name === '..') continue;
+            $files[] = [
+                'perms' => $parts[0],
+                'type' => str_starts_with($parts[0], 'd') ? 'dir' : 'file',
+                'size' => (int)$parts[4],
+                'date' => $parts[5] . ' ' . $parts[6],
+                'name' => $name,
+            ];
+        }
+
+        usort($files, function($a, $b) {
+            if ($a['type'] !== $b['type']) return $a['type'] === 'dir' ? -1 : 1;
+            return strcasecmp($a['name'], $b['name']);
+        });
+
+        return Resposta::json(['ok' => true, 'path' => $path, 'files' => $files]);
+    }
+
+    public function ler(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $vpsId = (int)($req->query['vps_id'] ?? 0);
+        $path = (string)($req->query['path'] ?? '');
+        if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
+
+        // Limitar tamanho do arquivo (100KB)
+        $result = $this->execInContainer($clienteId, $vpsId, 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1');
+        if (!$result['ok']) return Resposta::json($result);
+
+        return Resposta::json(['ok' => true, 'content' => $result['output'], 'path' => $path]);
+    }
+
+    public function salvar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $path = (string)($req->post['path'] ?? '');
+        $content = (string)($req->post['content'] ?? '');
+        if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
+
+        $b64 = base64_encode($content);
+        $result = $this->execInContainer($clienteId, $vpsId, 'echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($path) . ' 2>&1 && echo OK');
+        return Resposta::json($result);
+    }
+
+    public function criarPasta(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $path = (string)($req->post['path'] ?? '');
+        if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
+
+        $result = $this->execInContainer($clienteId, $vpsId, 'mkdir -p ' . escapeshellarg($path) . ' 2>&1 && echo OK');
+        return Resposta::json($result);
+    }
+
+    public function deletar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $path = (string)($req->post['path'] ?? '');
+        if ($path === '' || $path === '/') return Resposta::json(['ok' => false, 'erro' => 'Não é possível deletar este caminho.']);
+
+        $result = $this->execInContainer($clienteId, $vpsId, 'rm -rf ' . escapeshellarg($path) . ' 2>&1 && echo OK');
+        return Resposta::json($result);
+    }
+
+    private function execInContainer(int $clienteId, int $vpsId, string $cmd): array
+    {
+        if ($vpsId <= 0) return ['ok' => false, 'erro' => 'VPS inválida.'];
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT v.id, v.container_id, v.status, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) return ['ok' => false, 'erro' => 'VPS não encontrada.'];
+        if (!in_array((string)($row['status'] ?? ''), ['running', 'active'], true)) return ['ok' => false, 'erro' => 'VPS não está em execução.'];
+
+        $containerId = trim((string)($row['container_id'] ?? ''));
+        if ($containerId === '') return ['ok' => false, 'erro' => 'Container não encontrado.'];
+
+        $containerName = 'vps_client_' . $clienteId . '_' . $vpsId;
+        $dockerCmd = 'docker exec ' . escapeshellarg($containerName) . ' bash -c ' . escapeshellarg($cmd)
+            . ' 2>&1 || docker exec ' . escapeshellarg($containerId) . ' bash -c ' . escapeshellarg($cmd) . ' 2>&1';
+
+        $ssh = new SshExecutor();
+        $ip = (string)($row['ip_address'] ?? '');
+        $porta = (int)($row['ssh_port'] ?? 22);
+        $usuario = (string)($row['ssh_user'] ?? 'root');
+        $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+        try {
+            if ($authType === 'password') {
+                $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $dockerCmd, 15);
+            } else {
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 15);
+            }
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'erro' => $e->getMessage()];
+        }
+
+        $output = (string)($result['saida'] ?? '');
+        // Filtrar warnings SSH
+        $lines = explode("\n", $output);
+        $clean = [];
+        foreach ($lines as $l) {
+            if (str_contains($l, 'Warning:') || str_contains($l, 'Permanently added') || str_contains($l, 'known_hosts')) continue;
+            $clean[] = $l;
+        }
+
+        return ['ok' => true, 'output' => implode("\n", $clean)];
+    }
+}

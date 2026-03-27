@@ -211,6 +211,14 @@ $roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class
 $roteador->post('/cliente/vps/terminal/exec', [ClienteTerminalController::class, 'exec'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('terminal_exec', 120, 60)]);
 $roteador->post('/cliente/vps/terminal/upload', [ClienteTerminalController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('terminal_upload', 20, 60)]);
 $roteador->get('/cliente/vps/terminal/download', [ClienteTerminalController::class, 'download'], [Middlewares::exigirLoginCliente()]);
+
+// Gerenciador de arquivos
+$roteador->get('/cliente/arquivos', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'index'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/arquivos/listar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/arquivos/ler', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'ler'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/arquivos/salvar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
+$roteador->post('/cliente/arquivos/criar-pasta', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'criarPasta'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
+$roteador->post('/cliente/arquivos/deletar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
