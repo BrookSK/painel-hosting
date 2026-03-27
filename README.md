@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **2.3.0**
+> Versão atual: **2.4.0**
 
 Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
 
@@ -68,6 +68,10 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0044_client_last_log
 mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0045_client_lang_country.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0046_subscription_billing_type.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_26_0047_client_subdomains.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0051_client_databases_application_id.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0052_client_managed.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0053_server_managed_flag.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0054_plan_client_id.sql
 ```
 
 ### 3. Configuração do banco
@@ -238,6 +242,16 @@ Ou via painel em `/equipe/inicializacao`.
 - Jobs assíncronos: criar, parar, reiniciar, remover VPS
 - Seleção automática de node por capacidade disponível
 - Métricas de CPU/RAM/Disco coletadas remotamente via SSH
+
+### Clientes Gerenciados (Hospedagem Gerenciada)
+- Tipo de cliente `is_managed` com painel restrito (VPS, Monitoramento, Tickets, Assinaturas, Minha Conta, Segurança)
+- Planos exclusivos por cliente (`plans.client_id`) — não aparecem para outros clientes
+- Servidores dedicados (`is_managed_server`) com overselling — containers sem limites de CPU/RAM
+- Impersonação: equipe loga como cliente com acesso completo, botão "Voltar para equipe"
+- Monitoramento mostra percentuais relativos ao plano (não ao host)
+- Alertas automáticos quando uso real do servidor gerenciado ou da VPS individual está alto
+- Listagem de servidores mostra ratio de overselling (vendido vs real)
+- Validações de segurança impedem mistura de clientes normais e gerenciados no mesmo servidor
 
 ---
 

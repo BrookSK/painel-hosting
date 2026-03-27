@@ -5,6 +5,39 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [2.4.0] — 2026-03-27
+
+### Adicionado
+- **Clientes gerenciados** — novo tipo de cliente (`is_managed`) com acesso restrito ao painel: VPS, Monitoramento, Tickets, Assinaturas, Minha Conta e Segurança. Ideal para clientes com hospedagem gerenciada onde a equipe cuida da infraestrutura
+- **Impersonação de clientes** — equipe pode "Logar como cliente" na tela de detalhes do cliente, com acesso completo a todas as funcionalidades. Botão "Voltar para equipe" na sidebar. Auditoria registrada
+- **Planos exclusivos por cliente** — campo `client_id` na tabela `plans` permite vincular um plano a um cliente específico. Planos exclusivos não aparecem na página pública nem para outros clientes
+- **Servidores para clientes gerenciados** — flag `is_managed_server` nos servidores. VPS de clientes gerenciados são provisionadas sem limites de CPU/RAM (overselling). Recursos não são contabilizados no servidor
+- **Overselling com visibilidade** — listagem de servidores mostra "vendido vs real" para servidores gerenciados (ex: "480 GB vendido / 128 GB real · 16 VPS")
+- **Alertas de uso alto em servidores gerenciados** — quando uso real do host atinge CPU 80%, RAM 75% ou Disco 85%, admin recebe alerta por email + WhatsApp + notificação interna com detalhes do overselling
+- **Alertas de uso alto por VPS gerenciada** — quando um cliente gerenciado usa mais de 80% da RAM do plano, admin é notificado (rate limit 2h por VPS)
+- **Monitoramento relativo ao plano** — para clientes gerenciados, percentuais de uso são calculados relativos ao plano contratado (não ao host). Ex: "15 GB / 30 GB = 50%"
+- **Domínios raiz para VPS** — clientes agora podem adicionar domínios raiz (ex: meudominio.com.br) apontando direto para a VPS via registro A. IP do servidor exibido na tela de domínios com botão de copiar
+- **Verificação de registro A** — novo fluxo de verificação DNS para domínios raiz, checando se o registro A aponta para o IP correto do servidor
+- **Card "Plano Sob Medida"** — na home e na página de planos do cliente, card visual para hospedagem gerenciada com botões de WhatsApp Vendas e E-mail
+- **Banner de plano exclusivo no painel** — cliente gerenciado sem assinatura vê banner destacado com detalhes do plano e botão "Assinar agora"
+- Validação de segurança: servidor não pode ser marcado como gerenciado se já tem VPS de clientes normais (e vice-versa)
+- Validação de segurança: cliente gerenciado não pode assinar planos públicos; ninguém pode assinar plano exclusivo de outro cliente
+- Migrations: `0052_client_managed`, `0053_server_managed_flag`, `0054_plan_client_id`
+
+### Alterado
+- Sidebar do cliente gerenciado mostra apenas: Painel, VPS, Monitoramento, Tickets, Assinaturas, Minha Conta, Segurança
+- Botão de Terminal escondido na tela de VPS para clientes gerenciados
+- Tela de planos do cliente gerenciado mostra "✓ Seu plano personalizado" + card de contato para alterações
+- Servidores normais excluem `is_managed_server` da seleção automática de node
+- `DockerCli::criarEIniciarContainer` aceita cpu=0 e ram=0 para containers sem limites
+- Listagem de planos da equipe mostra badge 🔒 com nome do cliente para planos exclusivos
+- Formulário de edição de plano tem dropdown "Cliente exclusivo"
+- Formulário de edição de servidor tem checkbox "🔧 Servidor para clientes gerenciados"
+- Domínios: formulário de adicionar subdomínio agora aceita domínios raiz também
+- Todas as listagens públicas de planos filtram `client_id IS NULL`
+
+---
+
 ## [2.3.0] — 2026-03-26
 
 ### Adicionado

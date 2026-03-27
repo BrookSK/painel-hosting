@@ -144,7 +144,7 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   <pre>Webhook endpoint: POST /webhooks/stripe</pre>
 
   <div class="section-title">8. Nodes / Servidores</div>
-  <p style="font-size:14px;color:#475569;">Cadastre nodes em <a href="/equipe/servidores">/equipe/servidores</a>. O provisionamento seleciona automaticamente o node com mais capacidade disponível.</p>
+  <p style="font-size:14px;color:#475569;">Cadastre nodes em <a href="/equipe/servidores">/equipe/servidores</a>. O provisionamento seleciona automaticamente o node com mais capacidade disponível. Servidores podem ser marcados como "🧪 Teste" (só para clientes tester) ou "🔧 Gerenciado" (só para clientes gerenciados, com overselling).</p>
   <p style="font-size:14px;color:#475569;">A autenticação SSH suporta dois modos: <strong>chave privada</strong> (upload de arquivo .pem/id_rsa) ou <strong>usuário e senha</strong> (via ext-ssh2 ou pseudo-terminal, sem necessidade de sshpass). Ao fazer upload, o arquivo é salvo no diretório configurado em <code>infra.ssh_key_dir</code> com permissão 600.</p>
 
   <div class="section-title">9. Usuários e Permissões</div>
@@ -315,15 +315,32 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   Persistido via cookie <code>currency</code> ou query param <code>?currency=BRL</code>.
 </p>
 
-<div class="section-title">28. Gerenciamento de subdomínios (v2.3)</div>
+<div class="section-title">28. Gerenciamento de domínios (v2.3 / v2.4)</div>
 <p style="font-size:14px;color:#475569;">
-  Tela centralizada <code>/cliente/dominios</code> para gerenciar domínios raiz (email) e subdomínios (apps/deploy).<br>
-  Subdomínios usam verificação em 2 passos: TXT (prova de propriedade) + CNAME (apontamento seguro).<br>
-  O IP do servidor nunca é exposto ao cliente — CNAMEs apontam para subdomínios do sistema com proxy Cloudflare.<br>
+  Tela centralizada <code>/cliente/dominios</code> para gerenciar domínios raiz e subdomínios.<br>
+  <strong>Domínios raiz:</strong> o cliente pode adicionar domínios raiz (ex: meudominio.com.br) apontando direto para a VPS via registro A. O IP do servidor é exibido na tela com botão de copiar.<br>
+  <strong>Subdomínios:</strong> usam CNAME apontando para subdomínios do sistema com proxy Cloudflare.<br>
   Subdomínio automático <code>vpsN.clientes.DOMINIO</code> criado no Cloudflare ao provisionar VPS.<br>
-  Aplicações e Git Deploy agora usam select de subdomínios verificados (não aceita domínio raiz).<br>
+  Aplicações e Git Deploy usam select de subdomínios verificados.<br>
   Containers Docker bindam em <code>127.0.0.1</code> — portas não ficam expostas pro mundo.<br>
   Migration: <code>0047_client_subdomains</code>.
+</p>
+
+<div class="section-title">29. Clientes gerenciados / Hospedagem gerenciada (v2.4)</div>
+<p style="font-size:14px;color:#475569;">
+  <strong>Conceito:</strong> clientes com hospedagem gerenciada onde a equipe cuida de toda a infraestrutura. O cliente só paga e acompanha.<br><br>
+  <strong>Fluxo:</strong><br>
+  1. Cadastre um servidor e marque "🔧 Servidor para clientes gerenciados"<br>
+  2. Crie um plano personalizado e selecione o cliente no dropdown "Cliente exclusivo"<br>
+  3. Crie o cliente e marque "🔧 Gerenciado"<br>
+  4. Passe login/senha — o cliente loga, vê o plano exclusivo e paga<br>
+  5. VPS provisionada no servidor gerenciado sem limites de CPU/RAM (overselling)<br><br>
+  <strong>Painel do cliente:</strong> acesso restrito a VPS, Monitoramento, Tickets, Assinaturas, Minha Conta e Segurança. Sem terminal, chat, emails, domínios, aplicações, etc.<br>
+  <strong>Impersonação:</strong> botão "👤 Logar como cliente" na tela de detalhes — acesso completo. "Voltar para equipe" na sidebar.<br>
+  <strong>Overselling:</strong> servidores gerenciados mostram "vendido vs real" na listagem. Alertas automáticos quando uso real do host está alto.<br>
+  <strong>Monitoramento:</strong> percentuais relativos ao plano (não ao host).<br>
+  <strong>Segurança:</strong> servidores normais e gerenciados nunca se misturam. Planos exclusivos não aparecem para outros clientes.<br>
+  Migrations: <code>0052_client_managed</code>, <code>0053_server_managed_flag</code>, <code>0054_plan_client_id</code>.
 </p>
 
 </div>

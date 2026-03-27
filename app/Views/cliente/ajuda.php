@@ -120,17 +120,17 @@ details ul{padding-left:18px;}
 
   <details>
     <summary>Como funciona o sistema de domínios?</summary>
-    <p>Acesse <a href="/cliente/dominios">Domínios</a>. Existem dois tipos: domínios raiz (para e-mail, ex: seudominio.com) e subdomínios (para aplicações e deploys, ex: app.seudominio.com). Primeiro cadastre o domínio raiz, depois adicione subdomínios.</p>
+    <p>Acesse <a href="/cliente/dominios">Domínios</a>. Você pode adicionar domínios raiz (ex: meudominio.com.br) para apontar diretamente para sua VPS via registro A, ou subdomínios (ex: app.meudominio.com.br) via CNAME. O IP do seu servidor é exibido na tela de domínios para facilitar o apontamento.</p>
   </details>
 
   <details>
     <summary>Como verificar um subdomínio?</summary>
-    <p>São 2 passos: primeiro crie um registro TXT no seu DNS para provar que o domínio é seu. Depois crie um CNAME apontando para o endereço que o sistema indicar. O IP do servidor nunca é exposto — tudo passa pelo proxy.</p>
+    <p>Para subdomínios: crie um CNAME no seu DNS apontando para o endereço que o sistema indicar. Para domínios raiz: crie um registro A apontando para o IP do seu servidor (exibido na tela de domínios). Após configurar, clique em "Verificar" para confirmar o apontamento.</p>
   </details>
 
   <details>
     <summary>Posso usar domínio raiz nas aplicações?</summary>
-    <p>Não. Aplicações e deploys usam apenas subdomínios verificados. Isso garante segurança e esconde o IP do servidor. Domínios raiz são usados apenas para criar contas de e-mail.</p>
+    <p>Sim. Você pode adicionar um domínio raiz (ex: meudominio.com.br) e apontar via registro A para o IP do seu servidor. O IP é exibido na tela de domínios. Subdomínios continuam usando CNAME.</p>
   </details>
 
   <details>
