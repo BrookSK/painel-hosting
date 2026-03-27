@@ -54,7 +54,7 @@ final class AplicacoesController
 
         $templates = $pdo->query('SELECT * FROM app_templates ORDER BY category, name')->fetchAll() ?: [];
 
-        $vpsStmt = $pdo->prepare("SELECT id, cpu, ram, storage, status FROM vps WHERE client_id = :c AND status = 'active' ORDER BY id");
+        $vpsStmt = $pdo->prepare("SELECT id, cpu, ram, storage, status FROM vps WHERE client_id = :c AND status IN ('active','running') ORDER BY id");
         $vpsStmt->execute([':c' => $clienteId]);
         $vpsList = $vpsStmt->fetchAll() ?: [];
 
@@ -101,7 +101,7 @@ final class AplicacoesController
         }
 
         // Validar VPS pertence ao cliente
-        $vStmt = $pdo->prepare("SELECT id FROM vps WHERE id = :v AND client_id = :c AND status = 'active' LIMIT 1");
+        $vStmt = $pdo->prepare("SELECT id FROM vps WHERE id = :v AND client_id = :c AND status IN ('active','running') LIMIT 1");
         $vStmt->execute([':v' => $vpsId, ':c' => $clienteId]);
         if (!$vStmt->fetch()) {
             return Resposta::json(['ok' => false, 'erro' => 'VPS não encontrada ou inativa.'], 403);
