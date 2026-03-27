@@ -141,6 +141,15 @@ final class ClientesController
             return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
         }
 
+        // Toggle managed flag (cliente gerenciado)
+        if (!empty($req->post['toggle_managed']) && $id > 0) {
+            $pdo = BancoDeDados::pdo();
+            $pdo->prepare('UPDATE clients SET is_managed = IF(is_managed = 1, 0, 1) WHERE id = :id')->execute([':id' => $id]);
+            // Limpar cache de sessão se existir
+            unset($_SESSION['_cache_is_managed'], $_SESSION['_cache_is_managed_id']);
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+        }
+
         $nome   = trim((string)($req->post['name'] ?? ''));
         $email  = trim(strtolower((string)($req->post['email'] ?? '')));
         $phone  = trim((string)($req->post['phone'] ?? ''));
@@ -388,6 +397,29 @@ final class ClientesController
         }
 
         return Resposta::redirecionar('/equipe/clientes');
+    }
+
+    /** Equipe loga como cliente (impersonação). */
+    public function impersonar(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::texto('ID inválido.', 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $s = $pdo->prepare('SELECT id FROM clients WHERE id = :id');
+        $s->execute([':id' => $id]);
+        if (!$s->fetch()) {
+            return Resposta::texto('Cliente não encontrado.', 404);
+        }
+
+        (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
+            'client.impersonate', 'client', $id, [], $req);
+
+        \LRV\Core\Auth::impersonarCliente($id);
+
+        return Resposta::redirecionar('/cliente/painel');
     }
 
 }

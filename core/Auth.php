@@ -124,9 +124,52 @@ final class Auth
 
     public static function sairCliente(): void
     {
+        // Se estava impersonando, voltar para sessão da equipe
+        if (isset($_SESSION['impersonating_from_equipe_id'])) {
+            $equipeId = (int) $_SESSION['impersonating_from_equipe_id'];
+            unset($_SESSION[self::SESSAO_CLIENTE_ID], $_SESSION['impersonating_from_equipe_id']);
+            $_SESSION[self::SESSAO_EQUIPE_ID] = $equipeId;
+            return;
+        }
         unset($_SESSION[self::SESSAO_CLIENTE_ID]);
         Csrf::invalidar();
         self::regenerarSessao();
+    }
+
+    /**
+     * Equipe loga como cliente (impersonação).
+     * Mantém o ID da equipe em sessão para poder voltar.
+     */
+    public static function impersonarCliente(int $clienteId): void
+    {
+        $_SESSION['impersonating_from_equipe_id'] = $_SESSION[self::SESSAO_EQUIPE_ID] ?? null;
+        $_SESSION[self::SESSAO_CLIENTE_ID] = $clienteId;
+        unset($_SESSION[self::SESSAO_EQUIPE_ID]);
+    }
+
+    /** Retorna true se a sessão atual é uma impersonação da equipe. */
+    public static function estaImpersonando(): bool
+    {
+        return isset($_SESSION['impersonating_from_equipe_id']) && $_SESSION['impersonating_from_equipe_id'] !== null;
+    }
+
+    /** Retorna true se o cliente logado é do tipo gerenciado (is_managed). */
+    public static function clienteGerenciado(): bool
+    {
+        $id = self::clienteId();
+        if ($id === null) {
+            return false;
+        }
+        // Cache em sessão para evitar query repetida
+        if (!isset($_SESSION['_cache_is_managed']) || ($_SESSION['_cache_is_managed_id'] ?? 0) !== $id) {
+            $pdo = BancoDeDados::pdo();
+            $s = $pdo->prepare('SELECT is_managed FROM clients WHERE id = :id');
+            $s->execute([':id' => $id]);
+            $r = $s->fetch();
+            $_SESSION['_cache_is_managed'] = (bool) (int) ($r['is_managed'] ?? 0);
+            $_SESSION['_cache_is_managed_id'] = $id;
+        }
+        return (bool) $_SESSION['_cache_is_managed'];
     }
 
     public static function equipeExiste(): bool

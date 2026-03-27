@@ -59,6 +59,23 @@ final class Middlewares
         };
     }
 
+    /**
+     * Bloqueia acesso para clientes gerenciados (is_managed),
+     * exceto quando a equipe está impersonando.
+     */
+    public static function bloquearClienteGerenciado(): callable
+    {
+        return static function (Requisicao $req): ?Resposta {
+            if (Auth::estaImpersonando()) {
+                return null; // equipe impersonando → acesso total
+            }
+            if (Auth::clienteGerenciado()) {
+                return Resposta::redirecionar('/cliente/painel');
+            }
+            return null;
+        };
+    }
+
     public static function exigirPermissao(string $permissao): callable
     {
         return static function (Requisicao $req) use ($permissao): ?Resposta {

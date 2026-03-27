@@ -26,7 +26,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
   <?php if ($assinatura !== null): ?>
     <span class="badge-new badge-green" style="font-size:12px;padding:5px 12px;"><?php echo View::e((string)($assinatura['plan_name'] ?? 'Plano ativo')); ?></span>
-  <?php else: ?>
+  <?php elseif (!(\LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando())): ?>
     <a href="/cliente/planos" class="botao sm"><?php echo View::e(I18n::t('home.ver_planos')); ?></a>
   <?php endif; ?>
 </div>
@@ -59,7 +59,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <?php endif; ?>
 
 <!-- Stats -->
-<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;">
+<?php $_isManagedStats = \LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando(); ?>
+<div class="stats-grid" style="grid-template-columns:repeat(<?php echo $_isManagedStats ? '2' : '4'; ?>,1fr);margin-bottom:24px;">
+  <?php if (!$_isManagedStats): ?>
   <div class="stat-card-new">
     <div class="stat-card-header">
       <span class="stat-card-label"><?php echo View::e(I18n::t('painel.total_vps')); ?></span>
@@ -78,6 +80,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </div>
     <div class="stat-card-value" style="color:#16a34a;"><?php echo $vpsRunning; ?></div>
   </div>
+  <?php endif; ?>
   <div class="stat-card-new">
     <div class="stat-card-header">
       <span class="stat-card-label"><?php echo View::e(I18n::t('painel.tickets_abertos')); ?></span>
@@ -117,6 +120,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     ['/cliente/assinaturas',  '💳',  'Assinaturas',   'Planos e histórico de pagamentos'],
     ['/cliente/ajuda',        '📚',  'Ajuda',         'Documentação e tutoriais'],
   ];
+  // Cliente gerenciado vê apenas tickets e assinaturas
+  $_isManagedPainel = \LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando();
+  if ($_isManagedPainel) {
+    $navCards = [
+      ['/cliente/tickets',     '🎫',  'Tickets',      'Suporte técnico e solicitações'],
+      ['/cliente/assinaturas', '💳',  'Assinaturas',  'Planos e histórico de pagamentos'],
+    ];
+  }
   foreach ($navCards as [$href, $icon, $title, $desc]):
   ?>
   <a href="<?php echo $href; ?>" style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:20px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,box-shadow .15s,transform .15s;"

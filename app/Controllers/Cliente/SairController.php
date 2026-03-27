@@ -12,7 +12,11 @@ final class SairController
 {
     public function sair(Requisicao $req): Resposta
     {
+        $estaImpersonando = Auth::estaImpersonando();
         Auth::sairCliente();
+        if ($estaImpersonando) {
+            return Resposta::redirecionar('/equipe/clientes');
+        }
         return Resposta::redirecionar('/cliente/entrar');
     }
 }

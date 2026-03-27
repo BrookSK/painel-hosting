@@ -68,11 +68,27 @@ if (count($nomePartes) >= 2) {
           <?php if (!empty($cliente['is_tester'])): ?>
             <span class="badge-new" style="background:#fef3c7;color:#92400e;">🧪 Tester</span>
           <?php endif; ?>
+          <?php if (!empty($cliente['is_managed'])): ?>
+            <span class="badge-new" style="background:#dbeafe;color:#1e40af;">🔧 Gerenciado</span>
+          <?php endif; ?>
         </div>
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <a href="/equipe/clientes/editar?id=<?php echo (int)$cliente['id']; ?>" class="botao sec sm"><?php echo View::e(I18n::t('eq_cliente.editar_dados')); ?></a>
+      <form method="post" action="/equipe/clientes/impersonar" style="display:inline;" onsubmit="return confirm('Logar como este cliente?')">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <button class="botao sm" type="submit" style="background:#6366f1;">👤 Logar como cliente</button>
+      </form>
+      <form method="post" action="/equipe/clientes/salvar" style="display:inline;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <input type="hidden" name="toggle_managed" value="1" />
+        <button class="botao sm <?php echo !empty($cliente['is_managed']) ? 'ghost' : ''; ?>" type="submit" style="<?php echo !empty($cliente['is_managed']) ? '' : 'background:#0ea5e9;'; ?>">
+          <?php echo !empty($cliente['is_managed']) ? '✕ Remover gerenciado' : '🔧 Marcar como gerenciado'; ?>
+        </button>
+      </form>
       <form method="post" action="/equipe/clientes/salvar" style="display:inline;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />

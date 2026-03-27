@@ -3,9 +3,13 @@ declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\SistemaConfig;
 use LRV\Core\I18n;
+use LRV\Core\Auth;
 
 $_uri = (string)($_SERVER['REQUEST_URI'] ?? '');
 $_seg = strtok($_uri, '?');
+
+// Cliente gerenciado vê apenas: Painel, Assinaturas, Tickets, Minha Conta, Segurança, Sair
+$_isManaged = Auth::clienteGerenciado() && !Auth::estaImpersonando();
 
 function _nav_ativo_cli(string $path, string $uri): string {
     return str_starts_with($uri, $path) ? ' nav-ativo' : '';
@@ -39,6 +43,7 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="2" fill="currentColor" opacity=".9"/><rect x="11" y="2" width="7" height="7" rx="2" fill="currentColor" opacity=".5"/><rect x="2" y="11" width="7" height="7" rx="2" fill="currentColor" opacity=".5"/><rect x="11" y="11" width="7" height="7" rx="2" fill="currentColor" opacity=".9"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.painel')); ?></span>
     </a>
+    <?php if (!$_isManaged): ?>
     <a href="/cliente/vps" class="nav-item<?php echo _nav_ativo_cli('/cliente/vps', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.vps')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.vps')); ?></span>
@@ -47,10 +52,12 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 13l4-4 3 3 4-5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.monitoramento')); ?></span>
     </a>
+    <?php endif; ?>
     <a href="/cliente/tickets" class="nav-item<?php echo _nav_ativo_cli('/cliente/tickets', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.tickets')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.tickets')); ?></span>
     </a>
+    <?php if (!$_isManaged): ?>
     <a href="/cliente/chat" class="nav-item<?php echo _nav_ativo_cli('/cliente/chat', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.chat')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h3l3 3 3-3h5a1 1 0 001-1V4a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.chat')); ?></span>
@@ -83,17 +90,26 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 6V4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Arquivos</span>
     </a>
+    <?php endif; ?>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.assinaturas')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>
     </a>
+    <?php if (!$_isManaged): ?>
     <a href="/cliente/ajuda" class="nav-item<?php echo _nav_ativo_cli('/cliente/ajuda', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.ajuda')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M10 11v-1a2 2 0 10-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14" r="1" fill="currentColor"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.ajuda')); ?></span>
     </a>
+    <?php endif; ?>
   </nav>
 
   <div class="sidebar-footer">
+    <?php if (Auth::estaImpersonando()): ?>
+    <a href="/cliente/sair" class="nav-item" style="background:#fef3c7;color:#92400e;border-radius:8px;margin:0 8px 6px;" data-tooltip="Voltar para equipe">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M7 10h10M7 10l3-3M7 10l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 5h3a2 2 0 012 2v6a2 2 0 01-2 2h-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>↩ Voltar para equipe</span>
+    </a>
+    <?php endif; ?>
     <a href="/cliente/minha-conta" class="nav-item<?php echo _nav_ativo_cli('/cliente/minha-conta', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('geral.minha_conta')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('geral.minha_conta')); ?></span>
