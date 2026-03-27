@@ -34,7 +34,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
   <div class="stat-card verde">
     <div class="stat-val"><?php echo number_format($stats['mem_percent'], 1); ?>%</div>
-    <div class="stat-label">RAM agora · <?php echo View::e($stats['mem_usage']); ?></div>
+    <div class="stat-label">RAM agora · <?php
+      // Para clientes gerenciados, mostrar uso relativo ao plano
+      if (\LRV\Core\Auth::clienteGerenciado()) {
+          $usedGb = round($stats['mem_percent'] * $ramGb / 100, 1);
+          echo View::e($usedGb . ' GB / ' . $ramGb . ' GB');
+      } else {
+          echo View::e($stats['mem_usage']);
+      }
+    ?></div>
   </div>
   <div class="stat-card">
     <div class="stat-val" style="font-size:18px;"><?php echo View::e($stats['block_io']); ?></div>

@@ -224,6 +224,11 @@ final class StatusCollectorService
                     $meta,
                     $agora,
                 );
+
+                // Alertar admin se cliente gerenciado está usando muitos recursos relativos ao plano
+                if (is_array($m) && $state === 'running') {
+                    $this->verificarAlertaVpsGerenciada($pdo, $vpsId, $clientId, $v, $m);
+                }
             }
         }
     }
@@ -494,6 +499,79 @@ final class StatusCollectorService
         );
 
         $this->repo->registrarLog($serviceId, 'major_outage', $motivo, null, $agora);
+    }
+
+    /**
+     * Verifica se uma VPS de cliente gerenciado está usando recursos acima de 80% do plano.
+     * Se sim, notifica o admin (rate limit: 1 alerta por VPS a cada 2h).
+     */
+    private function verificarAlertaVpsGerenciada(\PDO $pdo, int $vpsId, int $clientId, array $vpsRow, array $statsRow): void
+    {
+        try {
+            // Verificar se o cliente é gerenciado
+            $ct = $pdo->prepare('SELECT is_managed, name FROM clients WHERE id = :id LIMIT 1');
+            $ct->execute([':id' => $clientId]);
+            $cli = $ct->fetch();
+            if (!is_array($cli) || (int)($cli['is_managed'] ?? 0) !== 1) {
+                return;
+            }
+
+            $ramPlanMb = (int)($vpsRow['ram'] ?? 0);
+            if ($ramPlanMb <= 0) return;
+
+            // Extrair uso real de memória do docker stats (ex: "1.5GiB / 64GiB")
+            $memUsage = trim((string)($statsRow['mem_usage'] ?? ''));
+            $memParts = preg_split('/\s*\/\s*/', $memUsage);
+            $usedStr = trim($memParts[0] ?? '');
+            $usedMb = 0.0;
+            if (preg_match('/^([\d.]+)\s*(GiB|GB)$/i', $usedStr, $mm)) {
+                $usedMb = (float)$mm[1] * 1024;
+            } elseif (preg_match('/^([\d.]+)\s*(MiB|MB)$/i', $usedStr, $mm)) {
+                $usedMb = (float)$mm[1];
+            }
+
+            $memPctOfPlan = $ramPlanMb > 0 ? ($usedMb / $ramPlanMb) * 100.0 : 0;
+
+            // Threshold: 80% do plano
+            if ($memPctOfPlan < 80) {
+                return;
+            }
+
+            // Rate limit: 1 alerta por VPS a cada 2 horas
+            $settingKey = 'alert.managed_vps_' . $vpsId;
+            $ultimo = (string)\LRV\Core\Settings::obter($settingKey, '');
+            if ($ultimo !== '' && (time() - strtotime($ultimo)) < 7200) {
+                return;
+            }
+            \LRV\Core\Settings::definir($settingKey, date('Y-m-d H:i:s'));
+
+            $clienteNome = trim((string)($cli['name'] ?? ''));
+            $ramGb = round($ramPlanMb / 1024, 1);
+            $usedGb = round($usedMb / 1024, 1);
+
+            $msg = "⚠️ Alerta: Cliente gerenciado usando " . number_format($memPctOfPlan, 1) . "% do plano\n\n"
+                . "Cliente: {$clienteNome} (#{$clientId})\n"
+                . "VPS: #{$vpsId}\n"
+                . "RAM: {$usedGb} GB / {$ramGb} GB (" . number_format($memPctOfPlan, 0) . "%)\n\n"
+                . "Este cliente está em overselling. Considere verificar o uso.";
+
+            // Notificar admin
+            $svc = new \LRV\App\Services\Alertas\NotificacoesService(new \LRV\App\Services\Http\ClienteHttp());
+            $svc->alertarAdmin('VPS Gerenciada — Uso Alto', $msg);
+
+            // Notificação interna para equipe
+            $agora = date('Y-m-d H:i:s');
+            $usuarios = $pdo->query("SELECT id FROM users WHERE status = 'active'")->fetchAll();
+            $ins = $pdo->prepare('INSERT INTO notifications (user_id, message, `read`, created_at) VALUES (:u,:m,0,:c)');
+            foreach (($usuarios ?: []) as $u) {
+                $uid = (int)($u['id'] ?? 0);
+                if ($uid > 0) {
+                    $ins->execute([':u' => $uid, ':m' => $msg, ':c' => $agora]);
+                }
+            }
+        } catch (\Throwable) {
+            // silencioso — não interromper coleta
+        }
     }
 
     private function parseDt(mixed $v): ?\DateTimeImmutable

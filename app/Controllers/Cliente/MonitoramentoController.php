@@ -73,6 +73,7 @@ final class MonitoramentoController
         $containerStats = null;
         $statsErro = '';
         $containerId = trim((string)($vps['container_id'] ?? ''));
+        $ramMbPlan = (int)($vps['ram'] ?? 0); // RAM do plano em MB
         if ($containerId !== '' && (string)($vps['status'] ?? '') === 'running') {
             try {
                 // Tentar com container_id, fallback para nome do container
@@ -122,10 +123,25 @@ final class MonitoramentoController
 
                     if ($output !== '' && $exitCode === 0 && str_contains($output, '|')) {
                         $parts = explode('|', $output);
+                        $rawCpuPct = (float)str_replace('%', '', $parts[0] ?? '0');
+                        $rawMemPct = (float)str_replace('%', '', $parts[2] ?? '0');
+                        $memUsageRaw = trim($parts[1] ?? '0');
+
+                        // Para clientes gerenciados (overselling), o container não tem limites.
+                        // docker stats mostra % relativo ao host. Recalcular relativo ao plano.
+                        if (\LRV\Core\Auth::clienteGerenciado() && $ramMbPlan > 0) {
+                            // Extrair uso real de memória do formato "123.4MiB / 64GiB"
+                            $memParts = preg_split('/\s*\/\s*/', $memUsageRaw);
+                            $usedMb = $this->parseMemToMb(trim($memParts[0] ?? ''));
+                            if ($usedMb > 0) {
+                                $rawMemPct = ($usedMb / $ramMbPlan) * 100.0;
+                            }
+                        }
+
                         $containerStats = [
-                            'cpu_percent' => (float)str_replace('%', '', $parts[0] ?? '0'),
-                            'mem_usage'   => trim($parts[1] ?? '0'),
-                            'mem_percent' => (float)str_replace('%', '', $parts[2] ?? '0'),
+                            'cpu_percent' => $rawCpuPct,
+                            'mem_usage'   => $memUsageRaw,
+                            'mem_percent' => $rawMemPct,
                             'block_io'    => trim($parts[3] ?? '0'),
                         ];
                     } else {
@@ -162,5 +178,21 @@ final class MonitoramentoController
         ]);
 
         return Resposta::html($html);
+    }
+
+    /** Converte string de memória do docker stats (ex: "1.5GiB", "512MiB") para MB. */
+    private function parseMemToMb(string $val): float
+    {
+        $val = trim($val);
+        if (preg_match('/^([\d.]+)\s*(GiB|GB)$/i', $val, $m)) {
+            return (float)$m[1] * 1024;
+        }
+        if (preg_match('/^([\d.]+)\s*(MiB|MB)$/i', $val, $m)) {
+            return (float)$m[1];
+        }
+        if (preg_match('/^([\d.]+)\s*(KiB|KB)$/i', $val, $m)) {
+            return (float)$m[1] / 1024;
+        }
+        return 0.0;
     }
 }

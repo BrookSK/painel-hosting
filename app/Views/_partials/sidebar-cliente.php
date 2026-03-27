@@ -48,11 +48,11 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.vps')); ?></span>
     </a>
+    <?php endif; ?>
     <a href="/cliente/monitoramento" class="nav-item<?php echo _nav_ativo_cli('/cliente/monitoramento', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.monitoramento')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 13l4-4 3 3 4-5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.monitoramento')); ?></span>
     </a>
-    <?php endif; ?>
     <a href="/cliente/tickets" class="nav-item<?php echo _nav_ativo_cli('/cliente/tickets', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.tickets')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.tickets')); ?></span>
