@@ -10,13 +10,17 @@ $_cwManaged = false;
 $_cwCsrf = '';
 $_cwTrialAtivo = false;
 $_cwEmailAdmin = '';
+$_cwIsEquipe = false;
 try {
+    $_cwIsEquipe = (Auth::equipeId() !== null) && !Auth::estaImpersonando();
     $_cwLogado = (Auth::clienteId() !== null);
     $_cwManaged = $_cwLogado && Auth::clienteGerenciado() && !Auth::estaImpersonando();
     if ($_cwLogado) { $_cwCsrf = \LRV\Core\Csrf::token(); }
     $_cwTrialAtivo = (int)Settings::obter('trial.enabled', 0) === 1;
     $_cwEmailAdmin = (string)\LRV\Core\ConfiguracoesSistema::emailAdmin();
 } catch (\Throwable $_e) {}
+// Não mostrar widget para equipe logada (eles usam /equipe/chat)
+if ($_cwIsEquipe) return;
 $_cwWsUrl = '';
 try {
     $_cwWsUrl = (string)Settings::obter('chat.ws_url', '');
