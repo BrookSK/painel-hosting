@@ -84,7 +84,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         </div>
       <?php endif; ?>
 
+      <?php
+        // Cliente gerenciado que já tem assinatura: não mostrar botão de contratar
+        $_isManagedView = \LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando();
+        if (!$_isManagedView):
+      ?>
       <a href="/cliente/planos/checkout?plan_id=<?php echo (int)($p['id'] ?? 0); ?>" class="botao" style="display:block;text-align:center;">Contratar este plano</a>
+      <?php else: ?>
+      <div style="text-align:center;padding:10px 0;font-size:13px;color:#64748b;border-top:1px solid #f1f5f9;margin-top:8px;">✓ Seu plano personalizado</div>
+      <?php endif; ?>
     </div>
   <?php endforeach; ?>
 
