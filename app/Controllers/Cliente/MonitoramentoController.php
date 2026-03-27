@@ -109,6 +109,17 @@ final class MonitoramentoController
                     $output = trim((string)($result['saida'] ?? ''));
                     $exitCode = (int)($result['codigo'] ?? -1);
 
+                    // Filtrar warnings do SSH
+                    $lines = explode("\n", $output);
+                    $cleanLines = [];
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if ($line === '' || str_contains($line, 'Warning:') || str_contains($line, 'Permanently added') || str_contains($line, 'known_hosts')) continue;
+                        if (str_contains($line, 'Error response from daemon')) continue;
+                        $cleanLines[] = $line;
+                    }
+                    $output = implode("\n", $cleanLines);
+
                     if ($output !== '' && $exitCode === 0 && str_contains($output, '|')) {
                         $parts = explode('|', $output);
                         $containerStats = [
