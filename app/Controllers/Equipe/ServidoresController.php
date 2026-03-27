@@ -27,12 +27,34 @@ final class ServidoresController
         try {
             $stmt = $pdo->query('SELECT id, hostname, ip_address, ssh_port, ssh_user, ssh_auth_type,
                 terminal_ssh_user, ram_total, ram_used, cpu_total, cpu_used,
-                storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error, role, is_test
+                storage_total, storage_used, status, setup_status, is_online, last_check_at, last_error, role, is_test, is_managed_server
                 FROM servers ORDER BY id DESC');
             $servidores = $stmt->fetchAll();
         } catch (\Throwable) {
             $servidores = [];
         }
+
+        // Para servidores gerenciados: calcular total vendido (soma dos planos) e qtd de VPS
+        foreach ($servidores as &$srv) {
+            if (!empty($srv['is_managed_server'])) {
+                try {
+                    $ms = $pdo->prepare(
+                        "SELECT COUNT(v.id) AS total_vps,
+                                COALESCE(SUM(v.ram), 0) AS ram_vendida,
+                                COALESCE(SUM(v.cpu), 0) AS cpu_vendido,
+                                COALESCE(SUM(v.storage), 0) AS storage_vendido
+                         FROM vps v WHERE v.server_id = :sid AND v.status NOT IN ('removed')"
+                    );
+                    $ms->execute([':sid' => (int)$srv['id']]);
+                    $mRow = $ms->fetch();
+                    $srv['managed_vps_count'] = (int)($mRow['total_vps'] ?? 0);
+                    $srv['managed_ram_sold'] = (int)($mRow['ram_vendida'] ?? 0);
+                    $srv['managed_cpu_sold'] = (int)($mRow['cpu_vendido'] ?? 0);
+                    $srv['managed_storage_sold'] = (int)($mRow['storage_vendido'] ?? 0);
+                } catch (\Throwable) {}
+            }
+        }
+        unset($srv);
 
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/equipe/servidores-listar.php', [
             'servidores' => is_array($servidores) ? $servidores : [],

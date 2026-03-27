@@ -49,9 +49,30 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <?php endif; ?>
             </td>
             <td><?php echo View::e((string)($s['ip_address'] ?? '')); ?></td>
-            <td><?php echo View::e((string)($s['cpu_used'] ?? 0)); ?>/<?php echo View::e((string)($s['cpu_total'] ?? 0)); ?></td>
-            <td><?php echo View::e(formatarGb((int)($s['ram_used'] ?? 0))); ?>/<?php echo View::e(formatarGb((int)($s['ram_total'] ?? 0))); ?></td>
-            <td><?php echo View::e(formatarGb((int)($s['storage_used'] ?? 0))); ?>/<?php echo View::e(formatarGb((int)($s['storage_total'] ?? 0))); ?></td>
+            <td>
+              <?php if (!empty($s['is_managed_server'])): ?>
+                <span style="font-size:12px;color:#64748b;"><?php echo (int)($s['managed_cpu_sold'] ?? 0); ?> vendido</span><br>
+                <span style="font-size:11px;color:#94a3b8;"><?php echo (int)($s['cpu_total'] ?? 0); ?> real · <?php echo (int)($s['managed_vps_count'] ?? 0); ?> VPS</span>
+              <?php else: ?>
+                <?php echo View::e((string)($s['cpu_used'] ?? 0)); ?>/<?php echo View::e((string)($s['cpu_total'] ?? 0)); ?>
+              <?php endif; ?>
+            </td>
+            <td>
+              <?php if (!empty($s['is_managed_server'])): ?>
+                <span style="font-size:12px;color:#64748b;"><?php echo View::e(formatarGb((int)($s['managed_ram_sold'] ?? 0))); ?> vendido</span><br>
+                <span style="font-size:11px;color:#94a3b8;"><?php echo View::e(formatarGb((int)($s['ram_total'] ?? 0))); ?> real</span>
+              <?php else: ?>
+                <?php echo View::e(formatarGb((int)($s['ram_used'] ?? 0))); ?>/<?php echo View::e(formatarGb((int)($s['ram_total'] ?? 0))); ?>
+              <?php endif; ?>
+            </td>
+            <td>
+              <?php if (!empty($s['is_managed_server'])): ?>
+                <span style="font-size:12px;color:#64748b;"><?php echo View::e(formatarGb((int)($s['managed_storage_sold'] ?? 0))); ?> vendido</span><br>
+                <span style="font-size:11px;color:#94a3b8;"><?php echo View::e(formatarGb((int)($s['storage_total'] ?? 0))); ?> real</span>
+              <?php else: ?>
+                <?php echo View::e(formatarGb((int)($s['storage_used'] ?? 0))); ?>/<?php echo View::e(formatarGb((int)($s['storage_total'] ?? 0))); ?>
+              <?php endif; ?>
+            </td>
             <td>
               <?php
                 $st = (string)($s['status'] ?? '');
