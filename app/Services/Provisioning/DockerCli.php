@@ -119,8 +119,12 @@ final class DockerCli
         $args = [];
         $args[] = 'docker run -d';
         $args[] = '--name ' . escapeshellarg($nome);
-        $args[] = '--cpus=' . escapeshellarg((string) $cpu);
-        $args[] = '-m ' . escapeshellarg((string) $ramMb . 'm');
+        if ($cpu > 0) {
+            $args[] = '--cpus=' . escapeshellarg((string) $cpu);
+        }
+        if ($ramMb > 0) {
+            $args[] = '-m ' . escapeshellarg((string) $ramMb . 'm');
+        }
         $args[] = '-v ' . escapeshellarg($volumeHost . ':/data');
         $args[] = '--network ' . escapeshellarg($rede);
 

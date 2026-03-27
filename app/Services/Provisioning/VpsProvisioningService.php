@@ -124,10 +124,13 @@ final class VpsProvisioningService
 
         $log('Criando container...');
 
+        // Cliente gerenciado → overselling: container sem limites de CPU/RAM
+        $clienteManaged = $this->clienteEhGerenciado((int)($vps['client_id'] ?? 0));
+
         $resp = $this->docker->criarEIniciarContainer(
             $nomeContainer,
-            (int) $vps['cpu'],
-            (int) $vps['ram'],
+            $clienteManaged ? 0 : (int) $vps['cpu'],
+            $clienteManaged ? 0 : (int) $vps['ram'],
             $volumeHost,
             $rede,
             $imagemBase,
@@ -264,8 +267,8 @@ final class VpsProvisioningService
             }
         }
 
-        // Liberar recursos do node
-        if ($serverId > 0) {
+        // Liberar recursos do node (apenas se não for cliente gerenciado — overselling não contabiliza)
+        if ($serverId > 0 && !$this->clienteEhGerenciado((int)($vps['client_id'] ?? 0))) {
             try {
                 $cpu = (int) ($vps['cpu'] ?? 0);
                 $ram = (int) ($vps['ram'] ?? 0);
@@ -387,20 +390,27 @@ final class VpsProvisioningService
 
         $maxUtil = ConfiguracoesSistema::infraNodeMaxUtilPercent();
 
-        // Verificar se o cliente é tester
+        // Verificar se o cliente é tester ou gerenciado
         $isTester = false;
+        $isManaged = false;
         if ($clientId > 0) {
             try {
-                $ct = $pdo->prepare('SELECT is_tester FROM clients WHERE id = :id LIMIT 1');
+                $ct = $pdo->prepare('SELECT is_tester, is_managed FROM clients WHERE id = :id LIMIT 1');
                 $ct->execute([':id' => $clientId]);
                 $row = $ct->fetch();
                 $isTester = is_array($row) && (int)($row['is_tester'] ?? 0) === 1;
+                $isManaged = is_array($row) && (int)($row['is_managed'] ?? 0) === 1;
             } catch (\Throwable) {}
         }
 
+        // Cliente gerenciado → servidores marcados como is_managed_server (overselling, sem checar capacidade)
+        if ($isManaged) {
+            return $this->selecionarNodeGerenciado();
+        }
+
         // Tester → só servidores de teste
-        // Normal → só servidores que NÃO são de teste
-        $testFilter = $isTester ? 'AND is_test = 1' : 'AND (is_test = 0 OR is_test IS NULL)';
+        // Normal → só servidores que NÃO são de teste e NÃO são gerenciados
+        $testFilter = $isTester ? 'AND is_test = 1' : 'AND (is_test = 0 OR is_test IS NULL) AND (is_managed_server = 0 OR is_managed_server IS NULL)';
 
         $candidatos = [];
 
@@ -502,6 +512,49 @@ final class VpsProvisioningService
         return $melhorId;
     }
 
+    /**
+     * Seleciona um servidor marcado como is_managed_server.
+     * Não verifica capacidade (overselling) — escolhe o com menos VPS alocadas.
+     */
+    private function selecionarNodeGerenciado(): int
+    {
+        $pdo = BancoDeDados::pdo();
+        try {
+            $sql = "SELECT s.id, COUNT(v.id) AS total_vps
+                    FROM servers s
+                    LEFT JOIN vps v ON v.server_id = s.id AND v.status NOT IN ('removed')
+                    WHERE s.status = 'active'
+                      AND s.is_online = 1
+                      AND (s.role = 'vps' OR s.role IS NULL)
+                      AND s.is_managed_server = 1
+                      AND COALESCE(s.ssh_user,'') <> ''
+                      AND (COALESCE(s.ssh_key_id,'') <> '' OR COALESCE(s.ssh_password,'') <> '')
+                    GROUP BY s.id
+                    ORDER BY total_vps ASC
+                    LIMIT 1";
+            $stmt = $pdo->query($sql);
+            $row = $stmt->fetch();
+            return is_array($row) ? (int)($row['id'] ?? 0) : 0;
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
+    /** Verifica se o cliente dono da VPS é gerenciado. */
+    private function clienteEhGerenciado(int $clientId): bool
+    {
+        if ($clientId <= 0) return false;
+        try {
+            $pdo = BancoDeDados::pdo();
+            $s = $pdo->prepare('SELECT is_managed FROM clients WHERE id = :id LIMIT 1');
+            $s->execute([':id' => $clientId]);
+            $r = $s->fetch();
+            return is_array($r) && (int)($r['is_managed'] ?? 0) === 1;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     private function notificarSemNode(int $vpsId, int $cpu, int $ram, int $storage): void
     {
         $pdo = BancoDeDados::pdo();
@@ -570,6 +623,18 @@ final class VpsProvisioningService
     private function alocarRecursosNode(int $serverId, int $cpu, int $ram, int $storage, int $vpsId): void
     {
         $pdo = BancoDeDados::pdo();
+
+        // Verificar se a VPS pertence a um cliente gerenciado (overselling)
+        $isManaged = false;
+        try {
+            $vc = $pdo->prepare('SELECT client_id FROM vps WHERE id = :id LIMIT 1');
+            $vc->execute([':id' => $vpsId]);
+            $vRow = $vc->fetch();
+            if (is_array($vRow)) {
+                $isManaged = $this->clienteEhGerenciado((int)($vRow['client_id'] ?? 0));
+            }
+        } catch (\Throwable) {}
+
         $pdo->beginTransaction();
 
         try {
@@ -591,21 +656,24 @@ final class VpsProvisioningService
                 throw new \RuntimeException('Servidor offline.');
             }
 
-            $ramAvail = (int) $srv['ram_total'] - (int) $srv['ram_used'];
-            $cpuAvail = (int) $srv['cpu_total'] - (int) $srv['cpu_used'];
-            $stAvail = (int) $srv['storage_total'] - (int) $srv['storage_used'];
+            // Cliente gerenciado: não contabilizar recursos (overselling)
+            if (!$isManaged) {
+                $ramAvail = (int) $srv['ram_total'] - (int) $srv['ram_used'];
+                $cpuAvail = (int) $srv['cpu_total'] - (int) $srv['cpu_used'];
+                $stAvail = (int) $srv['storage_total'] - (int) $srv['storage_used'];
 
-            if ($ramAvail < $ram || $cpuAvail < $cpu || $stAvail < $storage) {
-                throw new \RuntimeException('Servidor sem capacidade.');
+                if ($ramAvail < $ram || $cpuAvail < $cpu || $stAvail < $storage) {
+                    throw new \RuntimeException('Servidor sem capacidade.');
+                }
+
+                $upSrv = $pdo->prepare('UPDATE servers SET ram_used = ram_used + :ram, cpu_used = cpu_used + :cpu, storage_used = storage_used + :st WHERE id = :id');
+                $upSrv->execute([
+                    ':ram' => $ram,
+                    ':cpu' => $cpu,
+                    ':st' => $storage,
+                    ':id' => $serverId,
+                ]);
             }
-
-            $upSrv = $pdo->prepare('UPDATE servers SET ram_used = ram_used + :ram, cpu_used = cpu_used + :cpu, storage_used = storage_used + :st WHERE id = :id');
-            $upSrv->execute([
-                ':ram' => $ram,
-                ':cpu' => $cpu,
-                ':st' => $storage,
-                ':id' => $serverId,
-            ]);
 
             $upVps = $pdo->prepare('UPDATE vps SET server_id = :sid WHERE id = :vid');
             $upVps->execute([

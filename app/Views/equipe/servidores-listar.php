@@ -44,6 +44,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <?php if (!empty($s['is_test'])): ?>
                 <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#fef3c7;color:#92400e;">🧪 teste</span>
               <?php endif; ?>
+              <?php if (!empty($s['is_managed_server'])): ?>
+                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#dbeafe;color:#1e40af;">🔧 gerenciado</span>
+              <?php endif; ?>
             </td>
             <td><?php echo View::e((string)($s['ip_address'] ?? '')); ?></td>
             <td><?php echo View::e((string)($s['cpu_used'] ?? 0)); ?>/<?php echo View::e((string)($s['cpu_total'] ?? 0)); ?></td>

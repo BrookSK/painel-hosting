@@ -95,6 +95,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">Servidores de teste só são usados por clientes marcados como "tester". Clientes normais nunca recebem VPS neste servidor.</p>
     </div>
 
+    <div style="margin-top:8px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+        <input type="checkbox" name="is_managed_server" value="1" <?php echo !empty($servidor['is_managed_server']) ? 'checked' : ''; ?> style="accent-color:#0ea5e9;width:16px;height:16px;" />
+        <span>🔧 Servidor para clientes gerenciados</span>
+      </label>
+      <p class="texto" style="font-size:12px;margin-top:4px;">VPS de clientes gerenciados são provisionadas neste servidor sem limites de recursos (overselling). Os recursos do plano aparecem para o cliente, mas o container não tem caps.</p>
+    </div>
+
     <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.ip')); ?></label>
