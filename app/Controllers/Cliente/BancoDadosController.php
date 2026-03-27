@@ -11,6 +11,7 @@ use LRV\Core\Http\Resposta;
 use LRV\Core\View;
 use LRV\App\Services\Infra\SshCrypto;
 use LRV\App\Services\Infra\SshExecutor;
+use LRV\Core\Settings;
 
 final class BancoDadosController
 {
@@ -24,8 +25,11 @@ final class BancoDadosController
         $stmt->execute([':c' => $clienteId]);
         $bancos = $stmt->fetchAll() ?: [];
 
-        // Mask passwords
-        foreach ($bancos as &$b) { $b['db_password_enc'] = ''; }
+        // Keep encrypted password for reveal toggle, mask display
+        foreach ($bancos as &$b) {
+            $b['db_password_enc_raw'] = (string)($b['db_password_enc'] ?? '');
+            $b['db_password_enc'] = '';
+        }
         unset($b);
 
         $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = ?');
@@ -215,6 +219,51 @@ final class BancoDadosController
         $pdo->prepare('DELETE FROM client_databases WHERE id = :id AND client_id = :c')->execute([':id' => $id, ':c' => $clienteId]);
 
         return Resposta::redirecionar('/cliente/banco-dados');
+    }
+
+    /**
+     * AJAX: retorna a senha decifrada de um banco.
+     */
+    public function senha(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->query['id'] ?? 0);
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT db_password_enc FROM client_databases WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+        if (!is_array($row)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
+
+        $senha = SshCrypto::decifrar((string)($row['db_password_enc'] ?? ''));
+        return Resposta::json(['ok' => true, 'senha' => $senha]);
+    }
+
+    /**
+     * Redireciona para phpMyAdmin com auto-login via URL params.
+     */
+    public function phpmyadmin(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $id = (int)($req->query['id'] ?? 0);
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT db_host, db_port, db_user, db_name FROM client_databases WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+        if (!is_array($row)) return Resposta::texto('Banco não encontrado.', 404);
+
+        $pmaUrl = (string)\LRV\Core\Settings::obter('infra.phpmyadmin_url', '');
+        if ($pmaUrl === '') {
+            return Resposta::texto('phpMyAdmin não configurado. Configure infra.phpmyadmin_url nas configurações do sistema.', 500);
+        }
+
+        $url = rtrim($pmaUrl, '/') . '/?server=' . urlencode((string)($row['db_host'] ?? ''))
+            . '&db=' . urlencode((string)($row['db_name'] ?? ''));
+
+        return Resposta::redirecionar($url);
     }
 
     private function renderizarErro(int $clienteId, string $erro): Resposta

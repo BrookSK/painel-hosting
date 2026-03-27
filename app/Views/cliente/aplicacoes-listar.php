@@ -53,17 +53,26 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAppCliente($appSt); ?></td>
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
               <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <?php if ($appSt === 'running' || $appSt === 'active'): ?>
+                  <a href="/cliente/arquivos?vps_id=<?php echo (int)($a['vps_id'] ?? 0); ?>&path=/var/www/html" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Arquivos">📁</a>
+                  <?php if (!empty($a['db_id'])): ?>
+                    <a href="/cliente/banco-dados/ver?id=<?php echo (int)$a['db_id']; ?>" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Banco de dados">🗄️</a>
+                  <?php endif; ?>
+                  <?php if (!empty($a['domain'])): ?>
+                    <a href="https://<?php echo View::e((string)$a['domain']); ?>" target="_blank" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Abrir site">🌐</a>
+                  <?php endif; ?>
+                <?php endif; ?>
                 <?php if ($appSt === 'error'): ?>
                   <form method="post" action="/cliente/aplicacoes/reinstalar" style="display:inline;">
                     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
                     <input type="hidden" name="app_id" value="<?php echo $appId; ?>"/>
-                    <button class="botao sm" type="submit">🔄 Reinstalar</button>
+                    <button class="botao sm" type="submit" style="font-size:11px;">🔄 Reinstalar</button>
                   </form>
                 <?php endif; ?>
                 <form method="post" action="/cliente/aplicacoes/deletar" style="display:inline;" onsubmit="return confirm('Deletar aplicação #<?php echo $appId; ?>?')">
                   <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
                   <input type="hidden" name="app_id" value="<?php echo $appId; ?>"/>
-                  <button class="botao danger sm" type="submit">✕</button>
+                  <button class="botao danger sm" type="submit" style="font-size:11px;">✕</button>
                 </form>
               </div>
             </td>

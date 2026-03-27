@@ -60,8 +60,22 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <script>
 (function(){
-  var currentPath='/';
-  var currentVps=document.getElementById('vpsSelect').value;
+  var urlParams = new URLSearchParams(window.location.search);
+  var initialPath = urlParams.get('path') || '/';
+  var initialVps = urlParams.get('vps_id') || '';
+  var currentPath=initialPath;
+  var vpsSelect = document.getElementById('vpsSelect');
+
+  // Pre-select VPS from URL if provided
+  if (initialVps && vpsSelect) {
+    for (var i = 0; i < vpsSelect.options.length; i++) {
+      if (vpsSelect.options[i].value === initialVps) {
+        vpsSelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  var currentVps=vpsSelect.value;
   var csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
 
   document.getElementById('vpsSelect').addEventListener('change',function(){

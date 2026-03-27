@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LRV\App\Services\Deploy;
 
+use LRV\App\Services\Infra\SshCrypto;
 use LRV\App\Services\Provisioning\DockerCli;
 use LRV\Core\BancoDeDados;
 use LRV\Core\ConfiguracoesSistema;
@@ -123,6 +124,9 @@ final class AppInstallService
             $envVars['WORDPRESS_DB_PASSWORD'] = $dbPass;
             $envVars['WORDPRESS_DB_NAME'] = $dbName;
             foreach ($envVars as $k => $v) { if ($v === '__AUTO__') unset($envVars[$k]); }
+
+            // Registrar banco na client_databases para visibilidade do cliente
+            $this->registrarBancoCliente($pdo, (int)($app['client_id'] ?? 0), (int)($app['vps_id'] ?? 0), $applicationId, 'WordPress DB', $dbName, $dbUser, $dbPass, $dbContainer);
         }
 
         // Laravel: criar MySQL automaticamente
@@ -155,6 +159,9 @@ final class AppInstallService
             $envVars['DB_PASSWORD'] = $dbPass;
             $envVars['APP_KEY'] = 'base64:' . base64_encode(random_bytes(32));
             foreach ($envVars as $k => $v) { if ($v === '__AUTO__') unset($envVars[$k]); }
+
+            // Registrar banco na client_databases para visibilidade do cliente
+            $this->registrarBancoCliente($pdo, (int)($app['client_id'] ?? 0), (int)($app['vps_id'] ?? 0), $applicationId, 'Laravel DB', $dbName, $dbUser, $dbPass, $dbContainer);
         }
 
         // Node.js: criar projeto básico
@@ -239,8 +246,11 @@ final class AppInstallService
         }
 
         $containerId = substr($out, 0, 12);
-        $pdo->prepare("UPDATE applications SET status = 'running', container_id = :c, logs = :l WHERE id = :id")
-            ->execute([':c' => $containerId, ':l' => 'Instalação concluída em ' . date('Y-m-d H:i:s'), ':id' => $applicationId]);
+
+        // Salvar environment_json final (com credenciais geradas)
+        $finalEnv = json_encode($envVars, JSON_UNESCAPED_UNICODE);
+        $pdo->prepare("UPDATE applications SET status = 'running', container_id = :c, logs = :l, environment_json = :ej WHERE id = :id")
+            ->execute([':c' => $containerId, ':l' => 'Instalação concluída em ' . date('Y-m-d H:i:s'), ':ej' => $finalEnv, ':id' => $applicationId]);
 
         // Roundcube: atualizar webmail do cliente para usar o Roundcube
         if ($slug === 'roundcube') {
@@ -319,4 +329,28 @@ final class AppInstallService
         }
         return $base;
     }
+
+    private function registrarBancoCliente(\PDO $pdo, int $clientId, int $vpsId, int $appId, string $name, string $dbName, string $dbUser, string $dbPass, string $containerName): void
+    {
+        try {
+            $pdo->prepare(
+                'INSERT INTO client_databases (client_id, vps_id, application_id, name, db_name, db_user, db_password_enc, db_host, db_port, container_id, status, created_at)
+                 VALUES (:c, :v, :a, :n, :dn, :du, :dp, :dh, 3306, :ci, "active", :cr)'
+            )->execute([
+                ':c'  => $clientId,
+                ':v'  => $vpsId,
+                ':a'  => $appId,
+                ':n'  => $name,
+                ':dn' => $dbName,
+                ':du' => $dbUser,
+                ':dp' => SshCrypto::cifrar($dbPass),
+                ':dh' => $containerName,
+                ':ci' => $containerName,
+                ':cr' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable) {
+            // Não falhar a instalação se o registro do banco falhar
+        }
+    }
+
 }

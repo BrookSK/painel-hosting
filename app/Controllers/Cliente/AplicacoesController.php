@@ -27,10 +27,12 @@ final class AplicacoesController
         $stmt = $pdo->prepare(
             'SELECT a.id, a.vps_id, a.type, a.domain, a.port, a.status, a.repository,
                     a.template_id, a.container_id, a.created_at,
-                    t.name AS template_name, t.icon AS template_icon
+                    t.name AS template_name, t.icon AS template_icon,
+                    cd.id AS db_id
              FROM applications a
              INNER JOIN vps v ON v.id = a.vps_id
              LEFT JOIN app_templates t ON t.id = a.template_id
+             LEFT JOIN client_databases cd ON cd.application_id = a.id
              WHERE v.client_id = :c
              ORDER BY a.id DESC'
         );

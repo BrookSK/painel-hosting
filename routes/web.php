@@ -334,6 +334,8 @@ $roteador->post('/cliente/banco-dados/salvar', [\LRV\App\Controllers\Cliente\Ban
 $roteador->get('/cliente/banco-dados/ver', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/banco-dados/sql', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'executarSql'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('db_sql', 30, 60)]);
 $roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'excluir'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/banco-dados/senha', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'senha'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/banco-dados/phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'phpmyadmin'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
 // Soluções (landing pages públicas)
