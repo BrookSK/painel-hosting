@@ -68,7 +68,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <?php if ($st === 'running'): ?>
+            <?php if (!(\LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando())): ?>
             <a href="/cliente/vps/terminal?id=<?php echo (int)($v['id'] ?? 0); ?>" class="botao sm">Terminal</a>
+            <?php endif; ?>
             <a href="/cliente/monitoramento/ver?vps_id=<?php echo (int)($v['id'] ?? 0); ?>" class="botao sm ghost">Monitor</a>
           <?php elseif (in_array($st, ['pending_payment', 'suspended_payment'], true)): ?>
             <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;line-height:1.6;margin-bottom:8px;">
