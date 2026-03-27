@@ -138,13 +138,11 @@ function _tipoBadge(string $tipo): string {
                 <button class="botao danger sm" style="font-size:11px;" type="submit">✕ Remover</button>
               </form>
             <?php else: ?>
-              <?php if (($dData['used_by_type'] ?? null) === null): ?>
               <form method="post" action="/cliente/dominios/remover-sub" style="display:inline;" onsubmit="return confirm('Remover este domínio?')">
                 <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
                 <input type="hidden" name="sub_id" value="<?php echo $dId; ?>"/>
                 <button class="botao danger sm" style="font-size:11px;" type="submit">✕ Remover</button>
               </form>
-              <?php endif; ?>
             <?php endif; ?>
           </div>
         </div>
