@@ -59,12 +59,7 @@ function _tipoBadge(string $tipo): string {
   <div class="sucesso">Operação realizada.</div>
 <?php endif; ?>
 
-<?php if ($vpsIp !== ''): ?>
-<div style="font-size:12px;color:#64748b;margin-bottom:16px;display:flex;align-items:center;gap:6px;">
-  🖥️ IP do servidor: <code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:12px;cursor:pointer;color:#0f172a;" onclick="navigator.clipboard.writeText('<?php echo View::e($vpsIp); ?>');this.textContent='Copiado!';setTimeout(()=>this.textContent='<?php echo View::e($vpsIp); ?>',1500)" title="Clique para copiar"><?php echo View::e($vpsIp); ?></code>
-  <span style="opacity:.6;">— use registro A para domínios raiz</span>
-</div>
-<?php endif; ?>
+<?php /* IP do servidor só aparece inline nas instruções de registro A dos domínios pendentes */ ?>
 
 <div class="grid" style="grid-template-columns:1fr 340px;gap:16px;align-items:start;">
 <div>
@@ -121,7 +116,7 @@ function _tipoBadge(string $tipo): string {
           <?php if ($dStatus === 'pending_dns'): ?>
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;">
               <div style="font-weight:600;margin-bottom:4px;">Crie este registro A no seu DNS:</div>
-              <code style="font-size:11px;word-break:break-all;"><?php echo View::e($dNome); ?> A <?php echo View::e($vpsIp); ?></code>
+              <code style="font-size:11px;word-break:break-all;"><?php echo View::e($dNome); ?> A <strong style="cursor:pointer;" onclick="navigator.clipboard.writeText('<?php echo View::e($vpsIp); ?>');this.textContent='Copiado!';setTimeout(()=>this.textContent='<?php echo View::e($vpsIp); ?>',1500)" title="Clique para copiar"><?php echo View::e($vpsIp); ?></strong></code>
             </div>
             <form method="post" action="/cliente/dominios/verificar-a" style="display:inline;">
               <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>

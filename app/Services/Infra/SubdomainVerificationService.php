@@ -328,12 +328,21 @@ final class SubdomainVerificationService
     private function extrairRaiz(string $subdomain): string
     {
         $parts = explode('.', $subdomain);
-        if (count($parts) < 3) return $subdomain;
-        // Handle .com.br, .co.uk etc
-        $tld = $parts[count($parts) - 1];
-        if (strlen($tld) <= 3 && count($parts) >= 4) {
+        $total = count($parts);
+        if ($total < 2) return $subdomain;
+
+        // TLDs compostos: .com.br, .co.uk, .org.br, .net.br, .edu.br, .gov.br, etc.
+        $tldCompostos = ['com.br','co.uk','org.br','net.br','edu.br','gov.br','com.au','co.nz','co.za','com.ar','com.mx','com.pt','co.in','com.co'];
+        $last2 = implode('.', array_slice($parts, -2));
+
+        if (in_array($last2, $tldCompostos, true)) {
+            // TLD composto: raiz tem 3 partes (ex: lrvweb.com.br)
+            if ($total <= 3) return $subdomain; // é raiz
             return implode('.', array_slice($parts, -3));
         }
+
+        // TLD simples: raiz tem 2 partes (ex: example.com)
+        if ($total <= 2) return $subdomain; // é raiz
         return implode('.', array_slice($parts, -2));
     }
 }
