@@ -194,4 +194,46 @@ final class AplicacoesController
 
         return Resposta::json(['ok' => true, 'status' => $app['status'], 'logs' => $app['logs'], 'container_id' => $app['container_id']]);
     }
+
+    public function reinstalar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $appId = (int)($req->post['app_id'] ?? 0);
+        if ($appId <= 0) return Resposta::texto('ID inválido.', 400);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT a.id FROM applications a INNER JOIN vps v ON v.id = a.vps_id WHERE a.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt->execute([':id' => $appId, ':c' => $clienteId]);
+        if (!$stmt->fetch()) return Resposta::texto('Aplicação não encontrada.', 404);
+
+        $pdo->prepare("UPDATE applications SET status = 'installing', logs = NULL, container_id = NULL WHERE id = :id")
+            ->execute([':id' => $appId]);
+
+        (new \LRV\Core\Jobs\RepositorioJobs())->criar('install_app_template', ['application_id' => $appId]);
+
+        return Resposta::redirecionar('/cliente/aplicacoes');
+    }
+
+    public function deletar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $appId = (int)($req->post['app_id'] ?? 0);
+        if ($appId <= 0) return Resposta::texto('ID inválido.', 400);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT a.id FROM applications a INNER JOIN vps v ON v.id = a.vps_id WHERE a.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt->execute([':id' => $appId, ':c' => $clienteId]);
+        if (!$stmt->fetch()) return Resposta::texto('Aplicação não encontrada.', 404);
+
+        // Liberar porta
+        $pdo->prepare("DELETE FROM ports WHERE application_id = :id")->execute([':id' => $appId]);
+        // Deletar aplicação
+        $pdo->prepare("DELETE FROM applications WHERE id = :id")->execute([':id' => $appId]);
+
+        return Resposta::redirecionar('/cliente/aplicacoes');
+    }
 }

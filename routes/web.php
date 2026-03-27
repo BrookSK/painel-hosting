@@ -196,6 +196,8 @@ $roteador->post('/cliente/pagamento/cartao', [\LRV\App\Controllers\Cliente\Pagam
 $roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/aplicacoes/catalogo', [ClienteAplicacoesController::class, 'catalogo'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/aplicacoes/instalar', [ClienteAplicacoesController::class, 'instalar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('app_install', 10, 60)]);
+$roteador->post('/cliente/aplicacoes/reinstalar', [ClienteAplicacoesController::class, 'reinstalar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('app_install', 10, 60)]);
+$roteador->post('/cliente/aplicacoes/deletar', [ClienteAplicacoesController::class, 'deletar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/aplicacoes/status', [ClienteAplicacoesController::class, 'status'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/monitoramento', [ClienteMonitoramentoController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::class, 'ver'], [Middlewares::exigirLoginCliente()]);

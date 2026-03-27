@@ -36,21 +36,41 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('apps.dominio')); ?></th>
           <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('apps.porta')); ?></th>
           <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.status')); ?></th>
+          <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;"><?php echo View::e(I18n::t('geral.acoes')); ?></th>
         </tr>
       </thead>
       <tbody>
-        <?php foreach (($aplicacoes ?? []) as $a): ?>
+        <?php foreach (($aplicacoes ?? []) as $a):
+          $appId = (int)($a['id'] ?? 0);
+          $appSt = (string)($a['status'] ?? '');
+        ?>
           <tr>
-            <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><strong>#<?php echo (int)($a['id'] ?? 0); ?></strong></td>
+            <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><strong>#<?php echo $appId; ?></strong></td>
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;">#<?php echo (int)($a['vps_id'] ?? 0); ?></td>
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string)($a['type'] ?? '')); ?></code></td>
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['domain'] ?? '')); ?></td>
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><code><?php echo View::e((string)($a['port'] ?? '')); ?></code></td>
-            <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAppCliente((string)($a['status'] ?? 'active')); ?></td>
+            <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo badgeStatusAppCliente($appSt); ?></td>
+            <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <?php if ($appSt === 'error'): ?>
+                  <form method="post" action="/cliente/aplicacoes/reinstalar" style="display:inline;">
+                    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
+                    <input type="hidden" name="app_id" value="<?php echo $appId; ?>"/>
+                    <button class="botao sm" type="submit">🔄 Reinstalar</button>
+                  </form>
+                <?php endif; ?>
+                <form method="post" action="/cliente/aplicacoes/deletar" style="display:inline;" onsubmit="return confirm('Deletar aplicação #<?php echo $appId; ?>?')">
+                  <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
+                  <input type="hidden" name="app_id" value="<?php echo $appId; ?>"/>
+                  <button class="botao danger sm" type="submit">✕</button>
+                </form>
+              </div>
+            </td>
           </tr>
         <?php endforeach; ?>
         <?php if (empty($aplicacoes)): ?>
-          <tr><td colspan="6" style="padding:12px;color:#94a3b8;"><?php echo View::e(I18n::t('apps.nenhuma')); ?></td></tr>
+          <tr><td colspan="7" style="padding:12px;color:#94a3b8;"><?php echo View::e(I18n::t('apps.nenhuma')); ?></td></tr>
         <?php endif; ?>
       </tbody>
     </table>
