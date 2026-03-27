@@ -96,8 +96,9 @@ $csrf = Csrf::token();
         <input type="text" name="repository" id="fRepo" placeholder="https://github.com/user/repo.git" />
       </div>
       <div class="install-field" id="fEnvWrap" style="display:none;">
-        <label>Variáveis de ambiente (JSON)</label>
-        <textarea name="env_json" id="fEnv" rows="4" placeholder='{"KEY":"value"}'></textarea>
+        <label style="margin-bottom:8px;">Configurações</label>
+        <div id="fEnvFields"></div>
+        <input type="hidden" name="env_json" id="fEnv" />
       </div>
       <div class="install-actions">
         <button type="button" class="botao ghost sm" onclick="closeInstall()"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
@@ -128,10 +129,32 @@ function openInstall(id,tpl){
   }else{warn.style.display='none';}
   var envVars=tpl.environment_variables;
   if(envVars&&typeof envVars==='string')try{envVars=JSON.parse(envVars);}catch(e){envVars=null;}
+  var envFieldsEl=document.getElementById('fEnvFields');
+  envFieldsEl.innerHTML='';
   if(envVars&&typeof envVars==='object'&&Object.keys(envVars).length>0){
     document.getElementById('fEnvWrap').style.display='';
-    document.getElementById('fEnv').value=JSON.stringify(envVars,null,2);
-  }else{document.getElementById('fEnvWrap').style.display='none';document.getElementById('fEnv').value='';}
+    var friendlyNames={
+      'WORDPRESS_DB_HOST':'Host do banco de dados','WORDPRESS_DB_USER':'Usuário do banco','WORDPRESS_DB_PASSWORD':'Senha do banco',
+      'MYSQL_ROOT_PASSWORD':'Senha root do MySQL','MYSQL_DATABASE':'Nome do banco de dados',
+      'ROUNDCUBEMAIL_DEFAULT_HOST':'Servidor IMAP','ROUNDCUBEMAIL_SMTP_SERVER':'Servidor SMTP',
+      'ROUNDCUBEMAIL_DEFAULT_PORT':'Porta IMAP','ROUNDCUBEMAIL_SMTP_PORT':'Porta SMTP'
+    };
+    var placeholders={
+      'WORDPRESS_DB_HOST':'localhost ou IP do MySQL','WORDPRESS_DB_USER':'root','WORDPRESS_DB_PASSWORD':'senha segura',
+      'MYSQL_ROOT_PASSWORD':'senha segura','MYSQL_DATABASE':'meu_banco'
+    };
+    Object.keys(envVars).forEach(function(key){
+      var label=friendlyNames[key]||key.replace(/_/g,' ').toLowerCase();
+      var ph=placeholders[key]||'';
+      var isPassword=key.toLowerCase().indexOf('password')!==-1||key.toLowerCase().indexOf('secret')!==-1;
+      var div=document.createElement('div');
+      div.style.marginBottom='10px';
+      div.innerHTML='<label style="display:block;font-size:12px;font-weight:500;color:#475569;margin-bottom:4px;">'+label+'</label>'
+        +'<input type="'+(isPassword?'password':'text')+'" class="input" data-env-key="'+key+'" placeholder="'+ph+'" value="'+envVars[key]+'" style="font-size:13px;"/>';
+      envFieldsEl.appendChild(div);
+    });
+  }else{document.getElementById('fEnvWrap').style.display='none';}
+  document.getElementById('fEnv').value='';
   document.getElementById('installStatus').style.display='none';
   document.getElementById('installBtn').disabled=false;
   document.getElementById('installBg').classList.add('open');
@@ -143,6 +166,13 @@ function doInstall(e){
   e.preventDefault();
   var btn=document.getElementById('installBtn'),st=document.getElementById('installStatus');
   btn.disabled=true;st.style.display='block';st.textContent='Iniciando instalação...';st.style.color='#64748b';
+
+  // Coletar variáveis de ambiente dos campos
+  var envObj={};
+  document.querySelectorAll('#fEnvFields input[data-env-key]').forEach(function(inp){
+    envObj[inp.dataset.envKey]=inp.value;
+  });
+  document.getElementById('fEnv').value=Object.keys(envObj).length>0?JSON.stringify(envObj):'';
   var fd=new FormData(document.getElementById('installForm'));
   var body=new URLSearchParams(fd).toString();
   fetch('/cliente/aplicacoes/instalar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
