@@ -318,6 +318,11 @@ final class TerminalController
         $containerId = trim((string)($row['container_id'] ?? ''));
         if ($containerId === '') return Resposta::json(['ok' => false, 'erro' => 'Container não encontrado.'], 400);
 
+        // Validar formato do container ID (só alfanumérico, ponto, hífen, underscore)
+        if (preg_match('/[^a-zA-Z0-9._\-]/', $containerId)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Container ID inválido.'], 400);
+        }
+
         $ip = (string)($row['ip_address'] ?? '');
         $porta = (int)($row['ssh_port'] ?? 22);
         $usuario = (string)($row['ssh_user'] ?? 'root');
