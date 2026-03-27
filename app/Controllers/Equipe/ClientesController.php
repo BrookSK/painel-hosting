@@ -38,7 +38,7 @@ final class ClientesController
                         COUNT(DISTINCT sub.id) AS total_assinaturas,
                         SUM(CASE WHEN sub.status IN ('active','ACTIVE') THEN 1 ELSE 0 END) AS assinaturas_ativas
                  FROM clients c
-                 LEFT JOIN vps v ON v.client_id = c.id
+                 LEFT JOIN vps v ON v.client_id = c.id AND v.deleted_at IS NULL
                  LEFT JOIN subscriptions sub ON sub.client_id = c.id";
 
         if ($busca !== '') {
@@ -109,7 +109,7 @@ final class ClientesController
         $vps = $pdo->prepare(
             "SELECT v.id, v.container_id, v.status, v.cpu, v.ram, v.storage, p.name AS plan_name
              FROM vps v LEFT JOIN plans p ON p.id = v.plan_id
-             WHERE v.client_id = :id ORDER BY v.id DESC"
+             WHERE v.client_id = :id AND v.deleted_at IS NULL ORDER BY v.id DESC"
         );
         $vps->execute([':id' => $id]);
 

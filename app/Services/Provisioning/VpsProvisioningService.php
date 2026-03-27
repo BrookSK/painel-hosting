@@ -253,6 +253,34 @@ final class VpsProvisioningService
         $serverId = (int) ($vps['server_id'] ?? 0);
         $containerId = (string) ($vps['container_id'] ?? '');
 
+        // Remover containers de aplicações associadas à VPS
+        if ($serverId > 0) {
+            try {
+                $appsStmt = $pdo->prepare('SELECT id, container_name FROM applications WHERE vps_id = :vid');
+                $appsStmt->execute([':vid' => $vpsId]);
+                $apps = $appsStmt->fetchAll() ?: [];
+                if (!empty($apps) && $this->configurarDockerParaNode($serverId, $log)) {
+                    foreach ($apps as $app) {
+                        $appContainer = trim((string)($app['container_name'] ?? ''));
+                        if ($appContainer !== '') {
+                            try {
+                                $this->docker->removerContainer($appContainer);
+                                $log('Container de aplicação removido: ' . $appContainer);
+                            } catch (\Throwable $e) {
+                                $log('Aviso ao remover container de app: ' . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+                // Limpar portas e aplicações do banco
+                $pdo->prepare('DELETE FROM ports WHERE application_id IN (SELECT id FROM applications WHERE vps_id = :vid)')->execute([':vid' => $vpsId]);
+                $pdo->prepare('DELETE FROM applications WHERE vps_id = :vid')->execute([':vid' => $vpsId]);
+                $log('Aplicações e portas removidas do banco.');
+            } catch (\Throwable $e) {
+                $log('Aviso ao limpar aplicações: ' . $e->getMessage());
+            }
+        }
+
         if ($serverId > 0 && $containerId !== '') {
             if ($this->configurarDockerParaNode($serverId, $log)) {
                 $log('Removendo container...');

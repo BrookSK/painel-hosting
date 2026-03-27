@@ -141,23 +141,6 @@ final class DominiosController
         if ($res['ok']) return Resposta::redirecionar('/cliente/dominios?ok=a_verificado');
         return $this->redir($res['erro'] ?? 'Registro A não encontrado.');
     }
-    public function verificarA(Requisicao $req): Resposta
-    {
-        $clienteId = Auth::clienteId();
-        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
-
-        $subId = (int)($req->post['sub_id'] ?? 0);
-        if ($subId <= 0) return $this->redir('ID inválido.');
-
-        try {
-            $res = (new SubdomainVerificationService())->verificarA($clienteId, $subId);
-        } catch (\Throwable $e) {
-            return $this->redir($e->getMessage());
-        }
-
-        if ($res['ok']) return Resposta::redirecionar('/cliente/dominios?ok=a_verificado');
-        return $this->redir($res['erro'] ?? 'Registro A não encontrado.');
-    }
 
     public function removerRaiz(Requisicao $req): Resposta
     {
