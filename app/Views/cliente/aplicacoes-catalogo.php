@@ -134,16 +134,21 @@ function openInstall(id,tpl){
   if(envVars&&typeof envVars==='object'&&Object.keys(envVars).length>0){
     document.getElementById('fEnvWrap').style.display='';
     var friendlyNames={
-      'WORDPRESS_DB_HOST':'Host do banco de dados','WORDPRESS_DB_USER':'Usuário do banco','WORDPRESS_DB_PASSWORD':'Senha do banco',
+      'WORDPRESS_SITE_TITLE':'Título do site','WORDPRESS_ADMIN_USER':'Usuário administrador','WORDPRESS_ADMIN_PASSWORD':'Senha do administrador',
+      'WORDPRESS_ADMIN_EMAIL':'E-mail do administrador','WORDPRESS_TABLE_PREFIX':'Prefixo das tabelas',
       'MYSQL_ROOT_PASSWORD':'Senha root do MySQL','MYSQL_DATABASE':'Nome do banco de dados',
       'ROUNDCUBEMAIL_DEFAULT_HOST':'Servidor IMAP','ROUNDCUBEMAIL_SMTP_SERVER':'Servidor SMTP',
       'ROUNDCUBEMAIL_DEFAULT_PORT':'Porta IMAP','ROUNDCUBEMAIL_SMTP_PORT':'Porta SMTP'
     };
     var placeholders={
-      'WORDPRESS_DB_HOST':'localhost ou IP do MySQL','WORDPRESS_DB_USER':'root','WORDPRESS_DB_PASSWORD':'senha segura',
+      'WORDPRESS_SITE_TITLE':'Meu Site','WORDPRESS_ADMIN_USER':'admin','WORDPRESS_ADMIN_PASSWORD':'senha segura',
+      'WORDPRESS_ADMIN_EMAIL':'seu@email.com','WORDPRESS_TABLE_PREFIX':'wp_',
       'MYSQL_ROOT_PASSWORD':'senha segura','MYSQL_DATABASE':'meu_banco'
     };
+    // Esconder variáveis internas do cliente
+    var hiddenVars=['WORDPRESS_DB_HOST','WORDPRESS_DB_USER','WORDPRESS_DB_PASSWORD','WORDPRESS_DB_NAME'];
     Object.keys(envVars).forEach(function(key){
+      if(hiddenVars&&hiddenVars.indexOf(key)!==-1)return; // Pular variáveis internas
       var label=friendlyNames[key]||key.replace(/_/g,' ').toLowerCase();
       var ph=placeholders[key]||'';
       var isPassword=key.toLowerCase().indexOf('password')!==-1||key.toLowerCase().indexOf('secret')!==-1;

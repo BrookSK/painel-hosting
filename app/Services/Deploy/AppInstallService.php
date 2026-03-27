@@ -89,6 +89,44 @@ final class AppInstallService
             (string) ($app['environment_json'] ?? '')
         );
 
+        // WordPress: criar MySQL automaticamente e configurar DB
+        if ($slug === 'wordpress') {
+            $dbName = 'wp_' . $applicationId;
+            $dbUser = 'wp_user_' . $applicationId;
+            $dbPass = bin2hex(random_bytes(12));
+            $dbContainer = 'app_mysql_wp_' . $applicationId;
+
+            // Criar container MySQL
+            $log('Criando MySQL para WordPress...');
+            try { $this->docker->removerContainer($dbContainer); } catch (\Throwable) {}
+            $mysqlCmd = 'docker run -d'
+                . ' --name ' . escapeshellarg($dbContainer)
+                . ' --network ' . escapeshellarg($rede)
+                . ' --restart unless-stopped'
+                . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
+                . ' -e MYSQL_DATABASE=' . escapeshellarg($dbName)
+                . ' -e MYSQL_USER=' . escapeshellarg($dbUser)
+                . ' -e MYSQL_PASSWORD=' . escapeshellarg($dbPass)
+                . ' mysql:8';
+            $rMysql = $this->docker->executar($mysqlCmd);
+            $log('MySQL: ' . trim((string)($rMysql['saida'] ?? '')));
+
+            // Aguardar MySQL iniciar
+            $log('Aguardando MySQL iniciar (10s)...');
+            sleep(10);
+
+            // Configurar variáveis do WordPress
+            $envVars['WORDPRESS_DB_HOST'] = $dbContainer;
+            $envVars['WORDPRESS_DB_USER'] = $dbUser;
+            $envVars['WORDPRESS_DB_PASSWORD'] = $dbPass;
+            $envVars['WORDPRESS_DB_NAME'] = $dbName;
+
+            // Remover marcadores __AUTO__
+            foreach ($envVars as $k => $v) {
+                if ($v === '__AUTO__') unset($envVars[$k]);
+            }
+        }
+
         // Roundcube: injetar host do Mailcow das configurações do sistema
         if ($slug === 'roundcube') {
             $mailcowHost = parse_url(rtrim((string) Settings::obter('email.mailcow_url', ''), '/'), PHP_URL_HOST) ?: '';
