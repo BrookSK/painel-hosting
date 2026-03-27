@@ -124,7 +124,7 @@ final class ClientesController
             'cliente'      => $cliente,
             'vps'          => $vps->fetchAll() ?: [],
             'assinaturas'  => $subs->fetchAll() ?: [],
-            'planos'       => $this->planos(),
+            'planos'       => $this->planos($id),
             'ok'           => '',
             'erro'         => '',
         ]));
@@ -268,14 +268,20 @@ final class ClientesController
     }
 
     // ── helpers ─────────────────────────────────────────────
-    private function planos(): array
+    private function planos(int $clientId = 0): array
     {
         try {
-            $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
+            if ($clientId > 0) {
+                // Planos públicos + planos exclusivos deste cliente
+                $s = BancoDeDados::pdo()->prepare("SELECT id, name, price_monthly, cpu, ram, storage, client_id FROM plans WHERE status = 'active' AND (client_id IS NULL OR client_id = :cid) ORDER BY client_id DESC, price_monthly ASC");
+                $s->execute([':cid' => $clientId]);
+                return $s->fetchAll() ?: [];
+            }
+            $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage, client_id FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
             return $s->fetchAll() ?: [];
         } catch (\Throwable) {
             try {
-                $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE active = 1 ORDER BY price_monthly ASC");
+                $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
                 return $s->fetchAll() ?: [];
             } catch (\Throwable) { return []; }
         }

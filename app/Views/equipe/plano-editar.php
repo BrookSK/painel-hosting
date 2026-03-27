@@ -40,6 +40,26 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
 
     <div style="margin-top:12px;">
+      <label style="display:block;font-size:13px;margin-bottom:6px;">Cliente exclusivo (opcional)</label>
+      <select class="input" name="client_id">
+        <option value="">— Plano público (todos os clientes)</option>
+        <?php
+          $clientesDoPlan = [];
+          try {
+              $clientesDoPlan = \LRV\Core\BancoDeDados::pdo()->query("SELECT id, name, email FROM clients ORDER BY name ASC")->fetchAll() ?: [];
+          } catch (\Throwable) {}
+          $selectedClientId = (int)($plano['client_id'] ?? 0);
+          foreach ($clientesDoPlan as $cl):
+        ?>
+          <option value="<?php echo (int)$cl['id']; ?>" <?php echo (int)$cl['id'] === $selectedClientId ? 'selected' : ''; ?>>
+            <?php echo View::e((string)$cl['name']); ?> (<?php echo View::e((string)$cl['email']); ?>)
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <p class="texto" style="font-size:12px;margin-top:4px;">Planos vinculados a um cliente não aparecem na página pública de planos nem ficam disponíveis para outros clientes.</p>
+    </div>
+
+    <div style="margin-top:12px;">
       <label style="display:block;font-size:13px;margin-bottom:6px;">Descricao</label>
       <input class="input" type="text" name="description" value="<?php echo View::e((string)($plano['description']??'')); ?>" />
     </div>

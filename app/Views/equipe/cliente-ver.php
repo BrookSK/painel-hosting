@@ -169,7 +169,7 @@ if (count($nomePartes) >= 2) {
         <option value="">Selecione o plano...</option>
         <?php foreach ($planos as $pl): ?>
           <option value="<?php echo (int)$pl['id']; ?>">
-            <?php echo View::e((string)$pl['name']); ?> — <?php echo (int)($pl['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($pl['ram'] ?? 0) / 1024); ?>GB RAM / <?php echo round((int)($pl['storage'] ?? 0) / 1024); ?>GB SSD — <?php echo View::e(I18n::preco((float)$pl['price_monthly'])); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?>
+            <?php if (!empty($pl['client_id'])): ?>🔒 <?php endif; ?><?php echo View::e((string)$pl['name']); ?> — <?php echo (int)($pl['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($pl['ram'] ?? 0) / 1024); ?>GB RAM / <?php echo round((int)($pl['storage'] ?? 0) / 1024); ?>GB SSD — <?php echo View::e(I18n::preco((float)$pl['price_monthly'])); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?><?php if (!empty($pl['client_id'])): ?> (exclusivo)<?php endif; ?>
           </option>
         <?php endforeach; ?>
       </select>

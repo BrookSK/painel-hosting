@@ -28,7 +28,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <tbody>
         <?php foreach (($planos??[]) as $p): ?>
           <tr>
-            <td><?php echo View::e((string)($p['name']??'')); ?></td>
+            <td><?php echo View::e((string)($p['name']??'')); ?>
+              <?php if (!empty($p['client_id'])): ?>
+                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#dbeafe;color:#1e40af;">🔒 <?php echo View::e((string)($p['client_name'] ?? 'Cliente #' . (int)$p['client_id'])); ?></span>
+              <?php endif; ?>
+            </td>
             <td><?php echo View::e((string)($p['cpu']??'')); ?></td>
             <td><?php echo View::e(fmtGbPlano((int)($p['ram']??0))); ?></td>
             <td><?php echo View::e(fmtGbPlano((int)($p['storage']??0))); ?></td>

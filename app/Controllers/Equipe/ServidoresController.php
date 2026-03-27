@@ -190,6 +190,45 @@ final class ServidoresController
         $isManagedServer = (int)($req->post['is_managed_server'] ?? 0) === 1 ? 1 : 0;
         $role = (string)($req->post['role'] ?? 'vps');
         if (!in_array($role, ['vps', 'email'], true)) $role = 'vps';
+
+        // Validar: não permitir marcar como gerenciado se já tem VPS de clientes normais
+        if ($isManagedServer && $id > 0) {
+            try {
+                $vpsNormais = BancoDeDados::pdo()->prepare(
+                    "SELECT COUNT(*) AS total FROM vps v
+                     INNER JOIN clients c ON c.id = v.client_id
+                     WHERE v.server_id = :sid AND v.status NOT IN ('removed')
+                       AND (c.is_managed = 0 OR c.is_managed IS NULL)"
+                );
+                $vpsNormais->execute([':sid' => $savedId]);
+                $totalNormais = (int)($vpsNormais->fetch()['total'] ?? 0);
+                if ($totalNormais > 0) {
+                    return $this->renderizarComDados($dados,
+                        'Este servidor tem ' . $totalNormais . ' VPS de clientes normais. '
+                        . 'Remova ou migre essas VPS antes de marcar como servidor para clientes gerenciados.');
+                }
+            } catch (\Throwable) {}
+        }
+
+        // Validar: não permitir desmarcar gerenciado se já tem VPS de clientes gerenciados
+        if (!$isManagedServer && $id > 0) {
+            try {
+                $vpsManaged = BancoDeDados::pdo()->prepare(
+                    "SELECT COUNT(*) AS total FROM vps v
+                     INNER JOIN clients c ON c.id = v.client_id
+                     WHERE v.server_id = :sid AND v.status NOT IN ('removed')
+                       AND c.is_managed = 1"
+                );
+                $vpsManaged->execute([':sid' => $savedId]);
+                $totalManaged = (int)($vpsManaged->fetch()['total'] ?? 0);
+                if ($totalManaged > 0) {
+                    return $this->renderizarComDados($dados,
+                        'Este servidor tem ' . $totalManaged . ' VPS de clientes gerenciados. '
+                        . 'Remova ou migre essas VPS antes de desmarcar como servidor gerenciado.');
+                }
+            } catch (\Throwable) {}
+        }
+
         try {
             BancoDeDados::pdo()->prepare('UPDATE servers SET is_test = :t, is_managed_server = :m, role = :r WHERE id = :id')->execute([':t' => $isTest, ':m' => $isManagedServer, ':r' => $role, ':id' => $savedId]);
         } catch (\Throwable) {}

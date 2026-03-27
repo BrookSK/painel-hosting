@@ -103,6 +103,16 @@ final class PainelController
             }
         } catch (\Throwable) {}
 
+        // Plano exclusivo pendente (para clientes gerenciados sem assinatura)
+        $planoExclusivo = null;
+        if ($assinatura === null) {
+            try {
+                $stmtPe = $pdo->prepare("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE status = 'active' AND client_id = :c LIMIT 1");
+                $stmtPe->execute([':c' => $id]);
+                $planoExclusivo = $stmtPe->fetch() ?: null;
+            } catch (\Throwable) {}
+        }
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/painel.php', [
             'cliente'        => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
             'notificacoes'   => $notifs,
@@ -112,6 +122,7 @@ final class PainelController
             'assinatura'     => $assinatura,
             'onboardingDone' => $onboardingDone,
             'trialInfo'      => $trialInfo,
+            'planoExclusivo' => $planoExclusivo,
         ]);
 
         return Resposta::html($html);

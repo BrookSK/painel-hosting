@@ -51,6 +51,22 @@ final class AssinarPlanoController
             return Resposta::texto('Plano inválido.', 400);
         }
 
+        // Validar acesso ao plano: clientes gerenciados só podem assinar planos exclusivos deles
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $planCheck = $pdo->prepare("SELECT client_id FROM plans WHERE id = :id AND status = 'active' LIMIT 1");
+        $planCheck->execute([':id' => $planId]);
+        $planRow = $planCheck->fetch();
+        if (!is_array($planRow)) {
+            return Resposta::texto('Plano não encontrado.', 404);
+        }
+        $planClientId = $planRow['client_id'] ?? null;
+        if ($planClientId !== null && (int)$planClientId !== $clienteId) {
+            return Resposta::texto('Acesso negado a este plano.', 403);
+        }
+        if ($planClientId === null && Auth::clienteGerenciado() && !Auth::estaImpersonando()) {
+            return Resposta::texto('Plano não disponível.', 403);
+        }
+
         // Salvar CPF/CNPJ se enviado e cliente não tem
         $cpfEnviado = preg_replace('/\D/', '', trim((string)($req->post['cpf_cnpj'] ?? '')));
         if ($cpfEnviado !== '') {

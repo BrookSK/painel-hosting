@@ -17,13 +17,30 @@ final class PlanosController
         $pdo = BancoDeDados::pdo();
 
         $erro = '';
+        $clienteId = Auth::clienteId() ?? 0;
+        $isManaged = Auth::clienteGerenciado();
+
         try {
-            try {
-                $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
-                $planos = $stmt->fetchAll();
-            } catch (\Throwable $e) {
-                $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
-                $planos = $stmt->fetchAll();
+            if ($isManaged && $clienteId > 0) {
+                // Cliente gerenciado: só planos exclusivos dele
+                try {
+                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
+                    $stmt->execute([':cid' => $clienteId]);
+                    $planos = $stmt->fetchAll();
+                } catch (\Throwable $e) {
+                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
+                    $stmt->execute([':cid' => $clienteId]);
+                    $planos = $stmt->fetchAll();
+                }
+            } else {
+                // Cliente normal: só planos públicos
+                try {
+                    $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
+                    $planos = $stmt->fetchAll();
+                } catch (\Throwable $e) {
+                    $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
+                    $planos = $stmt->fetchAll();
+                }
             }
         } catch (\Throwable $e) {
             $planos = [];
@@ -42,7 +59,6 @@ final class PlanosController
         }
         unset($p);
 
-        $clienteId = Auth::clienteId() ?? 0;
         $cliente = [];
         if ($clienteId > 0) {
             $s = BancoDeDados::pdo()->prepare('SELECT name, email FROM clients WHERE id = ?');
@@ -72,8 +88,8 @@ final class PlanosController
         }
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare("SELECT * FROM plans WHERE id = :id AND status = 'active'");
-        $stmt->execute([':id' => $planId]);
+        $stmt = $pdo->prepare("SELECT * FROM plans WHERE id = :id AND status = 'active' AND (client_id IS NULL OR client_id = :cid)");
+        $stmt->execute([':id' => $planId, ':cid' => $clienteId]);
         $plano = $stmt->fetch();
 
         if (!is_array($plano)) {

@@ -11,6 +11,7 @@ $ticketsAbertos = (int)($ticketsAbertos ?? 0);
 $assinatura     = $assinatura ?? null;
 $onboardingDone = (bool)($onboardingDone ?? true);
 $trialInfo      = $trialInfo ?? null;
+$planoExclusivo = $planoExclusivo ?? null;
 
 $clienteNome  = $nome;
 $clienteEmail = $email;
@@ -26,6 +27,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
   <?php if ($assinatura !== null): ?>
     <span class="badge-new badge-green" style="font-size:12px;padding:5px 12px;"><?php echo View::e((string)($assinatura['plan_name'] ?? 'Plano ativo')); ?></span>
+  <?php elseif ($planoExclusivo !== null): ?>
+    <a href="/cliente/planos/checkout?plan_id=<?php echo (int)$planoExclusivo['id']; ?>" class="botao sm" style="background:#16a34a;">Assinar plano</a>
   <?php elseif (!(\LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando())): ?>
     <a href="/cliente/planos" class="botao sm"><?php echo View::e(I18n::t('home.ver_planos')); ?></a>
   <?php endif; ?>
@@ -40,6 +43,23 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <div style="color:#64748b;"><?php echo View::e((string)($n['body'] ?? '')); ?></div>
     </div>
   <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php if ($planoExclusivo !== null && $assinatura === null): ?>
+<div style="background:linear-gradient(135deg,#0B1C3D,#4F46E5);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+  <div style="font-size:28px;flex-shrink:0;">📋</div>
+  <div style="flex:1;min-width:180px;">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Seu plano personalizado está pronto</div>
+    <div style="font-size:13px;opacity:.8;">
+      <?php echo View::e((string)$planoExclusivo['name']); ?> —
+      <?php echo (int)$planoExclusivo['cpu']; ?> vCPU ·
+      <?php echo round((int)$planoExclusivo['ram'] / 1024); ?> GB RAM ·
+      <?php echo round((int)$planoExclusivo['storage'] / 1024); ?> GB Disco ·
+      <?php echo View::e(\LRV\Core\I18n::preco((float)$planoExclusivo['price_monthly'])); ?>/mês
+    </div>
+  </div>
+  <a href="/cliente/planos/checkout?plan_id=<?php echo (int)$planoExclusivo['id']; ?>" class="botao sm" style="background:#fff;color:#4F46E5;flex-shrink:0;">Assinar agora</a>
 </div>
 <?php endif; ?>
 

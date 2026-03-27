@@ -15,7 +15,7 @@ final class PlanosController
     public function listar(Requisicao $req): Resposta
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->query('SELECT id, name, cpu, ram, storage, price_monthly, status FROM plans ORDER BY id DESC');
+        $stmt = $pdo->query('SELECT p.id, p.name, p.cpu, p.ram, p.storage, p.price_monthly, p.status, p.client_id, c.name AS client_name FROM plans p LEFT JOIN clients c ON c.id = p.client_id ORDER BY p.id DESC');
         $planos = $stmt->fetchAll();
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/planos-listar.php', [
@@ -89,6 +89,8 @@ final class PlanosController
         $status = (string) ($req->post['status'] ?? 'active');
         $backupSlots = max(0, min(2, (int) ($req->post['backup_slots'] ?? 0)));
         $isFeatured = (int) ($req->post['is_featured'] ?? 0) === 1 ? 1 : 0;
+        $clientId = (int) ($req->post['client_id'] ?? 0);
+        $clientIdVal = $clientId > 0 ? $clientId : null;
 
         if ($nome === '' || $cpu <= 0 || $ram <= 0 || $storage <= 0) {
             return $this->renderizarErro($id, $nome, $desc, $cpu, $ram, $storage, $preco, $specs, $supportChannels, $status, 'Preencha os campos obrigatórios.');
@@ -155,6 +157,14 @@ final class PlanosController
             } catch (\Throwable $e) {
                 $auditId = 0;
             }
+        }
+
+        // Salvar client_id (plano exclusivo)
+        if ($auditId > 0) {
+            try {
+                $pdo->prepare('UPDATE plans SET client_id = :cid WHERE id = :id')
+                    ->execute([':cid' => $clientIdVal, ':id' => $auditId]);
+            } catch (\Throwable) {}
         }
 
         // Auto-criar Stripe Price ID se Stripe está configurado e não tem price_id
