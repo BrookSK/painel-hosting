@@ -55,7 +55,7 @@ final class SubdomainVerificationService
             ':t'  => 'subdomain',
             ':vt' => $token,
             ':ct' => $cnameTarget,
-            ':st' => 'pending_txt',
+            ':st' => 'pending_cname',
             ':cr' => date('Y-m-d H:i:s'),
         ]);
 

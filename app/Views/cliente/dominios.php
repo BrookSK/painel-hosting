@@ -79,17 +79,7 @@ function _badgeSub(string $st): string {
             <div style="font-size:12px;color:#ef4444;background:#fef2f2;padding:6px 10px;border-radius:8px;margin-bottom:8px;"><?php echo View::e((string)$s['error_msg']); ?></div>
           <?php endif; ?>
 
-          <?php if ($st === 'pending_txt'): ?>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;">
-              <div style="font-weight:600;margin-bottom:4px;"><?php echo View::e(I18n::t('dominios.passo1')); ?></div>
-              <code style="font-size:11px;word-break:break-all;">_lrv-verify.<?php echo View::e((string)($s['subdomain'] ?? '')); ?> TXT "lrv-verify=<?php echo View::e((string)($s['verify_token'] ?? '')); ?>"</code>
-            </div>
-            <form method="post" action="/cliente/dominios/verificar-txt" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
-              <input type="hidden" name="sub_id" value="<?php echo $sid; ?>"/>
-              <button class="botao sm" type="submit"><?php echo View::e(I18n::t('dominios.verificar_txt')); ?></button>
-            </form>
-          <?php elseif ($st === 'pending_cname'): ?>
+          <?php if ($st === 'pending_cname'): ?>
             <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;">
               <div style="font-weight:600;margin-bottom:4px;"><?php echo View::e(I18n::t('dominios.passo2')); ?></div>
               <code style="font-size:11px;word-break:break-all;"><?php echo View::e((string)($s['subdomain'] ?? '')); ?> CNAME <?php echo View::e((string)($s['cname_target'] ?? '')); ?></code>
@@ -106,7 +96,7 @@ function _badgeSub(string $st): string {
                   onsubmit="return confirm('<?php echo View::e(I18n::t('dominios.confirmar_remover')); ?>')">
               <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
               <input type="hidden" name="sub_id" value="<?php echo $sid; ?>"/>
-              <button class="botao danger sm" type="submit"><?php echo View::e(I18n::t('geral.remover')); ?></button>
+              <button class="botao danger sm" type="submit"><?php echo View::e(I18n::t('emails.remover')); ?></button>
             </form>
           <?php endif; ?>
         </div>
