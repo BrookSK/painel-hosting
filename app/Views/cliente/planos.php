@@ -96,6 +96,26 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </div>
   <?php endforeach; ?>
 
+  <?php if (!(\LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando())): ?>
+  <!-- Card plano personalizado -->
+  <div class="card-new" style="border:2px solid #4F46E5;position:relative;background:linear-gradient(180deg,#fff 0%,#f5f3ff 100%);display:flex;flex-direction:column;">
+    <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#0B1C3D,#4F46E5);color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:99px;white-space:nowrap;">🏢 PERSONALIZADO</div>
+    <h2 class="titulo" style="margin-bottom:6px;">Plano Sob Medida</h2>
+    <p class="texto" style="margin-bottom:12px;">Precisa de mais recursos ou quer que a gente gerencie tudo por você? Montamos um plano exclusivo para o seu projeto.</p>
+    <p class="texto" style="font-size:18px;color:#4F46E5;margin-bottom:12px;"><strong>Sob consulta</strong></p>
+    <div style="font-size:13px;color:#475569;display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> CPU, RAM e disco sob medida</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> Gerenciamento completo</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> Deploy, monitoramento e suporte dedicado</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> Ideal para empresas</div>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;">
+      <a href="https://wa.me/5517988093160?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados" target="_blank" class="botao" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;border-color:#25D366;text-align:center;">💬 WhatsApp Vendas</a>
+      <a href="mailto:<?php echo View::e(\LRV\Core\ConfiguracoesSistema::emailAdmin()); ?>?subject=Plano%20Personalizado" class="botao sec" style="display:block;text-align:center;">📧 Enviar e-mail</a>
+    </div>
+  </div>
+  <?php endif; ?>
+
   <?php if (empty($planos)): ?>
     <div class="card-new">
       <h2 class="titulo">Sem planos disponíveis</h2>

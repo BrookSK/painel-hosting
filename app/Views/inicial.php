@@ -451,6 +451,32 @@ $_trial_dias  = (int)($trial_dias ?? 7);
             <a href="/contratar?plan_id=<?php echo $_pid; ?>" id="cta-<?php echo $_pid; ?>" class="plan-cta"><?php echo View::e(I18n::t('home.nav_contratar')); ?></a>
           </div>
           <?php endforeach; ?>
+
+          <!-- Card plano personalizado -->
+          <div class="plan-card" style="border-color:#4F46E5;background:linear-gradient(180deg,#fff 0%,#f5f3ff 100%);">
+            <div class="plan-badge" style="background:linear-gradient(135deg,#0B1C3D,#4F46E5);">PERSONALIZADO</div>
+            <div class="plan-name">Plano Sob Medida</div>
+            <div class="plan-desc">Precisa de mais recursos ou quer que a gente gerencie tudo por você? Montamos um plano exclusivo para o seu projeto.</div>
+            <div class="plan-price" style="margin:16px 0;">
+              <span style="font-size:16px;color:#4F46E5;font-weight:700;">Sob consulta</span>
+            </div>
+            <ul class="plan-specs" style="list-style:none;padding:0;margin:0 0 16px;font-size:13px;color:#475569;display:flex;flex-direction:column;gap:8px;">
+              <li style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> CPU, RAM e disco sob medida</li>
+              <li style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> Gerenciamento completo da infraestrutura</li>
+              <li style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> Deploy, monitoramento e suporte dedicado</li>
+              <li style="display:flex;align-items:center;gap:8px;"><span style="color:#4F46E5;">✓</span> Ideal para empresas e projetos críticos</li>
+            </ul>
+            <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;">
+              <a href="https://wa.me/5517988093160?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados" target="_blank" class="plan-cta" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;border-color:#25D366;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.612.616l4.532-1.474A11.943 11.943 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.24 0-4.326-.724-6.022-1.95l-.422-.314-2.688.874.893-2.634-.346-.45A9.963 9.963 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
+                WhatsApp Vendas
+              </a>
+              <a href="mailto:<?php echo View::e(\LRV\Core\ConfiguracoesSistema::emailAdmin()); ?>?subject=Plano%20Personalizado" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;color:#4F46E5;border:2px solid #e2e8f0;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#e2e8f0'">
+                📧 Enviar e-mail
+              </a>
+            </div>
+          </div>
+
           <?php else: ?>
           <div style="padding:48px;text-align:center;color:#94a3b8;font-size:14px;width:100%"><?php echo View::e(I18n::t('home.plans_empty')); ?> <a href="/contato" style="color:#4F46E5"><?php echo View::e(I18n::t('home.plans_empty_contato')); ?></a> <?php echo View::e(I18n::t('home.plans_empty_saber')); ?></div>
           <?php endif; ?>
