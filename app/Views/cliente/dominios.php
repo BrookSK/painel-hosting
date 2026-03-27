@@ -6,6 +6,7 @@ use LRV\Core\I18n;
 
 $dominiosRaiz = is_array($dominios_raiz ?? null) ? $dominios_raiz : [];
 $subdomains   = is_array($subdomains ?? null) ? $subdomains : [];
+$vpsIp        = (string)($vps_ip ?? '');
 $erro         = (string)($erro ?? ($_SESSION['_dominios_erro'] ?? ''));
 unset($_SESSION['_dominios_erro']);
 $sucesso      = (string)($sucesso ?? '');
@@ -48,6 +49,17 @@ function _badgeSub(string $st): string {
   </div>
 </div>
 
+<?php if ($vpsIp !== ''): ?>
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <span style="font-size:18px;">🖥️</span>
+  <div style="flex:1;min-width:200px;">
+    <div style="font-size:13px;font-weight:600;color:#166534;margin-bottom:2px;">IP do seu servidor</div>
+    <div style="font-size:13px;color:#166534;">Para apontar um domínio raiz, crie um registro <strong>A</strong> no DNS apontando para:</div>
+  </div>
+  <code style="background:#dcfce7;padding:8px 16px;border-radius:8px;font-size:15px;font-weight:700;color:#166534;letter-spacing:.5px;cursor:pointer;" onclick="navigator.clipboard.writeText('<?php echo View::e($vpsIp); ?>');this.textContent='Copiado!';setTimeout(()=>this.textContent='<?php echo View::e($vpsIp); ?>',1500)" title="Clique para copiar"><?php echo View::e($vpsIp); ?></code>
+</div>
+<?php endif; ?>
+
 <div class="grid" style="grid-template-columns:1fr 340px;gap:16px;align-items:start;">
 <div>
 
@@ -88,6 +100,18 @@ function _badgeSub(string $st): string {
               <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
               <input type="hidden" name="sub_id" value="<?php echo $sid; ?>"/>
               <button class="botao sm" type="submit"><?php echo View::e(I18n::t('dominios.verificar_cname')); ?></button>
+            </form>
+          <?php endif; ?>
+
+          <?php if ($st === 'pending_dns'): ?>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;">
+              <div style="font-weight:600;margin-bottom:4px;">Aponte o registro A no seu DNS</div>
+              <code style="font-size:11px;word-break:break-all;"><?php echo View::e((string)($s['subdomain'] ?? '')); ?> A <?php echo View::e($vpsIp); ?></code>
+            </div>
+            <form method="post" action="/cliente/dominios/verificar-a" style="display:inline;">
+              <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
+              <input type="hidden" name="sub_id" value="<?php echo $sid; ?>"/>
+              <button class="botao sm" type="submit">Verificar registro A</button>
             </form>
           <?php endif; ?>
 
@@ -152,10 +176,10 @@ function _badgeSub(string $st): string {
 
   <div class="card-new" style="margin-bottom:14px;">
     <div class="card-new-title" style="margin-bottom:6px;"><?php echo View::e(I18n::t('dominios.add_sub')); ?></div>
-    <p style="font-size:12px;color:#64748b;margin-bottom:10px;"><?php echo View::e(I18n::t('dominios.add_sub_desc')); ?></p>
+    <p style="font-size:12px;color:#64748b;margin-bottom:10px;">Adicione um subdomínio (ex: app.meudominio.com.br) ou um domínio raiz (ex: meudominio.com.br) para apontar para sua VPS.</p>
     <form method="post" action="/cliente/dominios/adicionar-sub">
       <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
-      <input class="input" type="text" name="subdomain" placeholder="app.meudominio.com.br" required style="margin-bottom:8px;"
+      <input class="input" type="text" name="subdomain" placeholder="meudominio.com.br ou app.meudominio.com.br" required style="margin-bottom:8px;"
              pattern="[a-z0-9][a-z0-9\-\.]*\.[a-z]{2,}"/>
       <button class="botao sm" type="submit" style="width:100%;"><?php echo View::e(I18n::t('dominios.adicionar')); ?></button>
     </form>

@@ -13,20 +13,21 @@ final class SubdomainVerificationService
     {
         $subdomain = strtolower(trim($subdomain));
         if (!$this->validarFormato($subdomain)) {
-            throw new \InvalidArgumentException('Formato de subdomínio inválido. Use algo como app.seudominio.com.br');
+            throw new \InvalidArgumentException('Formato de domínio inválido. Use algo como meudominio.com.br ou app.meudominio.com.br');
         }
 
         $root = $this->extrairRaiz($subdomain);
-        if ($root === '' || $root === $subdomain) {
-            throw new \InvalidArgumentException('Informe um subdomínio, não o domínio raiz. Ex: app.seudominio.com.br');
-        }
+        $isRootDomain = ($root === '' || $root === $subdomain);
 
-        // Verificar se o domínio raiz pertence ao cliente
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare("SELECT id FROM client_domains WHERE client_id = :c AND domain = :d LIMIT 1");
-        $stmt->execute([':c' => $clientId, ':d' => $root]);
-        if (!$stmt->fetch()) {
-            throw new \RuntimeException('O domínio raiz "' . $root . '" não está cadastrado. Adicione-o primeiro.');
+
+        if (!$isRootDomain) {
+            // Subdomínio: verificar se o domínio raiz pertence ao cliente
+            $stmt = $pdo->prepare("SELECT id FROM client_domains WHERE client_id = :c AND domain = :d LIMIT 1");
+            $stmt->execute([':c' => $clientId, ':d' => $root]);
+            if (!$stmt->fetch()) {
+                throw new \RuntimeException('O domínio raiz "' . $root . '" não está cadastrado. Adicione-o primeiro.');
+            }
         }
 
         // Verificar duplicata
@@ -35,14 +36,39 @@ final class SubdomainVerificationService
         $existing = $dup->fetch();
         if (is_array($existing)) {
             if ((int)$existing['client_id'] === $clientId) {
-                throw new \RuntimeException('Você já cadastrou este subdomínio.');
+                throw new \RuntimeException('Você já cadastrou este domínio.');
             }
-            throw new \RuntimeException('Este subdomínio já está em uso por outro cliente.');
+            throw new \RuntimeException('Este domínio já está em uso por outro cliente.');
         }
 
         $token = bin2hex(random_bytes(16));
 
-        // Determinar CNAME target baseado na VPS do cliente
+        if ($isRootDomain) {
+            // Domínio raiz → registro A direto para o IP do servidor
+            $pdo->prepare(
+                'INSERT INTO client_subdomains (client_id, subdomain, root_domain, type, verify_token, cname_target, status, created_at)
+                 VALUES (:c, :s, :r, :t, :vt, :ct, :st, :cr)'
+            )->execute([
+                ':c'  => $clientId,
+                ':s'  => $subdomain,
+                ':r'  => $subdomain,
+                ':t'  => 'root_vps',
+                ':vt' => $token,
+                ':ct' => '',
+                ':st' => 'pending_dns',
+                ':cr' => date('Y-m-d H:i:s'),
+            ]);
+
+            return [
+                'id' => (int)$pdo->lastInsertId(),
+                'subdomain' => $subdomain,
+                'verify_token' => $token,
+                'cname_target' => '',
+                'type' => 'root_vps',
+            ];
+        }
+
+        // Subdomínio → CNAME
         $cnameTarget = $this->gerarCnameTarget($clientId);
 
         $pdo->prepare(
@@ -64,6 +90,7 @@ final class SubdomainVerificationService
             'subdomain' => $subdomain,
             'verify_token' => $token,
             'cname_target' => $cnameTarget,
+            'type' => 'subdomain',
         ];
     }
 
@@ -179,6 +206,58 @@ final class SubdomainVerificationService
         $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
             ->execute([':e' => 'CNAME não encontrado apontando para ' . $cnameTarget, ':id' => $subId]);
         return ['ok' => false, 'erro' => 'CNAME não encontrado. Aponte ' . $subdomain . ' para ' . $cnameTarget];
+    }
+
+    /** Verifica se o registro A de um domínio raiz aponta para o IP do servidor da VPS do cliente. */
+    public function verificarA(int $clientId, int $subId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT * FROM client_subdomains WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $subId, ':c' => $clientId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('Domínio não encontrado.');
+        }
+
+        $domain = (string)$row['subdomain'];
+
+        // Buscar IP do servidor da VPS do cliente
+        $ipStmt = $pdo->prepare(
+            "SELECT s.ip_address FROM vps v
+             INNER JOIN servers s ON s.id = v.server_id
+             WHERE v.client_id = :c AND v.status IN ('running','pending_provisioning','provisioning')
+             ORDER BY v.id DESC LIMIT 1"
+        );
+        $ipStmt->execute([':c' => $clientId]);
+        $ipRow = $ipStmt->fetch();
+        $expectedIp = is_array($ipRow) ? trim((string)($ipRow['ip_address'] ?? '')) : '';
+
+        if ($expectedIp === '') {
+            return ['ok' => false, 'erro' => 'Nenhuma VPS ativa encontrada para verificar o apontamento.'];
+        }
+
+        $records = @dns_get_record($domain, DNS_A);
+        $found = false;
+        if (is_array($records)) {
+            foreach ($records as $r) {
+                $ip = trim((string)($r['ip'] ?? ''));
+                if ($ip === $expectedIp) {
+                    $found = true;
+                    break;
+                }
+            }
+        }
+
+        if ($found) {
+            $pdo->prepare("UPDATE client_subdomains SET status = 'active', error_msg = NULL WHERE id = :id")
+                ->execute([':id' => $subId]);
+            return ['ok' => true, 'status' => 'active'];
+        }
+
+        $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
+            ->execute([':e' => 'Registro A não encontrado apontando para ' . $expectedIp, ':id' => $subId]);
+        return ['ok' => false, 'erro' => 'Registro A não encontrado. Aponte ' . $domain . ' para ' . $expectedIp];
     }
 
     public function removerSubdominio(int $clientId, int $subId): void

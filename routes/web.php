@@ -299,6 +299,7 @@ $roteador->post('/cliente/dominios/adicionar-raiz', [\LRV\App\Controllers\Client
 $roteador->post('/cliente/dominios/adicionar-sub', [\LRV\App\Controllers\Cliente\DominiosController::class, 'adicionarSub'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('domain_add', 5, 60)]);
 $roteador->post('/cliente/dominios/verificar-txt', [\LRV\App\Controllers\Cliente\DominiosController::class, 'verificarTxt'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
 $roteador->post('/cliente/dominios/verificar-cname', [\LRV\App\Controllers\Cliente\DominiosController::class, 'verificarCname'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
+$roteador->post('/cliente/dominios/verificar-a', [\LRV\App\Controllers\Cliente\DominiosController::class, 'verificarA'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('domain_verify', 10, 60)]);
 $roteador->post('/cliente/dominios/remover-raiz', [\LRV\App\Controllers\Cliente\DominiosController::class, 'removerRaiz'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->post('/cliente/dominios/remover-sub', [\LRV\App\Controllers\Cliente\DominiosController::class, 'removerSub'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 

@@ -31,9 +31,24 @@ final class DominiosController
         $svc = new SubdomainVerificationService();
         $subdomains = $svc->listar($clienteId);
 
+        // IP do servidor da VPS do cliente (para apontamento A)
+        $vpsIp = '';
+        try {
+            $ipStmt = $pdo->prepare(
+                "SELECT s.ip_address FROM vps v
+                 INNER JOIN servers s ON s.id = v.server_id
+                 WHERE v.client_id = :c AND v.status IN ('running','pending_provisioning','provisioning')
+                 ORDER BY v.id DESC LIMIT 1"
+            );
+            $ipStmt->execute([':c' => $clienteId]);
+            $ipRow = $ipStmt->fetch();
+            $vpsIp = is_array($ipRow) ? trim((string)($ipRow['ip_address'] ?? '')) : '';
+        } catch (\Throwable) {}
+
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/dominios.php', [
             'dominios_raiz' => $dominiosRaiz,
             'subdomains'    => $subdomains,
+            'vps_ip'        => $vpsIp,
             'erro'          => '',
             'sucesso'       => (string)($req->query['ok'] ?? ''),
         ]));
@@ -107,6 +122,41 @@ final class DominiosController
 
         if ($res['ok']) return Resposta::redirecionar('/cliente/dominios?ok=cname_verificado');
         return $this->redir($res['erro'] ?? 'CNAME não encontrado.');
+    }
+
+    public function verificarA(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $subId = (int)($req->post['sub_id'] ?? 0);
+        if ($subId <= 0) return $this->redir('ID inválido.');
+
+        try {
+            $res = (new SubdomainVerificationService())->verificarA($clienteId, $subId);
+        } catch (\Throwable $e) {
+            return $this->redir($e->getMessage());
+        }
+
+        if ($res['ok']) return Resposta::redirecionar('/cliente/dominios?ok=a_verificado');
+        return $this->redir($res['erro'] ?? 'Registro A não encontrado.');
+    }
+    public function verificarA(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $subId = (int)($req->post['sub_id'] ?? 0);
+        if ($subId <= 0) return $this->redir('ID inválido.');
+
+        try {
+            $res = (new SubdomainVerificationService())->verificarA($clienteId, $subId);
+        } catch (\Throwable $e) {
+            return $this->redir($e->getMessage());
+        }
+
+        if ($res['ok']) return Resposta::redirecionar('/cliente/dominios?ok=a_verificado');
+        return $this->redir($res['erro'] ?? 'Registro A não encontrado.');
     }
 
     public function removerRaiz(Requisicao $req): Resposta
