@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Controllers\Cliente;
 
 use LRV\App\Services\Terminal\ClientTerminalTokensService;
+use LRV\App\Services\Infra\SshCrypto;
 use LRV\App\Services\Infra\SshExecutor;
 use LRV\Core\Auth;
 use LRV\Core\BancoDeDados;
@@ -288,5 +289,62 @@ final class TerminalController
         } catch (\Throwable $e) {
             return Resposta::texto($e->getMessage(), 500);
         }
+    }
+
+    public function exec(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+        }
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $comando = trim((string)($req->post['command'] ?? ''));
+
+        if ($vpsId <= 0) return Resposta::json(['ok' => false, 'erro' => 'VPS inválida.'], 400);
+        if ($comando === '') return Resposta::json(['ok' => false, 'erro' => 'Comando vazio.'], 400);
+        if (strlen($comando) > 4096) return Resposta::json(['ok' => false, 'erro' => 'Comando muito longo.'], 400);
+
+        $pdo = BancoDeDados::pdo();
+
+        // Validar VPS pertence ao cliente e está rodando
+        $stmt = $pdo->prepare("SELECT v.id, v.server_id, v.container_id, v.status, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) return Resposta::json(['ok' => false, 'erro' => 'VPS não encontrada.'], 404);
+        if ((string)($row['status'] ?? '') !== 'running') return Resposta::json(['ok' => false, 'erro' => 'VPS não está em execução.'], 400);
+
+        $containerId = trim((string)($row['container_id'] ?? ''));
+        if ($containerId === '') return Resposta::json(['ok' => false, 'erro' => 'Container não encontrado.'], 400);
+
+        $ip = (string)($row['ip_address'] ?? '');
+        $porta = (int)($row['ssh_port'] ?? 22);
+        $usuario = (string)($row['ssh_user'] ?? 'root');
+        $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+        // Executar comando dentro do container via docker exec
+        $dockerCmd = 'docker exec ' . escapeshellarg($containerId) . ' bash -c ' . escapeshellarg($comando);
+
+        $ssh = new SshExecutor();
+
+        try {
+            if ($authType === 'password') {
+                $senhaPlain = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                $result = $ssh->executarComSenha($ip, $porta, $usuario, $senhaPlain, $dockerCmd, 30);
+            } else {
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 30);
+            }
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => 'Erro ao executar: ' . $e->getMessage()], 500);
+        }
+
+        return Resposta::json([
+            'ok' => true,
+            'output' => (string)($result['saida'] ?? ''),
+            'exit_code' => (int)($result['codigo'] ?? -1),
+        ]);
     }
 }

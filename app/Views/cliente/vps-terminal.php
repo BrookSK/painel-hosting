@@ -1,13 +1,11 @@
 <?php
 declare(strict_types=1);
 use LRV\Core\View;
-use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\I18n;
 
 $vps    = (array)($vps ?? []);
 $vpsId  = (int)($vps['id'] ?? 0);
 $status = (string)($vps['status'] ?? '');
-$porta  = (int)ConfiguracoesSistema::terminalWsInternalPort();
 
 $pageTitle    = I18n::tf('terminal.titulo', $vpsId);
 $clienteNome  = (string)($cliente['name'] ?? '');
@@ -30,7 +28,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <div style="font-weight:600;font-size:14px;margin-bottom:4px;"><?php echo View::e(I18n::t('terminal.abrir_sessao')); ?></div>
       <div style="font-size:13px;color:#64748b;"><?php echo View::e(I18n::t('terminal.auditado')); ?></div>
     </div>
-    <span class="badge-new" style="background:#f1f5f9;color:#334155;">WS: 127.0.0.1:<?php echo $porta; ?></span>
+    <span class="badge-new" style="background:#f1f5f9;color:#334155;">HTTP</span>
   </div>
 
   <?php if ($status !== 'running'): ?>
@@ -45,21 +43,20 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
   <div style="border:1px solid #0b1220;border-radius:14px;overflow:hidden;background:#020617;">
     <div style="padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.18);color:#e2e8f0;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
-      <div>Terminal</div>
+      <div>terminal <span style="opacity:.6;">(HTTP)</span></div>
       <div style="display:flex;gap:10px;align-items:center;">
         <button id="btnUpload" class="botao ghost sm" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('terminal.upload')); ?></button>
         <button id="btnDownload" class="botao ghost sm" type="button" style="padding:4px 10px;font-size:12px;"><?php echo View::e(I18n::t('terminal.download')); ?></button>
         <div id="status" style="opacity:.9;font-size:13px;"><?php echo View::e(I18n::t('terminal.desconectado')); ?></div>
       </div>
     </div>
-    <pre id="out" style="margin:0;padding:12px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;height:420px;overflow:auto;"></pre>
-    <div style="border-top:1px solid rgba(148,163,184,.18);padding:10px 12px;">
-      <input class="input" id="in" type="text" autocomplete="off" placeholder="Digite um comando e pressione Enter"
-             style="background:#0b1220;border-color:#1f2937;color:#e2e8f0;" />
+    <pre id="out" style="margin:0;padding:12px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;height:420px;overflow:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+    <div style="border-top:1px solid rgba(148,163,184,.18);padding:10px 12px;display:flex;gap:8px;align-items:center;">
+      <span id="prompt" style="color:#22c55e;font-family:monospace;font-size:13px;">$</span>
+      <input class="input" id="in" type="text" autocomplete="off" placeholder="<?php echo View::e(I18n::t('terminal.placeholder') !== 'terminal.placeholder' ? I18n::t('terminal.placeholder') : 'Digite um comando e pressione Enter'); ?>"
+             style="background:#0b1220;border-color:#1f2937;color:#e2e8f0;flex:1;" disabled />
     </div>
   </div>
-
-  <div style="font-size:13px;color:#94a3b8;margin-top:10px;"><?php echo View::e(I18n::t('terminal.conexao_proxy')); ?></div>
 </div>
 
 <!-- Modal upload -->
@@ -99,92 +96,112 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <script>
 (function(){
-  const VPS_ID = <?php echo $vpsId; ?>;
-  const elOut = document.getElementById('out');
-  const elIn = document.getElementById('in');
-  const elStatus = document.getElementById('status');
-  const elAlerta = document.getElementById('alerta');
-  const btn = document.getElementById('btnConectar');
-  let ws = null, conectado = false;
+  var VPS_ID=<?php echo $vpsId; ?>;
+  var elOut=document.getElementById('out');
+  var elIn=document.getElementById('in');
+  var elStatus=document.getElementById('status');
+  var elAlerta=document.getElementById('alerta');
+  var elPrompt=document.getElementById('prompt');
+  var btn=document.getElementById('btnConectar');
+  var conectado=false,executando=false,cwd='~';
+  var historico=[],histIdx=0;
 
-  function sendResize(){
-    if(!ws || ws.readyState !== 1) return;
-    const cols = Math.max(40, Math.floor(elOut.offsetWidth / 8));
-    const rows = Math.max(10, Math.floor(elOut.offsetHeight / 16));
-    ws.send(JSON.stringify({type:'resize', cols, rows}));
+  function csrf(){return(document.querySelector('meta[name="csrf-token"]')||{}).content||'';}
+  function setErro(msg){elAlerta.style.display='block';elAlerta.textContent=msg;}
+  function clearErro(){elAlerta.style.display='none';}
+  function append(text,color){
+    var span=document.createElement('span');
+    span.textContent=text;
+    if(color)span.style.color=color;
+    elOut.appendChild(span);
+    elOut.scrollTop=elOut.scrollHeight;
   }
-  new ResizeObserver(function(){ sendResize(); }).observe(elOut);
+  function promptStr(){return cwd+'$';}
 
-  function setErro(msg){ elAlerta.style.display='block'; elAlerta.textContent=msg; }
-  function clearErro(){ elAlerta.style.display='none'; elAlerta.textContent=''; }
-  function append(text){ elOut.textContent += text; elOut.scrollTop = elOut.scrollHeight; }
-
-  async function emitirToken(){
-    const csrf = (document.querySelector('meta[name="csrf-token"]')||{}).content||'';
-    const body = new URLSearchParams();
-    body.set('vps_id', String(VPS_ID));
-    const resp = await fetch('/cliente/vps/terminal/token', {
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf,'Accept':'application/json'},
-      body
-    });
-    const json = await resp.json();
-    if(!json||!json.ok) throw new Error((json&&json.erro)?json.erro:'Falha ao emitir token.');
-    return json.token;
-  }
-
-  function wsUrl(token){
-    const proto = (location.protocol==='https:')?'wss://':'ws://';
-    return proto + location.host + '/ws/terminal?token=' + encodeURIComponent(token);
-  }
-
-  async function conectar(){
+  function conectar(){
     clearErro();
-    if(ws){ try{ ws.close(); }catch(e){} }
-    elOut.textContent = '';
-    append('Abrindo sessao...\n');
-    elStatus.textContent = 'Conectando...';
-    const token = await emitirToken();
-    ws = new WebSocket(wsUrl(token));
-    ws.onopen = function(){ conectado=true; elStatus.textContent='Conectado'; append('Conectado.\n'); elIn.focus(); sendResize(); };
-    ws.onmessage = function(ev){ append(String(ev.data||'')); };
-    ws.onclose = function(){ conectado=false; elStatus.textContent='Desconectado'; append('\n[conexao encerrada]\n'); };
-    ws.onerror = function(){ setErro('Falha no WebSocket. Verifique proxy /ws/terminal e o daemon interno.'); };
+    elOut.textContent='';
+    conectado=true;
+    elIn.disabled=false;
+    elIn.focus();
+    elStatus.textContent='Conectado (HTTP)';
+    elPrompt.textContent=promptStr();
+    append('Sessão iniciada via HTTP.\n','#22c55e');
+    append('Comandos são executados dentro do container da sua VPS.\n\n','#94a3b8');
   }
 
-  btn.addEventListener('click', function(){ conectar().catch(e => setErro(e.message||'Erro ao conectar.')); });
+  async function executarComando(cmd){
+    if(executando)return;
+    executando=true;elIn.disabled=true;
+    elStatus.textContent='Executando...';
 
-  elIn.addEventListener('keydown', function(ev){
-    if(ev.key !== 'Enter') return;
-    ev.preventDefault();
-    const v = elIn.value; elIn.value = '';
-    if(!conectado||!ws||ws.readyState!==1){ setErro('Nao conectado.'); return; }
-    ws.send(v + "\n");
+    var realCmd=cmd;
+    var isCD=/^\s*cd\s/.test(cmd)||cmd.trim()==='cd';
+    if(isCD) realCmd=cmd+' && pwd';
+
+    var body=new URLSearchParams();
+    body.set('vps_id',String(VPS_ID));
+    body.set('command',realCmd);
+    try{
+      var resp=await fetch('/cliente/vps/terminal/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','x-csrf-token':csrf(),'Accept':'application/json'},body:body});
+      var json=await resp.json();
+      if(!json.ok){
+        append((json.erro||'Erro')+'\n','#ef4444');
+      }else{
+        var out=(json.output||'').replace(/\r\n/g,'\n');
+        if(isCD&&json.exit_code===0&&out.trim()!==''){
+          var lines=out.trim().split('\n');
+          cwd=lines[lines.length-1]||cwd;
+          if(lines.length>1)append(lines.slice(0,-1).join('\n')+'\n');
+        }else if(out!==''){
+          append(out+'\n');
+        }
+        if(json.exit_code!==0) append('[exit '+json.exit_code+']\n','#f59e0b');
+      }
+    }catch(e){
+      append('Erro de rede: '+e.message+'\n','#ef4444');
+    }
+    elPrompt.textContent=promptStr();
+    elStatus.textContent='Conectado (HTTP)';
+    executando=false;elIn.disabled=false;elIn.focus();
+  }
+
+  btn.addEventListener('click',conectar);
+  elIn.addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'){
+      ev.preventDefault();
+      var v=elIn.value;elIn.value='';
+      if(!conectado){setErro('Não conectado.');return;}
+      if(v.trim()==='')return;
+      historico.push(v);histIdx=historico.length;
+      append(promptStr()+' '+v+'\n','#22c55e');
+      executarComando(v);
+    }else if(ev.key==='ArrowUp'){
+      ev.preventDefault();
+      if(histIdx>0){histIdx--;elIn.value=historico[histIdx]||'';}
+    }else if(ev.key==='ArrowDown'){
+      ev.preventDefault();
+      if(histIdx<historico.length-1){histIdx++;elIn.value=historico[histIdx]||'';}
+      else{histIdx=historico.length;elIn.value='';}
+    }
   });
 
-  document.getElementById('btnUpload').addEventListener('click', function(){ document.getElementById('modalUpload').style.display='flex'; });
-  document.getElementById('btnUploadEnviar').addEventListener('click', async function(){
-    const file = document.getElementById('uploadFile').files[0];
-    const path = document.getElementById('uploadPath').value.trim();
-    const statusEl = document.getElementById('uploadStatus');
-    if(!file||!path){ statusEl.style.display='block'; statusEl.textContent='Selecione um arquivo e informe o caminho.'; return; }
-    statusEl.style.display='block'; statusEl.textContent='Enviando...';
-    const csrf = (document.querySelector('meta[name="csrf-token"]')||{}).content||'';
-    const fd = new FormData();
-    fd.append('file', file); fd.append('vps_id', String(VPS_ID)); fd.append('remote_path', path);
-    try {
-      const resp = await fetch('/cliente/vps/terminal/upload', {method:'POST', headers:{'x-csrf-token':csrf}, body:fd});
-      const json = await resp.json();
-      statusEl.textContent = json.ok ? '✓ ' + (json.mensagem||'Enviado.') : '✗ ' + (json.erro||'Erro.');
-    } catch(e){ statusEl.textContent = '✗ Erro de rede.'; }
+  document.getElementById('btnUpload').addEventListener('click',function(){document.getElementById('modalUpload').style.display='flex';});
+  document.getElementById('btnUploadEnviar').addEventListener('click',async function(){
+    var file=document.getElementById('uploadFile').files[0];
+    var path=document.getElementById('uploadPath').value.trim();
+    var statusEl=document.getElementById('uploadStatus');
+    if(!file||!path){statusEl.style.display='block';statusEl.textContent='Selecione arquivo e caminho.';return;}
+    statusEl.style.display='block';statusEl.textContent='Enviando...';
+    var fd=new FormData();fd.append('file',file);fd.append('vps_id',String(VPS_ID));fd.append('remote_path',path);
+    try{var resp=await fetch('/cliente/vps/terminal/upload',{method:'POST',headers:{'x-csrf-token':csrf()},body:fd});var json=await resp.json();statusEl.textContent=json.ok?'✓ '+(json.mensagem||'Enviado.'):'✗ '+(json.erro||'Erro.');}catch(e){statusEl.textContent='✗ Erro de rede.';}
   });
-
-  document.getElementById('btnDownload').addEventListener('click', function(){ document.getElementById('modalDownload').style.display='flex'; });
-  document.getElementById('btnDownloadIniciar').addEventListener('click', function(){
-    const path = document.getElementById('downloadPath').value.trim();
-    if(!path) return;
-    window.location.href = '/cliente/vps/terminal/download?vps_id=' + VPS_ID + '&remote_path=' + encodeURIComponent(path);
-    document.getElementById('modalDownload').style.display = 'none';
+  document.getElementById('btnDownload').addEventListener('click',function(){document.getElementById('modalDownload').style.display='flex';});
+  document.getElementById('btnDownloadIniciar').addEventListener('click',function(){
+    var path=document.getElementById('downloadPath').value.trim();
+    if(!path)return;
+    window.location.href='/cliente/vps/terminal/download?vps_id='+VPS_ID+'&remote_path='+encodeURIComponent(path);
+    document.getElementById('modalDownload').style.display='none';
   });
 })();
 </script>

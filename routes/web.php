@@ -208,6 +208,7 @@ $roteador->post('/cliente/tickets/responder', [ClienteTicketsController::class, 
 $roteador->get('/cliente/vps', [ClienteVpsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/vps/terminal', [ClienteTerminalController::class, 'vps'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class, 'emitirToken'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('terminal_token', 30, 60)]);
+$roteador->post('/cliente/vps/terminal/exec', [ClienteTerminalController::class, 'exec'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('terminal_exec', 120, 60)]);
 $roteador->post('/cliente/vps/terminal/upload', [ClienteTerminalController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('terminal_upload', 20, 60)]);
 $roteador->get('/cliente/vps/terminal/download', [ClienteTerminalController::class, 'download'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
