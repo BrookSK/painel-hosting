@@ -75,7 +75,19 @@ final class MonitoramentoController
         $containerId = trim((string)($vps['container_id'] ?? ''));
         if ($containerId !== '' && (string)($vps['status'] ?? '') === 'running') {
             try {
-                $dockerCmd = 'docker stats ' . escapeshellarg($containerId) . ' --no-stream --format "{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.BlockIO}}" 2>&1';
+                // Tentar com container_id, fallback para nome do container
+                $containerRef = $containerId;
+                $clientIdForName = 0;
+                try {
+                    $cStmt = $pdo->prepare('SELECT client_id FROM vps WHERE id = :id');
+                    $cStmt->execute([':id' => $vpsId]);
+                    $cRow = $cStmt->fetch();
+                    $clientIdForName = (int)($cRow['client_id'] ?? 0);
+                } catch (\Throwable) {}
+                $containerName = 'vps_client_' . $clientIdForName . '_' . $vpsId;
+
+                $fmt = "'{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.BlockIO}}'";
+                $dockerCmd = 'docker stats ' . escapeshellarg($containerRef) . ' --no-stream --format ' . $fmt . ' 2>&1 || docker stats ' . escapeshellarg($containerName) . ' --no-stream --format ' . $fmt . ' 2>&1';
                 $ssh = new \LRV\App\Services\Infra\SshExecutor();
                 $ip = (string)($vps['ip_address'] ?? '');
                 $porta = (int)($vps['ssh_port'] ?? 22);
