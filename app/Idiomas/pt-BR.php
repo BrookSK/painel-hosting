@@ -966,7 +966,7 @@ return [
     'sidebar.dominios' => 'Domínios',
     'dominios.titulo' => 'Meus Domínios',
     'dominios.subtitulo' => 'Gerencie seus domínios raiz e subdomínios',
-    'dominios.info' => 'Domínios raiz são usados para criar e-mails (ex: contato@seudominio.com). Subdomínios são usados para aplicações, deploys e webmail (ex: app.seudominio.com). O IP do servidor nunca é exposto.',
+    'dominios.info' => 'Domínios raiz são usados para criar e-mails (ex: contato@seudominio.com). Subdomínios são usados para aplicações, deploys e webmail (ex: app.seudominio.com).',
     'dominios.subdomains' => 'Subdomínios',
     'dominios.sub_desc' => 'Subdomínios verificados para usar em aplicações, git deploy e webmail.',
     'dominios.nenhum_sub' => 'Nenhum subdomínio cadastrado. Adicione um ao lado.',

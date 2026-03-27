@@ -842,7 +842,7 @@ return [
     'sidebar.dominios' => 'Dominios',
     'dominios.titulo' => 'Mis Dominios',
     'dominios.subtitulo' => 'Administre sus dominios raíz y subdominios',
-    'dominios.info' => 'Los dominios raíz se usan para email (ej: contacto@sudominio.com). Los subdominios se usan para aplicaciones, deploys y webmail (ej: app.sudominio.com). La IP del servidor nunca se expone.',
+    'dominios.info' => 'Los dominios raíz se usan para email (ej: contacto@sudominio.com). Los subdominios se usan para aplicaciones, deploys y webmail (ej: app.sudominio.com).',
     'dominios.subdomains' => 'Subdominios',
     'dominios.sub_desc' => 'Subdominios verificados para usar en aplicaciones, git deploy y webmail.',
     'dominios.nenhum_sub' => 'Ningún subdominio registrado. Agregue uno al lado.',

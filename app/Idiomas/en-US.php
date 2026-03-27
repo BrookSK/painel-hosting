@@ -842,7 +842,7 @@ return [
     'sidebar.dominios' => 'Domains',
     'dominios.titulo' => 'My Domains',
     'dominios.subtitulo' => 'Manage your root domains and subdomains',
-    'dominios.info' => 'Root domains are used for email (e.g. contact@yourdomain.com). Subdomains are used for applications, deploys and webmail (e.g. app.yourdomain.com). The server IP is never exposed.',
+    'dominios.info' => 'Root domains are used for email (e.g. contact@yourdomain.com). Subdomains are used for applications, deploys and webmail (e.g. app.yourdomain.com).',
     'dominios.subdomains' => 'Subdomains',
     'dominios.sub_desc' => 'Verified subdomains for use in applications, git deploy and webmail.',
     'dominios.nenhum_sub' => 'No subdomains registered. Add one on the right.',
