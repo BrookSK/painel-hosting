@@ -82,13 +82,13 @@ $csrf = Csrf::token();
       <div class="install-field" id="fDomainWrap" style="display:none;">
         <label>Subdomínio</label>
         <select name="domain" id="fDomain">
-          <option value="">Selecione um subdomínio...</option>
+          <option value="">Selecione um domínio...</option>
           <?php foreach (($subdomains_disponiveis ?? []) as $sd): ?>
             <option value="<?php echo View::e((string)($sd['subdomain'] ?? '')); ?>"><?php echo View::e((string)($sd['subdomain'] ?? '')); ?></option>
           <?php endforeach; ?>
         </select>
         <?php if (empty($subdomains_disponiveis ?? [])): ?>
-          <p style="font-size:11px;color:#f59e0b;margin-top:4px;">Nenhum subdomínio disponível. <a href="/cliente/dominios">Cadastre um</a>.</p>
+          <p style="font-size:11px;color:#f59e0b;margin-top:4px;">Nenhum domínio disponível. <a href="/cliente/dominios">Cadastre um</a>.</p>
         <?php endif; ?>
       </div>
       <div class="install-field" id="fRepoWrap" style="display:none;">

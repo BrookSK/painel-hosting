@@ -18,9 +18,7 @@ $dominiosSelect = [];
 foreach ($dominiosAtivos as $d) {
     if (!in_array($d, $dominiosSelect, true)) $dominiosSelect[] = $d;
 }
-if (empty($dominiosSelect) && $dominioPadrao !== '') {
-    $dominiosSelect[] = $dominioPadrao;
-}
+// Não usar domínio padrão do sistema — exigir domínio próprio
 
 $pageTitle    = I18n::t('emails.titulo');
 $clienteNome  = (string)($cliente['name'] ?? '');
@@ -143,8 +141,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <?php elseif (count($dominiosSelect) === 1): ?>
             <input class="input" type="text" name="domain" value="<?php echo View::e($dominiosSelect[0]); ?>" readonly style="background:#f8fafc;" />
           <?php else: ?>
-            <input class="input" type="text" name="domain" placeholder="seudominio.com" required />
-            <p style="font-size:12px;color:#94a3b8;margin-top:4px;">Nenhum domínio configurado. <a href="/cliente/dominios">Adicione seu domínio</a>.</p>
+            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;">
+              Você precisa cadastrar um domínio primeiro. <a href="/cliente/dominios" style="font-weight:600;color:#92400e;text-decoration:underline;">Adicionar domínio</a>
+            </div>
+            <input type="hidden" name="domain" value="" />
           <?php endif; ?>
         </div>
         <div style="margin-bottom:10px;">
