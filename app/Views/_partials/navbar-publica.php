@@ -42,7 +42,7 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
     <div class="pn-actions">
       <?php require __DIR__ . '/idioma.php'; ?>
       <a href="/cliente/entrar" class="pn-btn ghost"><?php echo View::e(I18n::t('nav.entrar')); ?></a>
-      <a href="/cliente/criar-conta" class="pn-btn solid"><?php echo $_pn_trial ? View::e($_pn_trial_label) : View::e(I18n::t('nav.contratar')); ?></a>
+      <a href="/#planos" class="pn-btn solid"><?php echo $_pn_trial ? View::e($_pn_trial_label) : View::e(I18n::t('nav.contratar')); ?></a>
       <button class="pn-hamburger" id="pnHamburger" type="button" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -174,7 +174,7 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
   </div>
   <div class="pn-drawer-actions">
     <a href="/cliente/entrar" class="pn-btn ghost"><?php echo View::e(I18n::t('nav.entrar')); ?></a>
-    <a href="/cliente/criar-conta" class="pn-btn solid"><?php echo $_pn_trial ? View::e($_pn_trial_label) : View::e(I18n::t('nav.contratar')); ?></a>
+    <a href="/#planos" class="pn-btn solid"><?php echo $_pn_trial ? View::e($_pn_trial_label) : View::e(I18n::t('nav.contratar')); ?></a>
   </div>
 </div>
 
