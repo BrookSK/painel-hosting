@@ -48,6 +48,12 @@ final class AppInstallService
         if ($port <= 0) {
             $port = (int) ($app['default_port'] ?? 80);
         }
+        // Forçar porta alta se é porta baixa (evitar conflito com Nginx/Apache)
+        if ($port < 1024) {
+            $port = 10000 + $applicationId;
+            // Atualizar no banco
+            $pdo->prepare('UPDATE applications SET port = :p WHERE id = :id')->execute([':p' => $port, ':id' => $applicationId]);
+        }
 
         $serverId = (int) ($app['server_id'] ?? 0);
         if ($serverId <= 0) {
@@ -194,9 +200,10 @@ final class AppInstallService
             }
         }
 
-        // Repo mount
+        // Repo mount (only if it's actually a git URL, not a domain)
         $repo = trim((string) ($app['repository'] ?? ''));
-        if ($repo !== '') {
+        $isGitUrl = $repo !== '' && (str_starts_with($repo, 'http') || str_starts_with($repo, 'git@'));
+        if ($isGitUrl) {
             $volumeBase = rtrim((string) Settings::obter('infra.volume_base', '/vps'), '/');
             $appDir = $volumeBase . '/apps/' . $applicationId;
             $log('Clonando repositório...');
