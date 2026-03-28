@@ -23,12 +23,20 @@ final class TerminalController
             return Resposta::redirecionar('/cliente/entrar');
         }
 
+        $pdo = BancoDeDados::pdo();
         $vpsId = (int) ($req->query['id'] ?? 0);
+
+        // Se não passou ID, redirecionar para a primeira VPS ativa ou mostrar seleção
         if ($vpsId <= 0) {
-            return Resposta::texto('VPS inválida.', 400);
+            $stmt = $pdo->prepare("SELECT id FROM vps WHERE client_id = :c AND status IN ('running','active') ORDER BY id DESC LIMIT 1");
+            $stmt->execute([':c' => $clienteId]);
+            $first = $stmt->fetch();
+            if (is_array($first) && !empty($first['id'])) {
+                return Resposta::redirecionar('/cliente/vps/terminal?id=' . (int)$first['id']);
+            }
+            return Resposta::texto('Nenhuma VPS ativa encontrada. Crie uma VPS primeiro.', 400);
         }
 
-        $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare('SELECT id, server_id, container_id, status, cpu, ram, storage, created_at FROM vps WHERE id = :id AND client_id = :c LIMIT 1');
         $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
         $vps = $stmt->fetch();
