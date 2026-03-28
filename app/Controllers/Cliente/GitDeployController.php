@@ -270,7 +270,6 @@ final class GitDeployController
         if ($tokenEnc !== '') {
             $token = \LRV\App\Services\Infra\SshCrypto::decifrar($tokenEnc);
             if ($token !== '' && str_starts_with($repoUrl, 'https://')) {
-                // https://github.com/user/repo → https://token@github.com/user/repo
                 $repoUrl = preg_replace('#^https://#', 'https://' . urlencode($token) . '@', $repoUrl);
             }
         }
@@ -288,29 +287,11 @@ final class GitDeployController
             $runCmd = fn(string $cmd) => $exec->executar($cmd, $host, $port, $user, $keyPath, 120);
         }
 
-        // Ensure git is installed
-        $gitCheck = $runCmd('which git 2>&1 || echo "GIT_NOT_FOUND"');
-        $gitCheckOut = trim((string)($gitCheck['saida'] ?? ''));
-        if (str_contains($gitCheckOut, 'GIT_NOT_FOUND') || $gitCheckOut === '') {
-            // Try to install git
-            $runCmd('apt-get update -qq && apt-get install -y -qq git 2>&1 || yum install -y git 2>&1 || apk add git 2>&1');
-        }
+        // Ensure git is installed (try on host first)
+        $runCmd('which git 2>/dev/null || apt-get update -qq && apt-get install -y -qq git 2>/dev/null || true');
 
-        // Ensure DNS resolution works (some VPS containers lack resolv.conf)
-        $dnsCheck = $runCmd('getent hosts github.com 2>/dev/null && echo "DNS_OK" || echo "DNS_FAIL"');
-        $dnsOut = trim((string)($dnsCheck['saida'] ?? ''));
-        if (!str_contains($dnsOut, 'DNS_OK')) {
-            // Fix DNS: overwrite resolv.conf with public DNS servers
-            $runCmd('echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1\nnameserver 8.8.4.4" > /etc/resolv.conf 2>/dev/null || (echo "nameserver 8.8.8.8" >> /etc/resolv.conf 2>/dev/null)');
-            // Also install ca-certificates if missing (needed for HTTPS git)
-            $runCmd('which update-ca-certificates >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq ca-certificates 2>/dev/null) || true');
-            // Verify DNS works now
-            $dnsRetry = $runCmd('getent hosts github.com 2>/dev/null && echo "DNS_OK" || curl -sI https://github.com 2>/dev/null | head -1 || echo "DNS_STILL_FAIL"');
-            $dnsRetryOut = trim((string)($dnsRetry['saida'] ?? ''));
-            if (str_contains($dnsRetryOut, 'DNS_STILL_FAIL') && !str_contains($dnsRetryOut, 'DNS_OK') && !str_contains($dnsRetryOut, 'HTTP')) {
-                throw new \RuntimeException('Erro de DNS: o servidor não consegue resolver github.com. Verifique /etc/resolv.conf e a configuração de rede do servidor. Tente adicionar manualmente: echo "nameserver 8.8.8.8" > /etc/resolv.conf');
-            }
-        }
+        // Fix DNS if needed
+        $runCmd('grep -q nameserver /etc/resolv.conf 2>/dev/null || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null; getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true');
 
         // Check if repo already cloned
         $checkCmd = 'test -d ' . escapeshellarg($deployPath . '/.git') . ' && echo "exists" || echo "new"';
@@ -320,17 +301,15 @@ final class GitDeployController
         $output = '';
 
         if ($isNew) {
-            // Clone fresh — remove target dir first since git clone needs empty/non-existent dir
-            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath)
+                . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
             if ($forceOverwrite) {
-                // Hard reset — discard local changes
-                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
+                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
             } else {
-                // Stash local changes, pull, pop
-                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
+                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
             }
             $r = $runCmd($pullCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
@@ -339,15 +318,14 @@ final class GitDeployController
         // Verificar se o clone/pull falhou
         if (str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) {
             $msg = substr($output, 0, 500);
-            // Mensagens mais amigáveis para erros comuns
             if (str_contains($output, 'No such device or address') || str_contains($output, 'Could not resolve host')) {
-                $msg = 'Erro de DNS: o servidor não consegue resolver o endereço do GitHub/GitLab. Verifique a configuração de rede da VPS (DNS). Detalhes: ' . $msg;
+                $msg = 'Erro de DNS: o servidor não consegue acessar a internet. Acesse o terminal da VPS e execute: echo "nameserver 8.8.8.8" > /etc/resolv.conf — Detalhes: ' . $msg;
             } elseif (str_contains($output, 'could not read Username') || str_contains($output, 'Authentication failed')) {
-                $msg = 'Repositório privado: configure um token de acesso no campo "Token de acesso" nas configurações do deploy. Detalhes: ' . $msg;
+                $msg = 'Repositório privado: configure um token de acesso no campo "Token de acesso". Detalhes: ' . $msg;
             } elseif (str_contains($output, 'not found') && str_contains($output, 'repository')) {
-                $msg = 'Repositório não encontrado. Verifique a URL e se o repositório existe. Detalhes: ' . $msg;
+                $msg = 'Repositório não encontrado. Verifique a URL. Detalhes: ' . $msg;
             } elseif (str_contains($output, 'Remote branch') && str_contains($output, 'not found')) {
-                $msg = 'Branch "' . $branch . '" não encontrada no repositório. Verifique o nome da branch. Detalhes: ' . $msg;
+                $msg = 'Branch "' . $branch . '" não encontrada. Detalhes: ' . $msg;
             }
             throw new \RuntimeException($msg);
         }
