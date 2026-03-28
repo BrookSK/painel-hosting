@@ -328,6 +328,7 @@ $roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitD
 $roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
 $roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regenerarChave'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 
 // Bancos de Dados
 $roteador->get('/cliente/banco-dados', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);

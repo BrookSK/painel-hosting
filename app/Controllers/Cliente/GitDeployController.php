@@ -138,8 +138,18 @@ final class GitDeployController
                 }
             }
             $tokenEnc = $authToken !== '' ? \LRV\App\Services\Infra\SshCrypto::cifrar($authToken) : null;
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:at,:b,:s,:td,:dp,:fo,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+
+            // Gerar deploy key (par de chaves SSH) para autenticação via SSH
+            $deployKeyPublic = null;
+            $deployKeyPrivateEnc = null;
+            try {
+                $keyPair = $this->gerarDeployKey($name);
+                $deployKeyPublic = $keyPair['public'];
+                $deployKeyPrivateEnc = \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']);
+            } catch (\Throwable) {}
+
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
         }
 
         return Resposta::redirecionar('/cliente/git-deploy');
@@ -156,6 +166,16 @@ final class GitDeployController
         $stmt->execute([':id' => $id, ':c' => $clienteId]);
         $deployment = $stmt->fetch();
         if (!is_array($deployment)) return Resposta::texto('Não encontrado.', 404);
+
+        // Gerar deploy key se não existir
+        if (empty($deployment['deploy_key_public'])) {
+            try {
+                $keyPair = $this->gerarDeployKey((string)($deployment['name'] ?? ''));
+                $pdo->prepare('UPDATE git_deployments SET deploy_key_public=:pub, deploy_key_private_enc=:priv WHERE id=:id')
+                    ->execute([':pub' => $keyPair['public'], ':priv' => \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']), ':id' => $id]);
+                $deployment['deploy_key_public'] = $keyPair['public'];
+            } catch (\Throwable) {}
+        }
 
         $vpsStmt = $pdo->prepare("SELECT id, cpu, ram, storage FROM vps WHERE client_id = :c AND status = 'running' ORDER BY id");
         $vpsStmt->execute([':c' => $clienteId]);
@@ -273,6 +293,24 @@ final class GitDeployController
                 $repoUrl = preg_replace('#^https://#', 'https://' . urlencode($token) . '@', $repoUrl);
             }
         }
+
+        // Deploy key: se disponível, preparar para uso via GIT_SSH_COMMAND
+        $deployKeyPrivateEnc = (string)($dep['deploy_key_private_enc'] ?? '');
+        $useDeployKey = false;
+        $sshKeySetup = '';
+        if ($deployKeyPrivateEnc !== '' && $tokenEnc === '') {
+            $privateKey = \LRV\App\Services\Infra\SshCrypto::decifrar($deployKeyPrivateEnc);
+            if ($privateKey !== '') {
+                $useDeployKey = true;
+                // Converter URL HTTPS para SSH se necessário
+                if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
+                    $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
+                }
+                // Escrever chave temporária no servidor e configurar GIT_SSH_COMMAND
+                $keyB64 = base64_encode($privateKey);
+                $sshKeySetup = 'DEPLOY_KEY=$(mktemp) && echo ' . escapeshellarg($keyB64) . ' | base64 -d > $DEPLOY_KEY && chmod 600 $DEPLOY_KEY && export GIT_SSH_COMMAND="ssh -i $DEPLOY_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" && ';
+            }
+        }
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
         $forceOverwrite = (int)($dep['force_overwrite'] ?? 1) === 1;
 
@@ -306,25 +344,28 @@ final class GitDeployController
             if (str_starts_with($cloneUrl, 'https://') && !str_ends_with($cloneUrl, '.git')) {
                 $cloneUrl .= '.git';
             }
-            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath)
+            $cloneCmd = $sshKeySetup . 'rm -rf ' . escapeshellarg($deployPath)
                 . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($cloneUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+            if ($useDeployKey) $cloneCmd .= '; rm -f $DEPLOY_KEY 2>/dev/null';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
 
             // If failed with .git suffix, retry without it
             if ((str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) && $cloneUrl !== $repoUrl) {
                 $output = '';
-                $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath)
+                $cloneCmd = $sshKeySetup . 'rm -rf ' . escapeshellarg($deployPath)
                     . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+                if ($useDeployKey) $cloneCmd .= '; rm -f $DEPLOY_KEY 2>/dev/null';
                 $r = $runCmd($cloneCmd);
                 $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
             }
         } else {
             if ($forceOverwrite) {
-                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
+                $pullCmd = $sshKeySetup . 'cd ' . escapeshellarg($deployPath) . ' && GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
             } else {
-                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
+                $pullCmd = $sshKeySetup . 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
             }
+            if ($useDeployKey) $pullCmd .= '; rm -f $DEPLOY_KEY 2>/dev/null';
             $r = $runCmd($pullCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         }
@@ -372,6 +413,63 @@ final class GitDeployController
             $clean[] = $l;
         }
         return implode("\n", $clean);
+    }
+
+    /**
+     * Gera par de chaves SSH ed25519 para deploy key.
+     */
+    private function gerarDeployKey(string $label): array
+    {
+        $tmpDir = sys_get_temp_dir();
+        $keyFile = $tmpDir . '/deploy_key_' . bin2hex(random_bytes(8));
+
+        // Gerar chave ed25519 sem passphrase
+        $cmd = 'ssh-keygen -t ed25519 -f ' . escapeshellarg($keyFile) . ' -N "" -C ' . escapeshellarg('deploy@lrvweb-' . preg_replace('/[^a-z0-9]/', '', strtolower($label))) . ' 2>&1';
+        exec($cmd, $output, $code);
+
+        if ($code !== 0 || !file_exists($keyFile) || !file_exists($keyFile . '.pub')) {
+            // Fallback: tentar rsa se ed25519 não disponível
+            $cmd = 'ssh-keygen -t rsa -b 4096 -f ' . escapeshellarg($keyFile) . ' -N "" -C ' . escapeshellarg('deploy@lrvweb') . ' 2>&1';
+            exec($cmd, $output, $code);
+        }
+
+        if (!file_exists($keyFile) || !file_exists($keyFile . '.pub')) {
+            throw new \RuntimeException('Falha ao gerar chave SSH.');
+        }
+
+        $private = file_get_contents($keyFile);
+        $public = file_get_contents($keyFile . '.pub');
+
+        // Limpar arquivos temporários
+        @unlink($keyFile);
+        @unlink($keyFile . '.pub');
+
+        return ['private' => trim($private), 'public' => trim($public)];
+    }
+
+    /**
+     * Regenerar deploy key para um deploy existente.
+     */
+    public function regenerarChave(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, name FROM git_deployments WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
+
+        try {
+            $keyPair = $this->gerarDeployKey((string)($dep['name'] ?? ''));
+            $pdo->prepare('UPDATE git_deployments SET deploy_key_public=:pub, deploy_key_private_enc=:priv WHERE id=:id AND client_id=:c')
+                ->execute([':pub' => $keyPair['public'], ':priv' => \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']), ':id' => $id, ':c' => $clienteId]);
+            return Resposta::json(['ok' => true, 'public_key' => $keyPair['public']]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
     }
 
     private function renderizarErro(int $clienteId, int $id, string $erro): Resposta
