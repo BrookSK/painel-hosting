@@ -53,25 +53,38 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <p style="font-size:12px;color:#64748b;margin-top:4px;">URL HTTPS ou SSH do repositório (público ou privado).</p>
     </div>
 
-    <div style="margin-bottom:14px;">
-      <label style="display:block;font-size:13px;margin-bottom:5px;">Token de acesso <span style="font-weight:400;color:#94a3b8;">(opção 1 — para repositórios privados)</span></label>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input class="input" type="password" name="auth_token" id="authTokenInput" value="" placeholder="<?php echo !empty($dep['auth_token_enc']) ? '••••••••••• (já configurado)' : 'ghp_xxxx... ou token pessoal'; ?>" style="flex:1;" autocomplete="off" />
-        <button type="button" onclick="var i=document.getElementById('authTokenInput');i.type=i.type==='password'?'text':'password';" class="botao ghost sm" style="flex-shrink:0;">👁</button>
-      </div>
-      <p style="font-size:12px;color:#64748b;margin-top:4px;">GitHub: <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Settings → Developer settings → Personal access tokens</a>. Deixe vazio para repositórios públicos<?php echo !empty($dep['auth_token_enc']) ? ' ou para manter o token atual' : ''; ?>.</p>
-    </div>
-
     <?php if ($isEdit && !empty($dep['deploy_key_public'])): ?>
     <div style="margin-bottom:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;">
-      <div style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;">🔑 Deploy Key <span style="font-weight:400;color:#64748b;">(opção 2 — mais seguro)</span></div>
-      <p style="font-size:12px;color:#475569;margin-bottom:8px;">Copie a chave pública abaixo e adicione como Deploy Key no seu repositório:<br>
-        GitHub: Repositório → Settings → Deploy keys → Add deploy key</p>
-      <div style="position:relative;">
+      <div style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;">🔑 Deploy Key (para repositórios privados)</div>
+      <p style="font-size:12px;color:#475569;margin-bottom:10px;">Para repositórios privados, copie a chave abaixo e adicione no seu repositório:</p>
+
+      <div style="position:relative;margin-bottom:12px;">
         <textarea id="deployKeyPub" readonly style="width:100%;height:70px;font-family:monospace;font-size:11px;padding:8px;border:1px solid #bae6fd;border-radius:6px;background:#f8fafc;resize:none;box-sizing:border-box;"><?php echo View::e((string)$dep['deploy_key_public']); ?></textarea>
         <button type="button" onclick="document.getElementById('deployKeyPub').select();navigator.clipboard.writeText(document.getElementById('deployKeyPub').value).then(function(){this.textContent='✓ Copiada'}.bind(this))" style="position:absolute;top:6px;right:6px;background:#fff;border:1px solid #bae6fd;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">Copiar</button>
       </div>
-      <p style="font-size:11px;color:#94a3b8;margin-top:6px;">Se usar deploy key, não precisa de token. A URL será convertida automaticamente para SSH (git@github.com:...).</p>
+
+      <div style="background:#fff;border:1px solid #e0f2fe;border-radius:8px;padding:12px;font-size:12px;color:#475569;">
+        <div style="font-weight:600;color:#0369a1;margin-bottom:8px;">Como adicionar no GitHub:</div>
+        <ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;">
+          <li>Acesse seu repositório no GitHub</li>
+          <li>Vá em <strong>Settings</strong> (aba no topo do repositório)</li>
+          <li>No menu lateral, clique em <strong>Deploy keys</strong></li>
+          <li>Clique em <strong>Add deploy key</strong></li>
+          <li>Em "Title", coloque um nome (ex: <code>LRV Cloud</code>)</li>
+          <li>Em "Key", cole a chave pública copiada acima</li>
+          <li>Clique em <strong>Add key</strong></li>
+        </ol>
+
+        <div style="font-weight:600;color:#0369a1;margin-top:12px;margin-bottom:8px;">Como adicionar no GitLab:</div>
+        <ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;">
+          <li>Acesse seu repositório no GitLab</li>
+          <li>Vá em <strong>Settings → Repository</strong></li>
+          <li>Expanda a seção <strong>Deploy keys</strong></li>
+          <li>Cole a chave pública, dê um título e clique em <strong>Add key</strong></li>
+        </ol>
+      </div>
+
+      <p style="font-size:11px;color:#94a3b8;margin-top:8px;">Repositórios públicos não precisam de deploy key. A URL será convertida automaticamente para SSH durante o deploy.</p>
     </div>
     <?php elseif (!$isEdit): ?>
     <div style="margin-bottom:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;">
