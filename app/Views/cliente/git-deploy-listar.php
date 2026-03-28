@@ -68,6 +68,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <button class="botao sm" id="btn-deploy-<?php echo $did; ?>" onclick="executarDeploy(<?php echo $did; ?>)">▶ Deploy agora</button>
       <button class="botao sm ghost" onclick="verLogs(<?php echo $did; ?>)">📋 Histórico</button>
+      <a href="/cliente/arquivos?vps_id=<?php echo (int)($d['vps_id'] ?? 0); ?>&path=<?php echo urlencode((string)($d['deploy_path'] ?? '/var/www/html')); ?>&direct=1" class="botao sm ghost" title="Ver arquivos">📁 Arquivos</a>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirm('Remover esta integração?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />

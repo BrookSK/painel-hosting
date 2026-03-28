@@ -270,6 +270,14 @@ final class GitDeployController
             $runCmd = fn(string $cmd) => $exec->executar($cmd, $host, $port, $user, $keyPath, 120);
         }
 
+        // Ensure git is installed
+        $gitCheck = $runCmd('which git 2>&1 || echo "GIT_NOT_FOUND"');
+        $gitCheckOut = trim((string)($gitCheck['saida'] ?? ''));
+        if (str_contains($gitCheckOut, 'GIT_NOT_FOUND') || $gitCheckOut === '') {
+            // Try to install git
+            $runCmd('apt-get update -qq && apt-get install -y -qq git 2>&1 || yum install -y git 2>&1 || apk add git 2>&1');
+        }
+
         // Check if repo already cloned
         $checkCmd = 'test -d ' . escapeshellarg($deployPath . '/.git') . ' && echo "exists" || echo "new"';
         $checkResult = $runCmd($checkCmd);
@@ -278,8 +286,8 @@ final class GitDeployController
         $output = '';
 
         if ($isNew) {
-            // Clone fresh
-            $cloneCmd = 'mkdir -p ' . escapeshellarg($deployPath) . ' && git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+            // Clone fresh — remove target dir first since git clone needs empty/non-existent dir
+            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= (string)($r['saida'] ?? '');
         } else {

@@ -79,6 +79,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var initialPath = urlParams.get('path') || '/';
   var initialVps = urlParams.get('vps_id') || '';
   var appIdParam = urlParams.get('app_id') || '';
+  var directParam = urlParams.get('direct') || '';
   var currentPath=initialPath;
   var vpsSelect = document.getElementById('vpsSelect');
 
@@ -97,11 +98,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   // Build query string with either app_id or vps_id
   function qsRead() {
     if (appIdParam) return 'app_id=' + appIdParam;
-    return 'vps_id=' + currentVps;
+    var qs = 'vps_id=' + currentVps;
+    if (directParam) qs += '&direct=1';
+    return qs;
   }
   function qsPost(body) {
     if (appIdParam) body.set('app_id', appIdParam);
-    else body.set('vps_id', currentVps);
+    else {
+      body.set('vps_id', currentVps);
+      if (directParam) body.set('direct', '1');
+    }
   }
 
   if (vpsSelect) {

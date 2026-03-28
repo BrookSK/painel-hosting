@@ -53,13 +53,17 @@ final class ArquivosController
 
         $vpsId = (int)($req->query['vps_id'] ?? 0);
         $appId = (int)($req->query['app_id'] ?? 0);
+        $direct = (int)($req->query['direct'] ?? 0);
         $path = (string)($req->query['path'] ?? '/');
         if ($path === '') $path = '/';
 
+        $cmd = 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1';
         if ($appId > 0) {
-            $result = $this->execInAppContainer($clienteId, $appId, 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1');
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
         } else {
-            $result = $this->execInContainer($clienteId, $vpsId, 'ls -la --time-style=long-iso ' . escapeshellarg($path) . ' 2>&1');
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
         if (!$result['ok']) return Resposta::json($result);
 
@@ -95,13 +99,17 @@ final class ArquivosController
 
         $vpsId = (int)($req->query['vps_id'] ?? 0);
         $appId = (int)($req->query['app_id'] ?? 0);
+        $direct = (int)($req->query['direct'] ?? 0);
         $path = (string)($req->query['path'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
+        $cmd = 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1';
         if ($appId > 0) {
-            $result = $this->execInAppContainer($clienteId, $appId, 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1');
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
         } else {
-            $result = $this->execInContainer($clienteId, $vpsId, 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1');
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
         if (!$result['ok']) return Resposta::json($result);
 
@@ -115,6 +123,7 @@ final class ArquivosController
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
         $appId = (int)($req->post['app_id'] ?? 0);
+        $direct = (int)($req->post['direct'] ?? 0);
         $path = (string)($req->post['path'] ?? '');
         $content = (string)($req->post['content'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
@@ -123,6 +132,8 @@ final class ArquivosController
         $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($path) . ' 2>&1 && echo OK';
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -136,12 +147,15 @@ final class ArquivosController
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
         $appId = (int)($req->post['app_id'] ?? 0);
+        $direct = (int)($req->post['direct'] ?? 0);
         $path = (string)($req->post['path'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
         $cmd = 'mkdir -p ' . escapeshellarg($path) . ' 2>&1 && echo OK';
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -155,12 +169,15 @@ final class ArquivosController
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
         $appId = (int)($req->post['app_id'] ?? 0);
+        $direct = (int)($req->post['direct'] ?? 0);
         $path = (string)($req->post['path'] ?? '');
         if ($path === '' || $path === '/') return Resposta::json(['ok' => false, 'erro' => 'Não é possível deletar este caminho.']);
 
         $cmd = 'rm -rf ' . escapeshellarg($path) . ' 2>&1 && echo OK';
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -207,6 +224,51 @@ final class ArquivosController
 
         $output = (string)($result['saida'] ?? '');
         // Filtrar warnings SSH
+        $lines = explode("\n", $output);
+        $clean = [];
+        foreach ($lines as $l) {
+            if (str_contains($l, 'Warning:') || str_contains($l, 'Permanently added') || str_contains($l, 'known_hosts')) continue;
+            $clean[] = $l;
+        }
+
+        return ['ok' => true, 'output' => implode("\n", $clean)];
+    }
+
+    /**
+     * Executa comando diretamente no servidor (sem docker exec).
+     * Usado para Git Deploy onde os arquivos ficam no filesystem do host.
+     */
+    private function execDirectOnServer(int $clienteId, int $vpsId, string $cmd): array
+    {
+        if ($vpsId <= 0) return ['ok' => false, 'erro' => 'VPS inválida.'];
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT v.id, v.status, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) return ['ok' => false, 'erro' => 'VPS não encontrada.'];
+
+        $ssh = new SshExecutor();
+        $ip = (string)($row['ip_address'] ?? '');
+        $porta = (int)($row['ssh_port'] ?? 22);
+        $usuario = (string)($row['ssh_user'] ?? 'root');
+        $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+        try {
+            if ($authType === 'password') {
+                $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 15);
+            } else {
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $cmd, 15);
+            }
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'erro' => $e->getMessage()];
+        }
+
+        $output = (string)($result['saida'] ?? '');
         $lines = explode("\n", $output);
         $clean = [];
         foreach ($lines as $l) {
