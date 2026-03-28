@@ -129,101 +129,105 @@ final class VpsBackupService
         $rTar = $this->docker->executar($cmd);
         $log(trim((string) ($rTar['saida'] ?? '')));
 
-        $log('Baixando backup via scp...');
-        $localDir = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'backups';
-        if (!is_dir($localDir)) {
-            @mkdir($localDir, 0775, true);
-        }
+        $log('Backup concluído. Arquivo salvo no node: ' . $remoteFile);
 
-        $localFile = $localDir . DIRECTORY_SEPARATOR . basename($remoteFile);
-
-        $scpOut = $this->executarScp($host, $sshPort, $sshUser, $authType, $keyPath ?? '', $senha ?? '', $remoteFile, $localFile);
-        $scpOutTrim = trim($scpOut);
-        if ($scpOutTrim !== '') {
-            $log($scpOutTrim);
-        }
-
-        if (!is_file($localFile)) {
-            throw new \RuntimeException('Falha ao baixar backup via scp.');
-        }
-
-        $log('Removendo arquivo temporário no node...');
-        $rRm = $this->docker->executar('rm -f ' . escapeshellarg($remoteFile));
-        $log(trim((string) ($rRm['saida'] ?? '')));
-
-        $size = (int) (@filesize($localFile) ?: 0);
+        $size = 0;
+        try {
+            $rSize = $this->docker->executar('stat -c%s ' . escapeshellarg($remoteFile) . ' 2>/dev/null || echo 0');
+            $size = (int)trim((string)($rSize['saida'] ?? '0'));
+        } catch (\Throwable) {}
 
         $up = $pdo->prepare("UPDATE backups SET status='completed', file_path=:p, file_size=:s, completed_at=:c, error=NULL WHERE id=:id");
         $up->execute([
-            ':p' => $localFile,
+            ':p' => 'remote:' . $serverId . ':' . $remoteFile,
             ':s' => $size,
             ':c' => date('Y-m-d H:i:s'),
             ':id' => $backupId,
         ]);
 
-        $log('Backup concluído.');
+        $log('Backup concluído. Tamanho: ' . $size . ' bytes.');
     }
 
-    private function executarScp(string $host, int $porta, string $usuario, string $authType, string $keyPath, string $senha, string $remoteFile, string $localFile): string
+    /**
+     * Faz download de um backup remoto via SSH stream (cat + proc_open).
+     * Retorna o path local temporário ou null se falhar.
+     */
+    public function baixarRemoto(string $filePath): ?string
     {
-        $knownHosts = '/dev/null';
-        if (PHP_OS_FAMILY === 'Windows') $knownHosts = 'NUL';
-
-        $sshOpts = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=' . $knownHosts . ' -o ConnectTimeout=30';
-        $src = $usuario . '@' . $host . ':' . $remoteFile;
-
-        if ($authType === 'password' && $senha !== '') {
-            // Tentar sshpass primeiro
-            if ($this->comandoDisponivel('sshpass')) {
-                $cmd = 'sshpass -p ' . escapeshellarg($senha)
-                    . ' scp -P ' . (int)$porta . ' ' . $sshOpts
-                    . ' ' . escapeshellarg($src) . ' ' . escapeshellarg($localFile) . ' 2>&1';
-                return $this->execCmd($cmd);
-            }
-
-            // Fallback: ext-ssh2 SFTP
-            if (function_exists('\\ssh2_connect')) {
-                $conn = @\ssh2_connect($host, $porta);
-                if ($conn && @\ssh2_auth_password($conn, $usuario, $senha)) {
-                    $sftp = @\ssh2_sftp($conn);
-                    if ($sftp) {
-                        $stream = @fopen('ssh2.sftp://' . intval($sftp) . $remoteFile, 'r');
-                        if ($stream) {
-                            $local = fopen($localFile, 'w');
-                            while (!feof($stream)) { fwrite($local, fread($stream, 8192)); }
-                            fclose($stream);
-                            fclose($local);
-                            return '';
-                        }
-                    }
-                }
-                return 'Falha ao baixar via SFTP (ssh2).';
-            }
-
-            return 'Não foi possível baixar o backup. Instale sshpass ou ext-ssh2 no servidor do painel.';
+        // file_path formato: remote:SERVER_ID:/path/to/file.tar.gz
+        if (!str_starts_with($filePath, 'remote:')) {
+            // Arquivo local (legado)
+            return is_file($filePath) ? $filePath : null;
         }
 
-        // Auth por chave: scp direto
-        $cmd = 'scp -i ' . escapeshellarg($keyPath)
-            . ' -P ' . (int)$porta . ' -o BatchMode=yes ' . $sshOpts
-            . ' ' . escapeshellarg($src) . ' ' . escapeshellarg($localFile) . ' 2>&1';
-        return $this->execCmd($cmd);
-    }
+        $parts = explode(':', $filePath, 3);
+        $serverId = (int)($parts[1] ?? 0);
+        $remotePath = (string)($parts[2] ?? '');
+        if ($serverId <= 0 || $remotePath === '') return null;
 
-    private function comandoDisponivel(string $cmd): bool
-    {
-        $r = @shell_exec('which ' . escapeshellarg($cmd) . ' 2>/dev/null');
-        return trim((string)$r) !== '';
-    }
+        $pdo = BancoDeDados::pdo();
+        $srv = $pdo->prepare('SELECT ip_address, ssh_port, ssh_user, ssh_key_id, ssh_password, ssh_auth_type FROM servers WHERE id = :id');
+        $srv->execute([':id' => $serverId]);
+        $s = $srv->fetch();
+        if (!is_array($s)) return null;
 
-    private function execCmd(string $cmd): string
-    {
-        if (function_exists('exec')) {
-            $linhas = [];
-            $codigo = 0;
-            @exec($cmd, $linhas, $codigo);
-            return trim(implode("\n", $linhas));
+        $host = trim((string)($s['ip_address'] ?? ''));
+        $porta = (int)($s['ssh_port'] ?? 22);
+        $usuario = trim((string)($s['ssh_user'] ?? ''));
+        $authType = (string)($s['ssh_auth_type'] ?? 'key');
+
+        if ($authType === 'password') {
+            $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($s['ssh_password'] ?? ''));
+            $this->docker->definirRemotoComSenha($host, $porta, $usuario, $senha);
+        } else {
+            $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+            $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($s['ssh_key_id'] ?? '');
+            $this->docker->definirRemoto($host, $porta, $usuario, $keyPath);
         }
-        return (string)@shell_exec($cmd);
+
+        // Verificar se o arquivo existe no node
+        try {
+            $check = $this->docker->executar('test -f ' . escapeshellarg($remotePath) . ' && echo EXISTS || echo MISSING');
+            if (!str_contains((string)($check['saida'] ?? ''), 'EXISTS')) return null;
+        } catch (\Throwable) { return null; }
+
+        // Baixar via base64 em chunks (funciona em servidor compartilhado)
+        $localDir = dirname(__DIR__, 3) . '/storage/backups';
+        if (!is_dir($localDir)) @mkdir($localDir, 0775, true);
+        $localFile = $localDir . '/download_' . time() . '_' . mt_rand(1000, 9999) . '.tar.gz';
+
+        try {
+            // Dividir em chunks de 700KB base64 (~500KB binário)
+            $r = $this->docker->executar('wc -c < ' . escapeshellarg($remotePath));
+            $totalBytes = (int)trim((string)($r['saida'] ?? '0'));
+            if ($totalBytes <= 0) return null;
+
+            $chunkBin = 524288; // 512KB por chunk
+            $offset = 0;
+            $fh = fopen($localFile, 'wb');
+            if (!$fh) return null;
+
+            while ($offset < $totalBytes) {
+                $cmd = 'dd if=' . escapeshellarg($remotePath) . ' bs=1 skip=' . $offset . ' count=' . $chunkBin . ' 2>/dev/null | base64';
+                $r = $this->docker->executar($cmd);
+                $b64 = trim((string)($r['saida'] ?? ''));
+                if ($b64 === '') break;
+                $decoded = base64_decode($b64, true);
+                if ($decoded === false) break;
+                fwrite($fh, $decoded);
+                $offset += $chunkBin;
+            }
+            fclose($fh);
+
+            if (!is_file($localFile) || filesize($localFile) < 100) {
+                @unlink($localFile);
+                return null;
+            }
+
+            return $localFile;
+        } catch (\Throwable) {
+            @unlink($localFile);
+            return null;
+        }
     }
 }

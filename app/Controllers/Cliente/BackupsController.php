@@ -124,17 +124,21 @@ final class BackupsController
         if (!is_array($bk)) return Resposta::texto('Backup não encontrado.', 404);
         if ((string)($bk['status'] ?? '') !== 'completed') return Resposta::texto('Backup não está pronto.', 409);
 
-        $path = (string)($bk['file_path'] ?? '');
-        if ($path === '' || !is_file($path)) return Resposta::texto('Arquivo não encontrado.', 404);
+        $filePath = (string)($bk['file_path'] ?? '');
+        $svc = new \LRV\App\Services\Backup\VpsBackupService(new \LRV\App\Services\Provisioning\DockerCli());
+        $localFile = $svc->baixarRemoto($filePath);
 
-        $realPath = realpath($path);
-        $backupDir = realpath(dirname(__DIR__, 3) . '/storage/backups');
-        if ($realPath === false || $backupDir === false || !str_starts_with($realPath, $backupDir . DIRECTORY_SEPARATOR)) {
-            return Resposta::texto('Acesso negado.', 403);
-        }
+        if ($localFile === null) return Resposta::texto('Arquivo não encontrado.', 404);
 
         $nome = 'backup_vps_' . (int)$bk['vps_id'] . '_' . $id . '.tar.gz';
-        return Resposta::arquivo($realPath, $nome);
+        $resp = Resposta::arquivo($localFile, $nome);
+
+        // Limpar arquivo temporário após envio (se é download remoto)
+        if (str_starts_with($filePath, 'remote:')) {
+            register_shutdown_function(function() use ($localFile) { @unlink($localFile); });
+        }
+
+        return $resp;
     }
 
     public function restaurar(Requisicao $req): Resposta

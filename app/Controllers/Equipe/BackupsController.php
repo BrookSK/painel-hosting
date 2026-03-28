@@ -127,37 +127,30 @@ final class BackupsController
     public function baixar(Requisicao $req): Resposta
     {
         $id = (int) ($req->query['id'] ?? 0);
-        if ($id <= 0) {
-            return Resposta::texto('Backup inválido.', 400);
-        }
+        if ($id <= 0) return Resposta::texto('Backup inválido.', 400);
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare('SELECT id, status, file_path, vps_id FROM backups WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $bk = $stmt->fetch();
 
-        if (!is_array($bk)) {
-            return Resposta::texto('Backup não encontrado.', 404);
+        if (!is_array($bk)) return Resposta::texto('Backup não encontrado.', 404);
+        if ((string)($bk['status'] ?? '') !== 'completed') return Resposta::texto('Backup ainda não está pronto.', 409);
+
+        $filePath = (string)($bk['file_path'] ?? '');
+        $svc = new \LRV\App\Services\Backup\VpsBackupService(new \LRV\App\Services\Provisioning\DockerCli());
+        $localFile = $svc->baixarRemoto($filePath);
+
+        if ($localFile === null) return Resposta::texto('Arquivo não encontrado.', 404);
+
+        $nome = 'backup_vps_' . (int)($bk['vps_id'] ?? 0) . '_' . (int)($bk['id'] ?? 0) . '.tar.gz';
+        $resp = Resposta::arquivo($localFile, $nome);
+
+        if (str_starts_with($filePath, 'remote:')) {
+            register_shutdown_function(function() use ($localFile) { @unlink($localFile); });
         }
 
-        if ((string) ($bk['status'] ?? '') !== 'completed') {
-            return Resposta::texto('Backup ainda não está pronto.', 409);
-        }
-
-        $path = (string) ($bk['file_path'] ?? '');
-        if ($path === '' || !is_file($path)) {
-            return Resposta::texto('Arquivo não encontrado.', 404);
-        }
-
-        // Prevenir path traversal: verificar que o arquivo está no diretório de backups
-        $realPath = realpath($path);
-        $backupDir = realpath(dirname(__DIR__, 3) . '/storage/backups');
-        if ($realPath === false || $backupDir === false || !str_starts_with($realPath, $backupDir . DIRECTORY_SEPARATOR)) {
-            return Resposta::texto('Acesso negado.', 403);
-        }
-
-        $nome = 'backup_vps_' . (int) ($bk['vps_id'] ?? 0) . '_' . (int) ($bk['id'] ?? 0) . '.tar.gz';
-        return Resposta::arquivo($realPath, $nome);
+        return $resp;
     }
 
     public function excluir(Requisicao $req): Resposta
