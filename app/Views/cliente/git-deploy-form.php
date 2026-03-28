@@ -49,8 +49,17 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <div style="margin-bottom:14px;">
       <label style="display:block;font-size:13px;margin-bottom:5px;">URL do repositório</label>
-      <input class="input" type="text" name="repo_url" value="<?php echo View::e((string)($dep['repo_url'] ?? '')); ?>" placeholder="https://github.com/usuario/repositorio.git" required />
-      <p style="font-size:12px;color:#64748b;margin-top:4px;">Repositório público ou privado (HTTPS ou SSH). Para privados, use token no URL: <code>https://token@github.com/...</code></p>
+      <input class="input" type="text" name="repo_url" value="<?php echo View::e((string)($dep['repo_url'] ?? '')); ?>" placeholder="https://github.com/usuario/repositorio" required />
+      <p style="font-size:12px;color:#64748b;margin-top:4px;">URL HTTPS ou SSH do repositório (público ou privado).</p>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:13px;margin-bottom:5px;">Token de acesso <span style="font-weight:400;color:#94a3b8;">(para repositórios privados)</span></label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="input" type="password" name="auth_token" id="authTokenInput" value="" placeholder="<?php echo !empty($dep['auth_token_enc']) ? '••••••••••• (já configurado)' : 'ghp_xxxx... ou token pessoal'; ?>" style="flex:1;" autocomplete="off" />
+        <button type="button" onclick="var i=document.getElementById('authTokenInput');i.type=i.type==='password'?'text':'password';" class="botao ghost sm" style="flex-shrink:0;">👁</button>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin-top:4px;">GitHub: <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Settings → Developer settings → Personal access tokens</a>. GitLab: Settings → Access Tokens. Deixe vazio para repositórios públicos<?php echo !empty($dep['auth_token_enc']) ? ' ou para manter o token atual' : ''; ?>.</p>
     </div>
 
     <div class="grid" style="margin-bottom:14px;">

@@ -73,6 +73,7 @@ final class GitDeployController
         $deployPath = trim((string)($req->post['deploy_path'] ?? '/var/www/html'));
         $forceOverwrite = (int)($req->post['force_overwrite'] ?? 1) === 1 ? 1 : 0;
         $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
+        $authToken = trim((string)($req->post['auth_token'] ?? ''));
 
         if ($name === '' || $repoUrl === '' || $vpsId <= 0) {
             return $this->renderizarErro($clienteId, $id, 'Preencha nome, repositório e VPS.');
@@ -104,8 +105,14 @@ final class GitDeployController
         }
 
         if ($id > 0) {
-            $pdo->prepare('UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo WHERE id=:id AND client_id=:c')
-                ->execute([':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':id'=>$id,':c'=>$clienteId]);
+            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo';
+            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':id'=>$id,':c'=>$clienteId];
+            if ($authToken !== '') {
+                $updateSql .= ', auth_token_enc=:at';
+                $params[':at'] = \LRV\App\Services\Infra\SshCrypto::cifrar($authToken);
+            }
+            $updateSql .= ' WHERE id=:id AND client_id=:c';
+            $pdo->prepare($updateSql)->execute($params);
         } else {
             // Gerar domínio temporário se solicitado
             $tempDomain = null;
@@ -130,8 +137,9 @@ final class GitDeployController
                     }
                 }
             }
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:b,:s,:td,:dp,:fo,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+            $tokenEnc = $authToken !== '' ? \LRV\App\Services\Infra\SshCrypto::cifrar($authToken) : null;
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:at,:b,:s,:td,:dp,:fo,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
         }
 
         return Resposta::redirecionar('/cliente/git-deploy');
@@ -256,6 +264,16 @@ final class GitDeployController
         $authType = (string)($dep['ssh_auth_type'] ?? 'password');
         $repoUrl = (string)$dep['repo_url'];
         $branch = (string)($dep['branch'] ?? 'main');
+
+        // Injetar token de autenticação na URL HTTPS se disponível
+        $tokenEnc = (string)($dep['auth_token_enc'] ?? '');
+        if ($tokenEnc !== '') {
+            $token = \LRV\App\Services\Infra\SshCrypto::decifrar($tokenEnc);
+            if ($token !== '' && str_starts_with($repoUrl, 'https://')) {
+                // https://github.com/user/repo → https://token@github.com/user/repo
+                $repoUrl = preg_replace('#^https://#', 'https://' . urlencode($token) . '@', $repoUrl);
+            }
+        }
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
         $forceOverwrite = (int)($dep['force_overwrite'] ?? 1) === 1;
 
