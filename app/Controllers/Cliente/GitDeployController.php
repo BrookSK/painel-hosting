@@ -290,10 +290,10 @@ final class GitDeployController
         try {
             if ($authType === 'password') {
                 $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $fullCmd, 60);
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $fullCmd, 120);
             } else {
                 $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($dep['ssh_key_id'] ?? '');
-                $result = $exec->executar($host, $port, $user, $keyPath, $fullCmd, 60);
+                $result = $exec->executar($host, $port, $user, $keyPath, $fullCmd, 120);
             }
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);

@@ -81,8 +81,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <!-- Console inline -->
     <div id="console-<?php echo $did; ?>" style="display:none;margin-top:12px;background:#0b1020;border-radius:8px;padding:12px;font-family:monospace;font-size:12px;">
-      <div style="color:#64748b;margin-bottom:8px;">📂 <?php echo View::e((string)($d['deploy_path'] ?? '/var/www/html')); ?></div>
-      <div id="console-output-<?php echo $did; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:250px;overflow-y:auto;margin-bottom:8px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="color:#64748b;">📂 <?php echo View::e((string)($d['deploy_path'] ?? '/var/www/html')); ?></span>
+        <div style="display:flex;gap:4px;">
+          <button onclick="runQuickCmd(<?php echo $did; ?>,'curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs 2>&1 && node -v && npm -v')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Node.js 20 + npm">📦 Node.js</button>
+          <button onclick="runQuickCmd(<?php echo $did; ?>,'apt-get update -qq && apt-get install -y composer 2>&1 || curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 2>&1 && composer -V')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Composer">📦 Composer</button>
+          <button onclick="runQuickCmd(<?php echo $did; ?>,'apt-get update -qq && apt-get install -y python3 python3-pip 2>&1 && python3 --version')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Python 3">📦 Python</button>
+        </div>
+      </div>
+      <div id="console-output-<?php echo $did; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-bottom:8px;"></div>
       <div style="display:flex;gap:6px;">
         <span style="color:#10b981;flex-shrink:0;">$</span>
         <input type="text" id="console-input-<?php echo $did; ?>" style="flex:1;background:transparent;border:none;color:#e2e8f0;font-family:monospace;font-size:12px;outline:none;" placeholder="npm install, npm run build, ls -la..." onkeydown="if(event.key==='Enter')runConsoleCmd(<?php echo $did; ?>)" />
@@ -166,6 +173,31 @@ function toggleConsole(id) {
   var el = document.getElementById('console-' + id);
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
   if (el.style.display !== 'none') document.getElementById('console-input-' + id).focus();
+}
+
+function runQuickCmd(id, cmd) {
+  var output = document.getElementById('console-output-' + id);
+  var el = document.getElementById('console-' + id);
+  if (el.style.display === 'none') el.style.display = 'block';
+  output.textContent += '$ ' + cmd.substring(0, 80) + '...\n⏳ Instalando (pode demorar)...\n';
+  output.scrollTop = output.scrollHeight;
+
+  var fd = new FormData();
+  fd.append('_csrf', _csrf);
+  fd.append('id', id);
+  fd.append('command', cmd);
+
+  fetch('/cliente/git-deploy/console', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        output.textContent += (d.output || '✓ Concluído') + '\n';
+      } else {
+        output.textContent += '✘ ' + (d.erro || 'Erro') + '\n';
+      }
+      output.scrollTop = output.scrollHeight;
+    })
+    .catch(function() { output.textContent += '✘ Erro de rede\n'; });
 }
 
 function runConsoleCmd(id) {
