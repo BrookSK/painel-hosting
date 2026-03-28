@@ -69,6 +69,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <button class="botao sm" id="btn-deploy-<?php echo $did; ?>" onclick="executarDeploy(<?php echo $did; ?>)">▶ Deploy agora</button>
       <button class="botao sm ghost" onclick="verLogs(<?php echo $did; ?>)">📋 Histórico</button>
       <a href="/cliente/arquivos?vps_id=<?php echo (int)($d['vps_id'] ?? 0); ?>&path=<?php echo urlencode((string)($d['deploy_path'] ?? '/var/www/html')); ?>&direct=1" class="botao sm ghost" title="Ver arquivos">📁 Arquivos</a>
+      <button class="botao sm ghost" onclick="toggleConsole(<?php echo $did; ?>)" title="Executar comandos na pasta do projeto">💻 Console</button>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirm('Remover esta integração?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
@@ -76,6 +77,17 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <button class="botao danger sm" type="submit">🗑 Remover</button>
       </form>
       <span id="deploy-status-<?php echo $did; ?>" style="font-size:12px;color:#64748b;"></span>
+    </div>
+
+    <!-- Console inline -->
+    <div id="console-<?php echo $did; ?>" style="display:none;margin-top:12px;background:#0b1020;border-radius:8px;padding:12px;font-family:monospace;font-size:12px;">
+      <div style="color:#64748b;margin-bottom:8px;">📂 <?php echo View::e((string)($d['deploy_path'] ?? '/var/www/html')); ?></div>
+      <div id="console-output-<?php echo $did; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:250px;overflow-y:auto;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:6px;">
+        <span style="color:#10b981;flex-shrink:0;">$</span>
+        <input type="text" id="console-input-<?php echo $did; ?>" style="flex:1;background:transparent;border:none;color:#e2e8f0;font-family:monospace;font-size:12px;outline:none;" placeholder="npm install, npm run build, ls -la..." onkeydown="if(event.key==='Enter')runConsoleCmd(<?php echo $did; ?>)" />
+        <button onclick="runConsoleCmd(<?php echo $did; ?>)" style="background:#4F46E5;color:#fff;border:none;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;">▶</button>
+      </div>
     </div>
 
     <!-- Logs accordion -->
@@ -148,6 +160,45 @@ function verLogs(id) {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleConsole(id) {
+  var el = document.getElementById('console-' + id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (el.style.display !== 'none') document.getElementById('console-input-' + id).focus();
+}
+
+function runConsoleCmd(id) {
+  var input = document.getElementById('console-input-' + id);
+  var output = document.getElementById('console-output-' + id);
+  var cmd = input.value.trim();
+  if (!cmd) return;
+
+  output.textContent += '$ ' + cmd + '\n';
+  input.value = '';
+  input.disabled = true;
+
+  var fd = new FormData();
+  fd.append('_csrf', _csrf);
+  fd.append('id', id);
+  fd.append('command', cmd);
+
+  fetch('/cliente/git-deploy/console', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      input.disabled = false;
+      input.focus();
+      if (d.ok) {
+        if (d.output) output.textContent += d.output + '\n';
+      } else {
+        output.textContent += '✘ ' + (d.erro || 'Erro') + '\n';
+      }
+      output.scrollTop = output.scrollHeight;
+    })
+    .catch(function() {
+      input.disabled = false;
+      output.textContent += '✘ Erro de rede\n';
+    });
 }
 </script>
 

@@ -253,6 +253,56 @@ final class GitDeployController
         return Resposta::json(['ok' => true, 'logs' => $logs]);
     }
 
+    /**
+     * Executa um comando na pasta do deploy (console inline).
+     */
+    public function console(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $command = trim((string)($req->post['command'] ?? ''));
+        if ($command === '') return Resposta::json(['ok' => false, 'erro' => 'Comando vazio.']);
+        if (strlen($command) > 2000) return Resposta::json(['ok' => false, 'erro' => 'Comando muito longo.']);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.deploy_path, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.id = :id AND g.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
+
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $command . ' 2>&1';
+
+        $exec = new \LRV\App\Services\Infra\SshExecutor();
+        $host = (string)($dep['ip_address'] ?? '');
+        $port = (int)($dep['ssh_port'] ?? 22);
+        $user = (string)($dep['ssh_user'] ?? 'root');
+        $authType = (string)($dep['ssh_auth_type'] ?? 'password');
+
+        try {
+            if ($authType === 'password') {
+                $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $fullCmd, 60);
+            } else {
+                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($dep['ssh_key_id'] ?? '');
+                $result = $exec->executar($host, $port, $user, $keyPath, $fullCmd, 60);
+            }
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+
+        $output = $this->filtrarOutputSsh((string)($result['saida'] ?? ''));
+        return Resposta::json(['ok' => true, 'output' => $output]);
+    }
+
     public function excluir(Requisicao $req): Resposta
     {
         $clienteId = Auth::clienteId();
