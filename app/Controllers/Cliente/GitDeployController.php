@@ -323,16 +323,16 @@ final class GitDeployController
                 if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
                     $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
                 }
-                // Escrever chave no servidor
+                // Escrever chave no servidor linha por linha para preservar formato
                 $dkPath = '/tmp/.deploy_key_' . (int)($dep['id'] ?? 0);
                 $keyClean = str_replace(["\r\n", "\r"], "\n", trim($privateKey));
-                $keyB64 = base64_encode($keyClean);
-                $writeResult = $runCmd('echo ' . escapeshellarg($keyB64) . ' | base64 -d > ' . escapeshellarg($dkPath) . ' && chmod 600 ' . escapeshellarg($dkPath) . ' && wc -c < ' . escapeshellarg($dkPath));
+                // Escrever via printf que preserva newlines corretamente
+                $writeCmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ' . escapeshellarg($dkPath) . ' && chmod 600 ' . escapeshellarg($dkPath) . ' && head -1 ' . escapeshellarg($dkPath);
+                $writeResult = $runCmd($writeCmd);
                 $writeOut = trim((string)($writeResult['saida'] ?? ''));
-                // Verificar que a chave foi escrita (deve ter > 100 bytes)
-                $writtenBytes = (int)preg_replace('/\D/', '', $writeOut);
-                if ($writtenBytes < 100) {
-                    throw new \RuntimeException('Falha ao escrever deploy key no servidor (bytes: ' . $writtenBytes . ')');
+                // Verificar que a chave começa com o header correto
+                if (!str_contains($writeOut, 'BEGIN') && !str_contains($writeOut, 'PRIVATE')) {
+                    throw new \RuntimeException('Falha ao escrever deploy key no servidor. Header: ' . $writeOut);
                 }
                 $gitSshPrefix = 'GIT_SSH_COMMAND=' . escapeshellarg('ssh -i ' . $dkPath . ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null') . ' ';
             }
