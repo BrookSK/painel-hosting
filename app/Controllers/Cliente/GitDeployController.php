@@ -74,6 +74,7 @@ final class GitDeployController
         $forceOverwrite = (int)($req->post['force_overwrite'] ?? 1) === 1 ? 1 : 0;
         $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
         $authToken = trim((string)($req->post['auth_token'] ?? ''));
+        $postDeployCmd = trim((string)($req->post['post_deploy_cmd'] ?? ''));
 
         if ($name === '' || $repoUrl === '' || $vpsId <= 0) {
             return $this->renderizarErro($clienteId, $id, 'Preencha nome, repositório e VPS.');
@@ -105,8 +106,8 @@ final class GitDeployController
         }
 
         if ($id > 0) {
-            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo';
-            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':id'=>$id,':c'=>$clienteId];
+            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc';
+            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':id'=>$id,':c'=>$clienteId];
             if ($authToken !== '') {
                 $updateSql .= ', auth_token_enc=:at';
                 $params[':at'] = \LRV\App\Services\Infra\SshCrypto::cifrar($authToken);
@@ -148,8 +149,8 @@ final class GitDeployController
                 $deployKeyPrivateEnc = \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']);
             } catch (\Throwable) {}
 
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
         }
 
         return Resposta::redirecionar('/cliente/git-deploy');
@@ -363,7 +364,7 @@ final class GitDeployController
             $runCmd('rm -f ' . escapeshellarg($dkPath) . ' 2>/dev/null');
         }
 
-        // Verificar se o clone/pull falhou
+        // Verificar se o clone/pull falhou (antes de rodar pós-deploy)
         if (str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) {
             $msg = substr($output, 0, 500);
             if (str_contains($output, 'No such device or address') || str_contains($output, 'Could not resolve host')) {
@@ -376,6 +377,14 @@ final class GitDeployController
                 $msg = 'Branch "' . $branch . '" não encontrada. Detalhes: ' . $msg;
             }
             throw new \RuntimeException($msg);
+        }
+
+        // Comando pós-deploy (npm install, composer install, etc.)
+        $postCmd = trim((string)($dep['post_deploy_cmd'] ?? ''));
+        if ($postCmd !== '') {
+            $postResult = $runCmd('cd ' . escapeshellarg($deployPath) . ' && ' . $postCmd . ' 2>&1');
+            $postOutput = $this->filtrarOutputSsh((string)($postResult['saida'] ?? ''));
+            $output .= "\n--- Pós-deploy ---\n" . $postOutput;
         }
 
         // Get last commit info

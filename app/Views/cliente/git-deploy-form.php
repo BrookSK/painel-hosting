@@ -153,6 +153,12 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </label>
     </div>
 
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:13px;margin-bottom:5px;">Comando pós-deploy <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
+      <input class="input" type="text" name="post_deploy_cmd" value="<?php echo View::e((string)($dep['post_deploy_cmd'] ?? '')); ?>" placeholder="npm install && npm run build" />
+      <p style="font-size:12px;color:#64748b;margin-top:4px;">Executado automaticamente após cada deploy. Exemplos: <code>npm install && npm run build</code>, <code>composer install</code>, <code>pip install -r requirements.txt</code></p>
+    </div>
+
     <button class="botao" type="submit"><?php echo $isEdit ? 'Salvar alterações' : 'Conectar repositório'; ?></button>
   </form>
 </div>
