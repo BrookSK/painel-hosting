@@ -318,18 +318,17 @@ final class TerminalController
         $containerId = trim((string)($row['container_id'] ?? ''));
         if ($containerId === '') return Resposta::json(['ok' => false, 'erro' => 'Container não encontrado.'], 400);
 
-        // Validar formato do container ID (só alfanumérico, ponto, hífen, underscore)
-        if (preg_match('/[^a-zA-Z0-9._\-]/', $containerId)) {
-            return Resposta::json(['ok' => false, 'erro' => 'Container ID inválido.'], 400);
-        }
+        // Usar nome do container como fallback (mais confiável que o ID)
+        $containerName = 'vps_client_' . $clienteId . '_' . $vpsId;
 
         $ip = (string)($row['ip_address'] ?? '');
         $porta = (int)($row['ssh_port'] ?? 22);
         $usuario = (string)($row['ssh_user'] ?? 'root');
         $authType = (string)($row['ssh_auth_type'] ?? 'key');
 
-        // Executar comando dentro do container via docker exec
-        $dockerCmd = 'docker exec ' . escapeshellarg($containerId) . ' bash -c ' . escapeshellarg($comando);
+        // Executar comando dentro do container via docker exec (tentar nome, fallback ID)
+        $dockerCmd = 'docker exec ' . escapeshellarg($containerName) . ' bash -c ' . escapeshellarg($comando)
+            . ' 2>&1 || docker exec ' . escapeshellarg($containerId) . ' bash -c ' . escapeshellarg($comando) . ' 2>&1';
 
         $ssh = new SshExecutor();
 

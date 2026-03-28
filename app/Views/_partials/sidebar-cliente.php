@@ -84,6 +84,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 6V4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Arquivos</span>
     </a>
+    <a href="/cliente/vps/terminal" class="nav-item<?php echo _nav_ativo_cli('/cliente/vps/terminal', $_seg); ?>" data-tooltip="Terminal">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l3 2-3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Terminal</span>
+    </a>
     <?php endif; ?>
     <a href="/cliente/backups" class="nav-item<?php echo _nav_ativo_cli('/cliente/backups', $_seg); ?>" data-tooltip="Backups">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2M10 3v10M10 3l3 3M10 3L7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
