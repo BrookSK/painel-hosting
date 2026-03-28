@@ -166,54 +166,64 @@ final class VpsBackupService
 
     private function executarScp(string $host, int $porta, string $usuario, string $authType, string $keyPath, string $senha, string $remoteFile, string $localFile): string
     {
-        // Para auth por senha, baixar via SSH cat em vez de scp
-        if ($authType === 'password' && $senha !== '') {
-            $exec = new \LRV\App\Services\Infra\SshExecutor();
-            $r = $exec->executarComSenha($host, $porta, $usuario, $senha, 'base64 ' . escapeshellarg($remoteFile), 300);
-            $b64 = trim((string) ($r['saida'] ?? ''));
-            if (empty($r['ok']) || $b64 === '') {
-                return 'Falha ao baixar via SSH: ' . $b64;
-            }
-            $decoded = base64_decode($b64, true);
-            if ($decoded === false) {
-                return 'Falha ao decodificar base64 do backup.';
-            }
-            file_put_contents($localFile, $decoded);
-            return '';
-        }
-
-        // Auth por chave: usar scp
-        if (!function_exists('shell_exec') && !function_exists('exec')) {
-            throw new \RuntimeException('Nenhum método de execução disponível (exec/shell_exec).');
-        }
-
         $knownHosts = '/dev/null';
-        if (PHP_OS_FAMILY === 'Windows') {
-            $knownHosts = 'NUL';
-        }
+        if (PHP_OS_FAMILY === 'Windows') $knownHosts = 'NUL';
 
+        $sshOpts = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=' . $knownHosts . ' -o ConnectTimeout=30';
         $src = $usuario . '@' . $host . ':' . $remoteFile;
 
-        $args = [];
-        $args[] = 'scp';
-        $args[] = '-i ' . escapeshellarg($keyPath);
-        $args[] = '-P ' . (int) $porta;
-        $args[] = '-o BatchMode=yes';
-        $args[] = '-o ConnectTimeout=10';
-        $args[] = '-o StrictHostKeyChecking=no';
-        $args[] = '-o UserKnownHostsFile=' . $knownHosts;
-        $args[] = escapeshellarg($src);
-        $args[] = escapeshellarg($localFile);
+        if ($authType === 'password' && $senha !== '') {
+            // Tentar sshpass primeiro
+            if ($this->comandoDisponivel('sshpass')) {
+                $cmd = 'sshpass -p ' . escapeshellarg($senha)
+                    . ' scp -P ' . (int)$porta . ' ' . $sshOpts
+                    . ' ' . escapeshellarg($src) . ' ' . escapeshellarg($localFile) . ' 2>&1';
+                return $this->execCmd($cmd);
+            }
 
-        $cmd = implode(' ', $args);
+            // Fallback: ext-ssh2 SFTP
+            if (function_exists('\\ssh2_connect')) {
+                $conn = @\ssh2_connect($host, $porta);
+                if ($conn && @\ssh2_auth_password($conn, $usuario, $senha)) {
+                    $sftp = @\ssh2_sftp($conn);
+                    if ($sftp) {
+                        $stream = @fopen('ssh2.sftp://' . intval($sftp) . $remoteFile, 'r');
+                        if ($stream) {
+                            $local = fopen($localFile, 'w');
+                            while (!feof($stream)) { fwrite($local, fread($stream, 8192)); }
+                            fclose($stream);
+                            fclose($local);
+                            return '';
+                        }
+                    }
+                }
+                return 'Falha ao baixar via SFTP (ssh2).';
+            }
 
+            return 'Não foi possível baixar o backup. Instale sshpass ou ext-ssh2 no servidor do painel.';
+        }
+
+        // Auth por chave: scp direto
+        $cmd = 'scp -i ' . escapeshellarg($keyPath)
+            . ' -P ' . (int)$porta . ' -o BatchMode=yes ' . $sshOpts
+            . ' ' . escapeshellarg($src) . ' ' . escapeshellarg($localFile) . ' 2>&1';
+        return $this->execCmd($cmd);
+    }
+
+    private function comandoDisponivel(string $cmd): bool
+    {
+        $r = @shell_exec('which ' . escapeshellarg($cmd) . ' 2>/dev/null');
+        return trim((string)$r) !== '';
+    }
+
+    private function execCmd(string $cmd): string
+    {
         if (function_exists('exec')) {
             $linhas = [];
             $codigo = 0;
-            @exec($cmd . ' 2>&1', $linhas, $codigo);
+            @exec($cmd, $linhas, $codigo);
             return trim(implode("\n", $linhas));
         }
-
-        return (string) @shell_exec($cmd . ' 2>&1');
+        return (string)@shell_exec($cmd);
     }
 }
