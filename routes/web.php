@@ -90,6 +90,7 @@ $roteador->post('/equipe/inicializacao/gerar-tokens', [InicializacaoController::
 $roteador->post('/equipe/inicializacao/processar-job', [InicializacaoController::class, 'processarUmJob'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/coletar-status', [InicializacaoController::class, 'enfileirarColetaStatus'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/coletar-status-continuo', [InicializacaoController::class, 'iniciarColetaStatusContinua'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/inicializacao/backup-automatico', [InicializacaoController::class, 'iniciarBackupAutomatico'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/testar-nodes', [InicializacaoController::class, 'testarNodes'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/terminal/instalar-deps', [InicializacaoController::class, 'terminalInstalarDependencias'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/inicializacao/terminal/iniciar-daemon', [InicializacaoController::class, 'terminalIniciarDaemon'], [Middlewares::exigirPermissao('manage_servers')]);
@@ -338,6 +339,12 @@ $roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\Ba
 $roteador->get('/cliente/banco-dados/senha', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'senha'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/banco-dados/phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'phpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
+
+// Backups cliente
+$roteador->get('/cliente/backups', [\LRV\App\Controllers\Cliente\BackupsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/backups/criar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('backup_create', 3, 60)]);
+$roteador->get('/cliente/backups/baixar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'baixar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/backups/restaurar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'restaurar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('backup_restore', 2, 60)]);
 
 // Soluções (landing pages públicas)
 $roteador->get('/solucoes/vps', [\LRV\App\Controllers\SolucoesController::class, 'vps']);

@@ -115,6 +115,13 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <button class="botao" type="submit"><?php echo View::e(I18n::t('eq_init.iniciar')); ?></button>
       </form>
 
+      <form method="post" action="/equipe/inicializacao/backup-automatico" class="card-new" style="margin:0;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <div class="texto" style="margin:0 0 10px 0;"><strong>💾 Backup automático (24h)</strong></div>
+        <p class="texto" style="margin:0 0 8px;font-size:12px;">Inicia o ciclo de backups automáticos para todas as VPS com backup_slots > 0. Reagenda a cada 24h.</p>
+        <button class="botao" type="submit">Iniciar</button>
+      </form>
+
       <form method="post" action="/equipe/inicializacao/testar-nodes" class="card-new" style="margin:0;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <div class="texto" style="margin:0 0 10px 0;"><strong><?php echo View::e(I18n::t('eq_init.testar_nodes')); ?></strong></div>

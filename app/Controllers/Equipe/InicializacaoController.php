@@ -194,6 +194,38 @@ final class InicializacaoController
         return $this->renderizar($erro, $logs, $ok);
     }
 
+    public function iniciarBackupAutomatico(Requisicao $req): Resposta
+    {
+        $logs = [];
+        $ok = false;
+        $erro = '';
+
+        try {
+            $pdo = BancoDeDados::pdo();
+            $st = $pdo->prepare("SELECT id, status FROM jobs WHERE type = 'backup_automatico' AND status IN ('pending','running') ORDER BY id DESC LIMIT 1");
+            $st->execute();
+            $ja = $st->fetch();
+
+            if (is_array($ja)) {
+                $logs[] = 'Já existe um backup_automatico em fila/rodando: #' . (int)($ja['id'] ?? 0);
+                $ok = true;
+                return $this->renderizar($erro, $logs, $ok);
+            }
+
+            $repo = new RepositorioJobs();
+            $id = $repo->criar('backup_automatico', ['reagendar' => true]);
+            $logs[] = 'Backup automático iniciado. Job enfileirado: #' . $id . '. Reagenda a cada 24h.';
+            $ok = true;
+
+            (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
+                'backup.start_auto', 'job', $id, ['job_id' => $id], $req);
+        } catch (\Throwable $e) {
+            $erro = $e->getMessage();
+        }
+
+        return $this->renderizar($erro, $logs, $ok);
+    }
+
     public function terminalInstalarDependencias(Requisicao $req): Resposta
     {
         $logs = [];

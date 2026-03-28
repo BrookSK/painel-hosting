@@ -85,6 +85,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <span>Arquivos</span>
     </a>
     <?php endif; ?>
+    <a href="/cliente/backups" class="nav-item<?php echo _nav_ativo_cli('/cliente/backups', $_seg); ?>" data-tooltip="Backups">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2M10 3v10M10 3l3 3M10 3L7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Backups</span>
+    </a>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.assinaturas')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>

@@ -179,6 +179,145 @@ final class RegistroHandlers
             }
         });
 
+        // Restaurar backup: envia tar.gz de volta para o node e extrai
+        $p->registrar('restaurar_backup', static function (array $payload, ContextoJob $ctx): void {
+            $backupId = (int)($payload['backup_id'] ?? 0);
+            $vpsId = (int)($payload['vps_id'] ?? 0);
+            if ($backupId <= 0 || $vpsId <= 0) throw new \InvalidArgumentException('Dados inválidos.');
+
+            $pdo = BancoDeDados::pdo();
+            $bk = $pdo->prepare("SELECT file_path FROM backups WHERE id = :id AND status = 'completed'");
+            $bk->execute([':id' => $backupId]);
+            $row = $bk->fetch();
+            if (!is_array($row)) throw new \RuntimeException('Backup não encontrado.');
+
+            $localFile = (string)($row['file_path'] ?? '');
+            if ($localFile === '' || !is_file($localFile)) throw new \RuntimeException('Arquivo de backup não encontrado.');
+
+            $vps = $pdo->prepare('SELECT client_id, server_id FROM vps WHERE id = :id');
+            $vps->execute([':id' => $vpsId]);
+            $v = $vps->fetch();
+            if (!is_array($v)) throw new \RuntimeException('VPS não encontrada.');
+
+            $clientId = (int)($v['client_id'] ?? 0);
+            $serverId = (int)($v['server_id'] ?? 0);
+            if ($serverId <= 0) throw new \RuntimeException('VPS sem node.');
+
+            $docker = new DockerCli();
+            $svc = new VpsProvisioningService($docker);
+
+            // Configurar SSH para o node
+            $srv = $pdo->prepare('SELECT ip_address, ssh_port, ssh_user, ssh_key_id, ssh_password, ssh_auth_type FROM servers WHERE id = :id');
+            $srv->execute([':id' => $serverId]);
+            $s = $srv->fetch();
+            if (!is_array($s)) throw new \RuntimeException('Node não encontrado.');
+
+            $host = trim((string)($s['ip_address'] ?? ''));
+            $porta = (int)($s['ssh_port'] ?? 22);
+            $usuario = trim((string)($s['ssh_user'] ?? ''));
+            $authType = (string)($s['ssh_auth_type'] ?? 'key');
+
+            if ($authType === 'password') {
+                $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($s['ssh_password'] ?? ''));
+                $docker->definirRemotoComSenha($host, $porta, $usuario, $senha);
+            } else {
+                $keyDir = rtrim(\LRV\Core\ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($s['ssh_key_id'] ?? '');
+                $docker->definirRemoto($host, $porta, $usuario, $keyPath);
+            }
+
+            $volumeBase = (string)\LRV\Core\Settings::obter('infra.volume_base', '/vps');
+            $remoteFile = '/tmp/restore_' . $backupId . '_' . time() . '.tar.gz';
+
+            // Upload do backup para o node
+            $ctx->log('Enviando backup para o node...');
+            $exec = new \LRV\App\Services\Infra\SshExecutor();
+            $b64 = base64_encode(file_get_contents($localFile));
+            // Enviar em chunks via SSH
+            $chunkSize = 500000; // ~500KB por comando
+            $chunks = str_split($b64, $chunkSize);
+            $docker->executar('rm -f ' . escapeshellarg($remoteFile));
+            foreach ($chunks as $i => $chunk) {
+                $docker->executar('echo ' . escapeshellarg($chunk) . ' >> ' . escapeshellarg($remoteFile . '.b64'));
+            }
+            $docker->executar('base64 -d ' . escapeshellarg($remoteFile . '.b64') . ' > ' . escapeshellarg($remoteFile) . ' && rm -f ' . escapeshellarg($remoteFile . '.b64'));
+
+            // Extrair no volume
+            $ctx->log('Restaurando arquivos...');
+            $dirCliente = rtrim($volumeBase, '/') . '/client_' . $clientId;
+            $docker->executar('rm -rf ' . escapeshellarg($dirCliente) . '/*');
+            $docker->executar('tar -xzf ' . escapeshellarg($remoteFile) . ' -C ' . escapeshellarg($volumeBase));
+            $docker->executar('rm -f ' . escapeshellarg($remoteFile));
+
+            $ctx->log('Backup restaurado.');
+        });
+
+        // Backup automático: cria backups para todas as VPS com backup_slots > 0
+        $p->registrar('backup_automatico', static function (array $payload, ContextoJob $ctx): void {
+            $pdo = BancoDeDados::pdo();
+
+            $stmt = $pdo->query("SELECT v.id AS vps_id, p.backup_slots
+                FROM vps v
+                INNER JOIN plans p ON p.id = v.plan_id
+                WHERE v.deleted_at IS NULL AND v.status = 'running' AND p.backup_slots > 0");
+            $vpsList = $stmt->fetchAll() ?: [];
+
+            $ctx->log('VPS com backup habilitado: ' . count($vpsList));
+            $repo = new \LRV\Core\Jobs\RepositorioJobs();
+
+            foreach ($vpsList as $v) {
+                $vpsId = (int)($v['vps_id'] ?? 0);
+                $maxSlots = (int)($v['backup_slots'] ?? 0);
+                if ($vpsId <= 0) continue;
+
+                // Verificar se já tem backup recente (últimas 20h)
+                $recent = $pdo->prepare("SELECT id FROM backups WHERE vps_id = :v AND created_at > DATE_SUB(NOW(), INTERVAL 20 HOUR) LIMIT 1");
+                $recent->execute([':v' => $vpsId]);
+                if ($recent->fetch()) {
+                    $ctx->log('VPS #' . $vpsId . ': backup recente, pulando.');
+                    continue;
+                }
+
+                // Rotação
+                $countStmt = $pdo->prepare("SELECT COUNT(*) FROM backups WHERE vps_id = :v AND status IN ('completed','running','queued')");
+                $countStmt->execute([':v' => $vpsId]);
+                $existentes = (int)$countStmt->fetchColumn();
+
+                if ($existentes >= $maxSlots) {
+                    $oldStmt = $pdo->prepare("SELECT id, file_path FROM backups WHERE vps_id = :v AND status = 'completed' ORDER BY id ASC LIMIT 1");
+                    $oldStmt->execute([':v' => $vpsId]);
+                    $old = $oldStmt->fetch();
+                    if (is_array($old)) {
+                        $oldPath = (string)($old['file_path'] ?? '');
+                        if ($oldPath !== '' && is_file($oldPath)) @unlink($oldPath);
+                        $pdo->prepare('DELETE FROM backups WHERE id = :id')->execute([':id' => (int)$old['id']]);
+                    }
+                }
+
+                // Criar backup
+                $ins = $pdo->prepare("INSERT INTO backups (vps_id, job_id, status, created_at) VALUES (:v, NULL, 'queued', :c)");
+                $ins->execute([':v' => $vpsId, ':c' => date('Y-m-d H:i:s')]);
+                $backupId = (int)$pdo->lastInsertId();
+
+                $jobId = $repo->criar('backup_vps', ['backup_id' => $backupId]);
+                $pdo->prepare('UPDATE backups SET job_id = :j WHERE id = :id')->execute([':j' => $jobId, ':id' => $backupId]);
+
+                $ctx->log('VPS #' . $vpsId . ': backup #' . $backupId . ' enfileirado (job #' . $jobId . ').');
+            }
+
+            // Reagendar para daqui 24h
+            $reagendar = (bool)($payload['reagendar'] ?? true);
+            if ($reagendar) {
+                try {
+                    $quando = new \DateTimeImmutable('now +24 hours');
+                    $repo->criar('backup_automatico', ['reagendar' => true], $quando);
+                    $ctx->log('Reagendado para: ' . $quando->format('Y-m-d H:i:s'));
+                } catch (\Throwable $e) {
+                    $ctx->log('Falha ao reagendar: ' . $e->getMessage());
+                }
+            }
+        });
+
         $p->registrar('provisionar_vps', static function (array $payload, ContextoJob $ctx): void {
             $vpsId = (int) ($payload['vps_id'] ?? 0);
             if ($vpsId <= 0) {
