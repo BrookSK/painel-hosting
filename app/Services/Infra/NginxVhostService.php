@@ -123,10 +123,28 @@ final class NginxVhostService
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
 
         $logs = [];
-        $vhostName = str_replace('.', '_', $domain);
-        $config = $this->gerarConfigStaticSite($domain, $rootPath);
-
         $ssh = new SshExecutor();
+
+        // Detectar pasta de build (dist/, build/, public/, out/)
+        $detectCmd = 'test -d ' . escapeshellarg($rootPath . '/dist') . ' && echo "dist"'
+            . ' || (test -d ' . escapeshellarg($rootPath . '/build') . ' && echo "build")'
+            . ' || (test -d ' . escapeshellarg($rootPath . '/public') . ' && echo "public")'
+            . ' || (test -d ' . escapeshellarg($rootPath . '/out') . ' && echo "out")'
+            . ' || echo "root"';
+        $detectResult = $this->exec($ssh, $srv, $detectCmd);
+        $buildDir = trim((string)($detectResult['saida'] ?? 'root'));
+        // Filtrar warnings SSH
+        $buildDir = preg_replace('/^.*?(dist|build|public|out|root).*$/s', '$1', $buildDir) ?: 'root';
+
+        $actualRoot = $rootPath;
+        if ($buildDir !== 'root' && $buildDir !== 'public') {
+            $actualRoot = $rootPath . '/' . $buildDir;
+        }
+        $logs[] = 'Root detectado: ' . $actualRoot;
+
+        $vhostName = str_replace('.', '_', $domain);
+        $config = $this->gerarConfigStaticSite($domain, $actualRoot);
+
         $b64 = base64_encode($config);
         $cmd = 'mkdir -p /etc/nginx/sites-available/lrv && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
