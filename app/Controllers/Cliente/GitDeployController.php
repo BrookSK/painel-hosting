@@ -297,11 +297,19 @@ final class GitDeployController
         }
 
         // Ensure DNS resolution works (some VPS containers lack resolv.conf)
-        $dnsCheck = $runCmd('getent hosts github.com 2>&1 || host github.com 2>&1 || nslookup github.com 2>&1 || echo "DNS_FAIL"');
+        $dnsCheck = $runCmd('getent hosts github.com 2>/dev/null && echo "DNS_OK" || echo "DNS_FAIL"');
         $dnsOut = trim((string)($dnsCheck['saida'] ?? ''));
-        if (str_contains($dnsOut, 'DNS_FAIL') || str_contains($dnsOut, 'not found') || $dnsOut === '') {
-            // Try to fix DNS by adding Google DNS
-            $runCmd('echo "nameserver 8.8.8.8" >> /etc/resolv.conf 2>/dev/null; echo "nameserver 1.1.1.1" >> /etc/resolv.conf 2>/dev/null');
+        if (!str_contains($dnsOut, 'DNS_OK')) {
+            // Fix DNS: overwrite resolv.conf with public DNS servers
+            $runCmd('echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1\nnameserver 8.8.4.4" > /etc/resolv.conf 2>/dev/null || (echo "nameserver 8.8.8.8" >> /etc/resolv.conf 2>/dev/null)');
+            // Also install ca-certificates if missing (needed for HTTPS git)
+            $runCmd('which update-ca-certificates >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq ca-certificates 2>/dev/null) || true');
+            // Verify DNS works now
+            $dnsRetry = $runCmd('getent hosts github.com 2>/dev/null && echo "DNS_OK" || curl -sI https://github.com 2>/dev/null | head -1 || echo "DNS_STILL_FAIL"');
+            $dnsRetryOut = trim((string)($dnsRetry['saida'] ?? ''));
+            if (str_contains($dnsRetryOut, 'DNS_STILL_FAIL') && !str_contains($dnsRetryOut, 'DNS_OK') && !str_contains($dnsRetryOut, 'HTTP')) {
+                throw new \RuntimeException('Erro de DNS: o servidor não consegue resolver github.com. Verifique /etc/resolv.conf e a configuração de rede do servidor. Tente adicionar manualmente: echo "nameserver 8.8.8.8" > /etc/resolv.conf');
+            }
         }
 
         // Check if repo already cloned
