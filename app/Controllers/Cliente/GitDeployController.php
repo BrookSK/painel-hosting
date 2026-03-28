@@ -230,6 +230,17 @@ final class GitDeployController
         $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, commit_hash, commit_message, commit_author, output, deployed_at) VALUES (:d,:s,:h,:m,:a,:o,:t)')
             ->execute([':d'=>$id,':s'=>'success',':h'=>$result['hash'],':m'=>$result['message'],':a'=>$result['author'],':o'=>$result['output'],':t'=>date('Y-m-d H:i:s')]);
 
+        // Criar/atualizar vhost Nginx para o subdomínio (se configurado)
+        $deployDomain = trim((string)($dep['subdomain'] ?? ''));
+        $deployServerId = (int)($dep['server_id'] ?? 0);
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        if ($deployDomain !== '' && $deployServerId > 0) {
+            try {
+                $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
+                $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true);
+            } catch (\Throwable) {}
+        }
+
         return Resposta::json(['ok' => true, 'commit' => $result['hash'], 'mensagem' => $result['message']]);
     }
 

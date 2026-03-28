@@ -94,6 +94,60 @@ final class NginxVhostService
             . "}\n";
     }
 
+    private function gerarConfigStaticSite(string $domain, string $rootPath): string
+    {
+        return "server {\n"
+            . "    listen 80;\n"
+            . "    server_name {$domain};\n"
+            . "    root {$rootPath};\n"
+            . "    index index.html index.htm index.php;\n"
+            . "\n"
+            . "    location / {\n"
+            . "        try_files \$uri \$uri/ /index.html;\n"
+            . "    }\n"
+            . "\n"
+            . "    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n"
+            . "        expires 30d;\n"
+            . "        add_header Cache-Control \"public, immutable\";\n"
+            . "    }\n"
+            . "}\n";
+    }
+
+    /**
+     * Cria vhost para servir arquivos estáticos de um diretório (Git Deploy).
+     */
+    public function criarVhostStaticSite(int $serverId, string $domain, string $rootPath, bool $ssl = true): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $logs = [];
+        $vhostName = str_replace('.', '_', $domain);
+        $config = $this->gerarConfigStaticSite($domain, $rootPath);
+
+        $ssh = new SshExecutor();
+        $b64 = base64_encode($config);
+        $cmd = 'mkdir -p /etc/nginx/sites-available/lrv && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok';
+
+        $result = $this->exec($ssh, $srv, $cmd);
+        $logs[] = 'Vhost: ' . trim($result['saida'] ?? '');
+
+        if (!str_contains($result['saida'] ?? '', 'lrv-vhost-ok')) {
+            return ['ok' => false, 'erro' => 'Falha ao criar vhost Nginx.', 'logs' => $logs];
+        }
+
+        if ($ssl) {
+            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --redirect 2>&1; echo lrv-cert-done';
+            $certResult = $this->exec($ssh, $srv, $certCmd);
+            $logs[] = 'SSL: ' . trim($certResult['saida'] ?? '');
+        }
+
+        return ['ok' => true, 'logs' => $logs];
+    }
+
     private function getServer(\PDO $pdo, int $id): ?array
     {
         $stmt = $pdo->prepare('SELECT id, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password FROM servers WHERE id = :id LIMIT 1');
