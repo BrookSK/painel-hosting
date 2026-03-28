@@ -122,7 +122,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     fetch('/cliente/arquivos/listar?'+qsRead()+'&path='+encodeURIComponent(currentPath))
       .then(function(r){return r.json();})
       .then(function(d){
-        if(!d.ok){document.getElementById('fileList').innerHTML='<p class="erro">'+d.erro+'</p>';return;}
+        if(!d.ok){document.getElementById('fileList').innerHTML='<div style="text-align:center;padding:24px;"><p style="color:#ef4444;font-size:13px;margin-bottom:8px;">'+(d.erro||'Erro')+'</p><p style="color:#94a3b8;font-size:12px;">Para ver arquivos de aplicações (WordPress, Node.js, etc.), use o botão 📁 na <a href="/cliente/aplicacoes">listagem de aplicações</a>.</p></div>';return;}
         renderFiles(d.files);
       })
       .catch(function(){document.getElementById('fileList').innerHTML='<p class="erro">Erro de conexão.</p>';});

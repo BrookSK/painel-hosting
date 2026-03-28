@@ -67,10 +67,22 @@ final class ArquivosController
         }
         if (!$result['ok']) return Resposta::json($result);
 
-        $lines = explode("\n", trim($result['output']));
+        $output = trim($result['output']);
+
+        // Detectar erros do ls (No such file or directory, Permission denied, etc.)
+        if (str_contains($output, 'No such file or directory') || str_contains($output, 'cannot access')) {
+            return Resposta::json(['ok' => false, 'erro' => 'Pasta não encontrada: ' . $path]);
+        }
+        if (str_contains($output, 'Permission denied')) {
+            return Resposta::json(['ok' => false, 'erro' => 'Sem permissão para acessar: ' . $path]);
+        }
+
+        $lines = explode("\n", $output);
         $files = [];
         foreach ($lines as $line) {
             if (str_starts_with($line, 'total') || trim($line) === '') continue;
+            // Ignorar linhas que não começam com permissões (d/l/- seguido de rwx)
+            if (!preg_match('/^[dlcbps-][rwxsStT-]{9}/', $line)) continue;
             $parts = preg_split('/\s+/', $line, 8);
             if (count($parts) < 8) continue;
             $name = $parts[7];

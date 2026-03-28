@@ -289,7 +289,7 @@ final class GitDeployController
             // Clone fresh — remove target dir first since git clone needs empty/non-existent dir
             $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
-            $output .= (string)($r['saida'] ?? '');
+            $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
             if ($forceOverwrite) {
                 // Hard reset — discard local changes
@@ -299,19 +299,42 @@ final class GitDeployController
                 $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
             }
             $r = $runCmd($pullCmd);
-            $output .= (string)($r['saida'] ?? '');
+            $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
+        }
+
+        // Verificar se o clone/pull falhou
+        if (str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) {
+            throw new \RuntimeException('Git falhou: ' . substr($output, 0, 500));
         }
 
         // Get last commit info
         $logCmd = 'cd ' . escapeshellarg($deployPath) . ' && git log -1 --format="%H|%s|%an" 2>&1';
         $logResult = $runCmd($logCmd);
-        $logLine = trim((string)($logResult['saida'] ?? ''));
+        $logLine = $this->filtrarOutputSsh(trim((string)($logResult['saida'] ?? '')));
         $parts = explode('|', $logLine, 3);
         $hash = substr(trim($parts[0] ?? ''), 0, 40);
         $message = trim($parts[1] ?? '');
         $author = trim($parts[2] ?? '');
 
         return ['hash' => $hash, 'message' => $message, 'author' => $author, 'output' => $output];
+    }
+
+    /**
+     * Remove warnings SSH e linhas irrelevantes do output.
+     */
+    private function filtrarOutputSsh(string $output): string
+    {
+        $lines = explode("\n", $output);
+        $clean = [];
+        foreach ($lines as $l) {
+            $trimmed = trim($l);
+            if ($trimmed === '') continue;
+            if (str_contains($l, 'Warning: Permanently added')) continue;
+            if (str_contains($l, 'known_hosts')) continue;
+            if (str_starts_with($trimmed, 'Warning:') && !str_contains($l, 'git')) continue;
+            $clean[] = $l;
+        }
+        return implode("\n", $clean);
     }
 
     private function renderizarErro(int $clienteId, int $id, string $erro): Resposta
