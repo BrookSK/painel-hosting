@@ -301,10 +301,24 @@ final class GitDeployController
         $output = '';
 
         if ($isNew) {
+            // Append .git to URL if missing (some repos need it)
+            $cloneUrl = $repoUrl;
+            if (str_starts_with($cloneUrl, 'https://') && !str_ends_with($cloneUrl, '.git')) {
+                $cloneUrl .= '.git';
+            }
             $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath)
-                . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+                . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($cloneUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
+
+            // If failed with .git suffix, retry without it
+            if ((str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) && $cloneUrl !== $repoUrl) {
+                $output = '';
+                $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath)
+                    . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+                $r = $runCmd($cloneCmd);
+                $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
+            }
         } else {
             if ($forceOverwrite) {
                 $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
@@ -320,8 +334,8 @@ final class GitDeployController
             $msg = substr($output, 0, 500);
             if (str_contains($output, 'No such device or address') || str_contains($output, 'Could not resolve host')) {
                 $msg = 'Erro de DNS: o servidor não consegue acessar a internet. Acesse o terminal da VPS e execute: echo "nameserver 8.8.8.8" > /etc/resolv.conf — Detalhes: ' . $msg;
-            } elseif (str_contains($output, 'could not read Username') || str_contains($output, 'Authentication failed')) {
-                $msg = 'Repositório privado: configure um token de acesso no campo "Token de acesso". Detalhes: ' . $msg;
+            } elseif (str_contains($output, 'terminal prompts disabled') || str_contains($output, 'could not read Username') || str_contains($output, 'Authentication failed')) {
+                $msg = 'Autenticação necessária: o repositório requer credenciais. Edite o deploy e cole um token de acesso (GitHub: Settings → Developer settings → Personal access tokens → Fine-grained tokens). Detalhes: ' . $msg;
             } elseif (str_contains($output, 'not found') && str_contains($output, 'repository')) {
                 $msg = 'Repositório não encontrado. Verifique a URL. Detalhes: ' . $msg;
             } elseif (str_contains($output, 'Remote branch') && str_contains($output, 'not found')) {
