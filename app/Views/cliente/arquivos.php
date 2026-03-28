@@ -5,24 +5,39 @@ use LRV\Core\Csrf;
 use LRV\Core\I18n;
 
 $vpsList = $vpsList ?? [];
-$pageTitle = 'Gerenciador de Arquivos';
+$appInfo = $appInfo ?? null;
+$isAppMode = $appInfo !== null;
+$pageTitle = $isAppMode
+    ? 'Arquivos — ' . ($appInfo['template_name'] ?? 'Aplicação')
+    : 'Gerenciador de Arquivos';
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 <meta name="csrf-token" content="<?php echo View::e(Csrf::token()); ?>"/>
 
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
   <div>
-    <div class="page-title">Gerenciador de Arquivos</div>
-    <div class="page-subtitle" style="margin-bottom:0;">Navegue e edite arquivos dentro da sua VPS</div>
+    <div class="page-title"><?php
+      if ($isAppMode) {
+          echo View::e(($appInfo['template_icon'] ?? '📦') . ' ' . ($appInfo['template_name'] ?? 'Aplicação'));
+          if (!empty($appInfo['domain'])) echo ' <span style="font-size:13px;color:#64748b;font-weight:400;">(' . View::e((string)$appInfo['domain']) . ')</span>';
+      } else {
+          echo 'Gerenciador de Arquivos';
+      }
+    ?></div>
+    <div class="page-subtitle" style="margin-bottom:0;"><?php echo $isAppMode ? 'Navegue e edite arquivos da aplicação' : 'Navegue e edite arquivos dentro da sua VPS'; ?></div>
   </div>
-  <select class="input" id="vpsSelect" style="width:auto;min-width:200px;">
-    <?php foreach ($vpsList as $v): ?>
-      <option value="<?php echo (int)$v['id']; ?>">VPS #<?php echo (int)$v['id']; ?> — <?php echo (int)$v['cpu']; ?>vCPU</option>
-    <?php endforeach; ?>
-  </select>
+  <?php if ($isAppMode): ?>
+    <a href="/cliente/aplicacoes" class="botao ghost sm">← Voltar às aplicações</a>
+  <?php else: ?>
+    <select class="input" id="vpsSelect" style="width:auto;min-width:200px;">
+      <?php foreach ($vpsList as $v): ?>
+        <option value="<?php echo (int)$v['id']; ?>">VPS #<?php echo (int)$v['id']; ?> — <?php echo (int)$v['cpu']; ?>vCPU</option>
+      <?php endforeach; ?>
+    </select>
+  <?php endif; ?>
 </div>
 
-<?php if (empty($vpsList)): ?>
+<?php if (!$isAppMode && empty($vpsList)): ?>
   <div class="card-new" style="text-align:center;padding:40px;">
     <p style="color:#94a3b8;">Nenhuma VPS ativa. <a href="/cliente/vps">Ver VPS</a></p>
   </div>
@@ -76,7 +91,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       }
     }
   }
-  var currentVps=vpsSelect.value;
+  var currentVps = vpsSelect ? vpsSelect.value : '';
   var csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
 
   // Build query string with either app_id or vps_id
@@ -89,9 +104,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     else body.set('vps_id', currentVps);
   }
 
-  document.getElementById('vpsSelect').addEventListener('change',function(){
-    currentVps=this.value;currentPath='/';appIdParam='';loadFiles();
-  });
+  if (vpsSelect) {
+    vpsSelect.addEventListener('change',function(){
+      currentVps=this.value;currentPath='/';appIdParam='';loadFiles();
+    });
+  }
 
   function loadFiles(){
     document.getElementById('breadcrumb').textContent=currentPath;

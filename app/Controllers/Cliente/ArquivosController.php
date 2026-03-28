@@ -25,8 +25,24 @@ final class ArquivosController
         $stmt->execute([':c' => $clienteId]);
         $vpsList = $stmt->fetchAll() ?: [];
 
+        // Se veio app_id, buscar info da aplicação para exibir no título
+        $appInfo = null;
+        $appId = (int)($req->query['app_id'] ?? 0);
+        if ($appId > 0) {
+            $aStmt = $pdo->prepare(
+                'SELECT a.id, a.type, a.domain, t.name AS template_name, t.icon AS template_icon
+                 FROM applications a
+                 INNER JOIN vps v ON v.id = a.vps_id
+                 LEFT JOIN app_templates t ON t.id = a.template_id
+                 WHERE a.id = :id AND v.client_id = :c LIMIT 1'
+            );
+            $aStmt->execute([':id' => $appId, ':c' => $clienteId]);
+            $appInfo = $aStmt->fetch() ?: null;
+        }
+
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/arquivos.php', [
             'vpsList' => $vpsList,
+            'appInfo' => $appInfo,
         ]));
     }
 
@@ -229,9 +245,8 @@ final class ArquivosController
         $slug = (string)($row['slug'] ?? 'app');
         $containerName = 'app_' . $slug . '_' . $appId;
 
-        // Tentar pelo nome do container, fallback pelo container_id
-        $dockerCmd = 'docker exec ' . escapeshellarg($containerName) . ' bash -c ' . escapeshellarg($cmd)
-            . ' 2>&1 || docker exec ' . escapeshellarg($containerName) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
+        // Tentar sh primeiro (funciona em todos os containers, incluindo Alpine)
+        $dockerCmd = 'docker exec ' . escapeshellarg($containerName) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
         if ($containerId !== '') {
             $dockerCmd .= ' || docker exec ' . escapeshellarg($containerId) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
         }
