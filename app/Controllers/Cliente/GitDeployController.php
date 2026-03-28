@@ -296,6 +296,14 @@ final class GitDeployController
             $runCmd('apt-get update -qq && apt-get install -y -qq git 2>&1 || yum install -y git 2>&1 || apk add git 2>&1');
         }
 
+        // Ensure DNS resolution works (some VPS containers lack resolv.conf)
+        $dnsCheck = $runCmd('getent hosts github.com 2>&1 || host github.com 2>&1 || nslookup github.com 2>&1 || echo "DNS_FAIL"');
+        $dnsOut = trim((string)($dnsCheck['saida'] ?? ''));
+        if (str_contains($dnsOut, 'DNS_FAIL') || str_contains($dnsOut, 'not found') || $dnsOut === '') {
+            // Try to fix DNS by adding Google DNS
+            $runCmd('echo "nameserver 8.8.8.8" >> /etc/resolv.conf 2>/dev/null; echo "nameserver 1.1.1.1" >> /etc/resolv.conf 2>/dev/null');
+        }
+
         // Check if repo already cloned
         $checkCmd = 'test -d ' . escapeshellarg($deployPath . '/.git') . ' && echo "exists" || echo "new"';
         $checkResult = $runCmd($checkCmd);
@@ -322,7 +330,18 @@ final class GitDeployController
 
         // Verificar se o clone/pull falhou
         if (str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) {
-            throw new \RuntimeException('Git falhou: ' . substr($output, 0, 500));
+            $msg = substr($output, 0, 500);
+            // Mensagens mais amigáveis para erros comuns
+            if (str_contains($output, 'No such device or address') || str_contains($output, 'Could not resolve host')) {
+                $msg = 'Erro de DNS: o servidor não consegue resolver o endereço do GitHub/GitLab. Verifique a configuração de rede da VPS (DNS). Detalhes: ' . $msg;
+            } elseif (str_contains($output, 'could not read Username') || str_contains($output, 'Authentication failed')) {
+                $msg = 'Repositório privado: configure um token de acesso no campo "Token de acesso" nas configurações do deploy. Detalhes: ' . $msg;
+            } elseif (str_contains($output, 'not found') && str_contains($output, 'repository')) {
+                $msg = 'Repositório não encontrado. Verifique a URL e se o repositório existe. Detalhes: ' . $msg;
+            } elseif (str_contains($output, 'Remote branch') && str_contains($output, 'not found')) {
+                $msg = 'Branch "' . $branch . '" não encontrada no repositório. Verifique o nome da branch. Detalhes: ' . $msg;
+            }
+            throw new \RuntimeException($msg);
         }
 
         // Get last commit info
