@@ -284,38 +284,11 @@ final class GitDeployController
         $authType = (string)($dep['ssh_auth_type'] ?? 'password');
         $repoUrl = (string)$dep['repo_url'];
         $branch = (string)($dep['branch'] ?? 'main');
-
-        // Injetar token de autenticação na URL HTTPS se disponível
-        $tokenEnc = (string)($dep['auth_token_enc'] ?? '');
-        if ($tokenEnc !== '') {
-            $token = \LRV\App\Services\Infra\SshCrypto::decifrar($tokenEnc);
-            if ($token !== '' && str_starts_with($repoUrl, 'https://')) {
-                $repoUrl = preg_replace('#^https://#', 'https://' . urlencode($token) . '@', $repoUrl);
-            }
-        }
-
-        // Deploy key: se disponível, preparar para uso via GIT_SSH_COMMAND
-        $deployKeyPrivateEnc = (string)($dep['deploy_key_private_enc'] ?? '');
-        $useDeployKey = false;
-        $sshKeySetup = '';
-        if ($deployKeyPrivateEnc !== '' && $tokenEnc === '') {
-            $privateKey = \LRV\App\Services\Infra\SshCrypto::decifrar($deployKeyPrivateEnc);
-            if ($privateKey !== '') {
-                $useDeployKey = true;
-                // Converter URL HTTPS para SSH se necessário
-                if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
-                    $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
-                }
-                // Escrever chave temporária no servidor e configurar GIT_SSH_COMMAND
-                $keyB64 = base64_encode($privateKey);
-                $sshKeySetup = 'DEPLOY_KEY=$(mktemp) && echo ' . escapeshellarg($keyB64) . ' | base64 -d > $DEPLOY_KEY && chmod 600 $DEPLOY_KEY && export GIT_SSH_COMMAND="ssh -i $DEPLOY_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" && ';
-            }
-        }
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
         $forceOverwrite = (int)($dep['force_overwrite'] ?? 1) === 1;
 
+        // Setup SSH executor
         $exec = new \LRV\App\Services\Infra\SshExecutor();
-
         if ($authType === 'password') {
             $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
             $runCmd = fn(string $cmd) => $exec->executarComSenha($host, $port, $user, $senha, $cmd, 120);
@@ -325,58 +298,78 @@ final class GitDeployController
             $runCmd = fn(string $cmd) => $exec->executar($cmd, $host, $port, $user, $keyPath, 120);
         }
 
-        // Ensure git is installed (try on host first)
-        $runCmd('which git 2>/dev/null || apt-get update -qq && apt-get install -y -qq git 2>/dev/null || true');
+        // Ensure git is installed
+        $runCmd('which git 2>/dev/null || (apt-get update -qq && apt-get install -y -qq git 2>/dev/null) || true');
 
         // Fix DNS if needed
-        $runCmd('grep -q nameserver /etc/resolv.conf 2>/dev/null || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null; getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true');
+        $runCmd('getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true');
+
+        // Autenticação: token HTTPS ou deploy key SSH
+        $tokenEnc = (string)($dep['auth_token_enc'] ?? '');
+        $deployKeyPrivateEnc = (string)($dep['deploy_key_private_enc'] ?? '');
+        $gitSshPrefix = '';
+
+        if ($tokenEnc !== '') {
+            // Opção 1: Token — injetar na URL HTTPS
+            $token = \LRV\App\Services\Infra\SshCrypto::decifrar($tokenEnc);
+            if ($token !== '' && str_starts_with($repoUrl, 'https://')) {
+                $repoUrl = preg_replace('#^https://#', 'https://' . urlencode($token) . '@', $repoUrl);
+            }
+        } elseif ($deployKeyPrivateEnc !== '') {
+            // Opção 2: Deploy key — converter para SSH e usar chave
+            $privateKey = \LRV\App\Services\Infra\SshCrypto::decifrar($deployKeyPrivateEnc);
+            if ($privateKey !== '') {
+                // Converter URL HTTPS para SSH
+                if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
+                    $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
+                }
+                // Escrever chave no servidor
+                $dkPath = '/tmp/.deploy_key_' . (int)($dep['id'] ?? 0);
+                $keyClean = str_replace(["\r\n", "\r"], "\n", trim($privateKey));
+                $keyB64 = base64_encode($keyClean);
+                $writeResult = $runCmd('echo ' . escapeshellarg($keyB64) . ' | base64 -d > ' . escapeshellarg($dkPath) . ' && chmod 600 ' . escapeshellarg($dkPath) . ' && wc -c < ' . escapeshellarg($dkPath));
+                $writeOut = trim((string)($writeResult['saida'] ?? ''));
+                // Verificar que a chave foi escrita (deve ter > 100 bytes)
+                $writtenBytes = (int)preg_replace('/\D/', '', $writeOut);
+                if ($writtenBytes < 100) {
+                    throw new \RuntimeException('Falha ao escrever deploy key no servidor (bytes: ' . $writtenBytes . ')');
+                }
+                $gitSshPrefix = 'GIT_SSH_COMMAND=' . escapeshellarg('ssh -i ' . $dkPath . ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null') . ' ';
+            }
+        }
 
         // Check if repo already cloned
-        $checkCmd = 'test -d ' . escapeshellarg($deployPath . '/.git') . ' && echo "exists" || echo "new"';
-        $checkResult = $runCmd($checkCmd);
+        $checkResult = $runCmd('test -d ' . escapeshellarg($deployPath . '/.git') . ' && echo "exists" || echo "new"');
         $isNew = !str_contains((string)($checkResult['saida'] ?? ''), 'exists');
 
         $output = '';
 
         if ($isNew) {
-            // Append .git to URL if missing (some repos need it)
-            $cloneUrl = $repoUrl;
-            if (str_starts_with($cloneUrl, 'https://') && !str_ends_with($cloneUrl, '.git')) {
-                $cloneUrl .= '.git';
-            }
-            $cloneCmd = $sshKeySetup . 'rm -rf ' . escapeshellarg($deployPath)
-                . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($cloneUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
-            if ($useDeployKey) $cloneCmd .= '; rm -f $DEPLOY_KEY 2>/dev/null';
+            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
-
-            // If failed with .git suffix, retry without it
-            if ((str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) && $cloneUrl !== $repoUrl) {
-                $output = '';
-                $cloneCmd = $sshKeySetup . 'rm -rf ' . escapeshellarg($deployPath)
-                    . ' && GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
-                if ($useDeployKey) $cloneCmd .= '; rm -f $DEPLOY_KEY 2>/dev/null';
-                $r = $runCmd($cloneCmd);
-                $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
-            }
         } else {
             if ($forceOverwrite) {
-                $pullCmd = $sshKeySetup . 'cd ' . escapeshellarg($deployPath) . ' && GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
+                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
             } else {
-                $pullCmd = $sshKeySetup . 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
+                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
             }
-            if ($useDeployKey) $pullCmd .= '; rm -f $DEPLOY_KEY 2>/dev/null';
             $r = $runCmd($pullCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
+        }
+
+        // Limpar deploy key temporária
+        if ($gitSshPrefix !== '' && isset($dkPath)) {
+            $runCmd('rm -f ' . escapeshellarg($dkPath) . ' 2>/dev/null');
         }
 
         // Verificar se o clone/pull falhou
         if (str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) {
             $msg = substr($output, 0, 500);
             if (str_contains($output, 'No such device or address') || str_contains($output, 'Could not resolve host')) {
-                $msg = 'Erro de DNS: o servidor não consegue acessar a internet. Acesse o terminal da VPS e execute: echo "nameserver 8.8.8.8" > /etc/resolv.conf — Detalhes: ' . $msg;
-            } elseif (str_contains($output, 'terminal prompts disabled') || str_contains($output, 'could not read Username') || str_contains($output, 'Authentication failed')) {
-                $msg = 'Autenticação necessária: o repositório requer credenciais. Edite o deploy e cole um token de acesso (GitHub: Settings → Developer settings → Personal access tokens → Fine-grained tokens). Detalhes: ' . $msg;
+                $msg = 'Erro de DNS: o servidor não consegue acessar a internet. Detalhes: ' . $msg;
+            } elseif (str_contains($output, 'Permission denied') || str_contains($output, 'terminal prompts disabled') || str_contains($output, 'could not read Username') || str_contains($output, 'Authentication failed')) {
+                $msg = 'Autenticação falhou. Verifique se a deploy key foi adicionada no repositório ou configure um token de acesso. Detalhes: ' . $msg;
             } elseif (str_contains($output, 'not found') && str_contains($output, 'repository')) {
                 $msg = 'Repositório não encontrado. Verifique a URL. Detalhes: ' . $msg;
             } elseif (str_contains($output, 'Remote branch') && str_contains($output, 'not found')) {
