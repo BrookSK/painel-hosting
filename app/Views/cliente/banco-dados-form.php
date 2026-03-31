@@ -34,7 +34,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="grid" style="margin-bottom:14px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:5px;">Usuário <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
-        <input class="input" type="text" name="db_user" placeholder="Gerado automaticamente" pattern="[a-zA-Z0-9_]+" />
+        <input class="input" type="text" name="db_user" placeholder="Gerado automaticamente" pattern="[a-zA-Z0-9_\-]+" />
         <p style="font-size:12px;color:#64748b;margin-top:4px;">Deixe vazio para gerar automaticamente.</p>
       </div>
       <div>
