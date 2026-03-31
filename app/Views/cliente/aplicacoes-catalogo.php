@@ -90,6 +90,17 @@ $csrf = Csrf::token();
         <?php if (empty($subdomains_disponiveis ?? [])): ?>
           <p style="font-size:11px;color:#f59e0b;margin-top:4px;">Nenhum domínio disponível. <a href="/cliente/dominios">Cadastre um</a>.</p>
         <?php endif; ?>
+        <?php
+          $tempBase = trim((string)\LRV\Core\Settings::obter('infra.temp_domain_base', ''));
+        ?>
+        <?php if ($tempBase !== ''): ?>
+        <div style="margin-top:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;color:#166534;">
+            <input type="checkbox" name="gerar_temp_domain" value="1" id="fTempDomain" style="accent-color:#4F46E5;" onchange="toggleTempDomain()" />
+            🌐 Gerar domínio temporário (ex: <code>wp-abc123.<?php echo View::e($tempBase); ?></code>)
+          </label>
+        </div>
+        <?php endif; ?>
       </div>
       <div class="install-field" id="fRepoWrap" style="display:none;">
         <label>Repositório Git</label>
@@ -120,7 +131,17 @@ function openInstall(id,tpl){
   currentTpl=tpl;
   document.getElementById('fTplId').value=id;
   document.getElementById('installTitle').textContent='Instalar '+tpl.name;
-  document.getElementById('fDomainWrap').style.display=parseInt(tpl.requires_domain)?'':'none';
+  var needsDomain = parseInt(tpl.requires_domain);
+  document.getElementById('fDomainWrap').style.display=needsDomain?'':'none';
+  // Se precisa de domínio mas não tem subdomínios, mostrar o campo mesmo assim (para usar temp domain)
+  if (needsDomain) {
+    var domainSelect = document.getElementById('fDomain');
+    var hasSubs = domainSelect.options.length > 1;
+    if (!hasSubs) {
+      var tempCheck = document.getElementById('fTempDomain');
+      if (tempCheck) { tempCheck.checked = true; toggleTempDomain(); }
+    }
+  }
   document.getElementById('fRepoWrap').style.display=parseInt(tpl.requires_repo)?'':'none';
   var warn=document.getElementById('installWarning');
   if(tpl.slug==='roundcube'){
@@ -183,6 +204,16 @@ function openInstall(id,tpl){
 }
 function closeInstall(){document.getElementById('installBg').classList.remove('open');}
 document.getElementById('installBg').addEventListener('click',function(e){if(e.target===this)closeInstall();});
+
+function toggleTempDomain(){
+  var check=document.getElementById('fTempDomain');
+  var sel=document.getElementById('fDomain');
+  if(check && check.checked){
+    sel.disabled=true;sel.value='';
+  }else{
+    sel.disabled=false;
+  }
+}
 
 function doInstall(e){
   e.preventDefault();

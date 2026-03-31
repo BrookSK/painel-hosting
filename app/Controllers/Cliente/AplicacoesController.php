@@ -111,7 +111,18 @@ final class AplicacoesController
 
         // Validações
         if ((int) ($tpl['requires_domain'] ?? 0) === 1 && $domain === '') {
-            return Resposta::json(['ok' => false, 'erro' => 'Domínio obrigatório para esta aplicação.'], 422);
+            // Verificar se pediu domínio temporário
+            $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
+            if ($gerarTempDomain) {
+                $tempBase = trim((string)\LRV\Core\Settings::obter('infra.temp_domain_base', ''));
+                if ($tempBase !== '') {
+                    $slug = strtolower(preg_replace('/[^a-z0-9]/', '', (string)($tpl['slug'] ?? 'app')));
+                    $domain = $slug . substr(bin2hex(random_bytes(3)), 0, 4) . '.' . $tempBase;
+                }
+            }
+            if ($domain === '') {
+                return Resposta::json(['ok' => false, 'erro' => 'Domínio obrigatório para esta aplicação.'], 422);
+            }
         }
         if ((int) ($tpl['requires_repo'] ?? 0) === 1 && $repository === '') {
             return Resposta::json(['ok' => false, 'erro' => 'Repositório obrigatório para esta aplicação.'], 422);
