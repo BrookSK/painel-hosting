@@ -401,18 +401,37 @@ final class GitDeployController
             // Opção 2: Deploy key — converter para SSH e usar chave
             $privateKey = \LRV\App\Services\Infra\SshCrypto::decifrar($deployKeyPrivateEnc);
             if ($privateKey !== '') {
-                // Converter URL HTTPS para SSH
+                $depId = (int)($dep['id'] ?? 0);
+                // Extrair host e repo path da URL
+                $gitHost = 'github.com';
+                $gitRepoPath = '';
                 if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
-                    $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
+                    $gitHost = $m[1];
+                    $gitRepoPath = $m[2];
+                    // Converter URL HTTPS para SSH com alias único por deploy
+                    $repoUrl = 'git@github-deploy-' . $depId . ':' . $gitRepoPath . '.git';
+                } elseif (preg_match('#^git@([^:]+):(.+?)(?:\.git)?$#', $repoUrl, $m)) {
+                    $gitHost = $m[1];
+                    $gitRepoPath = $m[2];
+                    $repoUrl = 'git@github-deploy-' . $depId . ':' . $gitRepoPath . '.git';
                 }
-                // Instalar a deploy key como chave SSH padrão do usuário
+
+                // Instalar deploy key com nome único por deploy
                 $keyClean = str_replace(["\r\n", "\r"], "\n", trim($privateKey));
+                $keyFileName = 'deploy_key_' . $depId;
+                $hostAlias = 'github-deploy-' . $depId;
                 $installKeyCmd = 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'
-                    . ' && printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ~/.ssh/deploy_key'
-                    . ' && chmod 600 ~/.ssh/deploy_key'
-                    . ' && echo "Host github.com" > ~/.ssh/config'
-                    . ' && echo "  IdentityFile ~/.ssh/deploy_key" >> ~/.ssh/config'
+                    . ' && printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ~/.ssh/' . $keyFileName
+                    . ' && chmod 600 ~/.ssh/' . $keyFileName
+                    // Adicionar/atualizar bloco no config sem sobrescrever outros
+                    . ' && (grep -q "Host ' . $hostAlias . '" ~/.ssh/config 2>/dev/null || echo "" >> ~/.ssh/config)'
+                    . ' && sed -i "/Host ' . $hostAlias . '/,/^$/d" ~/.ssh/config 2>/dev/null; true'
+                    . ' && echo "Host ' . $hostAlias . '" >> ~/.ssh/config'
+                    . ' && echo "  HostName ' . $gitHost . '" >> ~/.ssh/config'
+                    . ' && echo "  IdentityFile ~/.ssh/' . $keyFileName . '" >> ~/.ssh/config'
+                    . ' && echo "  IdentitiesOnly yes" >> ~/.ssh/config'
                     . ' && echo "  StrictHostKeyChecking no" >> ~/.ssh/config'
+                    . ' && echo "" >> ~/.ssh/config'
                     . ' && chmod 600 ~/.ssh/config'
                     . ' && echo KEY_INSTALLED';
                 $keyResult = $runCmd($installKeyCmd);
