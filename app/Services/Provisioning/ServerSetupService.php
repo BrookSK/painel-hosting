@@ -644,7 +644,7 @@ final class ServerSetupService
             ],
             [
                 'name'           => 'Configurar Nginx proxy para phpMyAdmin',
-                'cmd'            => 'test -f /etc/nginx/sites-available/lrv/phpmyadmin.conf && echo "already exists" || (echo \'server { listen 80; server_name pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '; location / { proxy_pass http://127.0.0.1:8080; proxy_set_header Host \\$host; proxy_set_header X-Real-IP \\$remote_addr; } }\' > /etc/nginx/sites-available/lrv/phpmyadmin.conf && ln -sf /etc/nginx/sites-available/lrv/phpmyadmin.conf /etc/nginx/sites-enabled/phpmyadmin.conf && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-pma-nginx-ok)',
+                'cmd'            => 'echo \'server { listen 80; server_name pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '; location / { proxy_pass http://127.0.0.1:8080; proxy_set_header Host \\$host; proxy_set_header X-Real-IP \\$remote_addr; proxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for; } }\' > /etc/nginx/sites-available/lrv/phpmyadmin.conf && ln -sf /etc/nginx/sites-available/lrv/phpmyadmin.conf /etc/nginx/sites-enabled/phpmyadmin.conf && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-pma-nginx-ok',
                 'ok_if_contains' => 'lrv-pma-nginx-ok',
                 'fatal'          => false,
                 'precisa_root'   => true,
