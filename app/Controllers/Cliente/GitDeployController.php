@@ -100,12 +100,18 @@ final class GitDeployController
         if ($subdomain !== '') {
             $subCheck = $pdo->prepare("SELECT id FROM client_subdomains WHERE client_id = :c AND subdomain = :s AND status = 'active' LIMIT 1");
             $subCheck->execute([':c' => $clienteId, ':s' => $subdomain]);
-            if (!$subCheck->fetch()) {
+            $subRow = $subCheck->fetch();
+            if (!is_array($subRow)) {
                 return $this->renderizarErro($clienteId, $id, 'Subdomínio inválido ou não verificado. Cadastre e verifique em Domínios.');
             }
         }
 
+        $subSvc = new \LRV\App\Services\Infra\SubdomainVerificationService();
+
         if ($id > 0) {
+            // Liberar subdomínio anterior
+            $subSvc->liberarUso('git_deploy', $id);
+
             $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc';
             $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':id'=>$id,':c'=>$clienteId];
             if ($authToken !== '') {
@@ -114,6 +120,11 @@ final class GitDeployController
             }
             $updateSql .= ' WHERE id=:id AND client_id=:c';
             $pdo->prepare($updateSql)->execute($params);
+
+            // Marcar novo subdomínio como em uso
+            if ($subdomain !== '' && isset($subRow)) {
+                $subSvc->marcarEmUso((int)$subRow['id'], 'git_deploy', $id);
+            }
         } else {
             // Gerar domínio temporário se solicitado
             $tempDomain = null;
@@ -151,6 +162,12 @@ final class GitDeployController
 
             $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:st,:cr)')
                 ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+
+            // Marcar subdomínio como em uso
+            $newDeployId = (int)$pdo->lastInsertId();
+            if ($subdomain !== '' && isset($subRow) && $newDeployId > 0) {
+                $subSvc->marcarEmUso((int)$subRow['id'], 'git_deploy', $newDeployId);
+            }
         }
 
         return Resposta::redirecionar('/cliente/git-deploy');
@@ -331,6 +348,9 @@ final class GitDeployController
                 (new \LRV\App\Services\Infra\NginxProxyService())->removerProxy((string)$dep['temp_domain']);
             } catch (\Throwable) {}
         }
+
+        // Liberar subdomínio
+        (new \LRV\App\Services\Infra\SubdomainVerificationService())->liberarUso('git_deploy', $id);
 
         $pdo->prepare('DELETE FROM git_deploy_logs WHERE deployment_id = :id')->execute([':id' => $id]);
         $pdo->prepare('DELETE FROM git_deployments WHERE id = :id AND client_id = :c')->execute([':id' => $id, ':c' => $clienteId]);

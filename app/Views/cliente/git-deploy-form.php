@@ -105,12 +105,19 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <?php
             $subSvc = new \LRV\App\Services\Infra\SubdomainVerificationService();
             $subDisp = $subSvc->listarAtivosDisponiveis(LRV\Core\Auth::clienteId() ?? 0);
+            // Incluir o subdomínio atual do deploy (mesmo que esteja em uso por este deploy)
+            $currentSub = (string)($dep['subdomain'] ?? '');
+            $currentSubFound = false;
             foreach ($subDisp as $sd):
+              if ((string)($sd['subdomain'] ?? '') === $currentSub) $currentSubFound = true;
           ?>
-            <option value="<?php echo View::e((string)($sd['subdomain'] ?? '')); ?>" <?php echo ((string)($dep['subdomain'] ?? '')) === (string)($sd['subdomain'] ?? '') ? 'selected' : ''; ?>>
+            <option value="<?php echo View::e((string)($sd['subdomain'] ?? '')); ?>" <?php echo $currentSub === (string)($sd['subdomain'] ?? '') ? 'selected' : ''; ?>>
               <?php echo View::e((string)($sd['subdomain'] ?? '')); ?>
             </option>
           <?php endforeach; ?>
+          <?php if ($currentSub !== '' && !$currentSubFound): ?>
+            <option value="<?php echo View::e($currentSub); ?>" selected><?php echo View::e($currentSub); ?> (atual)</option>
+          <?php endif; ?>
         </select>
         <?php if (empty($subDisp)): ?>
           <p style="font-size:12px;color:#f59e0b;margin-top:4px;">Nenhum subdomínio disponível. <a href="/cliente/dominios">Cadastre um</a>.</p>
