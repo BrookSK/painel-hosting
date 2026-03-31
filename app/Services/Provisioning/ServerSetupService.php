@@ -95,6 +95,10 @@ final class ServerSetupService
             $stLog->execute([':id' => $serverId, ':s' => $stepName]);
             $prev = $stLog->fetchColumn();
             if ($prev === 'ok') {
+                // Rodar callback on_success mesmo quando skipped (para atualizar configs)
+                if (!empty($passo['on_success'])) {
+                    try { ($passo['on_success'])($srv, '(já concluído)'); } catch (\Throwable) {}
+                }
                 return ['ok' => true, 'step' => $stepName, 'status' => 'ok', 'output' => '(já concluído)', 'skipped' => true];
             }
         }
