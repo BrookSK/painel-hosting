@@ -83,14 +83,12 @@ final class BancoDadosController
             return $this->renderizarErro($clienteId, 'Preencha o nome e selecione a VPS.');
         }
 
-        // Sanitize db name
         $dbName = 'db_' . $clienteId . '_' . preg_replace('/[^a-z0-9_]/', '_', strtolower($name));
         $dbUser = $customUser !== '' ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $customUser) : 'u_' . $clienteId . '_' . substr(md5($name . time()), 0, 8);
         $dbPass = $customPass !== '' ? $customPass : bin2hex(random_bytes(12));
 
         $pdo = BancoDeDados::pdo();
 
-        // Validate VPS ownership
         $vStmt = $pdo->prepare("SELECT v.id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id FROM vps v JOIN servers s ON s.id = v.server_id WHERE v.id = :v AND v.client_id = :c AND v.status = 'running' LIMIT 1");
         $vStmt->execute([':v' => $vpsId, ':c' => $clienteId]);
         $vps = $vStmt->fetch();
@@ -98,19 +96,22 @@ final class BancoDadosController
             return $this->renderizarErro($clienteId, 'VPS não encontrada ou inativa.');
         }
 
-        // Insert pending record
-        $pdo->prepare('INSERT INTO client_databases (client_id, vps_id, name, db_name, db_user, db_password_enc, db_host, db_port, status, created_at) VALUES (:c,:v,:n,:dn,:du,:dp,:dh,:dport,:s,:cr)')
+        // Nome do container MySQL dedicado
+        $containerName = 'db_client_' . $clienteId . '_' . preg_replace('/[^a-z0-9]/', '', strtolower($name));
+        $rede = (string)\LRV\Core\Settings::obter('infra.docker_rede', 'lrvcloud_network');
+
+        $pdo->prepare('INSERT INTO client_databases (client_id, vps_id, name, db_name, db_user, db_password_enc, db_host, db_port, container_id, status, created_at) VALUES (:c,:v,:n,:dn,:du,:dp,:dh,:dport,:ci,:s,:cr)')
             ->execute([
                 ':c' => $clienteId, ':v' => $vpsId, ':n' => $name,
                 ':dn' => $dbName, ':du' => $dbUser,
                 ':dp' => SshCrypto::cifrar($dbPass),
-                ':dh' => (string)($vps['ip_address'] ?? '127.0.0.1'),
+                ':dh' => $containerName,
                 ':dport' => 3306,
+                ':ci' => $containerName,
                 ':s' => 'creating', ':cr' => date('Y-m-d H:i:s'),
             ]);
         $dbId = (int)$pdo->lastInsertId();
 
-        // Create MySQL database via SSH
         try {
             $exec = new SshExecutor();
             $authType = (string)($vps['ssh_auth_type'] ?? 'password');
@@ -118,18 +119,24 @@ final class BancoDadosController
             $port = (int)($vps['ssh_port'] ?? 22);
             $user = (string)($vps['ssh_user'] ?? 'root');
 
-            $mysqlCmd = 'docker run --rm mysql:8 mysql -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" -e '
-                . escapeshellarg("CREATE DATABASE IF NOT EXISTS `{$dbName}`; CREATE USER IF NOT EXISTS '{$dbUser}'@'%' IDENTIFIED BY '{$dbPass}'; GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
-                . ' 2>&1 || mysql -u root -e '
-                . escapeshellarg("CREATE DATABASE IF NOT EXISTS `{$dbName}`; CREATE USER IF NOT EXISTS '{$dbUser}'@'%' IDENTIFIED BY '{$dbPass}'; GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
-                . ' 2>&1';
+            // Criar container MySQL dedicado
+            $dockerCmd = 'docker ps -a --format "{{.Names}}" | grep -q ' . escapeshellarg($containerName) . ' && echo "already exists"'
+                . ' || docker run -d'
+                . ' --name ' . escapeshellarg($containerName)
+                . ' --network ' . escapeshellarg($rede)
+                . ' --restart unless-stopped'
+                . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
+                . ' -e MYSQL_DATABASE=' . escapeshellarg($dbName)
+                . ' -e MYSQL_USER=' . escapeshellarg($dbUser)
+                . ' -e MYSQL_PASSWORD=' . escapeshellarg($dbPass)
+                . ' mysql:8 2>&1 && echo lrv-db-ok';
 
             if ($authType === 'password') {
                 $senha = SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $mysqlCmd, 30);
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $dockerCmd, 60);
             } else {
                 $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
-                $result = $exec->executar($mysqlCmd, $host, $port, $user, $keyPath, 30);
+                $result = $exec->executar($host, $port, $user, $keyPath, $dockerCmd, 60);
             }
 
             $pdo->prepare('UPDATE client_databases SET status="active" WHERE id=:id')->execute([':id' => $dbId]);
