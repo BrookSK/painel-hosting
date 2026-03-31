@@ -405,16 +405,20 @@ final class GitDeployController
                 if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
                     $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
                 }
-                // Preparar setup inline (chave + wrapper no mesmo comando)
-                $dkPath = '/tmp/.deploy_key_' . (int)($dep['id'] ?? 0);
-                $wrapperPath = '/tmp/.git_ssh_' . (int)($dep['id'] ?? 0) . '.sh';
+                // Instalar a deploy key como chave SSH padrão do usuário
                 $keyClean = str_replace(["\r\n", "\r"], "\n", trim($privateKey));
-                $keySetupCmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ' . escapeshellarg($dkPath)
-                    . ' && chmod 600 ' . escapeshellarg($dkPath)
-                    . ' && echo ' . escapeshellarg('#!/bin/sh' . "\n" . 'exec ssh -i ' . $dkPath . ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$@"') . ' > ' . escapeshellarg($wrapperPath)
-                    . ' && chmod +x ' . escapeshellarg($wrapperPath);
-                $gitSshPrefix = $keySetupCmd . ' && GIT_SSH=' . escapeshellarg($wrapperPath) . ' ';
-                $useInlineKey = true;
+                $installKeyCmd = 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'
+                    . ' && printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ~/.ssh/deploy_key'
+                    . ' && chmod 600 ~/.ssh/deploy_key'
+                    . ' && echo "Host github.com" > ~/.ssh/config'
+                    . ' && echo "  IdentityFile ~/.ssh/deploy_key" >> ~/.ssh/config'
+                    . ' && echo "  StrictHostKeyChecking no" >> ~/.ssh/config'
+                    . ' && chmod 600 ~/.ssh/config'
+                    . ' && echo KEY_INSTALLED';
+                $keyResult = $runCmd($installKeyCmd);
+                if (!str_contains((string)($keyResult['saida'] ?? ''), 'KEY_INSTALLED')) {
+                    throw new \RuntimeException('Falha ao instalar deploy key: ' . trim((string)($keyResult['saida'] ?? '')));
+                }
             }
         }
 
@@ -438,10 +442,7 @@ final class GitDeployController
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         }
 
-        // Limpar deploy key temporária
-        if ($gitSshPrefix !== '' && isset($dkPath)) {
-            // Limpeza no mesmo comando não é necessária pois /tmp é efêmero entre sessões
-        }
+        // Limpeza não necessária — chave fica em ~/.ssh/deploy_key para futuros deploys
 
         // Verificar se o clone/pull falhou (antes de rodar pós-deploy)
         if (str_contains(strtolower($output), 'fatal:') || str_contains(strtolower($output), 'error:')) {
