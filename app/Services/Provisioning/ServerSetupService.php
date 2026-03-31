@@ -618,6 +618,30 @@ final class ServerSetupService
                 'risco'          => 'baixo',
                 'descricao'      => 'Prepara o Nginx para receber vhosts das aplicações dos clientes.',
             ],
+
+            // ── 10. phpMyAdmin ──
+            [
+                'name'           => 'Instalar phpMyAdmin (Docker)',
+                'cmd'            => 'docker ps -a --format "{{.Names}}" | grep -q lrv_phpmyadmin && echo "already exists" || (docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps) . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e PMA_ABSOLUTE_URI=/phpmyadmin/ phpmyadmin/phpmyadmin:latest 2>&1 && echo lrv-pma-ok)',
+                'ok_if_contains' => 'lrv-pma-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 180,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala o phpMyAdmin como container Docker na porta 8080 (localhost). Clientes podem gerenciar bancos MySQL pela interface web. Configure a URL nas Configurações do sistema após instalar.',
+            ],
+            [
+                'name'           => 'Configurar Nginx proxy para phpMyAdmin',
+                'cmd'            => 'test -f /etc/nginx/sites-available/lrv/phpmyadmin.conf && echo "already exists" || (echo \'server { listen 80; server_name phpmyadmin.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '; location / { proxy_pass http://127.0.0.1:8080; proxy_set_header Host \\$host; proxy_set_header X-Real-IP \\$remote_addr; } }\' > /etc/nginx/sites-available/lrv/phpmyadmin.conf && ln -sf /etc/nginx/sites-available/lrv/phpmyadmin.conf /etc/nginx/sites-enabled/phpmyadmin.conf && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-pma-nginx-ok)',
+                'ok_if_contains' => 'lrv-pma-nginx-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 30,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Cria vhost Nginx para acessar o phpMyAdmin via subdomínio. Depois configure a URL nas Configurações → URL do phpMyAdmin.',
+            ],
         ];
     }
 

@@ -207,6 +207,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <input class="input" type="text" name="infra_temp_domain_base" value="<?php echo View::e((string)($infra_temp_domain_base??'')); ?>" placeholder="apps.lrvweb.com.br" />
         <p class="texto" style="font-size:12px;margin-top:4px;">Configure um wildcard DNS <code>*.apps.lrvweb.com.br</code> → IP do servidor. Clientes sem domínio próprio recebem um subdomínio automático.</p>
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">URL do phpMyAdmin</label>
+        <input class="input" type="text" name="infra_phpmyadmin_url" value="<?php echo View::e((string)($infra_phpmyadmin_url??'')); ?>" placeholder="https://phpmyadmin.seudominio.com" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">URL do phpMyAdmin para gerenciar bancos de dados. Deixe vazio para esconder o botão phpMyAdmin dos clientes.</p>
+      </div>
     </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Servidor Proxy (Domínios Temporários)</h2>
