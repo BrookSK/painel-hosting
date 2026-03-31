@@ -448,7 +448,7 @@ final class GitDeployController
         $output = '';
 
         if ($isNew) {
-            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && echo "CLONE_URL: ' . addslashes($repoUrl) . '" && echo "SSH_CONFIG:" && cat ~/.ssh/config 2>/dev/null && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
