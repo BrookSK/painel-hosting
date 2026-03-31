@@ -405,19 +405,16 @@ final class GitDeployController
                 if (preg_match('#^https?://([^/]+)/(.+?)(?:\.git)?$#', $repoUrl, $m)) {
                     $repoUrl = 'git@' . $m[1] . ':' . $m[2] . '.git';
                 }
-                // Escrever chave no servidor
+                // Preparar setup inline (chave + wrapper no mesmo comando)
                 $dkPath = '/tmp/.deploy_key_' . (int)($dep['id'] ?? 0);
-                $keyClean = str_replace(["\r\n", "\r"], "\n", trim($privateKey));
-                $writeCmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ' . escapeshellarg($dkPath) . ' && chmod 600 ' . escapeshellarg($dkPath) . ' && head -1 ' . escapeshellarg($dkPath);
-                $writeResult = $runCmd($writeCmd);
-                $writeOut = trim((string)($writeResult['saida'] ?? ''));
-                if (!str_contains($writeOut, 'BEGIN') && !str_contains($writeOut, 'PRIVATE')) {
-                    throw new \RuntimeException('Falha ao escrever deploy key no servidor. Header: ' . $writeOut);
-                }
-                // Criar wrapper script para GIT_SSH_COMMAND (mais confiável que variável inline)
                 $wrapperPath = '/tmp/.git_ssh_' . (int)($dep['id'] ?? 0) . '.sh';
-                $runCmd('echo ' . escapeshellarg('#!/bin/sh' . "\n" . 'exec ssh -i ' . $dkPath . ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$@"') . ' > ' . escapeshellarg($wrapperPath) . ' && chmod +x ' . escapeshellarg($wrapperPath));
-                $gitSshPrefix = 'GIT_SSH=' . escapeshellarg($wrapperPath) . ' ';
+                $keyClean = str_replace(["\r\n", "\r"], "\n", trim($privateKey));
+                $keySetupCmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($keyClean . "\n") . ' > ' . escapeshellarg($dkPath)
+                    . ' && chmod 600 ' . escapeshellarg($dkPath)
+                    . ' && echo ' . escapeshellarg('#!/bin/sh' . "\n" . 'exec ssh -i ' . $dkPath . ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$@"') . ' > ' . escapeshellarg($wrapperPath)
+                    . ' && chmod +x ' . escapeshellarg($wrapperPath);
+                $gitSshPrefix = $keySetupCmd . ' && GIT_SSH=' . escapeshellarg($wrapperPath) . ' ';
+                $useInlineKey = true;
             }
         }
 
@@ -443,7 +440,7 @@ final class GitDeployController
 
         // Limpar deploy key temporária
         if ($gitSshPrefix !== '' && isset($dkPath)) {
-            $runCmd('rm -f ' . escapeshellarg($dkPath) . ' ' . escapeshellarg($dkPath . '.sh') . ' /tmp/.git_ssh_' . (int)($dep['id'] ?? 0) . '.sh 2>/dev/null');
+            // Limpeza no mesmo comando não é necessária pois /tmp é efêmero entre sessões
         }
 
         // Verificar se o clone/pull falhou (antes de rodar pós-deploy)
