@@ -633,7 +633,7 @@ final class ServerSetupService
             // ── 10. phpMyAdmin ──
             [
                 'name'           => 'Instalar phpMyAdmin (Docker)',
-                'cmd'            => 'docker ps -a --format "{{.Names}}" | grep -q lrv_phpmyadmin && echo "already exists" || (docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps) . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e PMA_ABSOLUTE_URI=/phpmyadmin/ phpmyadmin/phpmyadmin:latest 2>&1 && echo lrv-pma-ok)',
+                'cmd'            => 'docker ps -a --format "{{.Names}}" | grep -q lrv_phpmyadmin && echo "already exists" || (docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps) . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e PMA_ABSOLUTE_URI=http://pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '/ phpmyadmin/phpmyadmin:latest 2>&1 && echo lrv-pma-ok)',
                 'ok_if_contains' => 'lrv-pma-ok',
                 'fatal'          => false,
                 'precisa_root'   => true,
