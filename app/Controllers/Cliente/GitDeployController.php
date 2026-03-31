@@ -441,17 +441,24 @@ final class GitDeployController
             }
         }
 
-        // Check if repo already cloned
-        $checkResult = $runCmd('test -d ' . escapeshellarg($deployPath . '/.git') . ' && echo "exists" || echo "new"');
-        $isNew = !str_contains((string)($checkResult['saida'] ?? ''), 'exists');
+        // Check if repo already cloned (and if it's the correct repo)
+        $checkResult = $runCmd('test -d ' . escapeshellarg($deployPath . '/.git') . ' && git -C ' . escapeshellarg($deployPath) . ' remote get-url origin 2>/dev/null || echo "new"');
+        $currentRemote = trim((string)($checkResult['saida'] ?? 'new'));
+        // Se o remote não bate com o repo atual, forçar clone limpo
+        $isNew = ($currentRemote === 'new' || $currentRemote === '');
+        if (!$isNew && !str_contains($currentRemote, basename(rtrim($repoUrl, '.git')))) {
+            $isNew = true; // Remote diferente, precisa clonar de novo
+        }
 
         $output = '';
 
         if ($isNew) {
-            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && echo "CLONE_URL: ' . addslashes($repoUrl) . '" && echo "SSH_CONFIG:" && cat ~/.ssh/config 2>/dev/null && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
+            // Atualizar remote origin para a URL correta (pode ter mudado)
+            $runCmd('cd ' . escapeshellarg($deployPath) . ' && git remote set-url origin ' . escapeshellarg($repoUrl) . ' 2>/dev/null');
             if ($forceOverwrite) {
                 $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
             } else {
