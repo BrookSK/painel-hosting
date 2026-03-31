@@ -68,7 +68,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="/cliente/banco-dados/ver?id=<?php echo $bid; ?>" class="botao sm">Ver detalhes / SQL</a>
-      <a href="/cliente/banco-dados/phpmyadmin?id=<?php echo $bid; ?>" target="_blank" class="botao ghost sm" title="Abrir phpMyAdmin">🐬 phpMyAdmin</a>
+      <?php if (trim((string)\LRV\Core\Settings::obter('infra.phpmyadmin_url', '')) !== ''): ?>
+        <a href="/cliente/banco-dados/phpmyadmin?id=<?php echo $bid; ?>" target="_blank" class="botao ghost sm" title="Abrir phpMyAdmin">🐬 phpMyAdmin</a>
+      <?php endif; ?>
       <form method="post" action="/cliente/banco-dados/excluir" style="display:inline;" onsubmit="return confirm('Remover banco <?php echo View::e((string)($b['name'] ?? '')); ?>? Os dados serão perdidos.')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $bid; ?>" />

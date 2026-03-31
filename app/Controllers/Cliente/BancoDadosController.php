@@ -70,6 +70,8 @@ final class BancoDadosController
 
         $vpsId = (int)($req->post['vps_id'] ?? 0);
         $name = trim((string)($req->post['name'] ?? ''));
+        $customUser = trim((string)($req->post['db_user'] ?? ''));
+        $customPass = trim((string)($req->post['db_password'] ?? ''));
 
         if ($name === '' || $vpsId <= 0) {
             return $this->renderizarErro($clienteId, 'Preencha o nome e selecione a VPS.');
@@ -77,8 +79,8 @@ final class BancoDadosController
 
         // Sanitize db name
         $dbName = 'db_' . $clienteId . '_' . preg_replace('/[^a-z0-9_]/', '_', strtolower($name));
-        $dbUser = 'u_' . $clienteId . '_' . substr(md5($name . time()), 0, 8);
-        $dbPass = bin2hex(random_bytes(12));
+        $dbUser = $customUser !== '' ? preg_replace('/[^a-zA-Z0-9_]/', '', $customUser) : 'u_' . $clienteId . '_' . substr(md5($name . time()), 0, 8);
+        $dbPass = $customPass !== '' ? $customPass : bin2hex(random_bytes(12));
 
         $pdo = BancoDeDados::pdo();
 
