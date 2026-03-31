@@ -218,6 +218,42 @@ final class BancoDadosController
 
         $id = (int)($req->post['id'] ?? 0);
         $pdo = BancoDeDados::pdo();
+
+        // Buscar dados do banco para dropar no servidor
+        $stmt = $pdo->prepare('SELECT cd.db_name, cd.db_user, cd.vps_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id FROM client_databases cd JOIN vps v ON v.id = cd.vps_id JOIN servers s ON s.id = v.server_id WHERE cd.id = :id AND cd.client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $db = $stmt->fetch();
+
+        if (is_array($db)) {
+            $dbName = (string)($db['db_name'] ?? '');
+            $dbUser = (string)($db['db_user'] ?? '');
+
+            // Dropar banco e usuário no servidor via SSH
+            if ($dbName !== '') {
+                try {
+                    $exec = new SshExecutor();
+                    $host = (string)($db['ip_address'] ?? '');
+                    $port = (int)($db['ssh_port'] ?? 22);
+                    $user = (string)($db['ssh_user'] ?? 'root');
+                    $authType = (string)($db['ssh_auth_type'] ?? 'password');
+
+                    $dropCmd = 'mysql -u root -e '
+                        . escapeshellarg("DROP DATABASE IF EXISTS `{$dbName}`; DROP USER IF EXISTS '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
+                        . ' 2>&1';
+
+                    if ($authType === 'password') {
+                        $senha = SshCrypto::decifrar((string)($db['ssh_password'] ?? ''));
+                        $exec->executarComSenha($host, $port, $user, $senha, $dropCmd, 15);
+                    } else {
+                        $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($db['ssh_key_id'] ?? '');
+                        $exec->executar($host, $port, $user, $keyPath, $dropCmd, 15);
+                    }
+                } catch (\Throwable) {
+                    // Continuar mesmo se falhar — pelo menos remove o registro
+                }
+            }
+        }
+
         $pdo->prepare('DELETE FROM client_databases WHERE id = :id AND client_id = :c')->execute([':id' => $id, ':c' => $clienteId]);
 
         return Resposta::redirecionar('/cliente/banco-dados');
