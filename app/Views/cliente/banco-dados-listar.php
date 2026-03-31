@@ -46,8 +46,27 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <span style="font-size:11px;padding:3px 10px;border-radius:99px;background:<?php echo $statusColor; ?>20;color:<?php echo $statusColor; ?>;font-weight:600;"><?php echo $statusLabel; ?></span>
     </div>
 
+    <!-- Associação com domínio -->
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:11px;color:#94a3b8;">🌐</span>
+      <select id="db-note-<?php echo $bid; ?>" onchange="salvarNota(<?php echo $bid; ?>)" style="border:none;border-bottom:1px dashed #e2e8f0;background:transparent;font-size:12px;color:#475569;padding:2px 0;outline:none;cursor:pointer;">
+        <option value="">Nenhum domínio associado</option>
+        <?php foreach (($dominiosCliente ?? []) as $dc): ?>
+          <option value="<?php echo View::e((string)($dc['subdomain'] ?? '')); ?>" <?php echo ((string)($b['notes'] ?? '')) === (string)($dc['subdomain'] ?? '') ? 'selected' : ''; ?>><?php echo View::e((string)($dc['subdomain'] ?? '')); ?></option>
+        <?php endforeach; ?>
+        <?php if (!empty($b['notes']) && !in_array((string)($b['notes'] ?? ''), array_column($dominiosCliente ?? [], 'subdomain'))): ?>
+          <option value="<?php echo View::e((string)$b['notes']); ?>" selected><?php echo View::e((string)$b['notes']); ?></option>
+        <?php endif; ?>
+      </select>
+    </div>
+
     <!-- Credenciais inline -->
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+        <span style="font-size:11px;color:#64748b;width:55px;flex-shrink:0;">Host</span>
+        <code id="db-host-<?php echo $bid; ?>" style="flex:1;font-size:12px;color:#1e293b;"><?php echo View::e($dbHost); ?></code>
+        <button type="button" onclick="copiarDb('db-host-<?php echo $bid; ?>')" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;">Copiar</button>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
         <span style="font-size:11px;color:#64748b;width:55px;flex-shrink:0;">Banco</span>
         <code id="db-name-<?php echo $bid; ?>" style="flex:1;font-size:12px;color:#1e293b;"><?php echo View::e($dbName); ?></code>
@@ -129,6 +148,20 @@ function toggleSenha(bid) {
       }
     })
     .catch(function() { el.textContent = '(erro)'; });
+}
+
+function salvarNota(bid) {
+  var el = document.getElementById('db-note-' + bid);
+  if (!el) return;
+  var fd = new FormData();
+  fd.append('_csrf', '<?php echo View::e(Csrf::token()); ?>');
+  fd.append('id', bid);
+  fd.append('notes', el.value);
+  fetch('/cliente/banco-dados/nota', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) { el.style.borderBottomColor = '#10b981'; setTimeout(function(){ el.style.borderBottomColor = '#e2e8f0'; }, 1500); }
+    });
 }
 </script>
 <?php endif; ?>

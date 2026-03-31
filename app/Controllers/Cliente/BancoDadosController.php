@@ -36,9 +36,15 @@ final class BancoDadosController
         $cStmt->execute([$clienteId]);
         $cliente = $cStmt->fetch() ?: [];
 
+        // Buscar domínios do cliente para associação
+        $dStmt = $pdo->prepare("SELECT subdomain FROM client_subdomains WHERE client_id = :c AND status = 'active' ORDER BY subdomain");
+        $dStmt->execute([':c' => $clienteId]);
+        $dominiosCliente = $dStmt->fetchAll() ?: [];
+
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/banco-dados-listar.php', [
             'bancos'  => $bancos,
             'cliente' => $cliente,
+            'dominiosCliente' => $dominiosCliente,
         ]));
     }
 
@@ -257,6 +263,22 @@ final class BancoDadosController
         $pdo->prepare('DELETE FROM client_databases WHERE id = :id AND client_id = :c')->execute([':id' => $id, ':c' => $clienteId]);
 
         return Resposta::redirecionar('/cliente/banco-dados');
+    }
+
+    /**
+     * AJAX: salvar nota/associação de um banco.
+     */
+    public function nota(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $notes = trim((string)($req->post['notes'] ?? ''));
+        $pdo = BancoDeDados::pdo();
+        $pdo->prepare('UPDATE client_databases SET notes = :n WHERE id = :id AND client_id = :c')
+            ->execute([':n' => $notes !== '' ? $notes : null, ':id' => $id, ':c' => $clienteId]);
+        return Resposta::json(['ok' => true]);
     }
 
     /**

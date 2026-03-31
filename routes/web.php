@@ -339,6 +339,7 @@ $roteador->get('/cliente/banco-dados/ver', [\LRV\App\Controllers\Cliente\BancoDa
 $roteador->post('/cliente/banco-dados/sql', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'executarSql'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('db_sql', 30, 60)]);
 $roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/banco-dados/senha', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'senha'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/banco-dados/nota', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'nota'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/banco-dados/phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'phpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
