@@ -163,6 +163,13 @@ final class ServerSetupService
             $status = $ok ? 'ok' : 'error';
             $this->upsertLog($pdo, $serverId, $stepName, $status, $saida);
 
+            // Callback pós-sucesso (ex: salvar URL do phpMyAdmin)
+            if ($ok && !empty($passo['on_success'])) {
+                try {
+                    ($passo['on_success'])($srv, $saida);
+                } catch (\Throwable) {}
+            }
+
             return [
                 'ok' => $ok,
                 'step' => $stepName,
@@ -629,18 +636,38 @@ final class ServerSetupService
                 'timeout'        => 180,
                 'essencial'      => false,
                 'risco'          => 'nenhum',
-                'descricao'      => 'Instala o phpMyAdmin como container Docker na porta 8080 (localhost). Clientes podem gerenciar bancos MySQL pela interface web. Configure a URL nas Configurações do sistema após instalar.',
+                'descricao'      => 'Instala o phpMyAdmin como container Docker na porta 8080 (localhost). Clientes podem gerenciar bancos MySQL pela interface web.',
             ],
             [
                 'name'           => 'Configurar Nginx proxy para phpMyAdmin',
-                'cmd'            => 'test -f /etc/nginx/sites-available/lrv/phpmyadmin.conf && echo "already exists" || (echo \'server { listen 80; server_name phpmyadmin.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '; location / { proxy_pass http://127.0.0.1:8080; proxy_set_header Host \\$host; proxy_set_header X-Real-IP \\$remote_addr; } }\' > /etc/nginx/sites-available/lrv/phpmyadmin.conf && ln -sf /etc/nginx/sites-available/lrv/phpmyadmin.conf /etc/nginx/sites-enabled/phpmyadmin.conf && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-pma-nginx-ok)',
+                'cmd'            => 'test -f /etc/nginx/sites-available/lrv/phpmyadmin.conf && echo "already exists" || (echo \'server { listen 80; server_name pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '; location / { proxy_pass http://127.0.0.1:8080; proxy_set_header Host \\$host; proxy_set_header X-Real-IP \\$remote_addr; } }\' > /etc/nginx/sites-available/lrv/phpmyadmin.conf && ln -sf /etc/nginx/sites-available/lrv/phpmyadmin.conf /etc/nginx/sites-enabled/phpmyadmin.conf && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-pma-nginx-ok)',
                 'ok_if_contains' => 'lrv-pma-nginx-ok',
                 'fatal'          => false,
                 'precisa_root'   => true,
                 'timeout'        => 30,
                 'essencial'      => false,
                 'risco'          => 'nenhum',
-                'descricao'      => 'Cria vhost Nginx para acessar o phpMyAdmin via subdomínio. Depois configure a URL nas Configurações → URL do phpMyAdmin.',
+                'descricao'      => 'Cria vhost Nginx para phpMyAdmin em pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', ''), '.') . '. A URL é salva automaticamente no servidor.',
+                'on_success'     => function(array $srv, string $output) use ($serverId): void {
+                    $tempBase = trim((string)Settings::obter('infra.temp_domain_base', ''), '.');
+                    $serverIp = trim((string)($srv['ip_address'] ?? ''));
+                    if ($tempBase !== '' && $serverIp !== '') {
+                        $pmaHost = 'pma-' . $serverId . '.' . $tempBase;
+                        $pmaUrl = 'http://' . $pmaHost;
+                        // Salvar URL no servidor
+                        $pdo = \LRV\Core\BancoDeDados::pdo();
+                        $pdo->prepare('UPDATE servers SET phpmyadmin_url = :u WHERE id = :id')
+                            ->execute([':u' => $pmaUrl, ':id' => $serverId]);
+                        // Criar registro DNS no Cloudflare automaticamente
+                        try {
+                            $cf = new \LRV\App\Services\Cloudflare\CloudflareService();
+                            $zoneId = $cf->obterZoneIdDoTempDomain();
+                            if ($zoneId !== '') {
+                                $cf->criarRegistroA($zoneId, $pmaHost, $serverIp, false);
+                            }
+                        } catch (\Throwable) {}
+                    }
+                },
             ],
         ];
     }

@@ -68,7 +68,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="/cliente/banco-dados/ver?id=<?php echo $bid; ?>" class="botao sm">Ver detalhes / SQL</a>
-      <?php if (trim((string)\LRV\Core\Settings::obter('infra.phpmyadmin_url', '')) !== ''): ?>
+      <?php
+        // Verificar se o servidor desta VPS tem phpMyAdmin
+        $pmaCheck = \LRV\Core\BancoDeDados::pdo()->prepare('SELECT s.phpmyadmin_url FROM vps v JOIN servers s ON s.id = v.server_id WHERE v.id = :v LIMIT 1');
+        $pmaCheck->execute([':v' => (int)($b['vps_id'] ?? 0)]);
+        $pmaRow = $pmaCheck->fetch();
+        $hasPma = !empty($pmaRow['phpmyadmin_url']) || trim((string)\LRV\Core\Settings::obter('infra.phpmyadmin_url', '')) !== '';
+      ?>
+      <?php if ($hasPma): ?>
         <a href="/cliente/banco-dados/phpmyadmin?id=<?php echo $bid; ?>" target="_blank" class="botao ghost sm" title="Abrir phpMyAdmin">🐬 phpMyAdmin</a>
       <?php endif; ?>
       <form method="post" action="/cliente/banco-dados/excluir" style="display:inline;" onsubmit="return confirm('Remover banco <?php echo View::e((string)($b['name'] ?? '')); ?>? Os dados serão perdidos.')">
