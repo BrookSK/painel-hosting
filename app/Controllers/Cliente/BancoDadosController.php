@@ -309,8 +309,7 @@ final class BancoDadosController
             return Resposta::texto('phpMyAdmin não instalado neste servidor. Execute o passo "Instalar phpMyAdmin" na inicialização do servidor.', 500);
         }
 
-        $url = rtrim($pmaUrl, '/') . '/?server=' . urlencode((string)($row['db_host'] ?? ''))
-            . '&db=' . urlencode((string)($row['db_name'] ?? ''));
+        $url = rtrim($pmaUrl, '/') . '/';
 
         return Resposta::redirecionar($url);
     }
