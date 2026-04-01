@@ -94,8 +94,9 @@ final class NginxVhostService
             . "}\n";
     }
 
-    private function gerarConfigStaticSite(string $domain, string $rootPath): string
+    private function gerarConfigStaticSite(string $domain, string $rootPath, string $phpVersion = '8.3'): string
     {
+        $fpmSock = 'php' . $phpVersion . '-fpm.sock';
         return "server {\n"
             . "    listen 80;\n"
             . "    server_name {$domain};\n"
@@ -109,7 +110,7 @@ final class NginxVhostService
             . "    location ~ \\.php\$ {\n"
             . "        include fastcgi_params;\n"
             . "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n"
-            . "        fastcgi_pass unix:/run/php/php-fpm.sock;\n"
+            . "        fastcgi_pass unix:/run/php/{$fpmSock};\n"
             . "        fastcgi_index index.php;\n"
             . "    }\n"
             . "\n"
@@ -134,7 +135,7 @@ final class NginxVhostService
     /**
      * Cria vhost para servir arquivos estáticos de um diretório (Git Deploy).
      */
-    public function criarVhostStaticSite(int $serverId, string $domain, string $rootPath, bool $ssl = true): array
+    public function criarVhostStaticSite(int $serverId, string $domain, string $rootPath, bool $ssl = true, string $phpVersion = '8.3', array $phpSettings = []): array
     {
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
@@ -161,7 +162,7 @@ final class NginxVhostService
         $logs[] = 'Root detectado: ' . $actualRoot;
 
         $vhostName = str_replace('.', '_', $domain);
-        $config = $this->gerarConfigStaticSite($domain, $actualRoot);
+        $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion);
 
         $b64 = base64_encode($config);
         $cmd = 'mkdir -p /etc/nginx/sites-available/lrv && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
@@ -179,6 +180,24 @@ final class NginxVhostService
             $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --redirect 2>&1; echo lrv-cert-done';
             $certResult = $this->exec($ssh, $srv, $certCmd);
             $logs[] = 'SSL: ' . trim($certResult['saida'] ?? '');
+        }
+
+        // Aplicar configurações PHP personalizadas
+        if (!empty($phpSettings)) {
+            $iniLines = '';
+            foreach ($phpSettings as $key => $val) {
+                if ($val !== '' && preg_match('/^[a-z_]+$/', $key)) {
+                    $iniLines .= $key . ' = ' . $val . "\n";
+                }
+            }
+            if ($iniLines !== '') {
+                $iniB64 = base64_encode($iniLines);
+                $iniPath = '/etc/php/' . $phpVersion . '/fpm/conf.d/99-lrv-' . str_replace('.', '_', $domain) . '.ini';
+                $phpCmd = 'echo ' . escapeshellarg($iniB64) . ' | base64 -d > ' . escapeshellarg($iniPath)
+                    . ' && systemctl reload php' . $phpVersion . '-fpm 2>&1 && echo lrv-php-ok';
+                $phpResult = $this->exec($ssh, $srv, $phpCmd);
+                $logs[] = 'PHP config: ' . trim($phpResult['saida'] ?? '');
+            }
         }
 
         return ['ok' => true, 'logs' => $logs];

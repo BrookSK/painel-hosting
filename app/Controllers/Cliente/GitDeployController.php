@@ -75,6 +75,14 @@ final class GitDeployController
         $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
         $authToken = trim((string)($req->post['auth_token'] ?? ''));
         $postDeployCmd = trim((string)($req->post['post_deploy_cmd'] ?? ''));
+        $phpVersion = trim((string)($req->post['php_version'] ?? '8.3'));
+        $phpSettings = json_encode([
+            'memory_limit' => trim((string)($req->post['php_memory_limit'] ?? '256M')),
+            'upload_max_filesize' => trim((string)($req->post['php_upload_max'] ?? '64M')),
+            'post_max_size' => trim((string)($req->post['php_post_max'] ?? '64M')),
+            'max_execution_time' => trim((string)($req->post['php_max_exec'] ?? '300')),
+            'max_input_vars' => trim((string)($req->post['php_max_input_vars'] ?? '3000')),
+        ], JSON_UNESCAPED_UNICODE);
 
         if ($name === '' || $repoUrl === '' || $vpsId <= 0) {
             return $this->renderizarErro($clienteId, $id, 'Preencha nome, repositório e VPS.');
@@ -112,8 +120,8 @@ final class GitDeployController
             // Liberar subdomínio anterior
             $subSvc->liberarUso('git_deploy', $id);
 
-            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc';
-            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':id'=>$id,':c'=>$clienteId];
+            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc, php_version=:pv, php_settings=:ps';
+            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':id'=>$id,':c'=>$clienteId];
             if ($authToken !== '') {
                 $updateSql .= ', auth_token_enc=:at';
                 $params[':at'] = \LRV\App\Services\Infra\SshCrypto::cifrar($authToken);
@@ -160,8 +168,8 @@ final class GitDeployController
                 $deployKeyPrivateEnc = \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']);
             } catch (\Throwable) {}
 
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, php_version, php_settings, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:pv,:ps,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
 
             // Marcar subdomínio como em uso
             $newDeployId = (int)$pdo->lastInsertId();
@@ -253,8 +261,13 @@ final class GitDeployController
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
         if ($deployDomain !== '' && $deployServerId > 0) {
             try {
+                $phpVer = (string)($dep['php_version'] ?? '8.3');
+                $phpSet = [];
+                if (!empty($dep['php_settings'])) {
+                    $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
+                }
                 $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
-                $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true);
+                $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
             } catch (\Throwable) {}
         }
 

@@ -166,6 +166,52 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <p style="font-size:12px;color:#64748b;margin-top:4px;">Executado automaticamente após cada deploy. Exemplos: <code>npm install && npm run build</code>, <code>composer install</code>, <code>pip install -r requirements.txt</code></p>
     </div>
 
+    <!-- Configurações PHP -->
+    <div style="margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+      <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px;">🐘 Configurações PHP</div>
+      <?php
+        $phpSettings = [];
+        if (!empty($dep['php_settings'])) {
+            $phpSettings = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
+        }
+      ?>
+      <div class="grid" style="margin-bottom:10px;">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Versão do PHP</label>
+          <select class="input" name="php_version" style="font-size:13px;">
+            <option value="8.3" <?php echo ((string)($dep['php_version'] ?? '8.3')) === '8.3' ? 'selected' : ''; ?>>PHP 8.3</option>
+            <option value="8.2" <?php echo ((string)($dep['php_version'] ?? '')) === '8.2' ? 'selected' : ''; ?>>PHP 8.2</option>
+            <option value="8.1" <?php echo ((string)($dep['php_version'] ?? '')) === '8.1' ? 'selected' : ''; ?>>PHP 8.1</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">memory_limit</label>
+          <input class="input" type="text" name="php_memory_limit" value="<?php echo View::e((string)($phpSettings['memory_limit'] ?? '256M')); ?>" style="font-size:13px;" />
+        </div>
+      </div>
+      <div class="grid" style="margin-bottom:10px;">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">upload_max_filesize</label>
+          <input class="input" type="text" name="php_upload_max" value="<?php echo View::e((string)($phpSettings['upload_max_filesize'] ?? '64M')); ?>" style="font-size:13px;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">post_max_size</label>
+          <input class="input" type="text" name="php_post_max" value="<?php echo View::e((string)($phpSettings['post_max_size'] ?? '64M')); ?>" style="font-size:13px;" />
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">max_execution_time</label>
+          <input class="input" type="text" name="php_max_exec" value="<?php echo View::e((string)($phpSettings['max_execution_time'] ?? '300')); ?>" style="font-size:13px;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">max_input_vars</label>
+          <input class="input" type="text" name="php_max_input_vars" value="<?php echo View::e((string)($phpSettings['max_input_vars'] ?? '3000')); ?>" style="font-size:13px;" />
+        </div>
+      </div>
+      <p style="font-size:11px;color:#94a3b8;margin-top:8px;">As configurações PHP são aplicadas ao fazer deploy. A versão do PHP precisa estar instalada no servidor.</p>
+    </div>
+
     <button class="botao" type="submit"><?php echo $isEdit ? 'Salvar alterações' : 'Conectar repositório'; ?></button>
   </form>
 </div>
