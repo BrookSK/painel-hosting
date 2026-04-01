@@ -144,19 +144,21 @@ final class NginxVhostService
         $logs = [];
         $ssh = new SshExecutor();
 
-        // Detectar pasta de build (dist/, build/, public/, out/)
-        $detectCmd = 'test -d ' . escapeshellarg($rootPath . '/dist') . ' && echo "dist"'
+        // Detectar pasta de build/public (dist/, build/, public/, out/)
+        $detectCmd = 'test -f ' . escapeshellarg($rootPath . '/public/index.php') . ' && echo "public-php"'
+            . ' || (test -f ' . escapeshellarg($rootPath . '/public/index.html') . ' && echo "public-html")'
+            . ' || (test -d ' . escapeshellarg($rootPath . '/dist') . ' && echo "dist")'
             . ' || (test -d ' . escapeshellarg($rootPath . '/build') . ' && echo "build")'
-            . ' || (test -d ' . escapeshellarg($rootPath . '/public') . ' && echo "public")'
             . ' || (test -d ' . escapeshellarg($rootPath . '/out') . ' && echo "out")'
             . ' || echo "root"';
         $detectResult = $this->exec($ssh, $srv, $detectCmd);
         $buildDir = trim((string)($detectResult['saida'] ?? 'root'));
-        // Filtrar warnings SSH
-        $buildDir = preg_replace('/^.*?(dist|build|public|out|root).*$/s', '$1', $buildDir) ?: 'root';
+        $buildDir = preg_replace('/^.*?(public-php|public-html|dist|build|out|root).*$/s', '$1', $buildDir) ?: 'root';
 
         $actualRoot = $rootPath;
-        if ($buildDir !== 'root' && $buildDir !== 'public') {
+        if ($buildDir === 'public-php' || $buildDir === 'public-html') {
+            $actualRoot = $rootPath . '/public';
+        } elseif ($buildDir !== 'root') {
             $actualRoot = $rootPath . '/' . $buildDir;
         }
         $logs[] = 'Root detectado: ' . $actualRoot;
