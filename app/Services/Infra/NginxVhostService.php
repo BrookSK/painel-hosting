@@ -104,7 +104,7 @@ final class NginxVhostService
             . "    index index.php index.html index.htm;\n"
             . "\n"
             . "    location / {\n"
-            . "        try_files \$uri \$uri/ /index.php?\$query_string /index.html;\n"
+            . "        try_files \$uri \$uri/ /index.php?\$query_string;\n"
             . "    }\n"
             . "\n"
             . "    location ~ \\.php\$ {\n"
@@ -112,18 +112,12 @@ final class NginxVhostService
             . "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n"
             . "        fastcgi_pass unix:/run/php/{$fpmSock};\n"
             . "        fastcgi_index index.php;\n"
+            . "        fastcgi_read_timeout 300;\n"
             . "    }\n"
             . "\n"
-            . "    location ~* \\.js\$ {\n"
-            . "        add_header Content-Type application/javascript;\n"
+            . "    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)\$ {\n"
             . "        expires 30d;\n"
-            . "    }\n"
-            . "    location ~* \\.css\$ {\n"
-            . "        add_header Content-Type text/css;\n"
-            . "        expires 30d;\n"
-            . "    }\n"
-            . "    location ~* \\.(png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)\$ {\n"
-            . "        expires 30d;\n"
+            . "        access_log off;\n"
             . "    }\n"
             . "\n"
             . "    gzip on;\n"
@@ -167,10 +161,12 @@ final class NginxVhostService
         $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion);
 
         $b64 = base64_encode($config);
-        // Se o vhost já existe com SSL (Certbot), só atualizar o root em vez de sobrescrever
+        // Se o vhost já existe com SSL (Certbot), atualizar root e try_files sem sobrescrever SSL
         $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
             . ' && if grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
             . '   sed -i "s|root .*|root ' . $actualRoot . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
             . ' else'
             . '   echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
