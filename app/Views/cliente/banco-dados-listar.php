@@ -81,7 +81,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <span style="font-size:11px;color:#64748b;width:55px;flex-shrink:0;">Senha</span>
         <code id="db-pass-<?php echo $bid; ?>" style="flex:1;font-size:12px;color:#1e293b;" data-enc="<?php echo View::e($dbPassEnc); ?>" data-revealed="0">••••••••••••</code>
         <button type="button" onclick="toggleSenha(<?php echo $bid; ?>)" id="btn-eye-<?php echo $bid; ?>" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;" title="Mostrar/esconder">👁</button>
-        <button type="button" onclick="copiarDb('db-pass-<?php echo $bid; ?>')" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;">Copiar</button>
+        <button type="button" onclick="copiarSenha(<?php echo $bid; ?>)" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;">Copiar</button>
       </div>
     </div>
 
@@ -148,6 +148,23 @@ function toggleSenha(bid) {
       }
     })
     .catch(function() { el.textContent = '(erro)'; });
+}
+
+function copiarSenha(bid) {
+  var el = document.getElementById('db-pass-' + bid);
+  var plain = el ? el.getAttribute('data-plain') : null;
+  if (plain) {
+    navigator.clipboard.writeText(plain);
+    return;
+  }
+  fetch('/cliente/banco-dados/senha?id=' + bid)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok && d.senha) {
+        el.setAttribute('data-plain', d.senha);
+        navigator.clipboard.writeText(d.senha);
+      }
+    });
 }
 
 function salvarNota(bid) {
