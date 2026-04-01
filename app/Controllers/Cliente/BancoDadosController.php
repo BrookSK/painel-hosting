@@ -112,6 +112,12 @@ final class BancoDadosController
             ]);
         $dbId = (int)$pdo->lastInsertId();
 
+        // Encontrar porta livre para expor o MySQL (3307+)
+        $mysqlPort = 3307 + ($dbId % 1000);
+        // Atualizar host e porta para acesso via localhost
+        $pdo->prepare('UPDATE client_databases SET db_host = :h, db_port = :p WHERE id = :id')
+            ->execute([':h' => '127.0.0.1', ':p' => $mysqlPort, ':id' => $dbId]);
+
         try {
             $exec = new SshExecutor();
             $authType = (string)($vps['ssh_auth_type'] ?? 'password');
@@ -119,12 +125,13 @@ final class BancoDadosController
             $port = (int)($vps['ssh_port'] ?? 22);
             $user = (string)($vps['ssh_user'] ?? 'root');
 
-            // Criar container MySQL dedicado
+            // Criar container MySQL dedicado com porta exposta
             $dockerCmd = 'docker ps -a --format "{{.Names}}" | grep -q ' . escapeshellarg($containerName) . ' && echo "already exists"'
                 . ' || docker run -d'
                 . ' --name ' . escapeshellarg($containerName)
                 . ' --network ' . escapeshellarg($rede)
                 . ' --restart unless-stopped'
+                . ' -p 127.0.0.1:' . $mysqlPort . ':3306'
                 . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
                 . ' -e MYSQL_DATABASE=' . escapeshellarg($dbName)
                 . ' -e MYSQL_USER=' . escapeshellarg($dbUser)
