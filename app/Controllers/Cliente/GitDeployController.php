@@ -506,6 +506,9 @@ final class GitDeployController
             $output .= "\n--- Pós-deploy ---\n" . $postOutput;
         }
 
+        // Corrigir permissões para PHP-FPM (www-data)
+        $runCmd('chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null; chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null');
+
         // Get last commit info
         $logCmd = 'cd ' . escapeshellarg($deployPath) . ' && git log -1 --format="%H|%s|%an" 2>&1';
         $logResult = $runCmd($logCmd);

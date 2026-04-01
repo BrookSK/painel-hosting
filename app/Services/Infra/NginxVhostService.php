@@ -43,7 +43,7 @@ final class NginxVhostService
 
         // 2. Gerar SSL com Certbot (se solicitado)
         if ($ssl) {
-            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --email admin@' . escapeshellarg($domain) . ' --redirect 2>&1 || certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --redirect 2>&1; echo lrv-cert-done';
+            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --email admin@' . escapeshellarg($domain) . ' --no-redirect 2>&1 || certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
             $certResult = $this->exec($ssh, $srv, $certCmd);
             $certOutput = trim($certResult['saida'] ?? '');
             $logs[] = 'SSL: ' . $certOutput;
@@ -179,7 +179,7 @@ final class NginxVhostService
         }
 
         if ($ssl) {
-            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --redirect 2>&1; echo lrv-cert-done';
+            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
             $certResult = $this->exec($ssh, $srv, $certCmd);
             $logs[] = 'SSL: ' . trim($certResult['saida'] ?? '');
         }
