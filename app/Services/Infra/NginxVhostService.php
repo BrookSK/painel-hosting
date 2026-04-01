@@ -211,6 +211,10 @@ final class NginxVhostService
     /**
      * Cria vhost reverse proxy para apps Node.js/Python (Git Deploy).
      */
+    /**
+     * Cria vhost reverse proxy para apps Node.js/Python (Git Deploy).
+     * Sempre sobrescreve o vhost existente para garantir config de proxy correta.
+     */
     public function criarVhostProxy(int $serverId, string $domain, int $appPort, bool $ssl = true): array
     {
         $pdo = BancoDeDados::pdo();
@@ -224,16 +228,11 @@ final class NginxVhostService
         $config = $this->gerarConfig($domain, $appPort);
 
         $b64 = base64_encode($config);
-        // Se o vhost já existe com SSL (Certbot), só atualizar a porta proxy
+        // Sempre sobrescrever — se tinha SSL, o certbot vai re-adicionar
         $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
-            . ' && if grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
-            . '   sed -i "s|proxy_pass http://127.0.0.1:[0-9]*;|proxy_pass http://127.0.0.1:' . $appPort . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
-            . ' else'
-            . '   echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
-            . ' fi';
+            . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok';
 
         $result = $this->exec($ssh, $srv, $cmd);
         $logs[] = 'Vhost proxy: ' . trim($result['saida'] ?? '');
@@ -242,6 +241,7 @@ final class NginxVhostService
             return ['ok' => false, 'erro' => 'Falha ao criar vhost proxy Nginx.', 'logs' => $logs];
         }
 
+        // Sempre rodar certbot para (re)configurar SSL
         if ($ssl) {
             $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
             $certResult = $this->exec($ssh, $srv, $certCmd);
@@ -250,6 +250,7 @@ final class NginxVhostService
 
         return ['ok' => true, 'logs' => $logs];
     }
+
 
     private function getServer(\PDO $pdo, int $id): ?array
     {

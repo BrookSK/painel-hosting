@@ -533,13 +533,23 @@ final class GitDeployController
             $pm2Name = 'deploy-' . (int)($dep['id'] ?? 0);
             // Instalar PM2 globalmente se não existir
             $runCmd('which pm2 >/dev/null 2>&1 || npm install -g pm2 2>&1');
-            // Detectar script de start (package.json "start" ou server.js/index.js)
+            // Parar processo anterior se existir
+            $runCmd('pm2 delete ' . escapeshellarg($pm2Name) . ' 2>/dev/null; true');
+            // Iniciar com PM2 — usa ecosystem ou npm start
             $startScript = 'cd ' . escapeshellarg($deployPath)
-                . ' && (pm2 delete ' . escapeshellarg($pm2Name) . ' 2>/dev/null; true)'
-                . ' && PORT=' . $appPort . ' pm2 start'
-                . ' $(test -f package.json && echo "npm -- start" || (test -f server.js && echo "server.js" || echo "index.js"))'
-                . ' --name ' . escapeshellarg($pm2Name)
-                . ' 2>&1 && pm2 save 2>&1';
+                . ' && export PORT=' . $appPort
+                . ' && if test -f ecosystem.config.js || test -f ecosystem.config.cjs; then'
+                . '   pm2 start ecosystem.config.* --name ' . escapeshellarg($pm2Name) . ' 2>&1;'
+                . ' elif test -f package.json; then'
+                . '   pm2 start npm --name ' . escapeshellarg($pm2Name) . ' -- start 2>&1;'
+                . ' elif test -f server.js; then'
+                . '   pm2 start server.js --name ' . escapeshellarg($pm2Name) . ' 2>&1;'
+                . ' elif test -f index.js; then'
+                . '   pm2 start index.js --name ' . escapeshellarg($pm2Name) . ' 2>&1;'
+                . ' else'
+                . '   echo "Nenhum arquivo de entrada encontrado (package.json, server.js, index.js)";'
+                . ' fi'
+                . ' && pm2 save 2>&1';
             $pm2Result = $runCmd($startScript);
             $output .= "\n--- PM2 ---\n" . $this->filtrarOutputSsh((string)($pm2Result['saida'] ?? ''));
         }
