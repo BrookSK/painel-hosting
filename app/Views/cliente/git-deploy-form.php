@@ -167,14 +167,32 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </label>
     </div>
 
+    <div class="grid" style="margin-bottom:14px;">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:5px;">Tipo de aplicação</label>
+        <?php $appType = (string)($dep['app_type'] ?? 'php'); ?>
+        <select class="input" name="app_type" id="appTypeSelect" onchange="toggleAppTypeFields()">
+          <option value="php" <?php echo $appType === 'php' ? 'selected' : ''; ?>>🐘 PHP / Laravel / WordPress</option>
+          <option value="static" <?php echo $appType === 'static' ? 'selected' : ''; ?>>📄 Site estático (HTML/CSS/JS)</option>
+          <option value="nodejs" <?php echo $appType === 'nodejs' ? 'selected' : ''; ?>>🟢 Node.js</option>
+          <option value="python" <?php echo $appType === 'python' ? 'selected' : ''; ?>>🐍 Python</option>
+        </select>
+      </div>
+      <div id="appPortField" style="<?php echo in_array($appType, ['nodejs', 'python']) ? '' : 'display:none;'; ?>">
+        <label style="display:block;font-size:13px;margin-bottom:5px;">Porta da aplicação</label>
+        <input class="input" type="number" name="app_port" value="<?php echo (int)($dep['app_port'] ?? 3000); ?>" placeholder="3000" min="1024" max="65535" />
+        <p style="font-size:12px;color:#64748b;margin-top:4px;">Porta onde a aplicação roda (ex: 3000 para Node.js, 8000 para Python)</p>
+      </div>
+    </div>
+
     <div style="margin-bottom:20px;">
       <label style="display:block;font-size:13px;margin-bottom:5px;">Comando pós-deploy <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
-      <input class="input" type="text" name="post_deploy_cmd" value="<?php echo View::e((string)($dep['post_deploy_cmd'] ?? '')); ?>" placeholder="npm install && npm run build" />
+      <input class="input" type="text" name="post_deploy_cmd" id="postDeployCmd" value="<?php echo View::e((string)($dep['post_deploy_cmd'] ?? '')); ?>" placeholder="npm install && npm run build" />
       <p style="font-size:12px;color:#64748b;margin-top:4px;">Executado automaticamente após cada deploy. Exemplos: <code>npm install && npm run build</code>, <code>composer install</code>, <code>pip install -r requirements.txt</code></p>
     </div>
 
-    <!-- Configurações PHP -->
-    <div style="margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+    <!-- Configurações PHP (só para tipo PHP) -->
+    <div id="phpConfigSection" style="<?php echo in_array($appType, ['nodejs', 'python', 'static']) ? 'display:none;' : ''; ?>margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
       <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px;">🐘 Configurações PHP</div>
       <?php
         $phpSettings = [];
@@ -219,8 +237,42 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <p style="font-size:11px;color:#94a3b8;margin-top:8px;">As configurações PHP são aplicadas ao fazer deploy. A versão do PHP precisa estar instalada no servidor.</p>
     </div>
 
+    <!-- Dica Node.js/Python -->
+    <div id="nodejsHint" style="<?php echo $appType === 'nodejs' ? '' : 'display:none;'; ?>margin-bottom:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
+      <div style="font-size:13px;font-weight:600;color:#166534;margin-bottom:6px;">🟢 Deploy Node.js</div>
+      <p style="font-size:12px;color:#475569;margin:0;">O sistema vai usar PM2 para gerenciar o processo. Configure o comando pós-deploy com <code>npm install && npm run build</code> e o sistema vai iniciar automaticamente com <code>pm2 start</code>. O Nginx será configurado como reverse proxy para a porta informada.</p>
+    </div>
+    <div id="pythonHint" style="<?php echo $appType === 'python' ? '' : 'display:none;'; ?>margin-bottom:20px;background:#fefce8;border:1px solid #fef08a;border-radius:10px;padding:14px;">
+      <div style="font-size:13px;font-weight:600;color:#854d0e;margin-bottom:6px;">🐍 Deploy Python</div>
+      <p style="font-size:12px;color:#475569;margin:0;">O Nginx será configurado como reverse proxy para a porta informada. Configure o comando pós-deploy com <code>pip install -r requirements.txt</code> e inicie o servidor (ex: <code>gunicorn</code>, <code>uvicorn</code>) via PM2 ou systemd.</p>
+    </div>
+
     <button class="botao" type="submit"><?php echo $isEdit ? 'Salvar alterações' : 'Conectar repositório'; ?></button>
   </form>
 </div>
+
+<script>
+function toggleAppTypeFields() {
+  var type = document.getElementById('appTypeSelect').value;
+  var portField = document.getElementById('appPortField');
+  var phpSection = document.getElementById('phpConfigSection');
+  var nodejsHint = document.getElementById('nodejsHint');
+  var pythonHint = document.getElementById('pythonHint');
+  var postCmd = document.getElementById('postDeployCmd');
+
+  portField.style.display = (type === 'nodejs' || type === 'python') ? '' : 'none';
+  phpSection.style.display = (type === 'php') ? '' : 'none';
+  nodejsHint.style.display = (type === 'nodejs') ? '' : 'none';
+  pythonHint.style.display = (type === 'python') ? '' : 'none';
+
+  // Sugerir comando pós-deploy se vazio
+  if (postCmd.value === '') {
+    if (type === 'nodejs') postCmd.placeholder = 'npm install && npm run build';
+    else if (type === 'python') postCmd.placeholder = 'pip install -r requirements.txt';
+    else if (type === 'php') postCmd.placeholder = 'composer install --no-dev';
+    else postCmd.placeholder = '';
+  }
+}
+</script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

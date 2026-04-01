@@ -80,6 +80,9 @@ final class GitDeployController
         $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
         $authToken = trim((string)($req->post['auth_token'] ?? ''));
         $postDeployCmd = trim((string)($req->post['post_deploy_cmd'] ?? ''));
+        $appType = trim((string)($req->post['app_type'] ?? 'php'));
+        if (!in_array($appType, ['php', 'static', 'nodejs', 'python'], true)) $appType = 'php';
+        $appPort = in_array($appType, ['nodejs', 'python']) ? max(1024, min(65535, (int)($req->post['app_port'] ?? 3000))) : null;
         $phpVersion = trim((string)($req->post['php_version'] ?? '8.3'));
         $phpSettings = json_encode([
             'memory_limit' => trim((string)($req->post['php_memory_limit'] ?? '256M')),
@@ -125,8 +128,8 @@ final class GitDeployController
             // Liberar subdomínio anterior
             $subSvc->liberarUso('git_deploy', $id);
 
-            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc, php_version=:pv, php_settings=:ps';
-            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':id'=>$id,':c'=>$clienteId];
+            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc, php_version=:pv, php_settings=:ps, app_type=:at2, app_port=:ap';
+            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':at2'=>$appType,':ap'=>$appPort,':id'=>$id,':c'=>$clienteId];
             if ($authToken !== '') {
                 $updateSql .= ', auth_token_enc=:at';
                 $params[':at'] = \LRV\App\Services\Infra\SshCrypto::cifrar($authToken);
@@ -173,8 +176,8 @@ final class GitDeployController
                 $deployKeyPrivateEnc = \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']);
             } catch (\Throwable) {}
 
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, php_version, php_settings, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:pv,:ps,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, php_version, php_settings, app_type, app_port, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:pv,:ps,:at2,:ap,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':at2'=>$appType,':ap'=>$appPort,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
 
             // Marcar subdomínio como em uso
             $newDeployId = (int)$pdo->lastInsertId();
@@ -264,15 +267,24 @@ final class GitDeployController
         $deployDomain = trim((string)($dep['subdomain'] ?? ''));
         $deployServerId = (int)($dep['server_id'] ?? 0);
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        $appType = (string)($dep['app_type'] ?? 'php');
+        $appPort = (int)($dep['app_port'] ?? 3000);
+
         if ($deployDomain !== '' && $deployServerId > 0) {
             try {
-                $phpVer = (string)($dep['php_version'] ?? '8.3');
-                $phpSet = [];
-                if (!empty($dep['php_settings'])) {
-                    $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
-                }
                 $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
-                $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
+                if (in_array($appType, ['nodejs', 'python'])) {
+                    // Reverse proxy para Node.js/Python
+                    $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
+                } else {
+                    // Static/PHP vhost
+                    $phpVer = (string)($dep['php_version'] ?? '8.3');
+                    $phpSet = [];
+                    if (!empty($dep['php_settings'])) {
+                        $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
+                    }
+                    $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
+                }
             } catch (\Throwable) {}
         }
 
@@ -513,6 +525,24 @@ final class GitDeployController
 
         // Corrigir permissões para PHP-FPM (www-data)
         $runCmd('chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null; chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null');
+
+        // Para Node.js: instalar PM2 e (re)iniciar o processo
+        $appType = (string)($dep['app_type'] ?? 'php');
+        $appPort = (int)($dep['app_port'] ?? 3000);
+        if ($appType === 'nodejs') {
+            $pm2Name = 'deploy-' . (int)($dep['id'] ?? 0);
+            // Instalar PM2 globalmente se não existir
+            $runCmd('which pm2 >/dev/null 2>&1 || npm install -g pm2 2>&1');
+            // Detectar script de start (package.json "start" ou server.js/index.js)
+            $startScript = 'cd ' . escapeshellarg($deployPath)
+                . ' && (pm2 delete ' . escapeshellarg($pm2Name) . ' 2>/dev/null; true)'
+                . ' && PORT=' . $appPort . ' pm2 start'
+                . ' $(test -f package.json && echo "npm -- start" || (test -f server.js && echo "server.js" || echo "index.js"))'
+                . ' --name ' . escapeshellarg($pm2Name)
+                . ' 2>&1 && pm2 save 2>&1';
+            $pm2Result = $runCmd($startScript);
+            $output .= "\n--- PM2 ---\n" . $this->filtrarOutputSsh((string)($pm2Result['saida'] ?? ''));
+        }
 
         // Get last commit info
         $logCmd = 'cd ' . escapeshellarg($deployPath) . ' && git log -1 --format="%H|%s|%an" 2>&1';

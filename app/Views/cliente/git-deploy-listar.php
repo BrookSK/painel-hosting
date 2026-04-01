@@ -36,12 +36,18 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     $lastMsg = (string)($d['last_commit_message'] ?? '');
     $lastAt = (string)($d['last_deployed_at'] ?? '');
     $lastAuthor = (string)($d['last_commit_author'] ?? '');
+    $appType = (string)($d['app_type'] ?? 'php');
+    $appTypeIcon = match($appType) { 'nodejs' => '🟢', 'python' => '🐍', 'static' => '📄', default => '🐘' };
+    $appTypeLabel = match($appType) { 'nodejs' => 'Node.js', 'python' => 'Python', 'static' => 'Estático', default => 'PHP' };
   ?>
   <div class="card-new" id="dep-<?php echo $did; ?>">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
       <div>
-        <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:2px;"><?php echo View::e((string)($d['name'] ?? '')); ?></div>
+        <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:2px;"><?php echo $appTypeIcon; ?> <?php echo View::e((string)($d['name'] ?? '')); ?> <span style="font-size:11px;font-weight:500;color:#64748b;"><?php echo $appTypeLabel; ?></span></div>
         <div style="font-size:12px;color:#64748b;font-family:monospace;"><?php echo View::e((string)($d['repo_url'] ?? '')); ?> <span style="color:#4F46E5;">@<?php echo View::e((string)($d['branch'] ?? 'main')); ?></span>
+          <?php if (in_array($appType, ['nodejs', 'python']) && !empty($d['app_port'])): ?>
+            · <span style="color:#f59e0b;">:<?php echo (int)$d['app_port']; ?></span>
+          <?php endif; ?>
           <?php if (!empty($d['subdomain'])): ?>
             · <a href="https://<?php echo View::e((string)$d['subdomain']); ?>" target="_blank" rel="noopener" style="color:#10b981;font-family:system-ui;">🌐 <?php echo View::e((string)$d['subdomain']); ?></a>
           <?php endif; ?>
@@ -70,6 +76,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <button class="botao sm ghost" onclick="verLogs(<?php echo $did; ?>)">📋 Histórico</button>
       <a href="/cliente/arquivos?vps_id=<?php echo (int)($d['vps_id'] ?? 0); ?>&path=<?php echo urlencode((string)($d['deploy_path'] ?? '/var/www/html')); ?>&direct=1" class="botao sm ghost" title="Ver arquivos">📁 Arquivos</a>
       <button class="botao sm ghost" onclick="toggleConsole(<?php echo $did; ?>)" title="Executar comandos na pasta do projeto">💻 Console</button>
+      <?php if ($appType === 'nodejs'): ?>
+      <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 restart deploy-<?php echo $did; ?> 2>&1 && pm2 status deploy-<?php echo $did; ?> 2>&1')" title="Reiniciar processo Node.js">🔄 Reiniciar</button>
+      <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 logs deploy-<?php echo $did; ?> --lines 30 --nostream 2>&1')" title="Ver logs PM2">📜 Logs PM2</button>
+      <?php endif; ?>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirm('Remover esta integração?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />

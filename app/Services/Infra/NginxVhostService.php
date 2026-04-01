@@ -167,9 +167,16 @@ final class NginxVhostService
         $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion);
 
         $b64 = base64_encode($config);
-        $cmd = 'mkdir -p /etc/nginx/sites-available/lrv && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok';
+        // Se o vhost já existe com SSL (Certbot), só atualizar o root em vez de sobrescrever
+        $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
+            . ' && if grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
+            . '   sed -i "s|root .*|root ' . $actualRoot . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
+            . ' else'
+            . '   echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
+            . ' fi';
 
         $result = $this->exec($ssh, $srv, $cmd);
         $logs[] = 'Vhost: ' . trim($result['saida'] ?? '');
@@ -200,6 +207,49 @@ final class NginxVhostService
                 $phpResult = $this->exec($ssh, $srv, $phpCmd);
                 $logs[] = 'PHP config: ' . trim($phpResult['saida'] ?? '');
             }
+        }
+
+        return ['ok' => true, 'logs' => $logs];
+    }
+
+    /**
+     * Cria vhost reverse proxy para apps Node.js/Python (Git Deploy).
+     */
+    public function criarVhostProxy(int $serverId, string $domain, int $appPort, bool $ssl = true): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $logs = [];
+        $ssh = new SshExecutor();
+
+        $vhostName = str_replace('.', '_', $domain);
+        $config = $this->gerarConfig($domain, $appPort);
+
+        $b64 = base64_encode($config);
+        // Se o vhost já existe com SSL (Certbot), só atualizar a porta proxy
+        $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
+            . ' && if grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
+            . '   sed -i "s|proxy_pass http://127.0.0.1:[0-9]*;|proxy_pass http://127.0.0.1:' . $appPort . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
+            . ' else'
+            . '   echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
+            . ' fi';
+
+        $result = $this->exec($ssh, $srv, $cmd);
+        $logs[] = 'Vhost proxy: ' . trim($result['saida'] ?? '');
+
+        if (!str_contains($result['saida'] ?? '', 'lrv-vhost-ok')) {
+            return ['ok' => false, 'erro' => 'Falha ao criar vhost proxy Nginx.', 'logs' => $logs];
+        }
+
+        if ($ssl) {
+            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
+            $certResult = $this->exec($ssh, $srv, $certCmd);
+            $logs[] = 'SSL: ' . trim($certResult['saida'] ?? '');
         }
 
         return ['ok' => true, 'logs' => $logs];
