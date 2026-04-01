@@ -630,7 +630,20 @@ final class ServerSetupService
                 'descricao'      => 'Prepara o Nginx para receber vhosts das aplicações dos clientes.',
             ],
 
-            // ── 10. phpMyAdmin ──
+            // ── 10. PHP-FPM ──
+            [
+                'name'           => 'Instalar PHP-FPM',
+                'cmd'            => 'which php-fpm8.* >/dev/null 2>&1 && echo "already exists" || (export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq php-fpm php-mysql php-curl php-mbstring php-xml php-zip 2>&1 && systemctl enable php*-fpm 2>&1 && systemctl start php*-fpm 2>&1 && echo lrv-phpfpm-ok)',
+                'ok_if_contains' => 'lrv-phpfpm-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 180,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala PHP-FPM para processar aplicações PHP dos clientes (Git Deploy com PHP). Inclui extensões mysql, curl, mbstring, xml, zip.',
+            ],
+
+            // ── 11. phpMyAdmin ──
             [
                 'name'           => 'Instalar phpMyAdmin (Docker)',
                 'cmd'            => 'docker ps -a --format "{{.Names}}" | grep -q lrv_phpmyadmin && echo "already exists" || (docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps) . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e PMA_ABSOLUTE_URI=http://pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '/ phpmyadmin/phpmyadmin:latest 2>&1 && echo lrv-pma-ok)',
