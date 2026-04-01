@@ -146,8 +146,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <div style="margin-bottom:14px;">
       <label style="display:block;font-size:13px;margin-bottom:5px;">Caminho de deploy no servidor</label>
-      <input class="input" type="text" name="deploy_path" value="<?php echo View::e((string)($dep['deploy_path'] ?? '/var/www/html')); ?>" placeholder="/var/www/html" />
-      <p style="font-size:12px;color:#64748b;margin-top:4px;">Diretório onde os arquivos serão colocados na VPS.</p>
+      <?php
+        $defaultPath = (string)($dep['deploy_path'] ?? '');
+        if ($defaultPath === '' || $defaultPath === '/var/www/html') {
+            $slugName = strtolower(preg_replace('/[^a-z0-9]/', '-', strtolower((string)($dep['name'] ?? ''))));
+            $defaultPath = $isEdit && !empty($dep['deploy_path']) ? (string)$dep['deploy_path'] : '/var/www/' . ($slugName !== '' ? $slugName : 'html');
+        }
+      ?>
+      <input class="input" type="text" name="deploy_path" value="<?php echo View::e($defaultPath); ?>" placeholder="/var/www/meu-projeto" />
+      <p style="font-size:12px;color:#64748b;margin-top:4px;">Cada projeto deve ter seu próprio diretório. Ex: <code>/var/www/meu-site</code></p>
     </div>
 
     <div style="margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">

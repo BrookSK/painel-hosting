@@ -70,7 +70,12 @@ final class GitDeployController
         $repoUrl = trim((string)($req->post['repo_url'] ?? ''));
         $branch = trim((string)($req->post['branch'] ?? 'main'));
         $subdomain = trim((string)($req->post['subdomain'] ?? ''));
-        $deployPath = trim((string)($req->post['deploy_path'] ?? '/var/www/html'));
+        $deployPath = trim((string)($req->post['deploy_path'] ?? ''));
+        if ($deployPath === '' || $deployPath === '/var/www/html') {
+            // Gerar path único baseado no nome
+            $slugPath = strtolower(preg_replace('/[^a-z0-9]/', '-', strtolower($name)));
+            $deployPath = '/var/www/' . ($slugPath !== '' ? $slugPath : 'app-' . time());
+        }
         $forceOverwrite = (int)($req->post['force_overwrite'] ?? 1) === 1 ? 1 : 0;
         $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
         $authToken = trim((string)($req->post['auth_token'] ?? ''));
