@@ -15,7 +15,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="page-subtitle" style="margin-bottom:0;">Crie e gerencie bancos MySQL nas suas VPS</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <button class="botao ghost sm" onclick="document.getElementById('pmaConfigPanel').style.display=document.getElementById('pmaConfigPanel').style.display==='none'?'block':'none'">⚙️ Config phpMyAdmin</button>
+    <button class="botao ghost sm" onclick="var p=document.getElementById('pmaConfigPanel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display!=='none')carregarConfigPma();">⚙️ Config phpMyAdmin</button>
     <a href="/cliente/banco-dados/criar" class="botao">+ Novo banco</a>
   </div>
 </div>
@@ -263,6 +263,54 @@ function salvarNota(bid) {
 <?php endif; ?>
 
 <script>
+var pmaValoresMap = {
+  'upload_max_filesize': 'pma-upload-max',
+  'post_max_size': 'pma-post-max',
+  'max_execution_time': 'pma-max-exec',
+  'max_input_time': 'pma-max-input',
+  'memory_limit': 'pma-memory'
+};
+
+function carregarConfigPma() {
+  var vpsId = document.getElementById('pma-vps-id').value;
+  if (!vpsId) return;
+  var st = document.getElementById('pmaStatus');
+  st.textContent = '⏳ Carregando configurações...'; st.style.color = '#64748b';
+
+  fetch('/cliente/banco-dados/config-phpmyadmin?vps_id=' + vpsId)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok && d.config) {
+        for (var key in pmaValoresMap) {
+          var el = document.getElementById(pmaValoresMap[key]);
+          if (!el || !d.config[key]) continue;
+          var val = String(d.config[key]).toUpperCase();
+          // Tentar selecionar o valor exato
+          var found = false;
+          for (var i = 0; i < el.options.length; i++) {
+            if (el.options[i].value.toUpperCase() === val) {
+              el.selectedIndex = i; found = true; break;
+            }
+          }
+          // Para max_execution_time e max_input_time (numéricos)
+          if (!found) {
+            for (var i = 0; i < el.options.length; i++) {
+              if (el.options[i].value === d.config[key]) {
+                el.selectedIndex = i; break;
+              }
+            }
+          }
+        }
+        st.textContent = '✓ Valores atuais carregados' + (d.config.mode === 'docker' ? ' (Docker)' : ' (nativo)');
+        st.style.color = '#10b981';
+      } else {
+        st.textContent = d.config === null ? 'Não foi possível ler — usando padrões' : '';
+        st.style.color = '#f59e0b';
+      }
+    })
+    .catch(function() { st.textContent = ''; });
+}
+
 function aplicarConfigPma() {
   var btn = document.getElementById('pmaApplyBtn');
   var st = document.getElementById('pmaStatus');
@@ -296,6 +344,13 @@ function aplicarConfigPma() {
       st.style.color = '#ef4444';
     });
 }
+
+// Carregar config ao trocar VPS
+document.getElementById('pma-vps-id').addEventListener('change', carregarConfigPma);
+// Carregar ao abrir o painel
+document.getElementById('pmaConfigPanel').addEventListener('transitionend', function() {
+  if (this.style.display !== 'none') carregarConfigPma();
+});
 </script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

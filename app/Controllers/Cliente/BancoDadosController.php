@@ -351,7 +351,76 @@ final class BancoDadosController
     }
 
     /**
-     * AJAX: aplica configurações PHP no container phpMyAdmin via SSH.
+     * AJAX GET: lê configurações PHP atuais do phpMyAdmin no servidor.
+     */
+    public function lerConfigPhpmyadmin(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $vpsId = (int)($req->query['vps_id'] ?? 0);
+        if ($vpsId <= 0) return Resposta::json(['ok' => false, 'erro' => 'VPS não informada.']);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            "SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM vps v JOIN servers s ON s.id = v.server_id
+             WHERE v.id = :v AND v.client_id = :c AND v.status = 'running' LIMIT 1"
+        );
+        $stmt->execute([':v' => $vpsId, ':c' => $clienteId]);
+        $srv = $stmt->fetch();
+        if (!is_array($srv)) return Resposta::json(['ok' => false, 'erro' => 'VPS não encontrada.']);
+
+        // Ler valores atuais do PHP do phpMyAdmin (Docker ou direto)
+        $cmd = 'PMA_CONTAINER=$(docker ps --format "{{.Names}}" 2>/dev/null | grep -i phpmyadmin | head -1)'
+            . ' && if [ -n "$PMA_CONTAINER" ]; then'
+            . '   docker exec $PMA_CONTAINER php -r "echo json_encode(['
+            . '     \"upload_max_filesize\"=>ini_get(\"upload_max_filesize\"),'
+            . '     \"post_max_size\"=>ini_get(\"post_max_size\"),'
+            . '     \"max_execution_time\"=>ini_get(\"max_execution_time\"),'
+            . '     \"max_input_time\"=>ini_get(\"max_input_time\"),'
+            . '     \"memory_limit\"=>ini_get(\"memory_limit\"),'
+            . '     \"mode\"=>\"docker\"'
+            . '   ]);" 2>/dev/null;'
+            . ' else'
+            . '   PMA_PHP=$(find /etc/phpmyadmin /usr/share/phpmyadmin /var/www/phpmyadmin -name "*.php" -maxdepth 1 2>/dev/null | head -1)'
+            . '   && if [ -n "$PMA_PHP" ]; then'
+            . '     php -r "echo json_encode(['
+            . '       \"upload_max_filesize\"=>ini_get(\"upload_max_filesize\"),'
+            . '       \"post_max_size\"=>ini_get(\"post_max_size\"),'
+            . '       \"max_execution_time\"=>ini_get(\"max_execution_time\"),'
+            . '       \"max_input_time\"=>ini_get(\"max_input_time\"),'
+            . '       \"memory_limit\"=>ini_get(\"memory_limit\"),'
+            . '       \"mode\"=>\"native\"'
+            . '     ]);" 2>/dev/null;'
+            . '   else echo "NOT_FOUND"; fi;'
+            . ' fi';
+
+        try {
+            $result = $this->executarSshServidor($srv, $cmd, 15);
+            $output = trim((string)($result['saida'] ?? ''));
+            // Limpar warnings SSH
+            $lines = explode("\n", $output);
+            $jsonLine = '';
+            foreach ($lines as $l) {
+                $l = trim($l);
+                if (str_starts_with($l, '{')) { $jsonLine = $l; break; }
+            }
+            if ($jsonLine !== '') {
+                $data = json_decode($jsonLine, true);
+                if (is_array($data)) {
+                    return Resposta::json(['ok' => true, 'config' => $data]);
+                }
+            }
+            return Resposta::json(['ok' => true, 'config' => null]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * AJAX POST: aplica configurações PHP no phpMyAdmin via SSH.
+     * Suporta Docker e instalação nativa.
      */
     public function configPhpmyadmin(Requisicao $req): Resposta
     {
@@ -386,42 +455,54 @@ final class BancoDadosController
 
         $iniB64 = base64_encode($iniContent);
 
-        // Detectar container phpMyAdmin (nome padrão: phpmyadmin)
-        // Aplicar via docker exec + reiniciar Apache dentro do container
-        $cmd = 'PMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i phpmyadmin | head -1)'
-            . ' && if [ -z "$PMA_CONTAINER" ]; then echo "PMA_NOT_FOUND"; exit 1; fi'
-            . ' && echo ' . escapeshellarg($iniB64) . ' | base64 -d | docker exec -i $PMA_CONTAINER tee /usr/local/etc/php/conf.d/99-custom-limits.ini > /dev/null'
-            . ' && docker exec $PMA_CONTAINER kill -USR2 1 2>/dev/null'
-            . ' && docker restart $PMA_CONTAINER 2>&1'
-            . ' && echo lrv-pma-ok';
+        // Tentar Docker primeiro, fallback para instalação nativa
+        $cmd = 'PMA_CONTAINER=$(docker ps --format "{{.Names}}" 2>/dev/null | grep -i phpmyadmin | head -1)'
+            . ' && if [ -n "$PMA_CONTAINER" ]; then'
+            // Docker: escrever ini + restart container
+            . '   echo ' . escapeshellarg($iniB64) . ' | base64 -d | docker exec -i $PMA_CONTAINER tee /usr/local/etc/php/conf.d/99-custom-limits.ini > /dev/null'
+            . '   && docker restart $PMA_CONTAINER 2>&1'
+            . '   && echo lrv-pma-ok;'
+            . ' else'
+            // Nativo: detectar versão PHP e escrever ini + restart php-fpm/apache
+            . '   PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.\".\".PHP_MINOR_VERSION;" 2>/dev/null || echo "8.3")'
+            . '   && echo ' . escapeshellarg($iniB64) . ' | base64 -d > /etc/php/$PHP_VER/fpm/conf.d/99-phpmyadmin-limits.ini 2>/dev/null'
+            . '   && echo ' . escapeshellarg($iniB64) . ' | base64 -d > /etc/php/$PHP_VER/apache2/conf.d/99-phpmyadmin-limits.ini 2>/dev/null; true'
+            . '   && (systemctl reload php$PHP_VER-fpm 2>/dev/null || true)'
+            . '   && (systemctl reload apache2 2>/dev/null || systemctl reload nginx 2>/dev/null || true)'
+            . '   && echo lrv-pma-ok;'
+            . ' fi';
 
         try {
-            $exec = new SshExecutor();
-            $host = (string)($srv['ip_address'] ?? '');
-            $port = (int)($srv['ssh_port'] ?? 22);
-            $user = (string)($srv['ssh_user'] ?? 'root');
-            $authType = (string)($srv['ssh_auth_type'] ?? 'password');
-
-            if ($authType === 'password') {
-                $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $cmd, 30);
-            } else {
-                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($srv['ssh_key_id'] ?? '');
-                $result = $exec->executar($host, $port, $user, $keyPath, $cmd, 30);
-            }
-
+            $result = $this->executarSshServidor($srv, $cmd, 30);
             $output = (string)($result['saida'] ?? '');
-            if (str_contains($output, 'PMA_NOT_FOUND')) {
-                return Resposta::json(['ok' => false, 'erro' => 'Container phpMyAdmin não encontrado nesta VPS. Verifique se está instalado.']);
-            }
+
             if (!str_contains($output, 'lrv-pma-ok')) {
-                return Resposta::json(['ok' => false, 'erro' => 'Falha ao aplicar configurações: ' . substr($output, 0, 200)]);
+                return Resposta::json(['ok' => false, 'erro' => 'Falha ao aplicar configurações. Verifique se o phpMyAdmin está instalado. Saída: ' . substr($output, 0, 300)]);
             }
 
             return Resposta::json(['ok' => true]);
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Executa comando SSH no servidor de uma VPS.
+     */
+    private function executarSshServidor(array $srv, string $cmd, int $timeout = 30): array
+    {
+        $exec = new SshExecutor();
+        $host = (string)($srv['ip_address'] ?? '');
+        $port = (int)($srv['ssh_port'] ?? 22);
+        $user = (string)($srv['ssh_user'] ?? 'root');
+        $authType = (string)($srv['ssh_auth_type'] ?? 'password');
+
+        if ($authType === 'password') {
+            $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
+            return $exec->executarComSenha($host, $port, $user, $senha, $cmd, $timeout);
+        }
+        $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($srv['ssh_key_id'] ?? '');
+        return $exec->executar($host, $port, $user, $keyPath, $cmd, $timeout);
     }
 
     /**
