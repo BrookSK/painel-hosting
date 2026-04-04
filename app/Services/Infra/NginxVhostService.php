@@ -97,11 +97,20 @@ final class NginxVhostService
     private function gerarConfigStaticSite(string $domain, string $rootPath, string $phpVersion = '8.3'): string
     {
         $fpmSock = 'php' . $phpVersion . '-fpm.sock';
+        // Se o root termina em /public, adicionar alias para /public/ → root
+        // Isso resolve apps que geram URLs com /public/ no path
+        $publicAlias = '';
+        if (str_ends_with($rootPath, '/public')) {
+            $publicAlias = "\n    location ^~ /public/ {\n"
+                . "        alias {$rootPath}/;\n"
+                . "    }\n";
+        }
         return "server {\n"
             . "    listen 80;\n"
             . "    server_name {$domain};\n"
             . "    root {$rootPath};\n"
             . "    index index.php index.html index.htm;\n"
+            . $publicAlias
             . "\n"
             . "    location / {\n"
             . "        try_files \$uri \$uri/ /index.php?\$query_string;\n"
