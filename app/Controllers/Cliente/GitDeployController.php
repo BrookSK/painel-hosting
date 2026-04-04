@@ -641,6 +641,83 @@ final class GitDeployController
         }
     }
 
+    /**
+     * AJAX: busca logs do servidor para um git deploy (Nginx, PHP, PM2, app logs).
+     */
+    public function serverLogs(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->query['id'] ?? 0);
+        $tipo = (string)($req->query['tipo'] ?? 'all');
+        $linhas = min(200, max(20, (int)($req->query['linhas'] ?? 100)));
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.deploy_path, g.subdomain, g.app_type, g.app_port,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.id = :id AND g.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
+
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        $domain = (string)($dep['subdomain'] ?? '');
+        $appType = (string)($dep['app_type'] ?? 'php');
+
+        $cmds = [];
+        if ($tipo === 'all' || $tipo === 'nginx') {
+            $cmds[] = 'echo "=== NGINX ERROR LOG ===" && tail -' . $linhas . ' /var/log/nginx/error.log 2>/dev/null || echo "(vazio)"';
+        }
+        if ($tipo === 'all' || $tipo === 'php') {
+            $cmds[] = 'echo "=== PHP-FPM LOG ===" && tail -' . $linhas . ' /var/log/php*fpm*.log 2>/dev/null || echo "(vazio)"';
+        }
+        if ($tipo === 'all' || $tipo === 'app') {
+            // Logs da aplicação (storage/logs, logs/, .log)
+            $cmds[] = 'echo "=== APP LOGS ===" && (tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/storage/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/*.log 2>/dev/null || echo "(sem logs de app)")';
+            if ($appType === 'nodejs') {
+                $pm2Name = 'deploy-' . $id;
+                $cmds[] = 'echo "=== PM2 LOGS ===" && pm2 logs ' . escapeshellarg($pm2Name) . ' --nostream --lines ' . $linhas . ' 2>&1 || echo "(sem pm2)"';
+            }
+        }
+
+        $fullCmd = implode(' ; ', $cmds);
+
+        try {
+            $exec = new \LRV\App\Services\Infra\SshExecutor();
+            $host = (string)($dep['ip_address'] ?? '');
+            $port = (int)($dep['ssh_port'] ?? 22);
+            $user = (string)($dep['ssh_user'] ?? 'root');
+            $authType = (string)($dep['ssh_auth_type'] ?? 'password');
+
+            if ($authType === 'password') {
+                $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $fullCmd, 15);
+            } else {
+                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($dep['ssh_key_id'] ?? '');
+                $result = $exec->executar($host, $port, $user, $keyPath, $fullCmd, 15);
+            }
+
+            $output = (string)($result['saida'] ?? '');
+            $lines = explode("\n", $output);
+            $clean = [];
+            foreach ($lines as $l) {
+                if (str_contains($l, 'Warning: Permanently added')) continue;
+                if (str_contains($l, 'known_hosts')) continue;
+                $clean[] = $l;
+            }
+
+            return Resposta::json(['ok' => true, 'logs' => implode("\n", $clean)]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
     private function renderizarErro(int $clienteId, int $id, string $erro): Resposta
     {
         $pdo = BancoDeDados::pdo();

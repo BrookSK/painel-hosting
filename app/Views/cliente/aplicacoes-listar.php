@@ -68,6 +68,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
                   <?php if (!empty($a['domain'])): ?>
                     <a href="https://<?php echo View::e((string)$a['domain']); ?>" target="_blank" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Abrir site">🌐</a>
                   <?php endif; ?>
+                  <button class="botao ghost sm" style="font-size:11px;padding:3px 8px;" onclick="toggleAppLogs(<?php echo $appId; ?>)" title="Ver logs do servidor">📋</button>
                 <?php endif; ?>
                 <?php if ($appSt === 'error'): ?>
                   <form method="post" action="/cliente/aplicacoes/reinstalar" style="display:inline;">
@@ -84,6 +85,23 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               </div>
             </td>
           </tr>
+          <!-- Logs panel -->
+          <tr id="app-logs-row-<?php echo $appId; ?>" style="display:none;">
+            <td colspan="7" style="padding:0;border-bottom:1px solid #f1f5f9;">
+              <div style="background:#0b1020;border-radius:0 0 8px 8px;padding:12px;font-family:monospace;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;">
+                    <button onclick="carregarAppLogs(<?php echo $appId; ?>,'all')" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">Todos</button>
+                    <button onclick="carregarAppLogs(<?php echo $appId; ?>,'nginx')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">Nginx</button>
+                    <button onclick="carregarAppLogs(<?php echo $appId; ?>,'php')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">PHP</button>
+                    <button onclick="carregarAppLogs(<?php echo $appId; ?>,'app')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">App</button>
+                  </div>
+                  <button onclick="carregarAppLogs(<?php echo $appId; ?>,'all')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:11px;">🔄 Atualizar</button>
+                </div>
+                <pre id="app-logs-output-<?php echo $appId; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:400px;overflow-y:auto;margin:0;">Carregando...</pre>
+              </div>
+            </td>
+          </tr>
         <?php endforeach; ?>
         <?php if (empty($aplicacoes)): ?>
           <tr><td colspan="7" style="padding:12px;color:#94a3b8;"><?php echo View::e(I18n::t('apps.nenhuma')); ?></td></tr>
@@ -92,5 +110,34 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </table>
   </div>
 </div>
+
+<script>
+function toggleAppLogs(appId) {
+  var row = document.getElementById('app-logs-row-' + appId);
+  if (row.style.display === 'none') {
+    row.style.display = '';
+    carregarAppLogs(appId, 'all');
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+function carregarAppLogs(appId, tipo) {
+  var output = document.getElementById('app-logs-output-' + appId);
+  output.textContent = '⏳ Carregando logs...';
+
+  fetch('/cliente/aplicacoes/logs?app_id=' + appId + '&tipo=' + tipo + '&linhas=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        output.textContent = d.logs || '(sem logs)';
+        output.scrollTop = output.scrollHeight;
+      } else {
+        output.textContent = '✘ ' + (d.erro || 'Erro ao carregar logs');
+      }
+    })
+    .catch(function() { output.textContent = '✘ Erro de rede'; });
+}
+</script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

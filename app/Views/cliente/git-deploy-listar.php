@@ -81,6 +81,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 logs deploy-<?php echo $did; ?> --lines 30 --nostream 2>&1')" title="Ver logs PM2">📜 Logs PM2</button>
       <?php endif; ?>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
+      <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor">📋 Logs servidor</button>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirm('Remover esta integração?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $did; ?>" />
@@ -109,6 +110,21 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <!-- Logs accordion -->
     <div id="logs-<?php echo $did; ?>" style="display:none;margin-top:12px;"></div>
+
+    <!-- Server logs viewer -->
+    <div id="server-logs-<?php echo $did; ?>" style="display:none;margin-top:12px;background:#0b1020;border-radius:8px;padding:12px;font-family:monospace;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;gap:6px;">
+          <span style="color:#64748b;font-size:11px;">📋 Logs do servidor</span>
+          <button onclick="carregarServerLogs(<?php echo $did; ?>,'all')" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">Todos</button>
+          <button onclick="carregarServerLogs(<?php echo $did; ?>,'nginx')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">Nginx</button>
+          <button onclick="carregarServerLogs(<?php echo $did; ?>,'php')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">PHP</button>
+          <button onclick="carregarServerLogs(<?php echo $did; ?>,'app')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">App</button>
+        </div>
+        <button onclick="carregarServerLogs(<?php echo $did; ?>,'all')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:11px;">🔄</button>
+      </div>
+      <pre id="server-logs-output-<?php echo $did; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:400px;overflow-y:auto;margin:0;">Carregando...</pre>
+    </div>
   </div>
   <?php endforeach; ?>
 </div>
@@ -241,6 +257,32 @@ function runConsoleCmd(id) {
       input.disabled = false;
       output.textContent += '✘ Erro de rede\n';
     });
+}
+function toggleServerLogs(id) {
+  var el = document.getElementById('server-logs-' + id);
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    carregarServerLogs(id, 'all');
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function carregarServerLogs(id, tipo) {
+  var output = document.getElementById('server-logs-output-' + id);
+  output.textContent = '⏳ Carregando logs...';
+
+  fetch('/cliente/git-deploy/server-logs?id=' + id + '&tipo=' + tipo + '&linhas=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        output.textContent = d.logs || '(sem logs)';
+        output.scrollTop = output.scrollHeight;
+      } else {
+        output.textContent = '✘ ' + (d.erro || 'Erro ao carregar logs');
+      }
+    })
+    .catch(function() { output.textContent = '✘ Erro de rede'; });
 }
 </script>
 

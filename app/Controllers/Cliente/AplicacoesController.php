@@ -249,4 +249,87 @@ final class AplicacoesController
 
         return Resposta::redirecionar('/cliente/aplicacoes');
     }
+
+    /**
+     * AJAX: busca logs do servidor para uma aplicação (PHP-FPM, Nginx, app logs).
+     */
+    public function logs(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $appId = (int)($req->query['app_id'] ?? 0);
+        $tipo = (string)($req->query['tipo'] ?? 'all'); // all, php, nginx, app
+        $linhas = min(200, max(20, (int)($req->query['linhas'] ?? 100)));
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT a.container_id, a.type, a.domain, a.port, v.server_id,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM applications a
+             JOIN vps v ON v.id = a.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE a.id = :id AND v.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $appId, ':c' => $clienteId]);
+        $app = $stmt->fetch();
+        if (!is_array($app)) return Resposta::json(['ok' => false, 'erro' => 'Aplicação não encontrada.'], 404);
+
+        $domain = (string)($app['domain'] ?? '');
+        $appType = (string)($app['type'] ?? '');
+        $containerId = (string)($app['container_id'] ?? '');
+
+        $cmds = [];
+        if ($tipo === 'all' || $tipo === 'nginx') {
+            $cmds[] = 'echo "=== NGINX ERROR LOG ===" && tail -' . $linhas . ' /var/log/nginx/error.log 2>/dev/null || echo "(vazio)"';
+            if ($domain !== '') {
+                $vhostLog = str_replace('.', '_', $domain);
+                $cmds[] = 'echo "=== NGINX ACCESS (' . $domain . ') ===" && tail -' . $linhas . ' /var/log/nginx/' . $vhostLog . '.access.log 2>/dev/null || echo "(vazio)"';
+            }
+        }
+        if ($tipo === 'all' || $tipo === 'php') {
+            $cmds[] = 'echo "=== PHP-FPM LOG ===" && tail -' . $linhas . ' /var/log/php*fpm*.log 2>/dev/null || echo "(vazio)"';
+            $cmds[] = 'echo "=== PHP ERROR LOG ===" && tail -' . $linhas . ' /tmp/php_errors.log 2>/dev/null || echo "(vazio)"';
+        }
+        if ($tipo === 'all' || $tipo === 'app') {
+            if ($containerId !== '') {
+                $cmds[] = 'echo "=== CONTAINER LOGS ===" && docker logs --tail ' . $linhas . ' ' . escapeshellarg($containerId) . ' 2>&1 || echo "(sem container)"';
+            }
+            if ($appType === 'nodejs') {
+                $cmds[] = 'echo "=== PM2 LOGS ===" && pm2 logs --nostream --lines ' . $linhas . ' 2>&1 || echo "(sem pm2)"';
+            }
+        }
+
+        $fullCmd = implode(' ; ', $cmds);
+
+        try {
+            $exec = new \LRV\App\Services\Infra\SshExecutor();
+            $host = (string)($app['ip_address'] ?? '');
+            $port = (int)($app['ssh_port'] ?? 22);
+            $user = (string)($app['ssh_user'] ?? 'root');
+            $authType = (string)($app['ssh_auth_type'] ?? 'password');
+
+            if ($authType === 'password') {
+                $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($app['ssh_password'] ?? ''));
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $fullCmd, 15);
+            } else {
+                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($app['ssh_key_id'] ?? '');
+                $result = $exec->executar($host, $port, $user, $keyPath, $fullCmd, 15);
+            }
+
+            $output = (string)($result['saida'] ?? '');
+            // Limpar warnings SSH
+            $lines = explode("\n", $output);
+            $clean = [];
+            foreach ($lines as $l) {
+                if (str_contains($l, 'Warning: Permanently added')) continue;
+                if (str_contains($l, 'known_hosts')) continue;
+                $clean[] = $l;
+            }
+
+            return Resposta::json(['ok' => true, 'logs' => implode("\n", $clean)]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
 }
