@@ -14,7 +14,86 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="page-title">Bancos de Dados</div>
     <div class="page-subtitle" style="margin-bottom:0;">Crie e gerencie bancos MySQL nas suas VPS</div>
   </div>
-  <a href="/cliente/banco-dados/criar" class="botao">+ Novo banco</a>
+  <div style="display:flex;gap:8px;">
+    <button class="botao ghost sm" onclick="document.getElementById('pmaConfigPanel').style.display=document.getElementById('pmaConfigPanel').style.display==='none'?'block':'none'">⚙️ Config phpMyAdmin</button>
+    <a href="/cliente/banco-dados/criar" class="botao">+ Novo banco</a>
+  </div>
+</div>
+
+<!-- Painel de configuração phpMyAdmin -->
+<div id="pmaConfigPanel" class="card-new" style="display:none;margin-bottom:20px;">
+  <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">⚙️ Configurações do phpMyAdmin</div>
+  <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Ajuste os limites para importar arquivos SQL grandes. As alterações são aplicadas no servidor imediatamente.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:14px;">
+    <div>
+      <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">upload_max_filesize</label>
+      <select class="input" id="pma-upload-max" style="font-size:13px;">
+        <option value="64M">64 MB</option>
+        <option value="128M">128 MB</option>
+        <option value="256M" selected>256 MB</option>
+        <option value="512M">512 MB</option>
+        <option value="1G">1 GB</option>
+        <option value="2G">2 GB</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">post_max_size</label>
+      <select class="input" id="pma-post-max" style="font-size:13px;">
+        <option value="64M">64 MB</option>
+        <option value="128M">128 MB</option>
+        <option value="256M" selected>256 MB</option>
+        <option value="512M">512 MB</option>
+        <option value="1G">1 GB</option>
+        <option value="2G">2 GB</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">max_execution_time</label>
+      <select class="input" id="pma-max-exec" style="font-size:13px;">
+        <option value="300">5 min (300s)</option>
+        <option value="600">10 min (600s)</option>
+        <option value="1800" selected>30 min (1800s)</option>
+        <option value="3600">1 hora (3600s)</option>
+        <option value="7200">2 horas (7200s)</option>
+        <option value="0">Sem limite</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">max_input_time</label>
+      <select class="input" id="pma-max-input" style="font-size:13px;">
+        <option value="300">5 min (300s)</option>
+        <option value="600">10 min (600s)</option>
+        <option value="1800" selected>30 min (1800s)</option>
+        <option value="3600">1 hora (3600s)</option>
+        <option value="0">Sem limite</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">memory_limit</label>
+      <select class="input" id="pma-memory" style="font-size:13px;">
+        <option value="256M">256 MB</option>
+        <option value="512M" selected>512 MB</option>
+        <option value="1G">1 GB</option>
+        <option value="2G">2 GB</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;">
+    <label style="font-size:12px;color:#475569;">VPS:</label>
+    <select class="input" id="pma-vps-id" style="font-size:13px;max-width:250px;">
+      <?php
+        $vpsListPma = \LRV\Core\BancoDeDados::pdo()->prepare("SELECT v.id, v.cpu, v.ram FROM vps v WHERE v.client_id = :c AND v.status = 'running' ORDER BY v.id");
+        $vpsListPma->execute([':c' => \LRV\Core\Auth::clienteId()]);
+        foreach ($vpsListPma->fetchAll() ?: [] as $vp):
+      ?>
+        <option value="<?php echo (int)$vp['id']; ?>">VPS #<?php echo (int)$vp['id']; ?> — <?php echo (int)$vp['cpu']; ?>vCPU / <?php echo round((int)$vp['ram']/1024); ?>GB</option>
+      <?php endforeach; ?>
+    </select>
+    <button class="botao sm" id="pmaApplyBtn" onclick="aplicarConfigPma()">Aplicar</button>
+    <span id="pmaStatus" style="font-size:12px;color:#64748b;"></span>
+  </div>
 </div>
 
 <?php if (empty($bancos)): ?>
@@ -182,5 +261,41 @@ function salvarNota(bid) {
 }
 </script>
 <?php endif; ?>
+
+<script>
+function aplicarConfigPma() {
+  var btn = document.getElementById('pmaApplyBtn');
+  var st = document.getElementById('pmaStatus');
+  btn.disabled = true; btn.textContent = '⏳ Aplicando...';
+  st.textContent = ''; st.style.color = '#64748b';
+
+  var fd = new FormData();
+  fd.append('_csrf', '<?php echo View::e(Csrf::token()); ?>');
+  fd.append('vps_id', document.getElementById('pma-vps-id').value);
+  fd.append('upload_max_filesize', document.getElementById('pma-upload-max').value);
+  fd.append('post_max_size', document.getElementById('pma-post-max').value);
+  fd.append('max_execution_time', document.getElementById('pma-max-exec').value);
+  fd.append('max_input_time', document.getElementById('pma-max-input').value);
+  fd.append('memory_limit', document.getElementById('pma-memory').value);
+
+  fetch('/cliente/banco-dados/config-phpmyadmin', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      btn.disabled = false; btn.textContent = 'Aplicar';
+      if (d.ok) {
+        st.textContent = '✓ Configurações aplicadas com sucesso';
+        st.style.color = '#10b981';
+      } else {
+        st.textContent = '✘ ' + (d.erro || 'Erro ao aplicar');
+        st.style.color = '#ef4444';
+      }
+    })
+    .catch(function() {
+      btn.disabled = false; btn.textContent = 'Aplicar';
+      st.textContent = '✘ Erro de rede';
+      st.style.color = '#ef4444';
+    });
+}
+</script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

@@ -350,6 +350,90 @@ final class BancoDadosController
         return Resposta::redirecionar($url);
     }
 
+    /**
+     * AJAX: aplica configurações PHP no container phpMyAdmin via SSH.
+     */
+    public function configPhpmyadmin(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $uploadMax = $this->sanitizarTamanho((string)($req->post['upload_max_filesize'] ?? '256M'));
+        $postMax = $this->sanitizarTamanho((string)($req->post['post_max_size'] ?? '256M'));
+        $maxExec = max(0, min(7200, (int)($req->post['max_execution_time'] ?? 1800)));
+        $maxInput = max(0, min(7200, (int)($req->post['max_input_time'] ?? 1800)));
+        $memoryLimit = $this->sanitizarTamanho((string)($req->post['memory_limit'] ?? '512M'));
+
+        if ($vpsId <= 0) return Resposta::json(['ok' => false, 'erro' => 'Selecione uma VPS.']);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            "SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM vps v JOIN servers s ON s.id = v.server_id
+             WHERE v.id = :v AND v.client_id = :c AND v.status = 'running' LIMIT 1"
+        );
+        $stmt->execute([':v' => $vpsId, ':c' => $clienteId]);
+        $srv = $stmt->fetch();
+        if (!is_array($srv)) return Resposta::json(['ok' => false, 'erro' => 'VPS não encontrada.']);
+
+        // Gerar conteúdo do php.ini customizado
+        $iniContent = "upload_max_filesize = {$uploadMax}\n"
+            . "post_max_size = {$postMax}\n"
+            . "max_execution_time = {$maxExec}\n"
+            . "max_input_time = {$maxInput}\n"
+            . "memory_limit = {$memoryLimit}\n";
+
+        $iniB64 = base64_encode($iniContent);
+
+        // Detectar container phpMyAdmin (nome padrão: phpmyadmin)
+        // Aplicar via docker exec + reiniciar Apache dentro do container
+        $cmd = 'PMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i phpmyadmin | head -1)'
+            . ' && if [ -z "$PMA_CONTAINER" ]; then echo "PMA_NOT_FOUND"; exit 1; fi'
+            . ' && echo ' . escapeshellarg($iniB64) . ' | base64 -d | docker exec -i $PMA_CONTAINER tee /usr/local/etc/php/conf.d/99-custom-limits.ini > /dev/null'
+            . ' && docker exec $PMA_CONTAINER kill -USR2 1 2>/dev/null'
+            . ' && docker restart $PMA_CONTAINER 2>&1'
+            . ' && echo lrv-pma-ok';
+
+        try {
+            $exec = new SshExecutor();
+            $host = (string)($srv['ip_address'] ?? '');
+            $port = (int)($srv['ssh_port'] ?? 22);
+            $user = (string)($srv['ssh_user'] ?? 'root');
+            $authType = (string)($srv['ssh_auth_type'] ?? 'password');
+
+            if ($authType === 'password') {
+                $senha = SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $cmd, 30);
+            } else {
+                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($srv['ssh_key_id'] ?? '');
+                $result = $exec->executar($host, $port, $user, $keyPath, $cmd, 30);
+            }
+
+            $output = (string)($result['saida'] ?? '');
+            if (str_contains($output, 'PMA_NOT_FOUND')) {
+                return Resposta::json(['ok' => false, 'erro' => 'Container phpMyAdmin não encontrado nesta VPS. Verifique se está instalado.']);
+            }
+            if (!str_contains($output, 'lrv-pma-ok')) {
+                return Resposta::json(['ok' => false, 'erro' => 'Falha ao aplicar configurações: ' . substr($output, 0, 200)]);
+            }
+
+            return Resposta::json(['ok' => true]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Sanitiza valor de tamanho PHP (ex: 256M, 1G, 512M).
+     */
+    private function sanitizarTamanho(string $val): string
+    {
+        $val = strtoupper(trim($val));
+        if (preg_match('/^\d+[MG]$/', $val)) return $val;
+        return '256M';
+    }
+
     private function renderizarErro(int $clienteId, string $erro): Resposta
     {
         $pdo = BancoDeDados::pdo();

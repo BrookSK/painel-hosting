@@ -341,6 +341,7 @@ $roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\Ba
 $roteador->get('/cliente/banco-dados/senha', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'senha'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->post('/cliente/banco-dados/nota', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'nota'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/banco-dados/phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'phpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/banco-dados/config-phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'configPhpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('pma_config', 5, 60)]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
 // Backups cliente
