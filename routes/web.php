@@ -333,6 +333,13 @@ $roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cli
 $roteador->post('/cliente/git-deploy/console', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'console'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_console', 60, 60)]);
 $roteador->get('/cliente/git-deploy/server-logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'serverLogs'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 
+// Cron Jobs
+$roteador->get('/cliente/cron-jobs', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/cron-jobs/salvar', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('cron_save', 10, 60)]);
+$roteador->post('/cliente/cron-jobs/excluir', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/cron-jobs/toggle', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'toggle'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/cron-jobs/executar', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'executarAgora'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('cron_exec', 10, 60)]);
+
 // Bancos de Dados
 $roteador->get('/cliente/banco-dados', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/banco-dados/criar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);

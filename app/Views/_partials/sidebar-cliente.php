@@ -88,6 +88,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l3 2-3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Terminal</span>
     </a>
+    <a href="/cliente/cron-jobs" class="nav-item<?php echo _nav_ativo_cli('/cliente/cron-jobs', $_seg); ?>" data-tooltip="Cron Jobs">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Cron Jobs</span>
+    </a>
     <?php endif; ?>
     <a href="/cliente/backups" class="nav-item<?php echo _nav_ativo_cli('/cliente/backups', $_seg); ?>" data-tooltip="Backups">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2M10 3v10M10 3l3 3M10 3L7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
