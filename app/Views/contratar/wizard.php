@@ -167,8 +167,8 @@ $moedaJs = I18n::moedaCodigo();
       <div class="periodo-opt sel" data-periodo="1" onclick="selPeriodo(1)">
         <div><strong><?php echo View::e(I18n::t('wz.mensal')); ?></strong><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.sem_compromisso')); ?></span></div>
         <div style="text-align:right;">
-          <div style="font-weight:700;"><?php echo View::e(I18n::preco($preco)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></div>
-          <div style="font-size:11px;color:#94a3b8;"><?php echo View::e(I18n::t('wz.cobrado')); ?> <?php echo View::e(I18n::preco($preco)); ?></div>
+          <div style="font-weight:700;" id="preco1m"><?php echo View::e(I18n::preco($preco)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></div>
+          <div style="font-size:11px;color:#94a3b8;" id="cobrado1m"><?php echo View::e(I18n::t('wz.cobrado')); ?> <?php echo View::e(I18n::preco($preco)); ?></div>
         </div>
       </div>
       <div class="periodo-opt" data-periodo="6" onclick="selPeriodo(6)">
@@ -540,8 +540,11 @@ $moedaJs = I18n::moedaCodigo();
   };
 
   function atualizarPeriodos(){
+    var p1=precoComDesconto(precoBase,1);
     var p6=precoComDesconto(precoBase,6);
     var p12=precoComDesconto(precoBase,12);
+    document.getElementById('preco1m').textContent=fmt(p1)+'/mês';
+    document.getElementById('cobrado1m').textContent='Cobrado '+fmt(p1);
     document.getElementById('preco6m').textContent=fmt(p6)+'/mês';
     document.getElementById('cobrado6m').textContent='Cobrado '+fmt(p6*6);
     document.getElementById('preco12m').textContent=fmt(p12)+'/mês';

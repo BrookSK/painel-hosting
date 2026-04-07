@@ -253,7 +253,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     var perLabel=selectedPeriodo===1?'/mês':selectedPeriodo===6?'/mês (6 meses)':'/mês (12 meses)';
     var totalPlan=planPrice*selectedPeriodo;
 
-    // Update period prices
+    // Update period price labels
     document.querySelectorAll('.per-label').forEach(function(l){
       var per=parseInt(l.dataset.per);
       var oldPer=selectedPeriodo;selectedPeriodo=per;
