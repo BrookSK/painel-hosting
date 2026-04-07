@@ -132,14 +132,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="card-new" style="position:sticky;top:20px;">
       <div class="card-new-title" style="margin-bottom:12px;">Resumo do pedido</div>
       <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;">
-        <div style="display:flex;justify-content:space-between;">
-          <span><?php echo View::e((string)($plano['name'] ?? '')); ?></span>
-          <span><?php echo View::e(I18n::preco($precoBase)); ?></span>
-        </div>
         <div id="addons-resumo"></div>
         <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;font-size:18px;font-weight:700;">
           <span>Total</span>
-          <span id="total-preco" style="color:#4F46E5;"><?php echo View::e(I18n::preco($precoBase)); ?></span>
+          <span id="total-preco" style="color:#4F46E5;"></span>
         </div>
         <div style="font-size:11px;color:#94a3b8;" id="perInfo">por mês</div>
       </div>
@@ -280,9 +276,20 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   };
 
   function atualizar(){
-    var planPrice=getPlanPrice();
-    var perLabel=selectedPeriodo===1?'/mês':selectedPeriodo===6?'/mês (6 meses)':'/mês (12 meses)';
-    var totalPlan=planPrice*selectedPeriodo;
+    var planPricePerMonth=getPlanPrice();
+    var perLabel=selectedPeriodo===1?'/mês':'/mês ('+selectedPeriodo+' meses)';
+
+    // Parcelas
+    var instSel=document.getElementById('installmentsSelect');
+    var parcelas=instSel&&selectedPeriodo>1?parseInt(instSel.value)||1:1;
+
+    // Preço total do plano no período
+    var totalPlan=planPricePerMonth*selectedPeriodo;
+    // Se à vista (1x) no anual e tem preço upfront, usar ele
+    var upfrontVal=selectedCurrency==='USD'?toUsd(priceAnnualUpfront||0,priceAnnualUpfrontUsd):(priceAnnualUpfront||0);
+    if(selectedPeriodo===12&&parcelas===1&&upfrontVal>0){
+      totalPlan=upfrontVal;
+    }
 
     // Update period price labels
     document.querySelectorAll('.per-label').forEach(function(l){
@@ -295,48 +302,59 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     });
 
     // Plan price display
-    document.getElementById('planPriceDisplay').innerHTML=fmt(planPrice)+'<span style="font-size:13px;font-weight:400;color:#64748b;">'+perLabel+'</span>';
+    document.getElementById('planPriceDisplay').innerHTML=fmt(planPricePerMonth)+'<span style="font-size:13px;font-weight:400;color:#64748b;">'+perLabel+'</span>';
 
-    // Addons
-    var soma=0;var html='';var ids=[];
+    // Addons — calcular total por período
+    var addonsTotal=0;var html='';var ids=[];
     checks.forEach(function(cb){
       var card=cb.closest('.addon-card');
-      var p=getAddonPrice(card);
+      var pMes=getAddonPrice(card);
       // Update addon price display
       var priceDisp=card.querySelector('.addon-price-display');
-      if(priceDisp) priceDisp.textContent='+'+fmt(p)+'/mês';
+      if(priceDisp) priceDisp.textContent='+'+fmt(pMes)+'/mês';
       if(cb.checked){
-        soma+=p*selectedPeriodo;ids.push(cb.value);
+        var addonPeriodoTotal=pMes*selectedPeriodo;
+        addonsTotal+=addonPeriodoTotal;
+        ids.push(cb.value);
         var nome=card.querySelector('div[style*="font-weight:600"]').textContent;
-        html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+nome+'</span><span>+'+fmt(p*selectedPeriodo)+'</span></div>';
+        html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+nome+'</span><span>+'+fmt(addonPeriodoTotal)+'</span></div>';
         card.style.borderColor='#4F46E5';card.style.background='#f5f3ff';
       }else{
         card.style.borderColor='#e2e8f0';card.style.background='#fff';
       }
     });
-    resumo.innerHTML=html;
-    total.textContent=fmt(totalPlan+soma);
+
+    var totalGeral=totalPlan+addonsTotal;
+
+    // Resumo lateral — linha do plano
+    var resumoHtml='<div style="display:flex;justify-content:space-between;"><span><?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(totalPlan)+'</span></div>';
+    resumoHtml+=html;
+    resumo.innerHTML=resumoHtml;
+    total.textContent=fmt(totalGeral);
     idsInput.value=ids.join(',');
 
-    // Update "por mês" label
-    var instSel=document.getElementById('installmentsSelect');
-    var parcelas=instSel?parseInt(instSel.value)||1:1;
-    var totalGeral=totalPlan+soma;
-    var perSuffix=selectedPeriodo===1?'por mês':'total ('+selectedPeriodo+' meses)';
-    if(parcelas>1&&selectedPeriodo>1){
-      var valorParcela=totalGeral/parcelas;
-      perSuffix=parcelas+'x de '+fmt(valorParcela);
+    // Info abaixo do total
+    var perInfo=document.getElementById('perInfo');
+    if(perInfo){
+      if(selectedPeriodo===1){
+        perInfo.textContent='por mês';
+      }else if(parcelas>1){
+        perInfo.textContent=parcelas+'x de '+fmt(totalGeral/parcelas);
+      }else if(selectedPeriodo===12&&upfrontVal>0){
+        perInfo.textContent='pagamento único anual (à vista)';
+      }else{
+        perInfo.textContent='total ('+selectedPeriodo+' meses)';
+      }
     }
-    var perInfo=document.getElementById('perInfo');if(perInfo)perInfo.textContent=perSuffix;
 
-    // Installment info
+    // Installment info text
     var instInfo=document.getElementById('installmentInfo');
-    if(instInfo&&selectedPeriodo>1){
-      if(parcelas===1){
-        // Check if there's an upfront price
-        var upVal=selectedCurrency==='USD'?toUsd(priceAnnualUpfront||0,priceAnnualUpfrontUsd):priceAnnualUpfront||0;
-        if(selectedPeriodo===12&&upVal>0){
-          instInfo.textContent='À vista com desconto: '+fmt(upVal);
+    if(instInfo){
+      if(selectedPeriodo<=1){
+        instInfo.textContent='';
+      }else if(parcelas===1){
+        if(selectedPeriodo===12&&upfrontVal>0){
+          instInfo.textContent='À vista com desconto: '+fmt(upfrontVal)+(addonsTotal>0?' + '+fmt(addonsTotal)+' (addons) = '+fmt(totalGeral):'');
         }else{
           instInfo.textContent='Pagamento único de '+fmt(totalGeral);
         }
