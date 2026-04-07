@@ -154,21 +154,11 @@ final class AssinarPlanoController
             return Resposta::json(['ok' => true, 'redirect' => '/cliente/pagamento?sub=' . $localSubId]);
         }
 
-        // USD → Stripe inline (campos de cartão no nosso site)
+        // USD → Stripe Checkout (redirect para página segura do Stripe)
         $service = new StripeCheckoutService();
 
-        // Dados do cartão enviados pelo form
-        $ccNumero = preg_replace('/\D/', '', trim((string)($req->post['cc_numero'] ?? '')));
-        $ccValidade = trim((string)($req->post['cc_validade'] ?? ''));
-        $ccCvv = trim((string)($req->post['cc_cvv'] ?? ''));
-        $ccNome = trim((string)($req->post['cc_nome'] ?? ''));
-
-        if (strlen($ccNumero) < 13 || $ccValidade === '' || strlen($ccCvv) < 3) {
-            return Resposta::json(['ok' => false, 'erro' => 'Preencha os dados do cartão corretamente.'], 422);
-        }
-
         try {
-            $resultado = $service->criarAssinaturaComCartao($clienteId, $planId, $addonsSelecionados, $ccNumero, $ccValidade, $ccCvv, $ccNome);
+            $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados);
         } catch (\Throwable $e) {
             $erroDetalhe = $e->getMessage();
             (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
@@ -176,26 +166,25 @@ final class AssinarPlanoController
 
             $mensagemUsuario = match (true) {
                 str_contains($erroDetalhe, 'secret key ausente') => 'Stripe não configurado. Contate o suporte.',
+                str_contains($erroDetalhe, 'stripe_price_id ausente'),
                 str_contains($erroDetalhe, 'configurado para Stripe') => 'Plano não configurado para pagamento com cartão.',
                 str_contains($erroDetalhe, 'Plano não encontrado') => 'Plano não encontrado ou inativo.',
                 str_contains($erroDetalhe, 'Cliente não encontrado') => 'Erro ao localizar sua conta.',
-                str_contains($erroDetalhe, 'card_declined'),
-                str_contains($erroDetalhe, 'incorrect_number') => 'Cartão recusado. Verifique os dados e tente novamente.',
-                str_contains($erroDetalhe, 'expired_card') => 'Cartão expirado.',
-                str_contains($erroDetalhe, 'incorrect_cvc') => 'CVC incorreto.',
                 default => 'Erro ao processar pagamento: ' . $erroDetalhe,
             };
             return Resposta::json(['ok' => false, 'erro' => $mensagemUsuario], 400);
         }
 
-        (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
-            ['plan_id' => $planId, 'gateway' => 'stripe_card', 'ok' => true, 'sub_id' => (int)($resultado['subscription_id'] ?? 0)], $req);
+        $checkoutUrl = is_array($resultado) ? (string)($resultado['checkout_url'] ?? '') : '';
 
-        return Resposta::json([
-            'ok' => true,
-            'payment_type' => 'stripe_paid',
-            'sub_id' => (int)($resultado['subscription_id'] ?? 0),
-        ]);
+        (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
+            ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => true], $req);
+
+        if ($checkoutUrl === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Falha ao iniciar checkout.'], 500);
+        }
+
+        return Resposta::json(['ok' => true, 'redirect' => $checkoutUrl]);
     }
 
     private function extrairErroAsaas(array $respostaJson, string $fallback): string
