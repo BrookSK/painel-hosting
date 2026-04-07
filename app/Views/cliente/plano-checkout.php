@@ -15,6 +15,8 @@ $hasUpfront = ((float)($plano['price_annual_upfront'] ?? 0)) > 0 || ((float)($pl
 $pageTitle = 'Configurar plano';
 $clienteNome = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
+$extraHead = '<meta http-equiv="Content-Security-Policy" content="script-src \'self\' \'unsafe-inline\' https://js.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; connect-src \'self\' https://api.stripe.com ws: wss:;">'
+    . '<script src="https://js.stripe.com/v3/"></script>';
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
@@ -304,23 +306,17 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   atualizar();
   <?php if (!$isBrl): ?>selCurrency('USD');<?php endif; ?>
 
-  // Stripe Elements setup
+  // Stripe Elements setup (script já carregado no head)
   var stripePublicKey=<?php echo json_encode(\LRV\Core\ConfiguracoesSistema::stripePublishableKey()); ?>;
-  var stripeInstance=null,stripeElements=null,stripeCard=null;
-  if(stripePublicKey){
-    var sc=document.createElement('script');
-    sc.src='https://js.stripe.com/v3/';
-    sc.onload=function(){
-      stripeInstance=Stripe(stripePublicKey);
-      stripeElements=stripeInstance.elements();
-      stripeCard=stripeElements.create('card',{style:{base:{fontSize:'15px',color:'#1e293b','::placeholder':{color:'#94a3b8'}}}});
-      stripeCard.mount('#stripe-card-element');
-      stripeCard.on('change',function(ev){
-        var el=document.getElementById('stripe-card-errors');
-        el.textContent=ev.error?ev.error.message:'';
-      });
-    };
-    document.head.appendChild(sc);
+  var stripeInstance=null,stripeCard=null;
+  if(stripePublicKey && typeof Stripe !== 'undefined'){
+    stripeInstance=Stripe(stripePublicKey);
+    var stripeElements=stripeInstance.elements();
+    stripeCard=stripeElements.create('card',{style:{base:{fontSize:'15px',color:'#1e293b','::placeholder':{color:'#94a3b8'}}}});
+    stripeCard.mount('#stripe-card-element');
+    stripeCard.on('change',function(ev){
+      document.getElementById('stripe-card-errors').textContent=ev.error?ev.error.message:'';
+    });
   }
 
   window.submeterAssinar=function(e){

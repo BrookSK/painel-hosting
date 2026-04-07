@@ -41,6 +41,7 @@ $_t = static fn(string $k): string => I18n::t($k);
   <title><?php echo View::e($_pageTitle); ?> — <?php echo View::e(SistemaConfig::nome()); ?></title>
   <?php require __DIR__ . '/estilo.php'; ?>
   <?php require __DIR__ . '/estilo-equipe.php'; ?>
+  <?php if (!empty($extraHead)) echo $extraHead; ?>
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="fecharSidebarCli()"></div>
