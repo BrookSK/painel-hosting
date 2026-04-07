@@ -9,7 +9,8 @@ use LRV\Core\Roteador;
 
 Bootstrap::iniciar();
 
-// Sobrescrever CSP do servidor para permitir Stripe.js, Google Fonts, etc.
+// Remover CSP do servidor (Plesk) e definir o nosso com Stripe permitido
+header_remove('Content-Security-Policy');
 header("Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self' https://checkout.stripe.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://js.stripe.com; connect-src 'self' https://api.stripe.com ws: wss:; frame-src https://js.stripe.com https://hooks.stripe.com;");
 
 $roteador = new Roteador();
