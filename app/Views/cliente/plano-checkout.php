@@ -15,8 +15,7 @@ $hasUpfront = ((float)($plano['price_annual_upfront'] ?? 0)) > 0 || ((float)($pl
 $pageTitle = 'Configurar plano';
 $clienteNome = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
-$extraHead = '<meta http-equiv="Content-Security-Policy" content="script-src \'self\' \'unsafe-inline\' https://js.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; connect-src \'self\' https://api.stripe.com ws: wss:;">'
-    . '<script src="https://js.stripe.com/v3/"></script>';
+$extraHead = '';
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
@@ -161,12 +160,27 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           </div>
           <div style="display:none;gap:8px;flex-wrap:wrap;" id="gwUsd">
             <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;">
-              💳 <?php echo View::e(I18n::t('checkout.cartao')); ?> (Stripe)
+              💳 Cartão de crédito
             </label>
-            <!-- Stripe Elements card input -->
-            <div id="stripeCardContainer" style="width:100%;margin-top:10px;">
-              <div id="stripe-card-element" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;"></div>
-              <div id="stripe-card-errors" style="color:#ef4444;font-size:12px;margin-top:6px;"></div>
+            <div id="stripeCardFields" style="width:100%;margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Número do cartão</label>
+                <input class="input" type="text" id="ccNumUsd" placeholder="4242 4242 4242 4242" maxlength="19" inputmode="numeric" autocomplete="cc-number" style="font-family:monospace;" />
+              </div>
+              <div style="display:flex;gap:8px;">
+                <div style="flex:1;">
+                  <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Validade</label>
+                  <input class="input" type="text" id="ccExpUsd" placeholder="MM/AA" maxlength="5" inputmode="numeric" autocomplete="cc-exp" />
+                </div>
+                <div style="flex:1;">
+                  <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">CVC</label>
+                  <input class="input" type="text" id="ccCvcUsd" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc" />
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Nome no cartão</label>
+                <input class="input" type="text" id="ccNameUsd" placeholder="Nome como está no cartão" autocomplete="cc-name" />
+              </div>
             </div>
           </div>
         </div>
@@ -306,18 +320,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   atualizar();
   <?php if (!$isBrl): ?>selCurrency('USD');<?php endif; ?>
 
-  // Stripe Elements setup (script já carregado no head)
-  var stripePublicKey=<?php echo json_encode(\LRV\Core\ConfiguracoesSistema::stripePublishableKey()); ?>;
-  var stripeInstance=null,stripeCard=null;
-  if(stripePublicKey && typeof Stripe !== 'undefined'){
-    stripeInstance=Stripe(stripePublicKey);
-    var stripeElements=stripeInstance.elements();
-    stripeCard=stripeElements.create('card',{style:{base:{fontSize:'15px',color:'#1e293b','::placeholder':{color:'#94a3b8'}}}});
-    stripeCard.mount('#stripe-card-element');
-    stripeCard.on('change',function(ev){
-      document.getElementById('stripe-card-errors').textContent=ev.error?ev.error.message:'';
-    });
-  }
+  // Máscaras para campos de cartão USD
+  var ccNumEl=document.getElementById('ccNumUsd');
+  if(ccNumEl)ccNumEl.addEventListener('input',function(){var v=this.value.replace(/\D/g,'').substring(0,16);this.value=v.replace(/(\d{4})(?=\d)/g,'$1 ');});
+  var ccExpEl=document.getElementById('ccExpUsd');
+  if(ccExpEl)ccExpEl.addEventListener('input',function(){var v=this.value.replace(/\D/g,'').substring(0,4);if(v.length>=3)v=v.substring(0,2)+'/'+v.substring(2);this.value=v;});
 
   window.submeterAssinar=function(e){
     e.preventDefault();
@@ -328,37 +335,36 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     var form=document.getElementById('assinarForm');
     var fd=new FormData(form);
-    if(selectedCurrency==='USD') fd.set('gateway','stripe');
+    if(selectedCurrency==='USD'){
+      fd.set('gateway','stripe');
+      // Validar e enviar dados do cartão
+      var ccNum=(document.getElementById('ccNumUsd')||{}).value||'';
+      var ccExp=(document.getElementById('ccExpUsd')||{}).value||'';
+      var ccCvc=(document.getElementById('ccCvcUsd')||{}).value||'';
+      var ccName=(document.getElementById('ccNameUsd')||{}).value||'';
+      ccNum=ccNum.replace(/\s/g,'');
+      if(ccNum.length<13||!ccExp||ccCvc.length<3){
+        erro.textContent='Preencha os dados do cartão corretamente.';
+        erro.style.display='block';
+        btn.disabled=false;btn.textContent='Assinar agora';
+        return false;
+      }
+      fd.append('cc_numero',ccNum);
+      fd.append('cc_validade',ccExp);
+      fd.append('cc_cvv',ccCvc);
+      fd.append('cc_nome',ccName);
+    }
 
     fetch('/cliente/assinar',{method:'POST',body:fd,credentials:'same-origin'})
       .then(function(r){return r.json();})
       .then(function(d){
-        if(d.ok&&d.payment_type==='stripe_inline'&&d.client_secret){
-          // Confirmar pagamento com Stripe Elements
-          if(!stripeInstance||!stripeCard){
-            erro.textContent='Stripe não carregou. Recarregue a página.';
-            erro.style.display='block';
-            btn.disabled=false;btn.textContent='Assinar agora';
-            return;
-          }
-          btn.textContent='Confirmando pagamento...';
-          stripeInstance.confirmCardPayment(d.client_secret,{
-            payment_method:{card:stripeCard}
-          }).then(function(result){
-            if(result.error){
-              erro.textContent=result.error.message;
-              erro.style.display='block';
-              btn.disabled=false;btn.textContent='Assinar agora';
-            }else{
-              // Pagamento confirmado
-              btn.textContent='Pagamento confirmado!';
-              window.location.href='/cliente/assinaturas';
-            }
-          });
-          return;
-        }
         if(d.ok&&d.redirect){
           window.location.href=d.redirect;
+          return;
+        }
+        if(d.ok&&d.payment_type==='stripe_paid'){
+          btn.textContent='Pagamento confirmado!';
+          window.location.href='/cliente/assinaturas';
           return;
         }
         if(d.erro){

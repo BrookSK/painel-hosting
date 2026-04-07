@@ -157,8 +157,18 @@ final class AssinarPlanoController
         // USD → Stripe inline (campos de cartão no nosso site)
         $service = new StripeCheckoutService();
 
+        // Dados do cartão enviados pelo form
+        $ccNumero = preg_replace('/\D/', '', trim((string)($req->post['cc_numero'] ?? '')));
+        $ccValidade = trim((string)($req->post['cc_validade'] ?? ''));
+        $ccCvv = trim((string)($req->post['cc_cvv'] ?? ''));
+        $ccNome = trim((string)($req->post['cc_nome'] ?? ''));
+
+        if (strlen($ccNumero) < 13 || $ccValidade === '' || strlen($ccCvv) < 3) {
+            return Resposta::json(['ok' => false, 'erro' => 'Preencha os dados do cartão corretamente.'], 422);
+        }
+
         try {
-            $resultado = $service->criarAssinaturaInline($clienteId, $planId, $addonsSelecionados);
+            $resultado = $service->criarAssinaturaComCartao($clienteId, $planId, $addonsSelecionados, $ccNumero, $ccValidade, $ccCvv, $ccNome);
         } catch (\Throwable $e) {
             $erroDetalhe = $e->getMessage();
             (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
@@ -169,18 +179,21 @@ final class AssinarPlanoController
                 str_contains($erroDetalhe, 'configurado para Stripe') => 'Plano não configurado para pagamento com cartão.',
                 str_contains($erroDetalhe, 'Plano não encontrado') => 'Plano não encontrado ou inativo.',
                 str_contains($erroDetalhe, 'Cliente não encontrado') => 'Erro ao localizar sua conta.',
+                str_contains($erroDetalhe, 'card_declined'),
+                str_contains($erroDetalhe, 'incorrect_number') => 'Cartão recusado. Verifique os dados e tente novamente.',
+                str_contains($erroDetalhe, 'expired_card') => 'Cartão expirado.',
+                str_contains($erroDetalhe, 'incorrect_cvc') => 'CVC incorreto.',
                 default => 'Erro ao processar pagamento: ' . $erroDetalhe,
             };
             return Resposta::json(['ok' => false, 'erro' => $mensagemUsuario], 400);
         }
 
         (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
-            ['plan_id' => $planId, 'gateway' => 'stripe_inline', 'ok' => true, 'sub_id' => (int)($resultado['subscription_id'] ?? 0)], $req);
+            ['plan_id' => $planId, 'gateway' => 'stripe_card', 'ok' => true, 'sub_id' => (int)($resultado['subscription_id'] ?? 0)], $req);
 
         return Resposta::json([
             'ok' => true,
-            'payment_type' => 'stripe_inline',
-            'client_secret' => (string)($resultado['client_secret'] ?? ''),
+            'payment_type' => 'stripe_paid',
             'sub_id' => (int)($resultado['subscription_id'] ?? 0),
         ]);
     }

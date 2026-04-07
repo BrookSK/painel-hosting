@@ -293,6 +293,122 @@ final class StripeCheckoutService
     }
 
     /**
+     * Cria assinatura Stripe com dados do cartão server-side (sem Stripe.js).
+     */
+    public function criarAssinaturaComCartao(int $clientId, int $planId, array $addons, string $ccNumero, string $ccValidade, string $ccCvv, string $ccNome): array
+    {
+        $secretKey = ConfiguracoesSistema::stripeSecretKey();
+        if ($secretKey === '') throw new \RuntimeException('Stripe não configurado (secret key ausente).');
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT id, name, price_monthly, price_monthly_usd, cpu, ram, storage, stripe_price_id FROM plans WHERE id = :id AND status = 'active'");
+        $stmt->execute([':id' => $planId]);
+        $plano = $stmt->fetch();
+        if (!is_array($plano)) throw new \RuntimeException('Plano não encontrado.');
+
+        $stripePriceId = trim((string)($plano['stripe_price_id'] ?? ''));
+        if ($stripePriceId === '') {
+            $stripePriceId = $this->criarStripePriceParaPlano($secretKey, $plano, $pdo);
+            if ($stripePriceId === '') throw new \RuntimeException('Plano não configurado para Stripe.');
+        }
+
+        $clienteStmt = $pdo->prepare('SELECT id, name, email, stripe_customer_id FROM clients WHERE id = :id');
+        $clienteStmt->execute([':id' => $clientId]);
+        $cliente = $clienteStmt->fetch();
+        if (!is_array($cliente)) throw new \RuntimeException('Cliente não encontrado.');
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        // Garantir customer
+        $customerId = (string)($cliente['stripe_customer_id'] ?? '');
+        if ($customerId === '') {
+            $c = $stripe->customers->create(['name' => (string)($cliente['name'] ?? ''), 'email' => (string)($cliente['email'] ?? ''), 'metadata' => ['local_client_id' => (string)$clientId]]);
+            $customerId = (string)($c['id'] ?? '');
+            $pdo->prepare('UPDATE clients SET stripe_customer_id = :s WHERE id = :id')->execute([':s' => $customerId, ':id' => $clientId]);
+        }
+
+        // Criar PaymentMethod com dados do cartão
+        $expParts = explode('/', $ccValidade);
+        $expMonth = (int)($expParts[0] ?? 1);
+        $expYear = (int)($expParts[1] ?? 30);
+        if ($expYear < 100) $expYear += 2000;
+
+        $pm = $stripe->paymentMethods->create([
+            'type' => 'card',
+            'card' => [
+                'number' => $ccNumero,
+                'exp_month' => $expMonth,
+                'exp_year' => $expYear,
+                'cvc' => $ccCvv,
+            ],
+            'billing_details' => ['name' => $ccNome !== '' ? $ccNome : (string)($cliente['name'] ?? '')],
+        ]);
+
+        // Attach ao customer e definir como default
+        $stripe->paymentMethods->attach($pm->id, ['customer' => $customerId]);
+        $stripe->customers->update($customerId, ['invoice_settings' => ['default_payment_method' => $pm->id]]);
+
+        $agora = date('Y-m-d H:i:s');
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('INSERT INTO vps (client_id, server_id, container_id, cpu, ram, storage, status, created_at, plan_id) VALUES (:c, NULL, NULL, :cpu, :ram, :st, :s, :cr, :pid)')
+                ->execute([':c' => $clientId, ':cpu' => (int)$plano['cpu'], ':ram' => (int)$plano['ram'], ':st' => (int)$plano['storage'], ':s' => 'pending_payment', ':cr' => $agora, ':pid' => (int)$plano['id']]);
+            $vpsId = (int)$pdo->lastInsertId();
+
+            $addonsJson = !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null;
+            $due = (new DateTimeImmutable('now'))->modify('+1 day')->format('Y-m-d');
+            $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, billing_type, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, :bt, :s, :n, :cr)')
+                ->execute([':c' => $clientId, ':v' => $vpsId, ':p' => (int)$plano['id'], ':aj' => $addonsJson, ':bt' => 'CREDIT_CARD', ':s' => 'PENDING', ':n' => $due, ':cr' => $agora]);
+            $localSubId = (int)$pdo->lastInsertId();
+
+            // Montar items
+            $items = [['price' => $stripePriceId]];
+            $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
+            foreach ($addons as $addon) {
+                $addonUsdFixo = (float)($addon['price_usd'] ?? 0);
+                $addonUsdCents = $addonUsdFixo > 0 ? (int)round($addonUsdFixo * 100) : (int)round(((float)($addon['price'] ?? 0) / $taxaUsd) * 100);
+                if ($addonUsdCents <= 0) continue;
+                try {
+                    $ap = $stripe->products->create(['name' => (string)($addon['name'] ?? 'Addon')]);
+                    $apr = $stripe->prices->create(['product' => $ap->id, 'unit_amount' => $addonUsdCents, 'currency' => 'usd', 'recurring' => ['interval' => 'month']]);
+                    $items[] = ['price' => $apr->id];
+                } catch (\Throwable) {}
+            }
+
+            // Criar subscription — cobra automaticamente com o default payment method
+            $subscription = $stripe->subscriptions->create([
+                'customer' => $customerId,
+                'items' => $items,
+                'default_payment_method' => $pm->id,
+                'metadata' => [
+                    'local_subscription_id' => (string)$localSubId,
+                    'local_client_id' => (string)$clientId,
+                    'local_vps_id' => (string)$vpsId,
+                    'local_plan_id' => (string)$planId,
+                ],
+            ]);
+
+            $stripeSubId = (string)($subscription->id ?? '');
+            $subStatus = (string)($subscription->status ?? '');
+
+            $pdo->prepare('UPDATE subscriptions SET stripe_subscription_id = :sid, status = :st WHERE id = :id')
+                ->execute([':sid' => $stripeSubId, ':st' => $subStatus === 'active' ? 'ACTIVE' : 'PENDING', ':id' => $localSubId]);
+
+            if ($subStatus === 'active') {
+                $pdo->prepare("UPDATE vps SET status = 'running' WHERE id = :id")->execute([':id' => $vpsId]);
+            }
+
+            $pdo->commit();
+
+            return ['subscription_id' => $localSubId, 'stripe_subscription_id' => $stripeSubId, 'status' => $subStatus, 'vps_id' => $vpsId];
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * Cria produto + price recorrente no Stripe e salva o stripe_price_id no banco.
      */
     private function criarStripePriceParaPlano(string $secretKey, array $plano, \PDO $pdo): string
