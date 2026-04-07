@@ -215,8 +215,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     if(sel){sel.closest('.cur-label').style.borderColor='#4F46E5';sel.closest('.cur-label').style.background='#f5f3ff';}
     var cpf=document.getElementById('cpfField');if(cpf)cpf.style.display=cur==='USD'?'none':'block';
     document.getElementById('gwBrl').style.display=cur==='BRL'?'flex':'none';
-    document.getElementById('gwUsd').style.display=cur==='USD'?'flex':'none';
+    document.getElementById('gwUsd').style.display=cur==='USD'?'block':'none';
     document.getElementById('hidden_currency').value=cur;
+    if(cur==='USD') setTimeout(mountStripeCard,100);
     atualizar();
   };
 
@@ -302,17 +303,27 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   });
 
   atualizar();
-  <?php if (!$isBrl): ?>selCurrency('USD');<?php endif; ?>
+  <?php if (!$isBrl): ?>selCurrency('USD');<?php else: ?>
+  // Se já está em USD (raro), montar Stripe
+  if(selectedCurrency==='USD') setTimeout(mountStripeCard,100);
+  <?php endif; ?>
 
   // Stripe Elements
   var stripePublicKey=<?php echo json_encode(\LRV\Core\ConfiguracoesSistema::stripePublishableKey()); ?>;
-  var stripeInstance=null,stripeCard=null;
+  var stripeInstance=null,stripeCard=null,stripeMounted=false;
   if(stripePublicKey && typeof Stripe!=='undefined'){
     stripeInstance=Stripe(stripePublicKey);
+  }
+
+  function mountStripeCard(){
+    if(stripeMounted||!stripeInstance) return;
+    var container=document.getElementById('stripe-card-element');
+    if(!container||container.offsetParent===null) return; // still hidden
     var els=stripeInstance.elements();
     stripeCard=els.create('card',{style:{base:{fontSize:'15px',color:'#1e293b','::placeholder':{color:'#94a3b8'}}}});
     stripeCard.mount('#stripe-card-element');
     stripeCard.on('change',function(ev){document.getElementById('stripe-card-errors').textContent=ev.error?ev.error.message:'';});
+    stripeMounted=true;
   }
 
   window.submeterAssinar=function(e){
