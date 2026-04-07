@@ -28,8 +28,10 @@ final class ConfiguracoesController
             'asaas_webhook_segredo_production' => (string) Settings::obter('asaas.webhook_segredo.production', ''),
             'stripe_mode' => (string) Settings::obter('stripe.mode', 'sandbox'),
             'stripe_secret_key_sandbox' => (string) Settings::obter('stripe.secret_key.sandbox', ''),
+            'stripe_publishable_key_sandbox' => (string) Settings::obter('stripe.publishable_key.sandbox', ''),
             'stripe_webhook_secret_sandbox' => (string) Settings::obter('stripe.webhook_secret.sandbox', ''),
             'stripe_secret_key_production' => (string) Settings::obter('stripe.secret_key.production', ''),
+            'stripe_publishable_key_production' => (string) Settings::obter('stripe.publishable_key.production', ''),
             'stripe_webhook_secret_production' => (string) Settings::obter('stripe.webhook_secret.production', ''),
             'app_url_base' => ConfiguracoesSistema::appUrlBase(),
             'app_secret_key' => (string) Settings::obter('app.secret_key', ''),
@@ -124,8 +126,10 @@ final class ConfiguracoesController
 
         $stripeMode = $in->postEnum('stripe_mode', ['sandbox', 'production'], 'sandbox');
         $stripeSecretKeySandbox = $in->postString('stripe_secret_key_sandbox', 255, false);
+        $stripePublishableKeySandbox = $in->postString('stripe_publishable_key_sandbox', 255, false);
         $stripeWebhookSecretSandbox = $in->postString('stripe_webhook_secret_sandbox', 255, false);
         $stripeSecretKeyProduction = $in->postString('stripe_secret_key_production', 255, false);
+        $stripePublishableKeyProduction = $in->postString('stripe_publishable_key_production', 255, false);
         $stripeWebhookSecretProduction = $in->postString('stripe_webhook_secret_production', 255, false);
 
         $taxaConversaoUsd = (float) ($in->postString('taxa_conversao_usd', 20, false));
@@ -328,11 +332,14 @@ final class ConfiguracoesController
 
         Settings::definir('stripe.mode', $stripeMode);
         Settings::definir('stripe.secret_key.sandbox', $stripeSecretKeySandbox);
+        Settings::definir('stripe.publishable_key.sandbox', $stripePublishableKeySandbox);
         Settings::definir('stripe.webhook_secret.sandbox', $stripeWebhookSecretSandbox);
         Settings::definir('stripe.secret_key.production', $stripeSecretKeyProduction);
+        Settings::definir('stripe.publishable_key.production', $stripePublishableKeyProduction);
         Settings::definir('stripe.webhook_secret.production', $stripeWebhookSecretProduction);
         // Manter keys legadas apontando pro ambiente ativo
         Settings::definir('stripe.secret_key', $stripeMode === 'production' ? $stripeSecretKeyProduction : $stripeSecretKeySandbox);
+        Settings::definir('stripe.publishable_key', $stripeMode === 'production' ? $stripePublishableKeyProduction : $stripePublishableKeySandbox);
         Settings::definir('stripe.webhook_secret', $stripeMode === 'production' ? $stripeWebhookSecretProduction : $stripeWebhookSecretSandbox);
         Settings::definir('billing.taxa_conversao_usd', $taxaConversaoUsd);
         Settings::definir('app.url_base', rtrim($appUrlBase, '/'));
@@ -467,8 +474,10 @@ final class ConfiguracoesController
             'asaas_webhook_segredo_production' => $asaasSegredoProduction,
             'stripe_mode' => $stripeMode,
             'stripe_secret_key_sandbox' => $stripeSecretKeySandbox,
+            'stripe_publishable_key_sandbox' => $stripePublishableKeySandbox,
             'stripe_webhook_secret_sandbox' => $stripeWebhookSecretSandbox,
             'stripe_secret_key_production' => $stripeSecretKeyProduction,
+            'stripe_publishable_key_production' => $stripePublishableKeyProduction,
             'stripe_webhook_secret_production' => $stripeWebhookSecretProduction,
             'taxa_conversao_usd' => (string) $taxaConversaoUsd,
             'app_url_base' => rtrim($appUrlBase, '/'),

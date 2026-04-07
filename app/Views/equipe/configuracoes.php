@@ -105,6 +105,10 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <input class="input" type="password" name="stripe_secret_key_sandbox" value="<?php echo View::e((string)($stripe_secret_key_sandbox??'')); ?>" placeholder="sk_test_..." />
         </div>
         <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Publishable Key (Test)</label>
+          <input class="input" type="text" name="stripe_publishable_key_sandbox" value="<?php echo View::e((string)($stripe_publishable_key_sandbox??'')); ?>" placeholder="pk_test_..." />
+        </div>
+        <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Webhook Secret (Test)</label>
           <input class="input" type="text" name="stripe_webhook_secret_sandbox" value="<?php echo View::e((string)($stripe_webhook_secret_sandbox??'')); ?>" placeholder="whsec_..." />
         </div>
@@ -116,6 +120,10 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Secret Key (Live)</label>
           <input class="input" type="password" name="stripe_secret_key_production" value="<?php echo View::e((string)($stripe_secret_key_production??'')); ?>" placeholder="sk_live_..." />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:6px;">Publishable Key (Live)</label>
+          <input class="input" type="text" name="stripe_publishable_key_production" value="<?php echo View::e((string)($stripe_publishable_key_production??'')); ?>" placeholder="pk_live_..." />
         </div>
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Webhook Secret (Live)</label>
