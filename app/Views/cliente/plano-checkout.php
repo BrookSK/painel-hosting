@@ -88,6 +88,15 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </div>
     </div>
 
+    <!-- Parcelas (aparece para semestral/anual) -->
+    <div class="card-new" style="margin-bottom:14px;display:none;" id="installmentsCard">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">💳 Parcelas</div>
+      <select class="input" id="installmentsSelect" onchange="atualizar()" style="font-size:14px;">
+        <option value="1">À vista (1x)</option>
+      </select>
+      <p style="font-size:12px;color:#64748b;margin-top:6px;" id="installmentInfo"></p>
+    </div>
+
     <!-- Addons selecionáveis -->
     <?php if (!empty($addons)): ?>
     <div class="card-new">
@@ -183,6 +192,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var priceSemiannualUsd=<?php echo (float)($plano['price_semiannual_usd'] ?? 0); ?>;
   var priceAnnual=<?php echo (float)($plano['price_annual'] ?? 0); ?>;
   var priceAnnualUsd=<?php echo (float)($plano['price_annual_usd'] ?? 0); ?>;
+  var priceAnnualUpfront=<?php echo (float)($plano['price_annual_upfront'] ?? 0); ?>;
+  var priceAnnualUpfrontUsd=<?php echo (float)($plano['price_annual_upfront_usd'] ?? 0); ?>;
+  var maxInstAnnual=<?php echo (int)($plano['max_installments_annual'] ?? 12); ?>;
+  var maxInstSemiannual=<?php echo (int)($plano['max_installments_semiannual'] ?? 6); ?>;
   var taxaUsd=<?php echo \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); ?>;
   var checks=document.querySelectorAll('.addon-check');
   var resumo=document.getElementById('addons-resumo');
@@ -245,6 +258,24 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     document.querySelectorAll('.per-label').forEach(function(l){l.style.borderColor='#e2e8f0';l.style.background='#fff';});
     var sel=document.querySelector('input[name="sel_periodo"][value="'+p+'"]');
     if(sel)sel.closest('.per-label').style.borderColor='#4F46E5',sel.closest('.per-label').style.background='#f5f3ff';
+
+    // Installments
+    var instCard=document.getElementById('installmentsCard');
+    var instSel=document.getElementById('installmentsSelect');
+    if(p>1){
+      var maxInst=p===12?maxInstAnnual:maxInstSemiannual;
+      instSel.innerHTML='';
+      for(var i=1;i<=maxInst;i++){
+        var opt=document.createElement('option');
+        opt.value=i;
+        opt.textContent=i===1?'À vista (1x)':i+'x';
+        instSel.appendChild(opt);
+      }
+      instCard.style.display='block';
+    }else{
+      instCard.style.display='none';
+    }
+
     atualizar();
   };
 
@@ -288,8 +319,31 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     idsInput.value=ids.join(',');
 
     // Update "por mês" label
+    var instSel=document.getElementById('installmentsSelect');
+    var parcelas=instSel?parseInt(instSel.value)||1:1;
+    var totalGeral=totalPlan+soma;
     var perSuffix=selectedPeriodo===1?'por mês':'total ('+selectedPeriodo+' meses)';
+    if(parcelas>1&&selectedPeriodo>1){
+      var valorParcela=totalGeral/parcelas;
+      perSuffix=parcelas+'x de '+fmt(valorParcela);
+    }
     var perInfo=document.getElementById('perInfo');if(perInfo)perInfo.textContent=perSuffix;
+
+    // Installment info
+    var instInfo=document.getElementById('installmentInfo');
+    if(instInfo&&selectedPeriodo>1){
+      if(parcelas===1){
+        // Check if there's an upfront price
+        var upVal=selectedCurrency==='USD'?toUsd(priceAnnualUpfront||0,priceAnnualUpfrontUsd):priceAnnualUpfront||0;
+        if(selectedPeriodo===12&&upVal>0){
+          instInfo.textContent='À vista com desconto: '+fmt(upVal);
+        }else{
+          instInfo.textContent='Pagamento único de '+fmt(totalGeral);
+        }
+      }else{
+        instInfo.textContent=parcelas+'x de '+fmt(totalGeral/parcelas)+' = '+fmt(totalGeral)+' total';
+      }
+    }
   }
 
   checks.forEach(function(cb){cb.addEventListener('change',atualizar);});

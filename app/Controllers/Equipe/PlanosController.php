@@ -15,7 +15,7 @@ final class PlanosController
     public function listar(Requisicao $req): Resposta
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->query('SELECT p.id, p.name, p.cpu, p.ram, p.storage, p.price_monthly, p.status, p.client_id, c.name AS client_name FROM plans p LEFT JOIN clients c ON c.id = p.client_id ORDER BY p.id DESC');
+        $stmt = $pdo->query('SELECT p.id, p.name, p.cpu, p.ram, p.storage, p.price_monthly, p.price_monthly_usd, p.currency, p.status, p.client_id, c.name AS client_name FROM plans p LEFT JOIN clients c ON c.id = p.client_id ORDER BY p.id DESC');
         $planos = $stmt->fetchAll();
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/planos-listar.php', [
