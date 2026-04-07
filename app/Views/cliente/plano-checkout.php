@@ -314,36 +314,21 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       fd.set('gateway','stripe');
     }
 
-    fetch('/cliente/assinar',{method:'POST',body:fd,credentials:'same-origin',redirect:'follow'})
-      .then(function(r){
-        // Se redirecionou (Stripe checkout ou pagamento), seguir
-        if(r.redirected){
-          window.location.href=r.url;
-          return null;
+    fetch('/cliente/assinar',{method:'POST',body:fd,credentials:'same-origin'})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok&&d.redirect){
+          window.location.href=d.redirect;
+          return;
         }
-        return r.text();
-      })
-      .then(function(html){
-        if(html===null) return;
-        // Se retornou HTML (erro ou página de pagamento), renderizar
-        if(html.indexOf('<!DOCTYPE')!==-1||html.indexOf('<html')!==-1){
-          document.open();document.write(html);document.close();
-        }else{
-          // Tentar como JSON
-          try{
-            var d=JSON.parse(html);
-            if(d.redirect){window.location.href=d.redirect;return;}
-            if(d.erro){erro.textContent=d.erro;erro.style.display='block';}
-          }catch(ex){
-            document.open();document.write(html);document.close();
-          }
+        if(d.erro){
+          erro.textContent=d.erro;erro.style.display='block';
+          btn.disabled=false;btn.textContent='Assinar agora';
         }
       })
       .catch(function(){
         erro.textContent='Erro de conexão. Tente novamente.';
         erro.style.display='block';
-      })
-      .finally(function(){
         btn.disabled=false;btn.textContent='Assinar agora';
       });
     return false;

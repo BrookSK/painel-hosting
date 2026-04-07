@@ -151,7 +151,7 @@ final class AssinarPlanoController
             );
 
             $localSubId = (int) ($resultado['local_subscription_id'] ?? 0);
-            return Resposta::redirecionar('/cliente/pagamento?sub=' . $localSubId);
+            return Resposta::json(['ok' => true, 'redirect' => '/cliente/pagamento?sub=' . $localSubId]);
         }
 
         // USD → Stripe checkout
@@ -184,7 +184,7 @@ final class AssinarPlanoController
                 'erro' => $mensagemUsuario,
                 'resultado' => null,
             ]);
-            return Resposta::html($html, 400);
+            return Resposta::json(['ok' => false, 'erro' => $mensagemUsuario], 400);
         }
 
         $checkoutUrl = is_array($resultado) ? (string) ($resultado['checkout_url'] ?? '') : '';
@@ -200,10 +200,11 @@ final class AssinarPlanoController
         );
 
         if ($checkoutUrl === '') {
-            return Resposta::texto('Failed to start checkout.', 500);
+            return Resposta::json(['ok' => false, 'erro' => 'Failed to start checkout.'], 500);
         }
 
-        return Resposta::redirecionar($checkoutUrl);
+        // Retornar JSON com URL para o JS fazer o redirect (evita bloqueio CSP)
+        return Resposta::json(['ok' => true, 'redirect' => $checkoutUrl]);
     }
 
     private function extrairErroAsaas(array $respostaJson, string $fallback): string
