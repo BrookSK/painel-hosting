@@ -472,7 +472,13 @@ $moedaJs = I18n::moedaCodigo();
   var priceAnnualUpfrontUsd=<?php echo (float)($plano['price_annual_upfront_usd'] ?? 0); ?>;
   var maxInstAnnual=<?php echo (int)($plano['max_installments_annual'] ?? 12); ?>;
   var maxInstSemiannual=<?php echo (int)($plano['max_installments_semiannual'] ?? 6); ?>;
+  var taxaUsd=<?php echo \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); ?>;
   var selectedCurrency=moeda;
+
+  function toUsd(brl, fixedUsd){
+    if(fixedUsd>0) return fixedUsd;
+    return Math.round(brl/taxaUsd*100)/100;
+  }
   var upsell=<?php echo $upsell ? json_encode(['id'=>(int)$upsell['id'],'name'=>$upsell['name'],'price'=>(float)$upsell['price_monthly']]) : 'null'; ?>;
   var passo=0,periodo=1,gateway=<?php echo json_encode($isBrl?'PIX':'stripe'); ?>,addonsIds=<?php echo json_encode(array_values($preAddons)); ?>;
   var T=<?php echo json_encode([
@@ -500,17 +506,14 @@ $moedaJs = I18n::moedaCodigo();
     return 'US$ '+v.toFixed(2);
   }
   function precoMensal(){
-    return selectedCurrency==='USD' && priceMonthlyUsd>0 ? priceMonthlyUsd : precoBase;
+    if(selectedCurrency==='USD') return toUsd(precoBase, priceMonthlyUsd);
+    return precoBase;
   }
   function precoComDesconto(base,per){
-    // Usar preço fixo do plano se definido, senão calcular com desconto
     if(selectedCurrency==='USD'){
-      if(per===6 && priceSemiannualUsd>0) return priceSemiannualUsd;
-      if(per===12 && priceAnnualUsd>0) return priceAnnualUsd;
-      var b=priceMonthlyUsd>0?priceMonthlyUsd:base;
-      if(per===6) return b*(1-d6/100);
-      if(per===12) return b*(1-d12/100);
-      return b;
+      if(per===6) return toUsd(priceSemiannual>0?priceSemiannual:base, priceSemiannualUsd);
+      if(per===12) return toUsd(priceAnnual>0?priceAnnual:base, priceAnnualUsd);
+      return toUsd(base, priceMonthlyUsd);
     }
     if(per===6 && priceSemiannual>0) return priceSemiannual;
     if(per===12 && priceAnnual>0) return priceAnnual;
@@ -546,7 +549,7 @@ $moedaJs = I18n::moedaCodigo();
     // Anual à vista
     var upfrontEl=document.getElementById('anualUpfront');
     if(upfrontEl){
-      var upVal=selectedCurrency==='USD'?priceAnnualUpfrontUsd:priceAnnualUpfront;
+      var upVal=selectedCurrency==='USD'?toUsd(priceAnnualUpfront, priceAnnualUpfrontUsd):priceAnnualUpfront;
       upfrontEl.style.display=upVal>0?'flex':'none';
       if(upVal>0){
         document.getElementById('precoUpfront').textContent=fmt(upVal);

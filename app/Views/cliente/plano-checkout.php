@@ -183,6 +183,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var priceSemiannualUsd=<?php echo (float)($plano['price_semiannual_usd'] ?? 0); ?>;
   var priceAnnual=<?php echo (float)($plano['price_annual'] ?? 0); ?>;
   var priceAnnualUsd=<?php echo (float)($plano['price_annual_usd'] ?? 0); ?>;
+  var taxaUsd=<?php echo \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); ?>;
   var checks=document.querySelectorAll('.addon-check');
   var resumo=document.getElementById('addons-resumo');
   var total=document.getElementById('total-preco');
@@ -191,6 +192,12 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var selectedCurrency=curInput?curInput.value:'BRL';
   var selectedPeriodo=1;
 
+  // Converte BRL→USD usando taxa, ou retorna valor USD fixo se definido
+  function toUsd(brl, fixedUsd){
+    if(fixedUsd>0) return fixedUsd;
+    return Math.round(brl/taxaUsd*100)/100;
+  }
+
   function fmt(v){
     if(selectedCurrency==='BRL') return 'R$ '+v.toFixed(2).replace('.',',');
     return 'US$ '+v.toFixed(2);
@@ -198,9 +205,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
   function getPlanPrice(){
     if(selectedCurrency==='USD'){
-      if(selectedPeriodo===12 && priceAnnualUsd>0) return priceAnnualUsd;
-      if(selectedPeriodo===6 && priceSemiannualUsd>0) return priceSemiannualUsd;
-      return baseUsd>0?baseUsd:base;
+      if(selectedPeriodo===12) return toUsd(priceAnnual>0?priceAnnual:base, priceAnnualUsd);
+      if(selectedPeriodo===6) return toUsd(priceSemiannual>0?priceSemiannual:base, priceSemiannualUsd);
+      return toUsd(base, baseUsd);
     }
     if(selectedPeriodo===12 && priceAnnual>0) return priceAnnual;
     if(selectedPeriodo===6 && priceSemiannual>0) return priceSemiannual;
@@ -208,12 +215,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   }
 
   function getAddonPrice(card){
+    var pBrl=parseFloat(card.dataset.price)||0;
+    var pUsd=parseFloat(card.dataset.priceUsd)||0;
+    var pAnnualBrl=parseFloat(card.dataset.priceAnnual)||0;
+    var pAnnualUsd=parseFloat(card.dataset.priceAnnualUsd)||0;
     if(selectedCurrency==='USD'){
-      if(selectedPeriodo>=12){var v=parseFloat(card.dataset.priceAnnualUsd);if(v>0)return v;}
-      var u=parseFloat(card.dataset.priceUsd);if(u>0)return u;
+      if(selectedPeriodo>=12) return toUsd(pAnnualBrl>0?pAnnualBrl:pBrl, pAnnualUsd);
+      return toUsd(pBrl, pUsd);
     }
-    if(selectedPeriodo>=12){var a=parseFloat(card.dataset.priceAnnual);if(a>0)return a;}
-    return parseFloat(card.dataset.price)||0;
+    if(selectedPeriodo>=12 && pAnnualBrl>0) return pAnnualBrl;
+    return pBrl;
   }
 
   window.selCurrency=function(cur){
