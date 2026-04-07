@@ -1,4 +1,9 @@
 DirectoryIndex index.php
+
+# CSP com Stripe permitido
+<IfModule mod_headers.c>
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self' https://checkout.stripe.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://js.stripe.com; connect-src 'self' https://api.stripe.com ws: wss:; frame-src https://js.stripe.com https://hooks.stripe.com;"
+</IfModule>
  
 RewriteEngine On
  
