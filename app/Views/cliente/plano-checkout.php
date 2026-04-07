@@ -159,9 +159,13 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           </div>
           <div style="display:none;gap:8px;flex-wrap:wrap;" id="gwUsd">
             <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;">
-              <input type="hidden" name="gateway_usd" value="stripe" />
               💳 <?php echo View::e(I18n::t('checkout.cartao')); ?> (Stripe)
             </label>
+            <!-- Stripe Elements card input -->
+            <div id="stripeCardContainer" style="width:100%;margin-top:10px;">
+              <div id="stripe-card-element" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;"></div>
+              <div id="stripe-card-errors" style="color:#ef4444;font-size:12px;margin-top:6px;"></div>
+            </div>
           </div>
         </div>
 
@@ -300,6 +304,25 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   atualizar();
   <?php if (!$isBrl): ?>selCurrency('USD');<?php endif; ?>
 
+  // Stripe Elements setup
+  var stripePublicKey=<?php echo json_encode(\LRV\Core\ConfiguracoesSistema::stripePublishableKey()); ?>;
+  var stripeInstance=null,stripeElements=null,stripeCard=null;
+  if(stripePublicKey){
+    var sc=document.createElement('script');
+    sc.src='https://js.stripe.com/v3/';
+    sc.onload=function(){
+      stripeInstance=Stripe(stripePublicKey);
+      stripeElements=stripeInstance.elements();
+      stripeCard=stripeElements.create('card',{style:{base:{fontSize:'15px',color:'#1e293b','::placeholder':{color:'#94a3b8'}}}});
+      stripeCard.mount('#stripe-card-element');
+      stripeCard.on('change',function(ev){
+        var el=document.getElementById('stripe-card-errors');
+        el.textContent=ev.error?ev.error.message:'';
+      });
+    };
+    document.head.appendChild(sc);
+  }
+
   window.submeterAssinar=function(e){
     e.preventDefault();
     var btn=document.getElementById('btnAssinar');
@@ -309,14 +332,35 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     var form=document.getElementById('assinarForm');
     var fd=new FormData(form);
-    // Garantir gateway correto pra USD
-    if(selectedCurrency==='USD'){
-      fd.set('gateway','stripe');
-    }
+    if(selectedCurrency==='USD') fd.set('gateway','stripe');
 
     fetch('/cliente/assinar',{method:'POST',body:fd,credentials:'same-origin'})
       .then(function(r){return r.json();})
       .then(function(d){
+        if(d.ok&&d.payment_type==='stripe_inline'&&d.client_secret){
+          // Confirmar pagamento com Stripe Elements
+          if(!stripeInstance||!stripeCard){
+            erro.textContent='Stripe não carregou. Recarregue a página.';
+            erro.style.display='block';
+            btn.disabled=false;btn.textContent='Assinar agora';
+            return;
+          }
+          btn.textContent='Confirmando pagamento...';
+          stripeInstance.confirmCardPayment(d.client_secret,{
+            payment_method:{card:stripeCard}
+          }).then(function(result){
+            if(result.error){
+              erro.textContent=result.error.message;
+              erro.style.display='block';
+              btn.disabled=false;btn.textContent='Assinar agora';
+            }else{
+              // Pagamento confirmado
+              btn.textContent='Pagamento confirmado!';
+              window.location.href='/cliente/assinaturas';
+            }
+          });
+          return;
+        }
         if(d.ok&&d.redirect){
           window.location.href=d.redirect;
           return;

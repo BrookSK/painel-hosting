@@ -186,6 +186,113 @@ final class StripeCheckoutService
     }
 
     /**
+     * Cria assinatura Stripe inline (sem redirect) — retorna client_secret para Stripe Elements.
+     */
+    public function criarAssinaturaInline(int $clientId, int $planId, array $addons = []): array
+    {
+        $secretKey = ConfiguracoesSistema::stripeSecretKey();
+        if ($secretKey === '') {
+            throw new \RuntimeException('Stripe não configurado (secret key ausente).');
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        $stmt = $pdo->prepare("SELECT id, name, price_monthly, price_monthly_usd, cpu, ram, storage, stripe_price_id FROM plans WHERE id = :id AND status = 'active'");
+        $stmt->execute([':id' => $planId]);
+        $plano = $stmt->fetch();
+        if (!is_array($plano)) throw new \RuntimeException('Plano não encontrado.');
+
+        $stripePriceId = trim((string)($plano['stripe_price_id'] ?? ''));
+        if ($stripePriceId === '') {
+            $stripePriceId = $this->criarStripePriceParaPlano($secretKey, $plano, $pdo);
+            if ($stripePriceId === '') throw new \RuntimeException('Plano não está configurado para Stripe.');
+        }
+
+        $clienteStmt = $pdo->prepare('SELECT id, name, email, stripe_customer_id FROM clients WHERE id = :id');
+        $clienteStmt->execute([':id' => $clientId]);
+        $cliente = $clienteStmt->fetch();
+        if (!is_array($cliente)) throw new \RuntimeException('Cliente não encontrado.');
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        // Garantir customer no Stripe
+        $customerId = (string)($cliente['stripe_customer_id'] ?? '');
+        if ($customerId === '') {
+            $c = $stripe->customers->create([
+                'name' => (string)($cliente['name'] ?? ''),
+                'email' => (string)($cliente['email'] ?? ''),
+                'metadata' => ['local_client_id' => (string)$clientId],
+            ]);
+            $customerId = (string)($c['id'] ?? '');
+            $pdo->prepare('UPDATE clients SET stripe_customer_id = :s WHERE id = :id')
+                ->execute([':s' => $customerId, ':id' => $clientId]);
+        }
+
+        $agora = date('Y-m-d H:i:s');
+
+        $pdo->beginTransaction();
+        try {
+            // Criar VPS + subscription local
+            $pdo->prepare('INSERT INTO vps (client_id, server_id, container_id, cpu, ram, storage, status, created_at, plan_id) VALUES (:c, NULL, NULL, :cpu, :ram, :st, :s, :cr, :pid)')
+                ->execute([':c' => $clientId, ':cpu' => (int)$plano['cpu'], ':ram' => (int)$plano['ram'], ':st' => (int)$plano['storage'], ':s' => 'pending_payment', ':cr' => $agora, ':pid' => (int)$plano['id']]);
+            $vpsId = (int)$pdo->lastInsertId();
+
+            $addonsJson = !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null;
+            $due = (new DateTimeImmutable('now'))->modify('+1 day')->format('Y-m-d');
+            $pdo->prepare('INSERT INTO subscriptions (client_id, vps_id, plan_id, addons_json, billing_type, status, next_due_date, created_at) VALUES (:c, :v, :p, :aj, :bt, :s, :n, :cr)')
+                ->execute([':c' => $clientId, ':v' => $vpsId, ':p' => (int)$plano['id'], ':aj' => $addonsJson, ':bt' => 'CREDIT_CARD', ':s' => 'PENDING', ':n' => $due, ':cr' => $agora]);
+            $localSubId = (int)$pdo->lastInsertId();
+
+            // Montar items: plano + addons
+            $items = [['price' => $stripePriceId]];
+            $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
+            foreach ($addons as $addon) {
+                $addonUsdFixo = (float)($addon['price_usd'] ?? 0);
+                $addonUsdCents = $addonUsdFixo > 0 ? (int)round($addonUsdFixo * 100) : (int)round(((float)($addon['price'] ?? 0) / $taxaUsd) * 100);
+                if ($addonUsdCents <= 0) continue;
+                try {
+                    $ap = $stripe->products->create(['name' => (string)($addon['name'] ?? 'Addon')]);
+                    $apr = $stripe->prices->create(['product' => $ap->id, 'unit_amount' => $addonUsdCents, 'currency' => 'usd', 'recurring' => ['interval' => 'month']]);
+                    $items[] = ['price' => $apr->id];
+                } catch (\Throwable) {}
+            }
+
+            // Criar subscription com payment_behavior incomplete — retorna client_secret
+            $subscription = $stripe->subscriptions->create([
+                'customer' => $customerId,
+                'items' => $items,
+                'payment_behavior' => 'default_incomplete',
+                'payment_settings' => ['save_default_payment_method' => 'on_subscription'],
+                'expand' => ['latest_invoice.payment_intent'],
+                'metadata' => [
+                    'local_subscription_id' => (string)$localSubId,
+                    'local_client_id' => (string)$clientId,
+                    'local_vps_id' => (string)$vpsId,
+                    'local_plan_id' => (string)$planId,
+                ],
+            ]);
+
+            $stripeSubId = (string)($subscription->id ?? '');
+            $clientSecret = (string)($subscription->latest_invoice->payment_intent->client_secret ?? '');
+
+            $pdo->prepare('UPDATE subscriptions SET stripe_subscription_id = :sid WHERE id = :id')
+                ->execute([':sid' => $stripeSubId, ':id' => $localSubId]);
+
+            $pdo->commit();
+
+            return [
+                'client_secret' => $clientSecret,
+                'subscription_id' => $localSubId,
+                'stripe_subscription_id' => $stripeSubId,
+                'vps_id' => $vpsId,
+            ];
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * Cria produto + price recorrente no Stripe e salva o stripe_price_id no banco.
      */
     private function criarStripePriceParaPlano(string $secretKey, array $plano, \PDO $pdo): string

@@ -34,6 +34,11 @@ final class ConfiguracoesSistema
         return (string) Settings::obter('stripe.secret_key', '');
     }
 
+    public static function stripePublishableKey(): string
+    {
+        return (string) Settings::obter('stripe.publishable_key', '');
+    }
+
     public static function stripeWebhookSecret(): string
     {
         return (string) Settings::obter('stripe.webhook_secret', '');

@@ -154,57 +154,35 @@ final class AssinarPlanoController
             return Resposta::json(['ok' => true, 'redirect' => '/cliente/pagamento?sub=' . $localSubId]);
         }
 
-        // USD → Stripe checkout
+        // USD → Stripe inline (campos de cartão no nosso site)
         $service = new StripeCheckoutService();
 
         try {
-            $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados);
+            $resultado = $service->criarAssinaturaInline($clienteId, $planId, $addonsSelecionados);
         } catch (\Throwable $e) {
             $erroDetalhe = $e->getMessage();
-
-            (new AuditLogService())->registrar(
-                'client',
-                $clienteId,
-                'billing.subscribe_plan',
-                'plan',
-                $planId,
-                ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false, 'erro' => $erroDetalhe],
-                $req,
-            );
+            (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
+                ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => false, 'erro' => $erroDetalhe], $req);
 
             $mensagemUsuario = match (true) {
-                str_contains($erroDetalhe, 'secret key ausente') => 'Stripe is not configured. Please contact support.',
-                str_contains($erroDetalhe, 'stripe_price_id ausente') => 'This plan is not yet configured for card payment. Please contact support.',
-                str_contains($erroDetalhe, 'Plano não encontrado') => 'Plan not found or inactive.',
-                str_contains($erroDetalhe, 'Cliente não encontrado') => 'Could not locate your account. Please try again.',
-                default => 'Could not start checkout. Please try again later.',
+                str_contains($erroDetalhe, 'secret key ausente') => 'Stripe não configurado. Contate o suporte.',
+                str_contains($erroDetalhe, 'configurado para Stripe') => 'Plano não configurado para pagamento com cartão.',
+                str_contains($erroDetalhe, 'Plano não encontrado') => 'Plano não encontrado ou inativo.',
+                str_contains($erroDetalhe, 'Cliente não encontrado') => 'Erro ao localizar sua conta.',
+                default => 'Erro ao processar pagamento: ' . $erroDetalhe,
             };
-
-            $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                'erro' => $mensagemUsuario,
-                'resultado' => null,
-            ]);
             return Resposta::json(['ok' => false, 'erro' => $mensagemUsuario], 400);
         }
 
-        $checkoutUrl = is_array($resultado) ? (string) ($resultado['checkout_url'] ?? '') : '';
+        (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
+            ['plan_id' => $planId, 'gateway' => 'stripe_inline', 'ok' => true, 'sub_id' => (int)($resultado['subscription_id'] ?? 0)], $req);
 
-        (new AuditLogService())->registrar(
-            'client',
-            $clienteId,
-            'billing.subscribe_plan',
-            'plan',
-            $planId,
-            ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => true, 'checkout_url_set' => $checkoutUrl !== ''],
-            $req,
-        );
-
-        if ($checkoutUrl === '') {
-            return Resposta::json(['ok' => false, 'erro' => 'Failed to start checkout.'], 500);
-        }
-
-        // Retornar JSON com URL para o JS fazer o redirect (evita bloqueio CSP)
-        return Resposta::json(['ok' => true, 'redirect' => $checkoutUrl]);
+        return Resposta::json([
+            'ok' => true,
+            'payment_type' => 'stripe_inline',
+            'client_secret' => (string)($resultado['client_secret'] ?? ''),
+            'sub_id' => (int)($resultado['subscription_id'] ?? 0),
+        ]);
     }
 
     private function extrairErroAsaas(array $respostaJson, string $fallback): string
