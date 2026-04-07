@@ -90,9 +90,20 @@ final class ContratarController
         $addonsIds  = trim((string)($req->post['addons_ids'] ?? ''));
         $country    = trim((string)($req->post['country'] ?? ''));
         $prefLang   = trim((string)($req->post['preferred_lang'] ?? ''));
+        $currency   = in_array((string)($req->post['currency'] ?? 'BRL'), ['BRL', 'USD']) ? (string)$req->post['currency'] : 'BRL';
 
-        if ($in->temErros() || $nome === '' || $email === '' || $senha === '' || $cpfCnpj === '') {
-            return Resposta::json(['ok' => false, 'erro' => 'Preencha todos os campos obrigatórios. CPF/CNPJ é obrigatório.'], 422);
+        if ($in->temErros() || $nome === '' || $email === '' || $senha === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Preencha todos os campos obrigatórios.'], 422);
+        }
+
+        // CPF/CNPJ obrigatório apenas para BRL
+        if ($currency === 'BRL' && $cpfCnpj === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'CPF/CNPJ é obrigatório para pagamento em Real.'], 422);
+        }
+
+        // USD: forçar Stripe
+        if ($currency === 'USD') {
+            $gateway = 'stripe';
         }
 
         if (strlen($senha) < 8) {

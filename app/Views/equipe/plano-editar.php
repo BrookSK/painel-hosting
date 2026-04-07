@@ -83,9 +83,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
     <div class="grid" style="margin-top:12px;">
       <div>
-        <label style="display:block;font-size:13px;margin-bottom:6px;">Preco mensal (R$)</label>
-        <input class="input" type="text" name="price_monthly" value="<?php echo View::e((string)($plano['price_monthly']??'')); ?>" />
-        <p class="texto" style="font-size:12px;margin-top:4px;">Valor em BRL. Pra clientes em USD, o sistema converte automaticamente pela taxa configurada.</p>
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">💰 Moeda principal</label>
+        <select class="input" name="currency" id="planCurrency" onchange="toggleCurrencyFields()">
+          <option value="BRL" <?php echo ((string)($plano['currency']??'BRL'))==='BRL'?'selected':''; ?>>🇧🇷 BRL (Real)</option>
+          <option value="USD" <?php echo ((string)($plano['currency']??''))==='USD'?'selected':''; ?>>🇺🇸 USD (Dólar)</option>
+        </select>
+        <p class="texto" style="font-size:12px;margin-top:4px;">BRL = pagamento via Asaas (PIX, Boleto, Cartão). USD = pagamento via Stripe.</p>
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_planos.backup_slots')); ?></label>
@@ -94,11 +97,74 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           <option value="1" <?php echo ((int)($plano['backup_slots']??0))===1?'selected':''; ?>>1 backup</option>
           <option value="2" <?php echo ((int)($plano['backup_slots']??0))===2?'selected':''; ?>>2 backups</option>
         </select>
-        <p class="texto" style="font-size:12px;margin-top:4px;">Limita quantos backups o cliente pode ter. Rotação automática.</p>
+      </div>
+    </div>
+
+    <!-- Pricing por período -->
+    <div style="margin-top:16px;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+      <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:12px;">💲 Preços por período</div>
+
+      <div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;">Mensal</div>
+      <div class="grid" style="margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço mensal (R$)</label>
+          <input class="input" type="text" name="price_monthly" value="<?php echo View::e((string)($plano['price_monthly']??'')); ?>" placeholder="297.00" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço mensal (US$)</label>
+          <input class="input" type="text" name="price_monthly_usd" value="<?php echo View::e((string)($plano['price_monthly_usd']??'')); ?>" placeholder="59.00" />
+          <p class="texto" style="font-size:11px;margin-top:3px;">Deixe vazio para conversão automática</p>
+        </div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;">Semestral (6 meses)</div>
+      <div class="grid" style="margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço mensal no semestral (R$)</label>
+          <input class="input" type="text" name="price_semiannual" value="<?php echo View::e((string)($plano['price_semiannual']??'')); ?>" placeholder="267.00" />
+          <p class="texto" style="font-size:11px;margin-top:3px;">Valor por mês. Total = valor × 6</p>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço mensal no semestral (US$)</label>
+          <input class="input" type="text" name="price_semiannual_usd" value="<?php echo View::e((string)($plano['price_semiannual_usd']??'')); ?>" placeholder="53.00" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Máx. parcelas (semestral)</label>
+          <input class="input" type="number" name="max_installments_semiannual" value="<?php echo View::e((string)($plano['max_installments_semiannual']??'6')); ?>" min="1" max="6" />
+        </div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;">Anual (12 meses)</div>
+      <div class="grid" style="margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço mensal no anual (R$)</label>
+          <input class="input" type="text" name="price_annual" value="<?php echo View::e((string)($plano['price_annual']??'')); ?>" placeholder="237.00" />
+          <p class="texto" style="font-size:11px;margin-top:3px;">Valor por mês. Total = valor × 12</p>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço mensal no anual (US$)</label>
+          <input class="input" type="text" name="price_annual_usd" value="<?php echo View::e((string)($plano['price_annual_usd']??'')); ?>" placeholder="47.00" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Máx. parcelas (anual)</label>
+          <input class="input" type="number" name="max_installments_annual" value="<?php echo View::e((string)($plano['max_installments_annual']??'12')); ?>" min="1" max="12" />
+        </div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;">Anual à vista (pagamento único)</div>
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço anual à vista (R$)</label>
+          <input class="input" type="text" name="price_annual_upfront" value="<?php echo View::e((string)($plano['price_annual_upfront']??'')); ?>" placeholder="2500.00" />
+          <p class="texto" style="font-size:11px;margin-top:3px;">Valor total do ano com desconto à vista</p>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;">Preço anual à vista (US$)</label>
+          <input class="input" type="text" name="price_annual_upfront_usd" value="<?php echo View::e((string)($plano['price_annual_upfront_usd']??'')); ?>" placeholder="500.00" />
+        </div>
       </div>
     </div>
     <input type="hidden" name="stripe_price_id" value="<?php echo View::e((string)($plano['stripe_price_id']??'')); ?>" />
-    <p class="texto" style="font-size:12px;margin-top:8px;">O Stripe Price ID é gerado automaticamente ao salvar, se o Stripe estiver configurado.</p>
 
     <?php
       // Canais de suporte
@@ -183,10 +249,13 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
       <div id="addons-lista" style="display:flex;flex-direction:column;gap:10px;">
         <?php foreach (($addons ?? []) as $_a): ?>
-        <div class="addon-row" style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+        <div class="addon-row" style="display:grid;grid-template-columns:1fr 1fr auto auto auto auto auto;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
           <input class="input" type="text" name="addon_name[]" placeholder="Nome (ex: Backup)" value="<?php echo View::e((string)($_a['name']??'')); ?>" style="margin:0;" />
           <input class="input" type="text" name="addon_desc[]" placeholder="Descrição curta" value="<?php echo View::e((string)($_a['description']??'')); ?>" style="margin:0;" />
-          <input class="input" type="number" name="addon_price[]" placeholder="Preço R$" value="<?php echo View::e((string)($_a['price']??'0')); ?>" step="0.01" min="0" style="margin:0;width:110px;" />
+          <input class="input" type="number" name="addon_price[]" placeholder="R$/mês" value="<?php echo View::e((string)($_a['price']??'0')); ?>" step="0.01" min="0" style="margin:0;width:90px;" title="Preço mensal BRL" />
+          <input class="input" type="number" name="addon_price_usd[]" placeholder="US$/mês" value="<?php echo View::e((string)($_a['price_usd']??'')); ?>" step="0.01" min="0" style="margin:0;width:90px;" title="Preço mensal USD" />
+          <input class="input" type="number" name="addon_price_annual[]" placeholder="R$/mês anual" value="<?php echo View::e((string)($_a['price_annual']??'')); ?>" step="0.01" min="0" style="margin:0;width:100px;" title="Preço mensal no plano anual BRL" />
+          <input class="input" type="number" name="addon_price_annual_usd[]" placeholder="US$/mês anual" value="<?php echo View::e((string)($_a['price_annual_usd']??'')); ?>" step="0.01" min="0" style="margin:0;width:100px;" title="Preço mensal no plano anual USD" />
           <button type="button" onclick="this.closest('.addon-row').remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:20px;line-height:1;padding:4px 6px;">×</button>
         </div>
         <?php endforeach; ?>
@@ -255,10 +324,13 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   document.getElementById('btn-add-addon').addEventListener('click', function() {
     var div = document.createElement('div');
     div.className = 'addon-row';
-    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;';
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto auto auto auto auto;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;';
     div.innerHTML = '<input class="input" type="text" name="addon_name[]" placeholder="Nome (ex: Backup)" style="margin:0;" />'
       + '<input class="input" type="text" name="addon_desc[]" placeholder="Descrição curta" style="margin:0;" />'
-      + '<input class="input" type="number" name="addon_price[]" placeholder="Preço R$" value="0" step="0.01" min="0" style="margin:0;width:110px;" />'
+      + '<input class="input" type="number" name="addon_price[]" placeholder="R$/mês" value="0" step="0.01" min="0" style="margin:0;width:90px;" title="Preço mensal BRL" />'
+      + '<input class="input" type="number" name="addon_price_usd[]" placeholder="US$/mês" step="0.01" min="0" style="margin:0;width:90px;" title="Preço mensal USD" />'
+      + '<input class="input" type="number" name="addon_price_annual[]" placeholder="R$/mês anual" step="0.01" min="0" style="margin:0;width:100px;" title="Preço mensal no plano anual BRL" />'
+      + '<input class="input" type="number" name="addon_price_annual_usd[]" placeholder="US$/mês anual" step="0.01" min="0" style="margin:0;width:100px;" title="Preço mensal no plano anual USD" />'
       + '<button type="button" onclick="this.closest(\'.addon-row\').remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:20px;line-height:1;padding:4px 6px;">×</button>';
     document.getElementById('addons-lista').appendChild(div);
     div.querySelector('input').focus();

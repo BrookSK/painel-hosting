@@ -92,6 +92,18 @@ final class PlanosController
         $clientId = (int) ($req->post['client_id'] ?? 0);
         $clientIdVal = $clientId > 0 ? $clientId : null;
 
+        // Multi-pricing fields
+        $currency = in_array((string)($req->post['currency'] ?? 'BRL'), ['BRL', 'USD']) ? (string)$req->post['currency'] : 'BRL';
+        $priceMonthlyUsd = trim((string)($req->post['price_monthly_usd'] ?? ''));
+        $priceSemiannual = trim((string)($req->post['price_semiannual'] ?? ''));
+        $priceSemiannualUsd = trim((string)($req->post['price_semiannual_usd'] ?? ''));
+        $priceAnnual = trim((string)($req->post['price_annual'] ?? ''));
+        $priceAnnualUsd = trim((string)($req->post['price_annual_usd'] ?? ''));
+        $priceAnnualUpfront = trim((string)($req->post['price_annual_upfront'] ?? ''));
+        $priceAnnualUpfrontUsd = trim((string)($req->post['price_annual_upfront_usd'] ?? ''));
+        $maxInstallmentsAnnual = max(1, min(12, (int)($req->post['max_installments_annual'] ?? 12)));
+        $maxInstallmentsSemiannual = max(1, min(6, (int)($req->post['max_installments_semiannual'] ?? 6)));
+
         if ($nome === '' || $cpu <= 0 || $ram <= 0 || $storage <= 0) {
             return $this->renderizarErro($id, $nome, $desc, $cpu, $ram, $storage, $preco, $specs, $supportChannels, $status, 'Preencha os campos obrigatórios.');
         }
@@ -165,6 +177,24 @@ final class PlanosController
                 $pdo->prepare('UPDATE plans SET client_id = :cid WHERE id = :id')
                     ->execute([':cid' => $clientIdVal, ':id' => $auditId]);
             } catch (\Throwable) {}
+
+            // Salvar campos de multi-pricing
+            try {
+                $pdo->prepare('UPDATE plans SET currency=:cur, price_monthly_usd=:pmu, price_semiannual=:ps, price_semiannual_usd=:psu, price_annual=:pa, price_annual_usd=:pau, price_annual_upfront=:paup, price_annual_upfront_usd=:paupu, max_installments_annual=:mia, max_installments_semiannual=:mis WHERE id=:id')
+                    ->execute([
+                        ':cur' => $currency,
+                        ':pmu' => $priceMonthlyUsd !== '' ? (float)$priceMonthlyUsd : null,
+                        ':ps' => $priceSemiannual !== '' ? (float)$priceSemiannual : null,
+                        ':psu' => $priceSemiannualUsd !== '' ? (float)$priceSemiannualUsd : null,
+                        ':pa' => $priceAnnual !== '' ? (float)$priceAnnual : null,
+                        ':pau' => $priceAnnualUsd !== '' ? (float)$priceAnnualUsd : null,
+                        ':paup' => $priceAnnualUpfront !== '' ? (float)$priceAnnualUpfront : null,
+                        ':paupu' => $priceAnnualUpfrontUsd !== '' ? (float)$priceAnnualUpfrontUsd : null,
+                        ':mia' => $maxInstallmentsAnnual,
+                        ':mis' => $maxInstallmentsSemiannual,
+                        ':id' => $auditId,
+                    ]);
+            } catch (\Throwable) {}
         }
 
         // Auto-criar Stripe Price ID se Stripe está configurado e não tem price_id
@@ -214,11 +244,17 @@ final class PlanosController
             $addonNames = (array)($req->post['addon_name'] ?? []);
             $addonDescs = (array)($req->post['addon_desc'] ?? []);
             $addonPrices = (array)($req->post['addon_price'] ?? []);
+            $addonPricesUsd = (array)($req->post['addon_price_usd'] ?? []);
+            $addonPricesAnnual = (array)($req->post['addon_price_annual'] ?? []);
+            $addonPricesAnnualUsd = (array)($req->post['addon_price_annual_usd'] ?? []);
             foreach ($addonNames as $i => $an) {
                 $addonsRaw[] = [
-                    'name'        => $an,
-                    'description' => $addonDescs[$i] ?? '',
-                    'price'       => $addonPrices[$i] ?? 0,
+                    'name'              => $an,
+                    'description'       => $addonDescs[$i] ?? '',
+                    'price'             => $addonPrices[$i] ?? 0,
+                    'price_usd'         => $addonPricesUsd[$i] ?? null,
+                    'price_annual'      => $addonPricesAnnual[$i] ?? null,
+                    'price_annual_usd'  => $addonPricesAnnualUsd[$i] ?? null,
                 ];
             }
             $this->salvarAddons($pdo, $auditId, $addonsRaw);
@@ -262,15 +298,21 @@ final class PlanosController
     {
         try {
             $pdo->prepare('DELETE FROM plan_addons WHERE plan_id = :pid')->execute([':pid' => $planId]);
-            $ins = $pdo->prepare('INSERT INTO plan_addons (plan_id, name, description, price, sort_order, active) VALUES (:pid,:n,:d,:p,:s,1)');
+            $ins = $pdo->prepare('INSERT INTO plan_addons (plan_id, name, description, price, price_usd, price_annual, price_annual_usd, sort_order, active) VALUES (:pid,:n,:d,:p,:pu,:pa,:pau,:s,1)');
             foreach ($addonsRaw as $i => $a) {
                 $name = trim((string)($a['name'] ?? ''));
                 if ($name === '') continue;
+                $priceUsd = trim((string)($a['price_usd'] ?? ''));
+                $priceAnnual = trim((string)($a['price_annual'] ?? ''));
+                $priceAnnualUsd = trim((string)($a['price_annual_usd'] ?? ''));
                 $ins->execute([
                     ':pid' => $planId,
                     ':n'   => $name,
                     ':d'   => trim((string)($a['description'] ?? '')) ?: null,
                     ':p'   => (float)($a['price'] ?? 0),
+                    ':pu'  => $priceUsd !== '' ? (float)$priceUsd : null,
+                    ':pa'  => $priceAnnual !== '' ? (float)$priceAnnual : null,
+                    ':pau' => $priceAnnualUsd !== '' ? (float)$priceAnnualUsd : null,
                     ':s'   => $i,
                 ]);
             }

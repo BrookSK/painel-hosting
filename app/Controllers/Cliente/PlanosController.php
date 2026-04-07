@@ -98,10 +98,16 @@ final class PlanosController
 
         $addons = [];
         try {
-            $aStmt = $pdo->prepare('SELECT id, name, description, price FROM plan_addons WHERE plan_id = :pid AND active = 1 ORDER BY sort_order');
+            $aStmt = $pdo->prepare('SELECT id, name, description, price, price_usd, price_annual, price_annual_usd FROM plan_addons WHERE plan_id = :pid AND active = 1 ORDER BY sort_order');
             $aStmt->execute([':pid' => $planId]);
             $addons = $aStmt->fetchAll() ?: [];
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            try {
+                $aStmt = $pdo->prepare('SELECT id, name, description, price FROM plan_addons WHERE plan_id = :pid AND active = 1 ORDER BY sort_order');
+                $aStmt->execute([':pid' => $planId]);
+                $addons = $aStmt->fetchAll() ?: [];
+            } catch (\Throwable) {}
+        }
 
         $cStmt = $pdo->prepare('SELECT name, email, cpf_cnpj FROM clients WHERE id = ?');
         $cStmt->execute([$clienteId]);
