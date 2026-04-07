@@ -130,7 +130,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <div style="font-size:12px;color:#64748b;" id="perInfo"></div>
       </div>
 
-      <form method="post" action="/cliente/assinar" style="margin-top:16px;">
+      <form id="assinarForm" onsubmit="return submeterAssinar(event)">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="plan_id" value="<?php echo $planId; ?>" />
         <input type="hidden" name="addons_ids" id="addons_ids" value="" />
@@ -165,7 +165,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           </div>
         </div>
 
-        <button class="botao" type="submit" style="width:100%;font-size:15px;padding:14px;">Assinar agora</button>
+        <button class="botao" type="submit" id="btnAssinar" style="width:100%;font-size:15px;padding:14px;">Assinar agora</button>
+        <div id="assinarErro" style="display:none;margin-top:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 14px;border-radius:10px;font-size:13px;"></div>
       </form>
     </div>
   </div>
@@ -298,6 +299,55 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
   atualizar();
   <?php if (!$isBrl): ?>selCurrency('USD');<?php endif; ?>
+
+  window.submeterAssinar=function(e){
+    e.preventDefault();
+    var btn=document.getElementById('btnAssinar');
+    var erro=document.getElementById('assinarErro');
+    erro.style.display='none';
+    btn.disabled=true;btn.textContent='Processando...';
+
+    var form=document.getElementById('assinarForm');
+    var fd=new FormData(form);
+    // Garantir gateway correto pra USD
+    if(selectedCurrency==='USD'){
+      fd.set('gateway','stripe');
+    }
+
+    fetch('/cliente/assinar',{method:'POST',body:fd,credentials:'same-origin',redirect:'follow'})
+      .then(function(r){
+        // Se redirecionou (Stripe checkout ou pagamento), seguir
+        if(r.redirected){
+          window.location.href=r.url;
+          return null;
+        }
+        return r.text();
+      })
+      .then(function(html){
+        if(html===null) return;
+        // Se retornou HTML (erro ou página de pagamento), renderizar
+        if(html.indexOf('<!DOCTYPE')!==-1||html.indexOf('<html')!==-1){
+          document.open();document.write(html);document.close();
+        }else{
+          // Tentar como JSON
+          try{
+            var d=JSON.parse(html);
+            if(d.redirect){window.location.href=d.redirect;return;}
+            if(d.erro){erro.textContent=d.erro;erro.style.display='block';}
+          }catch(ex){
+            document.open();document.write(html);document.close();
+          }
+        }
+      })
+      .catch(function(){
+        erro.textContent='Erro de conexão. Tente novamente.';
+        erro.style.display='block';
+      })
+      .finally(function(){
+        btn.disabled=false;btn.textContent='Assinar agora';
+      });
+    return false;
+  };
 })();
 </script>
 
