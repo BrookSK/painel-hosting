@@ -10,6 +10,7 @@ $precoBase = (float)($plano['price_monthly'] ?? 0);
 $planId = (int)($plano['id'] ?? 0);
 $clienteCpf = trim((string)($cliente['cpf_cnpj'] ?? ''));
 $isBrl = I18n::moedaCodigo() === 'BRL';
+$hasUpfront = ((float)($plano['price_annual_upfront'] ?? 0)) > 0 || ((float)($plano['price_annual_upfront_usd'] ?? 0)) > 0;
 
 $pageTitle = 'Configurar plano';
 $clienteNome = (string)($cliente['name'] ?? '');
@@ -36,9 +37,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <span class="badge-new"><?php echo round((int)($plano['ram'] ?? 0) / 1024); ?> GB RAM</span>
         <span class="badge-new"><?php echo round((int)($plano['storage'] ?? 0) / 1024); ?> GB SSD</span>
       </div>
-      <div id="planPriceDisplay" style="font-size:20px;font-weight:700;color:#1e293b;">
-        <?php echo View::e(I18n::preco($precoBase)); ?><span style="font-size:13px;font-weight:400;color:#64748b;">/mês</span>
-      </div>
+      <div id="planPriceDisplay" style="font-size:20px;font-weight:700;color:#1e293b;"></div>
     </div>
 
     <!-- Moeda -->
@@ -54,54 +53,44 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </div>
     </div>
 
-    <!-- Período -->
+    <!-- Período: Mensal ou Anual à vista -->
     <div class="card-new" style="margin-bottom:14px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;">📅 Período</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid #4F46E5;border-radius:10px;cursor:pointer;background:#f5f3ff;" class="per-label" data-per="1">
+        <label style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1.5px solid #4F46E5;border-radius:10px;cursor:pointer;background:#f5f3ff;" class="per-label" data-per="monthly">
           <div style="display:flex;align-items:center;gap:8px;">
-            <input type="radio" name="sel_periodo" value="1" checked onchange="selPeriodo(1)" style="accent-color:#4F46E5;" />
-            <span style="font-size:13px;font-weight:600;">Mensal</span>
+            <input type="radio" name="sel_periodo" value="monthly" checked onchange="selPeriodo('monthly')" style="accent-color:#4F46E5;" />
+            <div>
+              <span style="font-size:14px;font-weight:600;">Mensal</span>
+              <div style="font-size:12px;color:#64748b;">Cobrado todo mês, cancele quando quiser</div>
+            </div>
           </div>
-          <span class="per-price" style="font-size:13px;font-weight:700;color:#4F46E5;"></span>
+          <span id="precoMensal" style="font-size:14px;font-weight:700;color:#4F46E5;"></span>
         </label>
-        <?php if ((float)($plano['price_semiannual'] ?? 0) > 0 || (float)($plano['price_semiannual_usd'] ?? 0) > 0): ?>
-        <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" class="per-label" data-per="6">
+        <?php if ($hasUpfront): ?>
+        <label style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" class="per-label" data-per="annual">
           <div style="display:flex;align-items:center;gap:8px;">
-            <input type="radio" name="sel_periodo" value="6" onchange="selPeriodo(6)" style="accent-color:#4F46E5;" />
-            <span style="font-size:13px;font-weight:600;">Semestral</span>
-            <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:600;">Economia</span>
+            <input type="radio" name="sel_periodo" value="annual" onchange="selPeriodo('annual')" style="accent-color:#4F46E5;" />
+            <div>
+              <span style="font-size:14px;font-weight:600;">Anual à vista</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:600;">Melhor preço</span>
+              <div style="font-size:12px;color:#64748b;">Pagamento único — 12 meses</div>
+            </div>
           </div>
-          <span class="per-price" style="font-size:13px;font-weight:700;color:#4F46E5;"></span>
-        </label>
-        <?php endif; ?>
-        <?php if ((float)($plano['price_annual'] ?? 0) > 0 || (float)($plano['price_annual_usd'] ?? 0) > 0): ?>
-        <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" class="per-label" data-per="12">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="radio" name="sel_periodo" value="12" onchange="selPeriodo(12)" style="accent-color:#4F46E5;" />
-            <span style="font-size:13px;font-weight:600;">Anual</span>
-            <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:600;">Melhor preço</span>
+          <div style="text-align:right;">
+            <span id="precoAnual" style="font-size:14px;font-weight:700;color:#4F46E5;"></span>
+            <div id="economiaAnual" style="font-size:11px;color:#16a34a;font-weight:600;"></div>
           </div>
-          <span class="per-price" style="font-size:13px;font-weight:700;color:#4F46E5;"></span>
         </label>
         <?php endif; ?>
       </div>
     </div>
 
-    <!-- Parcelas (aparece para semestral/anual) -->
-    <div class="card-new" style="margin-bottom:14px;display:none;" id="installmentsCard">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">💳 Parcelas</div>
-      <select class="input" id="installmentsSelect" onchange="atualizar()" style="font-size:14px;">
-        <option value="1">À vista (1x)</option>
-      </select>
-      <p style="font-size:12px;color:#64748b;margin-top:6px;" id="installmentInfo"></p>
-    </div>
-
-    <!-- Addons selecionáveis -->
+    <!-- Addons -->
     <?php if (!empty($addons)): ?>
     <div class="card-new">
       <div class="card-new-title" style="margin-bottom:4px;">Serviços adicionais</div>
-      <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Selecione os serviços extras que deseja incluir na sua assinatura.</p>
+      <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Selecione os serviços extras que deseja incluir.</p>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <?php foreach ($addons as $i => $a):
           $aId = (int)($a['id'] ?? $i);
@@ -117,8 +106,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               <div style="font-size:12px;color:#64748b;margin-top:2px;"><?php echo View::e($aDesc); ?></div>
             <?php endif; ?>
           </div>
-          <div style="font-size:14px;font-weight:700;color:#4F46E5;white-space:nowrap;" class="addon-price-display">
-            +<?php echo View::e(I18n::preco($aPrice)); ?>/mês
+          <div style="text-align:right;" class="addon-price-display">
+            <div style="font-size:14px;font-weight:700;color:#4F46E5;white-space:nowrap;" class="addon-price-line"></div>
+            <div style="font-size:11px;color:#64748b;" class="addon-price-sub"></div>
           </div>
         </label>
         <?php endforeach; ?>
@@ -132,24 +122,25 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="card-new" style="position:sticky;top:20px;">
       <div class="card-new-title" style="margin-bottom:12px;">Resumo do pedido</div>
       <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;">
-        <div id="addons-resumo"></div>
+        <div id="resumo-linhas"></div>
         <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;font-size:18px;font-weight:700;">
           <span>Total</span>
           <span id="total-preco" style="color:#4F46E5;"></span>
         </div>
-        <div style="font-size:11px;color:#94a3b8;" id="perInfo">por mês</div>
+        <div style="font-size:12px;color:#64748b;" id="perInfo"></div>
       </div>
 
       <form method="post" action="/cliente/assinar" style="margin-top:16px;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="plan_id" value="<?php echo $planId; ?>" />
         <input type="hidden" name="addons_ids" id="addons_ids" value="" />
+        <input type="hidden" name="periodo" id="hidden_periodo" value="1" />
+        <input type="hidden" name="currency" id="hidden_currency" value="<?php echo $isBrl ? 'BRL' : 'USD'; ?>" />
 
         <?php if ($clienteCpf === ''): ?>
         <div style="margin-bottom:12px;" id="cpfField">
           <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.cpf_cnpj')); ?></label>
           <input class="input" type="text" name="cpf_cnpj" placeholder="000.000.000-00" maxlength="18" inputmode="numeric" style="max-width:240px;" />
-          <p style="font-size:11px;color:#94a3b8;margin-top:4px;"><?php echo View::e(I18n::t('checkout.cpf_obrigatorio')); ?></p>
         </div>
         <?php endif; ?>
 
@@ -166,7 +157,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               <input type="radio" name="gateway" value="CREDIT_CARD" style="accent-color:#4F46E5;" /> <?php echo View::e(I18n::t('checkout.cartao')); ?>
             </label>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;display:none;" id="gwUsd">
+          <div style="display:none;gap:8px;flex-wrap:wrap;" id="gwUsd">
             <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;">
               <input type="hidden" name="gateway_usd" value="stripe" />
               💳 <?php echo View::e(I18n::t('checkout.cartao')); ?> (Stripe)
@@ -182,70 +173,45 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <script>
 (function(){
-  var base=<?php echo $precoBase; ?>;
-  var baseUsd=<?php echo (float)($plano['price_monthly_usd'] ?? 0); ?>;
-  var priceSemiannual=<?php echo (float)($plano['price_semiannual'] ?? 0); ?>;
-  var priceSemiannualUsd=<?php echo (float)($plano['price_semiannual_usd'] ?? 0); ?>;
-  var priceAnnual=<?php echo (float)($plano['price_annual'] ?? 0); ?>;
-  var priceAnnualUsd=<?php echo (float)($plano['price_annual_usd'] ?? 0); ?>;
-  var priceAnnualUpfront=<?php echo (float)($plano['price_annual_upfront'] ?? 0); ?>;
-  var priceAnnualUpfrontUsd=<?php echo (float)($plano['price_annual_upfront_usd'] ?? 0); ?>;
-  var maxInstAnnual=<?php echo (int)($plano['max_installments_annual'] ?? 12); ?>;
-  var maxInstSemiannual=<?php echo (int)($plano['max_installments_semiannual'] ?? 6); ?>;
   var taxaUsd=<?php echo \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); ?>;
+  var baseBrl=<?php echo $precoBase; ?>;
+  var baseUsd=<?php echo (float)($plano['price_monthly_usd'] ?? 0); ?>;
+  var upfrontBrl=<?php echo (float)($plano['price_annual_upfront'] ?? 0); ?>;
+  var upfrontUsd=<?php echo (float)($plano['price_annual_upfront_usd'] ?? 0); ?>;
+  var planName=<?php echo json_encode((string)($plano['name'] ?? '')); ?>;
+
   var checks=document.querySelectorAll('.addon-check');
-  var resumo=document.getElementById('addons-resumo');
-  var total=document.getElementById('total-preco');
-  var idsInput=document.getElementById('addons_ids');
-  var curInput=document.querySelector('[name="sel_currency"]:checked');
-  var selectedCurrency=curInput?curInput.value:'BRL';
-  var selectedPeriodo=1;
+  var selectedCurrency=<?php echo json_encode($isBrl ? 'BRL' : 'USD'); ?>;
+  var selectedPeriodo='monthly'; // 'monthly' ou 'annual'
 
-  // Converte BRL→USD usando taxa, ou retorna valor USD fixo se definido
-  function toUsd(brl, fixedUsd){
-    if(fixedUsd>0) return fixedUsd;
-    return Math.round(brl/taxaUsd*100)/100;
+  function toUsd(brl,fixedUsd){return fixedUsd>0?fixedUsd:Math.round(brl/taxaUsd*100)/100;}
+  function fmt(v){return selectedCurrency==='BRL'?'R$ '+v.toFixed(2).replace('.',','):'US$ '+v.toFixed(2);}
+
+  function getMonthlyPrice(){return selectedCurrency==='USD'?toUsd(baseBrl,baseUsd):baseBrl;}
+  function getUpfrontPrice(){return selectedCurrency==='USD'?toUsd(upfrontBrl,upfrontUsd):upfrontBrl;}
+
+  function getAddonMonthly(card){
+    var p=parseFloat(card.dataset.price)||0;
+    var pu=parseFloat(card.dataset.priceUsd)||0;
+    return selectedCurrency==='USD'?toUsd(p,pu):p;
   }
-
-  function fmt(v){
-    if(selectedCurrency==='BRL') return 'R$ '+v.toFixed(2).replace('.',',');
-    return 'US$ '+v.toFixed(2);
-  }
-
-  function getPlanPrice(){
-    if(selectedCurrency==='USD'){
-      if(selectedPeriodo===12) return toUsd(priceAnnual>0?priceAnnual:base, priceAnnualUsd);
-      if(selectedPeriodo===6) return toUsd(priceSemiannual>0?priceSemiannual:base, priceSemiannualUsd);
-      return toUsd(base, baseUsd);
-    }
-    if(selectedPeriodo===12 && priceAnnual>0) return priceAnnual;
-    if(selectedPeriodo===6 && priceSemiannual>0) return priceSemiannual;
-    return base;
-  }
-
-  function getAddonPrice(card){
-    var pBrl=parseFloat(card.dataset.price)||0;
-    var pUsd=parseFloat(card.dataset.priceUsd)||0;
-    var pAnnualBrl=parseFloat(card.dataset.priceAnnual)||0;
-    var pAnnualUsd=parseFloat(card.dataset.priceAnnualUsd)||0;
-    if(selectedCurrency==='USD'){
-      if(selectedPeriodo>=12) return toUsd(pAnnualBrl>0?pAnnualBrl:pBrl, pAnnualUsd);
-      return toUsd(pBrl, pUsd);
-    }
-    if(selectedPeriodo>=12 && pAnnualBrl>0) return pAnnualBrl;
-    return pBrl;
+  function getAddonAnnual(card){
+    var p=parseFloat(card.dataset.price)||0;
+    var pa=parseFloat(card.dataset.priceAnnual)||0;
+    var pau=parseFloat(card.dataset.priceAnnualUsd)||0;
+    if(selectedCurrency==='USD') return toUsd(pa>0?pa:p,pau)*12;
+    return (pa>0?pa:p)*12;
   }
 
   window.selCurrency=function(cur){
     selectedCurrency=cur;
     document.querySelectorAll('.cur-label').forEach(function(l){l.style.borderColor='#e2e8f0';l.style.background='#fff';});
     var sel=document.querySelector('input[name="sel_currency"][value="'+cur+'"]');
-    if(sel)sel.closest('.cur-label').style.borderColor='#4F46E5',sel.closest('.cur-label').style.background='#f5f3ff';
-    // CPF field
+    if(sel){sel.closest('.cur-label').style.borderColor='#4F46E5';sel.closest('.cur-label').style.background='#f5f3ff';}
     var cpf=document.getElementById('cpfField');if(cpf)cpf.style.display=cur==='USD'?'none':'block';
-    // Gateways
     document.getElementById('gwBrl').style.display=cur==='BRL'?'flex':'none';
     document.getElementById('gwUsd').style.display=cur==='USD'?'flex':'none';
+    document.getElementById('hidden_currency').value=cur;
     atualizar();
   };
 
@@ -253,120 +219,76 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     selectedPeriodo=p;
     document.querySelectorAll('.per-label').forEach(function(l){l.style.borderColor='#e2e8f0';l.style.background='#fff';});
     var sel=document.querySelector('input[name="sel_periodo"][value="'+p+'"]');
-    if(sel)sel.closest('.per-label').style.borderColor='#4F46E5',sel.closest('.per-label').style.background='#f5f3ff';
-
-    // Installments
-    var instCard=document.getElementById('installmentsCard');
-    var instSel=document.getElementById('installmentsSelect');
-    if(p>1){
-      var maxInst=p===12?maxInstAnnual:maxInstSemiannual;
-      instSel.innerHTML='';
-      for(var i=1;i<=maxInst;i++){
-        var opt=document.createElement('option');
-        opt.value=i;
-        opt.textContent=i===1?'À vista (1x)':i+'x';
-        instSel.appendChild(opt);
-      }
-      instCard.style.display='block';
-    }else{
-      instCard.style.display='none';
-    }
-
+    if(sel){sel.closest('.per-label').style.borderColor='#4F46E5';sel.closest('.per-label').style.background='#f5f3ff';}
+    document.getElementById('hidden_periodo').value=p==='annual'?12:1;
     atualizar();
   };
 
   function atualizar(){
-    var planPricePerMonth=getPlanPrice();
-    var perLabel=selectedPeriodo===1?'/mês':'/mês ('+selectedPeriodo+' meses)';
+    var monthly=getMonthlyPrice();
+    var upfront=getUpfrontPrice();
+    var isAnnual=selectedPeriodo==='annual';
 
-    // Parcelas
-    var instSel=document.getElementById('installmentsSelect');
-    var parcelas=instSel&&selectedPeriodo>1?parseInt(instSel.value)||1:1;
+    // Preço do plano
+    var planTotal=isAnnual?upfront:monthly;
+    var planLabel=isAnnual?fmt(upfront)+' <span style="font-size:13px;font-weight:400;color:#64748b;">/ano</span>':fmt(monthly)+' <span style="font-size:13px;font-weight:400;color:#64748b;">/mês</span>';
+    document.getElementById('planPriceDisplay').innerHTML=planLabel;
 
-    // Preço total do plano no período
-    var totalPlan=planPricePerMonth*selectedPeriodo;
-    // Se à vista (1x) no anual e tem preço upfront, usar ele
-    var upfrontVal=selectedCurrency==='USD'?toUsd(priceAnnualUpfront||0,priceAnnualUpfrontUsd):(priceAnnualUpfront||0);
-    if(selectedPeriodo===12&&parcelas===1&&upfrontVal>0){
-      totalPlan=upfrontVal;
+    // Period labels
+    document.getElementById('precoMensal').textContent=fmt(monthly)+'/mês';
+    var pa=document.getElementById('precoAnual');if(pa)pa.textContent=fmt(upfront)+'/ano';
+    var ec=document.getElementById('economiaAnual');
+    if(ec&&upfront>0){
+      var economia=monthly*12-upfront;
+      ec.textContent=economia>0?'Economia de '+fmt(economia):'';
     }
 
-    // Update period price labels
-    document.querySelectorAll('.per-label').forEach(function(l){
-      var per=parseInt(l.dataset.per);
-      var oldPer=selectedPeriodo;selectedPeriodo=per;
-      var pp=getPlanPrice();
-      selectedPeriodo=oldPer;
-      var priceEl=l.querySelector('.per-price');
-      if(priceEl) priceEl.textContent=fmt(pp)+'/mês';
-    });
-
-    // Plan price display
-    document.getElementById('planPriceDisplay').innerHTML=fmt(planPricePerMonth)+'<span style="font-size:13px;font-weight:400;color:#64748b;">'+perLabel+'</span>';
-
-    // Addons — calcular total por período
-    var addonsTotal=0;var html='';var ids=[];
+    // Addons
+    var addonsTotal=0;var resumoHtml='';var ids=[];
     checks.forEach(function(cb){
       var card=cb.closest('.addon-card');
-      var pMes=getAddonPrice(card);
-      // Update addon price display
-      var priceDisp=card.querySelector('.addon-price-display');
-      if(priceDisp) priceDisp.textContent='+'+fmt(pMes)+'/mês';
+      var addonMes=getAddonMonthly(card);
+      var addonAno=getAddonAnnual(card);
+      var addonVal=isAnnual?addonAno:addonMes;
+      // Update display
+      var pLine=card.querySelector('.addon-price-line');
+      var pSub=card.querySelector('.addon-price-sub');
+      if(isAnnual){
+        if(pLine)pLine.textContent='+'+fmt(addonAno)+'/ano';
+        if(pSub)pSub.textContent='≈ '+fmt(addonAno/12)+'/mês';
+      }else{
+        if(pLine)pLine.textContent='+'+fmt(addonMes)+'/mês';
+        if(pSub)pSub.textContent='';
+      }
       if(cb.checked){
-        var addonPeriodoTotal=pMes*selectedPeriodo;
-        addonsTotal+=addonPeriodoTotal;
-        ids.push(cb.value);
+        addonsTotal+=addonVal;ids.push(cb.value);
         var nome=card.querySelector('div[style*="font-weight:600"]').textContent;
-        html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+nome+'</span><span>+'+fmt(addonPeriodoTotal)+'</span></div>';
+        resumoHtml+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+nome+'</span><span>+'+fmt(addonVal)+'</span></div>';
         card.style.borderColor='#4F46E5';card.style.background='#f5f3ff';
       }else{
         card.style.borderColor='#e2e8f0';card.style.background='#fff';
       }
     });
 
-    var totalGeral=totalPlan+addonsTotal;
+    var totalGeral=planTotal+addonsTotal;
 
-    // Resumo lateral — linha do plano
-    var resumoHtml='<div style="display:flex;justify-content:space-between;"><span><?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(totalPlan)+'</span></div>';
-    resumoHtml+=html;
-    resumo.innerHTML=resumoHtml;
-    total.textContent=fmt(totalGeral);
-    idsInput.value=ids.join(',');
+    // Resumo
+    var rl=document.getElementById('resumo-linhas');
+    rl.innerHTML='<div style="display:flex;justify-content:space-between;"><span>'+planName+'</span><span>'+fmt(planTotal)+'</span></div>'+resumoHtml;
+    document.getElementById('total-preco').textContent=fmt(totalGeral);
+    document.getElementById('addons_ids').value=ids.join(',');
 
-    // Info abaixo do total
     var perInfo=document.getElementById('perInfo');
     if(perInfo){
-      if(selectedPeriodo===1){
-        perInfo.textContent='por mês';
-      }else if(parcelas>1){
-        perInfo.textContent=parcelas+'x de '+fmt(totalGeral/parcelas);
-      }else if(selectedPeriodo===12&&upfrontVal>0){
+      if(isAnnual){
         perInfo.textContent='pagamento único anual (à vista)';
       }else{
-        perInfo.textContent='total ('+selectedPeriodo+' meses)';
-      }
-    }
-
-    // Installment info text
-    var instInfo=document.getElementById('installmentInfo');
-    if(instInfo){
-      if(selectedPeriodo<=1){
-        instInfo.textContent='';
-      }else if(parcelas===1){
-        if(selectedPeriodo===12&&upfrontVal>0){
-          instInfo.textContent='À vista com desconto: '+fmt(upfrontVal)+(addonsTotal>0?' + '+fmt(addonsTotal)+' (addons) = '+fmt(totalGeral):'');
-        }else{
-          instInfo.textContent='Pagamento único de '+fmt(totalGeral);
-        }
-      }else{
-        instInfo.textContent=parcelas+'x de '+fmt(totalGeral/parcelas)+' = '+fmt(totalGeral)+' total';
+        perInfo.textContent='cobrado mensalmente';
       }
     }
   }
 
   checks.forEach(function(cb){cb.addEventListener('change',atualizar);});
-
-  // Gateway style
   document.querySelectorAll('.gw-label input[type=radio]').forEach(function(r){
     r.addEventListener('change',function(){
       document.querySelectorAll('.gw-label').forEach(function(l){l.style.borderColor='#e2e8f0';l.style.background='#fff';});
@@ -374,7 +296,6 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     });
   });
 
-  // Init
   atualizar();
   <?php if (!$isBrl): ?>selCurrency('USD');<?php endif; ?>
 })();
