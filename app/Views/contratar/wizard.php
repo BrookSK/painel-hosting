@@ -164,34 +164,25 @@ $moedaJs = I18n::moedaCodigo();
   <div class="card">
     <div class="subtitulo"><?php echo View::e(I18n::t('wz.periodo')); ?></div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
-      <div class="periodo-opt sel" data-periodo="1" onclick="selPeriodo(1)">
+      <div class="periodo-opt sel" data-periodo="monthly" onclick="selPeriodo('monthly')">
         <div><strong><?php echo View::e(I18n::t('wz.mensal')); ?></strong><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.sem_compromisso')); ?></span></div>
         <div style="text-align:right;">
-          <div style="font-weight:700;" id="preco1m"><?php echo View::e(I18n::preco($preco)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></div>
-          <div style="font-size:11px;color:#94a3b8;" id="cobrado1m"><?php echo View::e(I18n::t('wz.cobrado')); ?> <?php echo View::e(I18n::preco($preco)); ?></div>
+          <div style="font-weight:700;" id="precoMensalWz"></div>
+          <div style="font-size:11px;color:#94a3b8;" id="cobradoMensalWz"></div>
         </div>
       </div>
-      <div class="periodo-opt" data-periodo="6" onclick="selPeriodo(6)">
-        <div><strong><?php echo View::e(I18n::t('wz.semestral')); ?></strong> <span class="desc-badge"><?php echo $d6; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.cobrado_6m')); ?></span></div>
+      <?php
+        $hasUpfrontWz = ((float)($plano['price_annual_upfront'] ?? 0)) > 0 || ((float)($plano['price_annual_upfront_usd'] ?? 0)) > 0;
+      ?>
+      <?php if ($hasUpfrontWz): ?>
+      <div class="periodo-opt" data-periodo="annual" onclick="selPeriodo('annual')">
+        <div><strong>Anual à vista</strong> <span class="desc-badge" style="background:#dcfce7;color:#166534;">Melhor preço</span><br><span style="font-size:12px;color:#64748b;">Pagamento único — 12 meses</span></div>
         <div style="text-align:right;">
-          <div style="font-weight:700;" id="preco6m"></div>
-          <div style="font-size:11px;color:#94a3b8;" id="cobrado6m"></div>
+          <div style="font-weight:700;" id="precoAnualWz"></div>
+          <div style="font-size:11px;color:#16a34a;" id="economiaWz"></div>
         </div>
       </div>
-      <div class="periodo-opt" data-periodo="12" onclick="selPeriodo(12)">
-        <div><strong><?php echo View::e(I18n::t('wz.anual')); ?></strong> <span class="desc-badge"><?php echo $d12; ?>% OFF</span><br><span style="font-size:12px;color:#64748b;"><?php echo View::e(I18n::t('wz.cobrado_anual')); ?></span></div>
-        <div style="text-align:right;">
-          <div style="font-weight:700;" id="preco12m"></div>
-          <div style="font-size:11px;color:#94a3b8;" id="cobrado12m"></div>
-        </div>
-      </div>
-      <div class="periodo-opt" data-periodo="12u" id="anualUpfront" onclick="selPeriodo('12u')" style="display:<?php echo ((float)($plano['price_annual_upfront'] ?? 0)) > 0 ? 'flex' : 'none'; ?>;border-color:#10b981;">
-        <div><strong>Anual à vista</strong> <span class="desc-badge" style="background:#dcfce7;color:#166534;">Melhor preço</span><br><span style="font-size:12px;color:#64748b;">Pagamento único — sem parcelas</span></div>
-        <div style="text-align:right;">
-          <div style="font-weight:700;" id="precoUpfront"></div>
-          <div style="font-size:11px;color:#94a3b8;" id="equivUpfront"></div>
-        </div>
-      </div>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -207,7 +198,7 @@ $moedaJs = I18n::moedaCodigo();
         $aId = (int)($a['id'] ?? 0);
         $aPreSel = in_array($aId, $preAddons, true);
       ?>
-      <div class="addon-opt<?php echo $aPreSel ? ' sel' : ''; ?>" data-addon-id="<?php echo $aId; ?>" data-addon-price="<?php echo (float)($a['price'] ?? 0); ?>" onclick="toggleAddon(this)">
+      <div class="addon-opt<?php echo $aPreSel ? ' sel' : ''; ?>" data-addon-id="<?php echo $aId; ?>" data-addon-price="<?php echo (float)($a['price'] ?? 0); ?>" data-addon-price-usd="<?php echo (float)($a['price_usd'] ?? 0); ?>" data-addon-price-annual="<?php echo (float)($a['price_annual'] ?? 0); ?>" data-addon-price-annual-usd="<?php echo (float)($a['price_annual_usd'] ?? 0); ?>" onclick="toggleAddon(this)">
         <input type="checkbox" <?php echo $aPreSel ? 'checked' : ''; ?> style="accent-color:#4F46E5;width:18px;height:18px;pointer-events:none;"/>
         <div style="flex:1;">
           <div style="font-weight:600;font-size:14px;"><?php echo View::e((string)($a['name'] ?? '')); ?></div>
@@ -480,7 +471,7 @@ $moedaJs = I18n::moedaCodigo();
     return Math.round(brl/taxaUsd*100)/100;
   }
   var upsell=<?php echo $upsell ? json_encode(['id'=>(int)$upsell['id'],'name'=>$upsell['name'],'price'=>(float)$upsell['price_monthly']]) : 'null'; ?>;
-  var passo=0,periodo=1,gateway=<?php echo json_encode($isBrl?'PIX':'stripe'); ?>,addonsIds=<?php echo json_encode(array_values($preAddons)); ?>;
+  var passo=0,periodo='monthly',gateway=<?php echo json_encode($isBrl?'PIX':'stripe'); ?>,addonsIds=<?php echo json_encode(array_values($preAddons)); ?>;
   var T=<?php echo json_encode([
     'mes'=>I18n::t('assinaturas.mes'),'sem'=>'sem','ano'=>'ano',
     'equiv'=>I18n::t('wz.equiv_mensal'),'cobrado_por'=>I18n::t('wz.cobrado_por'),
@@ -505,68 +496,41 @@ $moedaJs = I18n::moedaCodigo();
     if(selectedCurrency==='BRL') return 'R$ '+v.toFixed(2).replace('.',',');
     return 'US$ '+v.toFixed(2);
   }
-  function precoMensal(){
-    if(selectedCurrency==='USD') return toUsd(precoBase, priceMonthlyUsd);
-    return precoBase;
+  function getMonthlyPrice(){
+    return selectedCurrency==='USD'?toUsd(precoBase,priceMonthlyUsd):precoBase;
   }
-  function precoComDesconto(base,per){
-    if(selectedCurrency==='USD'){
-      if(per===6) return toUsd(priceSemiannual>0?priceSemiannual:base, priceSemiannualUsd);
-      if(per===12) return toUsd(priceAnnual>0?priceAnnual:base, priceAnnualUsd);
-      return toUsd(base, priceMonthlyUsd);
-    }
-    if(per===6 && priceSemiannual>0) return priceSemiannual;
-    if(per===12 && priceAnnual>0) return priceAnnual;
-    if(per===6) return base*(1-d6/100);
-    if(per===12) return base*(1-d12/100);
-    return base;
+  function getUpfrontPrice(){
+    return selectedCurrency==='USD'?toUsd(priceAnnualUpfront,priceAnnualUpfrontUsd):priceAnnualUpfront;
+  }
+  function getAddonMonthly(el){
+    var p=parseFloat(el.dataset.addonPrice)||0;
+    var pu=parseFloat(el.dataset.addonPriceUsd)||0;
+    return selectedCurrency==='USD'?toUsd(p,pu):p;
+  }
+  function getAddonAnnualTotal(el){
+    var p=parseFloat(el.dataset.addonPrice)||0;
+    var pa=parseFloat(el.dataset.addonPriceAnnual)||0;
+    var pau=parseFloat(el.dataset.addonPriceAnnualUsd)||0;
+    if(selectedCurrency==='USD') return toUsd(pa>0?pa:p,pau)*12;
+    return (pa>0?pa:p)*12;
   }
 
-  // Seleção de moeda
   window.selCurrency=function(cur){
     selectedCurrency=cur;
     document.querySelectorAll('.currency-opt').forEach(function(el){el.classList.toggle('sel',el.dataset.cur===cur);});
-    // Atualizar campo CPF: obrigatório só para BRL
     var cpfField=document.getElementById('cpfField');
     if(cpfField) cpfField.style.display=cur==='USD'?'none':'block';
-    // Atualizar gateways
     var gwBrl=document.getElementById('gwBrl');
     var gwUsd=document.getElementById('gwUsd');
     if(gwBrl) gwBrl.style.display=cur==='BRL'?'flex':'none';
     if(gwUsd) gwUsd.style.display=cur==='USD'?'flex':'none';
     if(cur==='USD') gateway='stripe'; else gateway='PIX';
-    atualizarPeriodos();
     atualizarResumo();
   };
 
-  function atualizarPeriodos(){
-    var p1=precoComDesconto(precoBase,1);
-    var p6=precoComDesconto(precoBase,6);
-    var p12=precoComDesconto(precoBase,12);
-    document.getElementById('preco1m').textContent=fmt(p1)+'/mês';
-    document.getElementById('cobrado1m').textContent='Cobrado '+fmt(p1);
-    document.getElementById('preco6m').textContent=fmt(p6)+'/mês';
-    document.getElementById('cobrado6m').textContent='Cobrado '+fmt(p6*6);
-    document.getElementById('preco12m').textContent=fmt(p12)+'/mês';
-    document.getElementById('cobrado12m').textContent='Cobrado '+fmt(p12*12);
-    // Anual à vista
-    var upfrontEl=document.getElementById('anualUpfront');
-    if(upfrontEl){
-      var upVal=selectedCurrency==='USD'?toUsd(priceAnnualUpfront, priceAnnualUpfrontUsd):priceAnnualUpfront;
-      upfrontEl.style.display=upVal>0?'flex':'none';
-      if(upVal>0){
-        document.getElementById('precoUpfront').textContent=fmt(upVal);
-        var equivMes=upVal/12;
-        document.getElementById('equivUpfront').textContent='≈ '+fmt(equivMes)+'/mês';
-      }
-    }
-  }
-
-  atualizarPeriodos();
-
   window.selPeriodo=function(p){
     periodo=p;
-    document.querySelectorAll('.periodo-opt').forEach(function(el){el.classList.toggle('sel',parseInt(el.dataset.periodo)===p);});
+    document.querySelectorAll('.periodo-opt').forEach(function(el){el.classList.toggle('sel',el.dataset.periodo===p);});
     atualizarResumo();
   };
   window.alterarQtd=function(d){
@@ -591,33 +555,45 @@ $moedaJs = I18n::moedaCodigo();
 
   window.atualizarResumo=function(){
     var qtd=Math.max(1,parseInt(document.getElementById('qtdServidores').value||'1'));
-    var precoUnit=precoComDesconto(precoBase,periodo);
+    var isAnnual=periodo==='annual';
+    var monthly=getMonthlyPrice();
+    var upfront=getUpfrontPrice();
+    var planTotal=isAnnual?upfront*qtd:monthly*qtd;
+
+    // Update period labels
+    var pm=document.getElementById('precoMensalWz');if(pm)pm.textContent=fmt(monthly)+'/mês';
+    var cm=document.getElementById('cobradoMensalWz');if(cm)cm.textContent='Cobrado '+fmt(monthly);
+    var pa=document.getElementById('precoAnualWz');if(pa)pa.textContent=fmt(upfront)+'/ano';
+    var ec=document.getElementById('economiaWz');
+    if(ec&&upfront>0){var economia=monthly*12-upfront;ec.textContent=economia>0?'Economia de '+fmt(economia):'';}
+
+    // Addons
     var addonsTotal=0;
-    document.querySelectorAll('.addon-opt').forEach(function(el){if(el.classList.contains('sel'))addonsTotal+=parseFloat(el.dataset.addonPrice)||0;});
-    // Addons também recebem desconto do período
-    var addonsMes=addonsTotal*(periodo>1?(periodo===6?(1-d6/100):(1-d12/100)):1);
-    var totalMes=(precoUnit+addonsMes)*qtd;
-    var totalPeriodo=totalMes*periodo;
-    var perSuffix=periodo===1?'/'+T.mes:periodo===6?'/'+T.sem:'/'+T.ano;
-    var perLabel=periodo===1?T.mes:periodo===6?T.sem:T.ano;
+    document.querySelectorAll('.addon-opt').forEach(function(el){
+      if(el.classList.contains('sel')){
+        var addonVal=isAnnual?getAddonAnnualTotal(el):getAddonMonthly(el);
+        addonsTotal+=addonVal*qtd;
+      }
+    });
 
-    var planoPeriodo=precoUnit*qtd*periodo;
-    var addonsPeriodo=addonsMes*qtd*periodo;
+    var totalGeral=planTotal+addonsTotal;
+    var perSuffix=isAnnual?'/'+T.ano:'/'+T.mes;
+    var perLabel=isAnnual?T.ano:T.mes;
 
-    var html='<div style="display:flex;justify-content:space-between;"><span>'+qtd+'x <?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(planoPeriodo)+perSuffix+'</span></div>';
+    var html='<div style="display:flex;justify-content:space-between;"><span>'+qtd+'x <?php echo View::e((string)($plano['name'] ?? '')); ?></span><span>'+fmt(planTotal)+perSuffix+'</span></div>';
     if(addonsTotal>0){
-      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+T.addons+( periodo>1?' ('+T.com_desc+')':'' )+'</span><span>+'+fmt(addonsPeriodo)+perSuffix+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;color:#475569;"><span>'+T.addons+'</span><span>+'+fmt(addonsTotal)+perSuffix+'</span></div>';
     }
-    if(periodo>1){
-      html+='<div style="display:flex;justify-content:space-between;color:#16a34a;"><span>'+T.desconto+' '+(periodo===6?d6:d12)+'%</span><span>'+T.aplicado+'</span></div>';
+    if(isAnnual){
+      html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-top:4px;"><span>Pagamento único anual</span></div>';
+    }else{
+      html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-top:4px;"><span>Cobrado mensalmente</span></div>';
     }
-    html+='<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;color:#64748b;"><span><b>'+T.equiv+'</b></span><span>'+fmt(totalMes)+'/'+T.mes+'</span></div>';
-    html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-top:2px;"><span>'+T.cobrado_por+' '+perLabel+'</span><span>'+fmt(totalPeriodo)+'</span></div>';
 
     document.getElementById('resumoConfig').innerHTML=html;
-    document.getElementById('resumoTotal').textContent=fmt(totalPeriodo);
+    document.getElementById('resumoTotal').textContent=fmt(totalGeral);
     document.getElementById('resumoFinal').innerHTML=html;
-    document.getElementById('resumoFinalTotal').textContent=fmt(totalPeriodo);
+    document.getElementById('resumoFinalTotal').textContent=fmt(totalGeral);
   };
   atualizarResumo();
 
@@ -632,11 +608,13 @@ $moedaJs = I18n::moedaCodigo();
 
   var upsellShown=false;
   window.avancarStep1=function(){
-    if(!upsellShown&&periodo===1){
-      document.getElementById('upsellTitulo').textContent=T.upsell_titulo.replace('%s',d12);
-      document.getElementById('upsellDesc').textContent=T.upsell_desc_tpl.replace('%s',fmt(precoComDesconto(precoBase,12))).replace('%s',fmt(precoBase));
+    if(!upsellShown&&periodo==='monthly'&&priceAnnualUpfront>0){
+      var upfront=getUpfrontPrice();
+      var monthly=getMonthlyPrice();
+      document.getElementById('upsellTitulo').textContent='Economize com o plano anual';
+      document.getElementById('upsellDesc').textContent='Pague '+fmt(upfront)+' à vista em vez de '+fmt(monthly*12)+' (12x '+fmt(monthly)+')';
       document.getElementById('upsellAceitar').textContent=T.quero_desconto;
-      document.getElementById('upsellAceitar').onclick=function(){selPeriodo(12);fecharUpsell();irPasso(2);};
+      document.getElementById('upsellAceitar').onclick=function(){selPeriodo('annual');fecharUpsell();irPasso(2);};
       document.getElementById('modalUpsell').classList.add('show');
       upsellShown=true;return;
     }
@@ -682,7 +660,7 @@ $moedaJs = I18n::moedaCodigo();
     body.append('senha',document.getElementById('cSenha').value);
     body.append('country',document.getElementById('cPais').value);
     body.append('preferred_lang',document.getElementById('cIdioma').value);
-    body.append('gateway',gateway);body.append('periodo',periodo);
+    body.append('gateway',gateway);body.append('periodo',periodo==='annual'?12:1);
     body.append('quantidade',document.getElementById('qtdServidores').value);
     body.append('addons_ids',addonsIds.join(','));
     body.append('currency',selectedCurrency);

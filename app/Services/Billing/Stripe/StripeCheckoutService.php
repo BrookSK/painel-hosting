@@ -21,7 +21,7 @@ final class StripeCheckoutService
 
         $pdo = BancoDeDados::pdo();
 
-        $stmt = $pdo->prepare("SELECT id, name, price_monthly, cpu, ram, storage, stripe_price_id FROM plans WHERE id = :id AND status = 'active'");
+        $stmt = $pdo->prepare("SELECT id, name, price_monthly, price_monthly_usd, cpu, ram, storage, stripe_price_id FROM plans WHERE id = :id AND status = 'active'");
         $stmt->execute([':id' => $planId]);
         $plano = $stmt->fetch();
 
@@ -113,9 +113,14 @@ final class StripeCheckoutService
             // Create Stripe prices for addons on-the-fly
             $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
             foreach ($addons as $addon) {
-                $addonPriceBrl = (float)($addon['price'] ?? 0);
-                if ($addonPriceBrl <= 0) continue;
-                $addonUsdCents = (int)round(($addonPriceBrl / $taxaUsd) * 100);
+                $addonUsdFixo = (float)($addon['price_usd'] ?? 0);
+                if ($addonUsdFixo > 0) {
+                    $addonUsdCents = (int)round($addonUsdFixo * 100);
+                } else {
+                    $addonPriceBrl = (float)($addon['price'] ?? 0);
+                    if ($addonPriceBrl <= 0) continue;
+                    $addonUsdCents = (int)round(($addonPriceBrl / $taxaUsd) * 100);
+                }
                 if ($addonUsdCents <= 0) continue;
                 try {
                     $addonProduct = $stripe->products->create([
@@ -185,13 +190,19 @@ final class StripeCheckoutService
      */
     private function criarStripePriceParaPlano(string $secretKey, array $plano, \PDO $pdo): string
     {
-        $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
-        $precoBrl = (float) ($plano['price_monthly'] ?? 0);
-        if ($precoBrl <= 0) {
-            return '';
+        // Usar preço USD fixo se definido, senão converter BRL
+        $precoUsdFixo = (float)($plano['price_monthly_usd'] ?? 0);
+        if ($precoUsdFixo > 0) {
+            $precoUsdCents = (int)round($precoUsdFixo * 100);
+        } else {
+            $taxaUsd = ConfiguracoesSistema::taxaConversaoUsd();
+            $precoBrl = (float)($plano['price_monthly'] ?? 0);
+            if ($precoBrl <= 0) {
+                return '';
+            }
+            $precoUsdCents = (int)round(($precoBrl / $taxaUsd) * 100);
         }
 
-        $precoUsdCents = (int) round(($precoBrl / $taxaUsd) * 100);
         if ($precoUsdCents <= 0) {
             return '';
         }

@@ -36,12 +36,12 @@ final class AssinarPlanoController
             if (!empty($ids)) {
                 $pdo = \LRV\Core\BancoDeDados::pdo();
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $st = $pdo->prepare("SELECT id, name, price FROM plan_addons WHERE id IN ({$placeholders}) AND plan_id = ? AND active = 1");
+                $st = $pdo->prepare("SELECT id, name, price, price_usd FROM plan_addons WHERE id IN ({$placeholders}) AND plan_id = ? AND active = 1");
                 $params = array_merge($ids, [$planId]);
                 $st->execute($params);
                 $rows = $st->fetchAll();
                 foreach (($rows ?: []) as $r) {
-                    $addonsSelecionados[] = ['id' => (int)$r['id'], 'name' => (string)$r['name'], 'price' => (float)$r['price']];
+                    $addonsSelecionados[] = ['id' => (int)$r['id'], 'name' => (string)$r['name'], 'price' => (float)$r['price'], 'price_usd' => (float)($r['price_usd'] ?? 0)];
                     $addonsTotal += (float)$r['price'];
                 }
             }
