@@ -214,7 +214,6 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     document.getElementById('gwBrl').style.display=cur==='BRL'?'flex':'none';
     document.getElementById('gwUsd').style.display=cur==='USD'?'block':'none';
     document.getElementById('hidden_currency').value=cur;
-    if(cur==='USD') setTimeout(mountStripeCard,100);
     atualizar();
   };
 
