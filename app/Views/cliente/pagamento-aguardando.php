@@ -17,6 +17,8 @@ $subStatus = strtoupper((string)($sub['status'] ?? ''));
 
 $paymentStatus = strtoupper((string)($cobranca['status'] ?? ''));
 $paymentValue = (float)($cobranca['value'] ?? $priceMonthly);
+// Asaas é sempre BRL — formatar em Real independente da moeda do plano
+$paymentValueFmt = 'R$ ' . number_format($paymentValue, 2, ',', '.');
 $dueDate = (string)($cobranca['dueDate'] ?? '');
 $pago = in_array($paymentStatus, ['CONFIRMED', 'RECEIVED'], true) || $subStatus === 'ACTIVE';
 
@@ -36,7 +38,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div style="max-width:680px;margin:0 auto;">
   <div style="margin-bottom:24px;">
     <div class="page-title"><?php echo View::e(I18n::t('pagamento.titulo')); ?></div>
-    <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e($planName); ?> — <?php echo View::e(I18n::precoPlano($sub)); ?>/mês</div>
+    <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e($planName); ?> — <?php echo $paymentValueFmt; ?>/mês</div>
   </div>
 
   <?php if ($pago): ?>
@@ -157,7 +159,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </div>
 
       <button class="botao" type="submit" style="width:100%;font-size:15px;padding:14px;" id="btn-pagar">
-        <?php echo View::e(I18n::t('pagamento.pagar')); ?> <?php echo View::e(I18n::preco($paymentValue)); ?>
+        <?php echo View::e(I18n::t('pagamento.pagar')); ?> <?php echo $paymentValueFmt; ?>
       </button>
     </form>
   </div>
@@ -215,6 +217,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   }
 
   // Cartão de crédito (Asaas)
+  var btnPagarTexto='<?php echo View::e(I18n::t('pagamento.pagar')); ?> <?php echo $paymentValueFmt; ?>';
   window.enviarCartao=function(e){
     e.preventDefault();
     var form=document.getElementById('form-cartao');
@@ -243,19 +246,19 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         erroEl.textContent='<?php echo View::e(I18n::t('pagamento.cartao_analise')); ?>';
         erroEl.style.display='block';
         btn.disabled=false;
-        btn.textContent='<?php echo View::e(I18n::t('pagamento.pagar')); ?> <?php echo View::e(I18n::preco($paymentValue)); ?>';
+        btn.textContent=btnPagarTexto;
       } else {
         erroEl.textContent=d.erro||'<?php echo View::e(I18n::t('pagamento.erro_generico')); ?>';
         erroEl.style.display='block';
         btn.disabled=false;
-        btn.textContent='<?php echo View::e(I18n::t('pagamento.pagar')); ?> <?php echo View::e(I18n::preco($paymentValue)); ?>';
+        btn.textContent=btnPagarTexto;
       }
     })
     .catch(function(){
       erroEl.textContent='<?php echo View::e(I18n::t('pagamento.erro_generico')); ?>';
       erroEl.style.display='block';
       btn.disabled=false;
-      btn.textContent='<?php echo View::e(I18n::t('pagamento.pagar')); ?> <?php echo View::e(I18n::preco($paymentValue)); ?>';
+      btn.textContent=btnPagarTexto;
     });
     return false;
   };
