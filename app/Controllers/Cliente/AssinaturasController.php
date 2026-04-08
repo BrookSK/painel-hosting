@@ -27,7 +27,7 @@ final class AssinaturasController
             "SELECT s.id, s.status, s.vps_id,
                     s.asaas_subscription_id, s.stripe_subscription_id,
                     s.next_due_date, s.created_at,
-                    p.name AS plan_name, p.price_monthly, p.cpu, p.ram, p.storage,
+                    p.name AS plan_name, p.price_monthly, p.price_monthly_usd, p.currency, p.cpu, p.ram, p.storage,
                     v.status AS vps_status
              FROM subscriptions s
              INNER JOIN plans p ON p.id = s.plan_id
@@ -58,7 +58,7 @@ final class AssinaturasController
             "SELECT s.id, s.status,
                     s.asaas_subscription_id, s.stripe_subscription_id,
                     s.next_due_date, s.created_at,
-                    p.name AS plan_name, p.price_monthly
+                    p.name AS plan_name, p.price_monthly, p.price_monthly_usd, p.currency
              FROM subscriptions s
              INNER JOIN plans p ON p.id = s.plan_id
              WHERE s.client_id = :c

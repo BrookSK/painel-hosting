@@ -21,7 +21,7 @@ final class InicialController
         try {
             $pdo   = BancoDeDados::pdo();
             $stmt  = $pdo->query(
-                "SELECT id, name, price_monthly AS price, specs_json, description, is_featured,
+                "SELECT id, name, price_monthly AS price, price_monthly_usd AS price_usd, currency, specs_json, description, is_featured,
                         cpu, ram, storage, support_channels
                  FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC LIMIT 6"
             );
@@ -68,7 +68,7 @@ final class InicialController
         try {
             $pdo  = BancoDeDados::pdo();
             $stmt = $pdo->query(
-                "SELECT id, name, price_monthly AS price, specs_json, description, is_featured,
+                "SELECT id, name, price_monthly AS price, price_monthly_usd AS price_usd, currency, specs_json, description, is_featured,
                         cpu, ram, storage
                  FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC LIMIT 6"
             );

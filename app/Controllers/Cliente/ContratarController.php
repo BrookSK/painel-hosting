@@ -23,10 +23,10 @@ final class ContratarController
 
         // Plano selecionado — planos privados (client_id) não podem ser contratados pelo wizard público
         try {
-            $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, support_channels, specs_json, is_featured FROM plans WHERE id = :id AND status = 'active' AND client_id IS NULL");
+            $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, price_annual_upfront, price_annual_upfront_usd, currency, support_channels, specs_json, is_featured FROM plans WHERE id = :id AND status = 'active' AND client_id IS NULL");
             $stmt->execute([':id' => $planId]);
         } catch (\Throwable) {
-            $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE id = :id AND status = 'active' AND client_id IS NULL");
+            $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, price_annual_upfront, price_annual_upfront_usd, currency FROM plans WHERE id = :id AND status = 'active' AND client_id IS NULL");
             $stmt->execute([':id' => $planId]);
         }
         $plano = $stmt->fetch();
@@ -45,7 +45,7 @@ final class ContratarController
         // Plano upsell: próximo plano mais caro
         $upsell = null;
         try {
-            $uStmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL AND price_monthly > :p ORDER BY price_monthly ASC LIMIT 1");
+            $uStmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL AND price_monthly > :p ORDER BY price_monthly ASC LIMIT 1");
             $uStmt->execute([':p' => (float)$plano['price_monthly']]);
             $upsell = $uStmt->fetch() ?: null;
         } catch (\Throwable) {}

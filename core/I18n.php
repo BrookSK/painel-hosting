@@ -108,6 +108,33 @@ final class I18n
     }
 
     /**
+     * Retorna o preço de exibição de um plano, considerando moeda e preço USD fixo.
+     * Usa price_monthly_usd se disponível, senão converte price_monthly.
+     */
+    public static function precoPlano(array $plano): string
+    {
+        $priceBrl = (float)($plano['price_monthly'] ?? 0);
+        $priceUsd = (float)($plano['price_monthly_usd'] ?? 0);
+        $currency = (string)($plano['currency'] ?? 'BRL');
+
+        // Se o plano é em USD e tem preço USD definido
+        if ($currency === 'USD' && $priceUsd > 0) {
+            return 'US$ ' . number_format($priceUsd, 2, '.', ',');
+        }
+        if ($priceUsd > 0 && self::$moedaCodigo === 'USD') {
+            return 'US$ ' . number_format($priceUsd, 2, '.', ',');
+        }
+        if ($priceBrl > 0) {
+            return self::preco($priceBrl);
+        }
+        // Fallback: converter USD pra exibição
+        if ($priceUsd > 0) {
+            return 'US$ ' . number_format($priceUsd, 2, '.', ',');
+        }
+        return self::preco(0);
+    }
+
+    /**
      * Formata um número no padrão do idioma atual.
      */
     public static function numero(float $valor, int $decimais = 2): string

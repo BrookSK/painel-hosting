@@ -21,7 +21,7 @@ final class AssinaturasController
             try {
                 $sql = "SELECT s.id, s.client_id, s.vps_id, s.plan_id, s.asaas_subscription_id, s.stripe_subscription_id, s.stripe_checkout_session_id, s.status, s.next_due_date, s.created_at,
                                c.name AS client_name, c.email AS client_email,
-                               p.name AS plan_name, p.price_monthly AS plan_price
+                               p.name AS plan_name, p.price_monthly AS plan_price, p.price_monthly_usd AS plan_price_usd, p.currency AS plan_currency
                         FROM subscriptions s
                         INNER JOIN clients c ON c.id = s.client_id
                         LEFT JOIN plans p ON p.id = s.plan_id

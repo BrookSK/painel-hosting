@@ -36,7 +36,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div style="max-width:680px;margin:0 auto;">
   <div style="margin-bottom:24px;">
     <div class="page-title"><?php echo View::e(I18n::t('pagamento.titulo')); ?></div>
-    <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e($planName); ?> — <?php echo View::e(I18n::preco($paymentValue)); ?>/mês</div>
+    <div class="page-subtitle" style="margin-bottom:0;"><?php echo View::e($planName); ?> — <?php echo View::e(I18n::precoPlano($sub)); ?>/mês</div>
   </div>
 
   <?php if ($pago): ?>

@@ -42,7 +42,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </div>
 
       <p class="texto" style="font-size:18px; color:#0f172a; margin-bottom:12px;">
-        <strong><?php echo View::e(I18n::preco((float)($p['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></strong>
+        <strong><?php echo View::e(I18n::precoPlano($p)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></strong>
       </p>
 
       <?php

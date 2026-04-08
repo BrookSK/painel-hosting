@@ -109,7 +109,7 @@ function _badgeVps(string $st): string {
           <?php endif; ?>
 
           <div style="display:flex;justify-content:space-between;font-size:13px;color:#64748b;margin-bottom:8px;">
-            <span><?php echo View::e(I18n::preco($preco)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></span>
+            <span><?php echo View::e(I18n::precoPlano($a)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></span>
             <span><?php echo View::e(I18n::t('assinaturas.prox_vencimento')); ?>: <?php echo View::e($proxVenc); ?></span>
           </div>
 
@@ -145,7 +145,7 @@ function _badgeVps(string $st): string {
               <tr>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;">#<?php echo (int)($a['id'] ?? 0); ?></td>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['plan_name'] ?? '')); ?></td>
-                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::preco((float)($a['price_monthly'] ?? 0))); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></td>
+                <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e(I18n::precoPlano($a)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></td>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo _badgeSt((string)($a['status'] ?? '')); ?></td>
                 <td style="padding:10px;border-bottom:1px solid #f1f5f9;"><?php echo View::e((string)($a['created_at'] ?? '')); ?></td>
               </tr>

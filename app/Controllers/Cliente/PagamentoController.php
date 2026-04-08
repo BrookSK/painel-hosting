@@ -30,7 +30,7 @@ final class PagamentoController
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
             'SELECT s.id, s.asaas_subscription_id, s.status, s.next_due_date,
-                    p.name AS plan_name, p.price_monthly
+                    p.name AS plan_name, p.price_monthly, p.price_monthly_usd, p.currency
              FROM subscriptions s
              INNER JOIN plans p ON p.id = s.plan_id
              WHERE s.id = :id AND s.client_id = :c LIMIT 1'

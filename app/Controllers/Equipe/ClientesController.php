@@ -114,7 +114,7 @@ final class ClientesController
         $vps->execute([':id' => $id]);
 
         $subs = $pdo->prepare(
-            "SELECT s.id, s.status, s.next_due_date, s.created_at, p.name AS plan_name, p.price_monthly
+            "SELECT s.id, s.status, s.next_due_date, s.created_at, p.name AS plan_name, p.price_monthly, p.price_monthly_usd, p.currency
              FROM subscriptions s LEFT JOIN plans p ON p.id = s.plan_id
              WHERE s.client_id = :id ORDER BY s.id DESC"
         );
@@ -273,15 +273,15 @@ final class ClientesController
         try {
             if ($clientId > 0) {
                 // Planos públicos + planos exclusivos deste cliente
-                $s = BancoDeDados::pdo()->prepare("SELECT id, name, price_monthly, cpu, ram, storage, client_id FROM plans WHERE status = 'active' AND (client_id IS NULL OR client_id = :cid) ORDER BY client_id DESC, price_monthly ASC");
+                $s = BancoDeDados::pdo()->prepare("SELECT id, name, price_monthly, price_monthly_usd, currency, cpu, ram, storage, client_id FROM plans WHERE status = 'active' AND (client_id IS NULL OR client_id = :cid) ORDER BY client_id DESC, price_monthly ASC");
                 $s->execute([':cid' => $clientId]);
                 return $s->fetchAll() ?: [];
             }
-            $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage, client_id FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
+            $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, price_monthly_usd, currency, cpu, ram, storage, client_id FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
             return $s->fetchAll() ?: [];
         } catch (\Throwable) {
             try {
-                $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
+                $s = BancoDeDados::pdo()->query("SELECT id, name, price_monthly, price_monthly_usd, currency, cpu, ram, storage FROM plans WHERE status = 'active' ORDER BY price_monthly ASC");
                 return $s->fetchAll() ?: [];
             } catch (\Throwable) { return []; }
         }

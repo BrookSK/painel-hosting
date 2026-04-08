@@ -24,7 +24,7 @@ final class PlanosController
             if ($isManaged && $clienteId > 0) {
                 // Cliente gerenciado: só planos exclusivos dele
                 try {
-                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
+                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, currency, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
                     $stmt->execute([':cid' => $clienteId]);
                     $planos = $stmt->fetchAll();
                 } catch (\Throwable $e) {
@@ -35,7 +35,7 @@ final class PlanosController
             } else {
                 // Cliente normal: só planos públicos
                 try {
-                    $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
+                    $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, currency, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
                     $planos = $stmt->fetchAll();
                 } catch (\Throwable $e) {
                     $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
