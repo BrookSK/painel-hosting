@@ -83,7 +83,7 @@ final class AssinaturasService
     {
         $pdo = BancoDeDados::pdo();
 
-        $stmt = $pdo->prepare('SELECT id, name, price_monthly, cpu, ram, storage FROM plans WHERE id = :id AND status = \'active\'');
+        $stmt = $pdo->prepare('SELECT id, name, price_monthly, price_monthly_usd, currency, cpu, ram, storage FROM plans WHERE id = :id AND status = \'active\'');
         $stmt->execute([':id' => $planId]);
         $plano = $stmt->fetch();
 
@@ -91,9 +91,27 @@ final class AssinaturasService
             throw new \RuntimeException('Plano não encontrado.');
         }
 
-        $precoTotal = (float) $plano['price_monthly'];
+        // Calcular preço em BRL (Asaas só aceita BRL)
+        $precoBrl = (float)($plano['price_monthly'] ?? 0);
+        if ($precoBrl <= 0) {
+            // Plano em USD — converter pra BRL
+            $precoUsd = (float)($plano['price_monthly_usd'] ?? 0);
+            if ($precoUsd > 0) {
+                $taxa = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
+                $precoBrl = round($precoUsd * $taxa, 2);
+            }
+        }
+        $precoTotal = $precoBrl;
         foreach ($addons as $a) {
-            $precoTotal += (float)($a['price'] ?? 0);
+            $addonBrl = (float)($a['price'] ?? 0);
+            if ($addonBrl <= 0) {
+                $addonUsd = (float)($a['price_usd'] ?? 0);
+                if ($addonUsd > 0) {
+                    $taxa = $taxa ?? \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd();
+                    $addonBrl = round($addonUsd * $taxa, 2);
+                }
+            }
+            $precoTotal += $addonBrl;
         }
         $addonsJson = !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null;
 
