@@ -75,7 +75,9 @@ final class AssinarPlanoController
                 ->execute([':c' => $cpfEnviado, ':id' => $clienteId]);
         }
 
-        $isBrl = \LRV\Core\I18n::moedaCodigo() === 'BRL';
+        // Usar moeda selecionada pelo cliente no checkout (não o idioma do browser)
+        $selectedCurrency = trim(strtoupper((string)($req->post['currency'] ?? '')));
+        $isBrl = $selectedCurrency !== 'USD';
 
         // BRL → tudo via Asaas (PIX, BOLETO, CREDIT_CARD)
         // USD → só Stripe (cartão)
