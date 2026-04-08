@@ -154,11 +154,12 @@ final class AssinarPlanoController
             return Resposta::json(['ok' => true, 'redirect' => '/cliente/pagamento?sub=' . $localSubId]);
         }
 
-        // USD → Stripe (inline com Elements ou fallback pra Checkout redirect)
+        // USD → Stripe Checkout (redirect)
         $service = new StripeCheckoutService();
+        $periodo = (int)($req->post['periodo'] ?? 1);
 
         try {
-            $resultado = $service->criarAssinaturaInline($clienteId, $planId, $addonsSelecionados);
+            $resultado = $service->criarCheckoutAssinaturaDoPlano($clienteId, $planId, $addonsSelecionados, $periodo);
         } catch (\Throwable $e) {
             $erroDetalhe = $e->getMessage();
             (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
@@ -175,15 +176,16 @@ final class AssinarPlanoController
             return Resposta::json(['ok' => false, 'erro' => $mensagemUsuario], 400);
         }
 
-        (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
-            ['plan_id' => $planId, 'gateway' => 'stripe_inline', 'ok' => true, 'sub_id' => (int)($resultado['subscription_id'] ?? 0)], $req);
+        $checkoutUrl = is_array($resultado) ? (string)($resultado['checkout_url'] ?? '') : '';
 
-        return Resposta::json([
-            'ok' => true,
-            'payment_type' => 'stripe_inline',
-            'client_secret' => (string)($resultado['client_secret'] ?? ''),
-            'sub_id' => (int)($resultado['subscription_id'] ?? 0),
-        ]);
+        (new AuditLogService())->registrar('client', $clienteId, 'billing.subscribe_plan', 'plan', $planId,
+            ['plan_id' => $planId, 'gateway' => 'stripe', 'ok' => true, 'periodo' => $periodo], $req);
+
+        if ($checkoutUrl === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Falha ao iniciar checkout.'], 500);
+        }
+
+        return Resposta::json(['ok' => true, 'redirect' => $checkoutUrl]);
     }
 
     private function extrairErroAsaas(array $respostaJson, string $fallback): string

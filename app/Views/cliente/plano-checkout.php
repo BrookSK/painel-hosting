@@ -15,7 +15,7 @@ $hasUpfront = ((float)($plano['price_annual_upfront'] ?? 0)) > 0 || ((float)($pl
 $pageTitle = 'Configurar plano';
 $clienteNome = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
-$extraHead = '<script src="https://js.stripe.com/v3/"></script>';
+$extraHead = '';
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
@@ -160,12 +160,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           </div>
           <div style="display:none;gap:8px;flex-wrap:wrap;" id="gwUsd">
             <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;">
-              💳 Cartão de crédito
+              💳 Cartão de crédito (Stripe)
             </label>
-            <div style="width:100%;margin-top:10px;">
-              <div id="stripe-card-element" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;min-height:40px;"></div>
-              <div id="stripe-card-errors" style="color:#ef4444;font-size:12px;margin-top:6px;"></div>
-            </div>
+            <p style="font-size:12px;color:#64748b;margin-top:4px;width:100%;">Você será redirecionado para a página segura do Stripe.</p>
           </div>
         </div>
 
@@ -308,24 +305,6 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   if(selectedCurrency==='USD') setTimeout(mountStripeCard,100);
   <?php endif; ?>
 
-  // Stripe Elements
-  var stripePublicKey=<?php echo json_encode(\LRV\Core\ConfiguracoesSistema::stripePublishableKey()); ?>;
-  var stripeInstance=null,stripeCard=null,stripeMounted=false;
-  if(stripePublicKey && typeof Stripe!=='undefined'){
-    stripeInstance=Stripe(stripePublicKey);
-  }
-
-  function mountStripeCard(){
-    if(stripeMounted||!stripeInstance) return;
-    var container=document.getElementById('stripe-card-element');
-    if(!container||container.offsetParent===null) return; // still hidden
-    var els=stripeInstance.elements();
-    stripeCard=els.create('card',{style:{base:{fontSize:'15px',color:'#1e293b','::placeholder':{color:'#94a3b8'}}}});
-    stripeCard.mount('#stripe-card-element');
-    stripeCard.on('change',function(ev){document.getElementById('stripe-card-errors').textContent=ev.error?ev.error.message:'';});
-    stripeMounted=true;
-  }
-
   window.submeterAssinar=function(e){
     e.preventDefault();
     var btn=document.getElementById('btnAssinar');
@@ -340,39 +319,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     fetch('/cliente/assinar',{method:'POST',body:fd,credentials:'same-origin'})
       .then(function(r){return r.json();})
       .then(function(d){
-        // Stripe inline: confirmar com card element
-        if(d.ok&&d.payment_type==='stripe_inline'&&d.client_secret){
-          if(!stripeInstance||!stripeCard){
-            // Fallback: redirect se Stripe.js não carregou (CSP bloqueou)
-            if(d.redirect){window.location.href=d.redirect;return;}
-            erro.textContent='Stripe não disponível. Tente desativar extensões do browser ou use outro navegador.';
-            erro.style.display='block';btn.disabled=false;btn.textContent='Assinar agora';
-            return;
-          }
-          btn.textContent='Confirmando pagamento...';
-          stripeInstance.confirmCardPayment(d.client_secret,{payment_method:{card:stripeCard}})
-            .then(function(result){
-              if(result.error){
-                erro.textContent=result.error.message;erro.style.display='block';
-                btn.disabled=false;btn.textContent='Assinar agora';
-              }else{
-                btn.textContent='Pagamento confirmado!';
-                window.location.href='/cliente/assinaturas';
-              }
-            });
-          return;
-        }
-        // Redirect (Asaas ou fallback Stripe Checkout)
         if(d.ok&&d.redirect){window.location.href=d.redirect;return;}
-        if(d.erro){
-          erro.textContent=d.erro;erro.style.display='block';
-          btn.disabled=false;btn.textContent='Assinar agora';
-        }
+        if(d.erro){erro.textContent=d.erro;erro.style.display='block';btn.disabled=false;btn.textContent='Assinar agora';}
       })
-      .catch(function(){
-        erro.textContent='Erro de conexão. Tente novamente.';
-        erro.style.display='block';btn.disabled=false;btn.textContent='Assinar agora';
-      });
+      .catch(function(){erro.textContent='Erro de conexão.';erro.style.display='block';btn.disabled=false;btn.textContent='Assinar agora';});
     return false;
   };
 })();
