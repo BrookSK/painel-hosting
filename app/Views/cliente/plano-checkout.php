@@ -10,6 +10,9 @@ $precoBase = (float)($plano['price_monthly'] ?? 0);
 $planId = (int)($plano['id'] ?? 0);
 $clienteCpf = trim((string)($cliente['cpf_cnpj'] ?? ''));
 $isBrl = I18n::moedaCodigo() === 'BRL';
+$planCurrency = (string)($plano['currency'] ?? 'BRL');
+// Moeda padrão vem do plano, não do idioma
+$defaultCurrency = $planCurrency === 'USD' ? 'USD' : ($isBrl ? 'BRL' : 'USD');
 $hasUpfront = ((float)($plano['price_annual_upfront'] ?? 0)) > 0 || ((float)($plano['price_annual_upfront_usd'] ?? 0)) > 0;
 
 $pageTitle = 'Configurar plano';
@@ -46,10 +49,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;">💱 Moeda</div>
       <div style="display:flex;gap:8px;">
         <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;" class="cur-label">
-          <input type="radio" name="sel_currency" value="BRL" <?php echo $isBrl ? 'checked' : ''; ?> onchange="selCurrency('BRL')" style="accent-color:#4F46E5;" /> 🇧🇷 Real
+          <input type="radio" name="sel_currency" value="BRL" <?php echo $defaultCurrency === 'BRL' ? 'checked' : ''; ?> onchange="selCurrency('BRL')" style="accent-color:#4F46E5;" /> 🇧🇷 Real
         </label>
         <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;flex:1;justify-content:center;" class="cur-label">
-          <input type="radio" name="sel_currency" value="USD" <?php echo !$isBrl ? 'checked' : ''; ?> onchange="selCurrency('USD')" style="accent-color:#4F46E5;" /> 🇺🇸 Dólar
+          <input type="radio" name="sel_currency" value="USD" <?php echo $defaultCurrency === 'USD' ? 'checked' : ''; ?> onchange="selCurrency('USD')" style="accent-color:#4F46E5;" /> 🇺🇸 Dólar
         </label>
       </div>
     </div>
@@ -136,7 +139,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <input type="hidden" name="plan_id" value="<?php echo $planId; ?>" />
         <input type="hidden" name="addons_ids" id="addons_ids" value="" />
         <input type="hidden" name="periodo" id="hidden_periodo" value="1" />
-        <input type="hidden" name="currency" id="hidden_currency" value="<?php echo $isBrl ? 'BRL' : 'USD'; ?>" />
+        <input type="hidden" name="currency" id="hidden_currency" value="<?php echo $defaultCurrency; ?>" />
 
         <?php if ($clienteCpf === ''): ?>
         <div style="margin-bottom:12px;" id="cpfField">
@@ -183,26 +186,39 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var planName=<?php echo json_encode((string)($plano['name'] ?? '')); ?>;
 
   var checks=document.querySelectorAll('.addon-check');
-  var selectedCurrency=<?php echo json_encode($isBrl ? 'BRL' : 'USD'); ?>;
-  var selectedPeriodo='monthly'; // 'monthly' ou 'annual'
+  var selectedCurrency=<?php echo json_encode($defaultCurrency); ?>;
+  var selectedPeriodo='monthly';
 
   function toUsd(brl,fixedUsd){return fixedUsd>0?fixedUsd:Math.round(brl/taxaUsd*100)/100;}
+  function toBrl(usd,fixedBrl){return fixedBrl>0?fixedBrl:Math.round(usd*taxaUsd*100)/100;}
   function fmt(v){return selectedCurrency==='BRL'?'R$ '+v.toFixed(2).replace('.',','):'US$ '+v.toFixed(2);}
 
-  function getMonthlyPrice(){return selectedCurrency==='USD'?toUsd(baseBrl,baseUsd):baseBrl;}
-  function getUpfrontPrice(){return selectedCurrency==='USD'?toUsd(upfrontBrl,upfrontUsd):upfrontBrl;}
+  function getMonthlyPrice(){
+    if(selectedCurrency==='USD') return baseUsd>0?baseUsd:toUsd(baseBrl,0);
+    return baseBrl>0?baseBrl:toBrl(baseUsd,0);
+  }
+  function getUpfrontPrice(){
+    if(selectedCurrency==='USD') return upfrontUsd>0?upfrontUsd:toUsd(upfrontBrl,0);
+    return upfrontBrl>0?upfrontBrl:toBrl(upfrontUsd,0);
+  }
 
   function getAddonMonthly(card){
     var p=parseFloat(card.dataset.price)||0;
     var pu=parseFloat(card.dataset.priceUsd)||0;
-    return selectedCurrency==='USD'?toUsd(p,pu):p;
+    if(selectedCurrency==='USD') return pu>0?pu:toUsd(p,0);
+    return p>0?p:toBrl(pu,0);
   }
   function getAddonAnnual(card){
     var p=parseFloat(card.dataset.price)||0;
     var pa=parseFloat(card.dataset.priceAnnual)||0;
     var pau=parseFloat(card.dataset.priceAnnualUsd)||0;
-    if(selectedCurrency==='USD') return toUsd(pa>0?pa:p,pau)*12;
-    return (pa>0?pa:p)*12;
+    var pu=parseFloat(card.dataset.priceUsd)||0;
+    if(selectedCurrency==='USD'){
+      var monthlyUsd=pau>0?pau:(pu>0?pu:toUsd(pa>0?pa:p,0));
+      return monthlyUsd*12;
+    }
+    var monthlyBrl=pa>0?pa:(p>0?p:toBrl(pau>0?pau:pu,0));
+    return monthlyBrl*12;
   }
 
   window.selCurrency=function(cur){
@@ -299,10 +315,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   });
 
   atualizar();
-  <?php if (!$isBrl): ?>selCurrency('USD');<?php else: ?>
-  // Se já está em USD (raro), montar Stripe
-  if(selectedCurrency==='USD') setTimeout(mountStripeCard,100);
-  <?php endif; ?>
+  <?php if ($defaultCurrency === 'USD'): ?>selCurrency('USD');<?php endif; ?>
 
   window.submeterAssinar=function(e){
     e.preventDefault();
