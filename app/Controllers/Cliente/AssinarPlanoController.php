@@ -113,11 +113,7 @@ final class AssinarPlanoController
                 // Extrair mensagem legível do Asaas
                 $mensagemUsuario = $this->extrairErroAsaas($erroApi, $erroDetalhe);
 
-                $html = View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-criada.php', [
-                    'erro' => $mensagemUsuario,
-                    'resultado' => null,
-                ]);
-                return Resposta::html($html, 400);
+                return Resposta::json(['ok' => false, 'erro' => $mensagemUsuario], 400);
             }
 
             $asaasSubId = '';
