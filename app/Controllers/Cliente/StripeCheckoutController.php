@@ -45,7 +45,10 @@ final class StripeCheckoutController
                     $session = $stripe->checkout->sessions->retrieve($sessionId, []);
 
                     $stripeSubId = (string) ($session['subscription'] ?? '');
-                    if ($stripeSubId !== '') {
+                    $paymentIntentId = (string) ($session['payment_intent'] ?? '');
+                    $sessionMode = (string) ($session['mode'] ?? '');
+
+                    if ($stripeSubId !== '' || $paymentIntentId !== '') {
                         $pdo = BancoDeDados::pdo();
                         $pdo->beginTransaction();
                         try {
@@ -58,8 +61,10 @@ final class StripeCheckoutController
                                 $vpsId = (int) ($sub['vps_id'] ?? 0);
                                 $statusAnterior = strtoupper(trim((string) ($sub['status'] ?? '')));
 
-                                $upSub = $pdo->prepare('UPDATE subscriptions SET stripe_subscription_id = :s WHERE id = :id');
-                                $upSub->execute([':s' => $stripeSubId, ':id' => $subId]);
+                                if ($stripeSubId !== '') {
+                                    $pdo->prepare('UPDATE subscriptions SET stripe_subscription_id = :s WHERE id = :id')
+                                        ->execute([':s' => $stripeSubId, ':id' => $subId]);
+                                }
 
                                 $paymentStatus = strtolower(trim((string) ($session['payment_status'] ?? '')));
                                 if ($paymentStatus === 'paid' && $statusAnterior !== 'ACTIVE') {
@@ -114,7 +119,7 @@ final class StripeCheckoutController
             try {
                 $pdo = BancoDeDados::pdo();
                 $stmt = $pdo->prepare(
-                    'SELECT s.id, s.status, s.next_due_date, s.vps_id, p.name AS plan_name, p.price_monthly
+                    'SELECT s.id, s.status, s.next_due_date, s.vps_id, p.name AS plan_name, p.price_monthly, p.price_monthly_usd, p.price_annual_upfront, p.price_annual_upfront_usd
                      FROM subscriptions s
                      INNER JOIN plans p ON p.id = s.plan_id
                      WHERE s.client_id = :c AND s.stripe_checkout_session_id = :sid
@@ -132,10 +137,18 @@ final class StripeCheckoutController
             }
         }
 
+        $cliente = [];
+        try {
+            $cStmt = BancoDeDados::pdo()->prepare('SELECT name, email FROM clients WHERE id = ?');
+            $cStmt->execute([$clienteId]);
+            $cliente = $cStmt->fetch() ?: [];
+        } catch (\Throwable) {}
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/stripe-sucesso.php', [
             'erro'       => $erro,
             'assinatura' => $assinatura,
             'vps'        => $vps,
+            'cliente'    => $cliente,
         ]);
 
         return Resposta::html($html, $erro === '' ? 200 : 400);
