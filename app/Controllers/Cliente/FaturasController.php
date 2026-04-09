@@ -54,9 +54,17 @@ final class FaturasController
                     $sessStatus = (string)($sess->payment_status ?? '');
                     $sessMode = (string)($sess->mode ?? '');
                     if ($sessMode !== 'payment' || $sessStatus !== 'paid') continue;
-                    // Evitar duplicatas com invoices
                     $sessId = (string)($sess->id ?? '');
                     $amountTotal = (int)($sess->amount_total ?? 0);
+                    // Buscar receipt_url do payment_intent
+                    $receiptUrl = '';
+                    $piId = (string)($sess->payment_intent ?? '');
+                    if ($piId !== '') {
+                        try {
+                            $pi = $stripe->paymentIntents->retrieve($piId, ['expand' => ['latest_charge']]);
+                            $receiptUrl = (string)($pi->latest_charge->receipt_url ?? '');
+                        } catch (\Throwable) {}
+                    }
                     $faturas[] = [
                         'id' => $sessId,
                         'gateway' => 'Stripe',
@@ -65,8 +73,8 @@ final class FaturasController
                         'moeda' => strtoupper((string)($sess->currency ?? 'usd')),
                         'status' => 'paid',
                         'data' => date('Y-m-d', (int)($sess->created ?? time())),
-                        'pdf_url' => '',
-                        'hosted_url' => (string)($sess->url ?? ''),
+                        'pdf_url' => $receiptUrl,
+                        'hosted_url' => $receiptUrl,
                     ];
                 }
 
