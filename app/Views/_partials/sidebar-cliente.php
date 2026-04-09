@@ -101,6 +101,10 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>
     </a>
+    <a href="/cliente/faturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/faturas', $_seg); ?>" data-tooltip="Faturas">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 2h8l4 4v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5"/><path d="M12 2v4h4" stroke="currentColor" stroke-width="1.5"/><path d="M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Faturas</span>
+    </a>
     <?php if (!$_isManaged): ?>
     <a href="/cliente/ajuda" class="nav-item<?php echo _nav_ativo_cli('/cliente/ajuda', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.ajuda')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M10 11v-1a2 2 0 10-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14" r="1" fill="currentColor"/></svg>
