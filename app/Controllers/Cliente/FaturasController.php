@@ -25,12 +25,14 @@ final class FaturasController
 
         $faturas = [];
 
-        // Buscar invoices do Stripe
+        // Buscar invoices e pagamentos do Stripe
         $stripeCustomerId = trim((string)($cliente['stripe_customer_id'] ?? ''));
         $stripeKey = ConfiguracoesSistema::stripeSecretKey();
         if ($stripeCustomerId !== '' && $stripeKey !== '') {
             try {
                 $stripe = new \Stripe\StripeClient($stripeKey);
+
+                // 1. Invoices (de subscriptions)
                 $invoices = $stripe->invoices->all(['customer' => $stripeCustomerId, 'limit' => 50]);
                 foreach (($invoices->data ?? []) as $inv) {
                     $faturas[] = [
@@ -43,6 +45,51 @@ final class FaturasController
                         'data' => date('Y-m-d', (int)($inv->created ?? time())),
                         'pdf_url' => (string)($inv->invoice_pdf ?? ''),
                         'hosted_url' => (string)($inv->hosted_invoice_url ?? ''),
+                    ];
+                }
+
+                // 2. Checkout Sessions pagas (pagamentos únicos)
+                $sessions = $stripe->checkout->sessions->all(['customer' => $stripeCustomerId, 'limit' => 50]);
+                foreach (($sessions->data ?? []) as $sess) {
+                    $sessStatus = (string)($sess->payment_status ?? '');
+                    $sessMode = (string)($sess->mode ?? '');
+                    if ($sessMode !== 'payment' || $sessStatus !== 'paid') continue;
+                    // Evitar duplicatas com invoices
+                    $sessId = (string)($sess->id ?? '');
+                    $amountTotal = (int)($sess->amount_total ?? 0);
+                    $faturas[] = [
+                        'id' => $sessId,
+                        'gateway' => 'Stripe',
+                        'plano' => 'Pagamento único',
+                        'valor' => number_format($amountTotal / 100, 2, '.', ','),
+                        'moeda' => strtoupper((string)($sess->currency ?? 'usd')),
+                        'status' => 'paid',
+                        'data' => date('Y-m-d', (int)($sess->created ?? time())),
+                        'pdf_url' => '',
+                        'hosted_url' => (string)($sess->url ?? ''),
+                    ];
+                }
+
+                // 3. Charges (todos os pagamentos)
+                $charges = $stripe->charges->all(['customer' => $stripeCustomerId, 'limit' => 50]);
+                $invoiceIds = array_column($faturas, 'id');
+                foreach (($charges->data ?? []) as $ch) {
+                    $chId = (string)($ch->id ?? '');
+                    $chInvoice = (string)($ch->invoice ?? '');
+                    // Pular se já tem via invoice
+                    if ($chInvoice !== '' && in_array($chInvoice, $invoiceIds, true)) continue;
+                    $chStatus = (string)($ch->status ?? '');
+                    if ($chStatus !== 'succeeded') continue;
+                    $faturas[] = [
+                        'id' => $chId,
+                        'gateway' => 'Stripe',
+                        'plano' => (string)($ch->description ?? 'Pagamento'),
+                        'valor' => number_format(((int)($ch->amount ?? 0)) / 100, 2, '.', ','),
+                        'moeda' => strtoupper((string)($ch->currency ?? 'usd')),
+                        'status' => 'paid',
+                        'data' => date('Y-m-d', (int)($ch->created ?? time())),
+                        'pdf_url' => (string)($ch->receipt_url ?? ''),
+                        'hosted_url' => (string)($ch->receipt_url ?? ''),
                     ];
                 }
             } catch (\Throwable) {}
@@ -83,7 +130,14 @@ final class FaturasController
             } catch (\Throwable) {}
         }
 
-        // Ordenar por data desc
+        // Ordenar por data desc e remover duplicatas
+        $seen = [];
+        $faturas = array_filter($faturas, function($f) use (&$seen) {
+            $key = ($f['gateway'] ?? '') . '_' . ($f['valor'] ?? '') . '_' . ($f['data'] ?? '');
+            if (isset($seen[$key])) return false;
+            $seen[$key] = true;
+            return true;
+        });
         usort($faturas, fn($a, $b) => strcmp((string)($b['data'] ?? ''), (string)($a['data'] ?? '')));
 
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/faturas.php', [
