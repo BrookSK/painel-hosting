@@ -306,7 +306,6 @@ final class ServerSetupService
             . "  ForceCommand /usr/local/bin/lrv-terminal\n"
             . "  PermitTTY yes\n"
             . "  AllowAgentForwarding no\n"
-            . "  PermitUserEnvironment no\n"
             . "  X11Forwarding no\n"
             . "  AllowTcpForwarding no\n"
             . "  GatewayPorts no\n"
