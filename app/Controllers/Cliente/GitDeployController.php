@@ -410,11 +410,8 @@ final class GitDeployController
             $runCmd = fn(string $cmd) => $exec->executar($host, $port, $user, $keyPath, $cmd, 120);
         }
 
-        // Ensure git is installed
-        $runCmd('which git 2>/dev/null || (apt-get update -qq && apt-get install -y -qq git 2>/dev/null) || true');
-
-        // Fix DNS if needed
-        $runCmd('getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true');
+        // Ensure git is installed + Fix DNS — tudo numa única conexão SSH
+        $runCmd('(which git 2>/dev/null || (apt-get update -qq && apt-get install -y -qq git 2>/dev/null) || true) && (getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true)');
 
         // Autenticação: token HTTPS ou deploy key SSH
         $tokenEnc = (string)($dep['auth_token_enc'] ?? '');
@@ -523,20 +520,27 @@ final class GitDeployController
             $output .= "\n--- Pós-deploy ---\n" . $postOutput;
         }
 
-        // Corrigir permissões para PHP-FPM (www-data)
-        $runCmd('chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null; chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null');
-
-        // Para Node.js: instalar PM2 e (re)iniciar o processo
+        // Corrigir permissões + buscar commit info — tudo numa única conexão
+        $finalCmd = 'chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null; chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
+            . ' echo "LRV_COMMIT_START" && cd ' . escapeshellarg($deployPath) . ' && git log -1 --format="%H|%s|%an" 2>/dev/null && echo "LRV_COMMIT_END"';
+        $finalResult = $runCmd($finalCmd);
+        $finalOutput = (string)($finalResult['saida'] ?? '');
+        $hash = ''; $message = ''; $author = '';
+        if (preg_match('/LRV_COMMIT_START\s*\n?(.*?)\s*\n?LRV_COMMIT_END/s', $finalOutput, $m)) {
+            $commitLine = trim($m[1]);
+            $parts = explode('|', $commitLine, 3);
+            $hash = substr(trim($parts[0] ?? ''), 0, 40);
+            $message = trim($parts[1] ?? '');
+            $author = trim($parts[2] ?? '');
+        }
         $appType = (string)($dep['app_type'] ?? 'php');
         $appPort = (int)($dep['app_port'] ?? 3000);
         if ($appType === 'nodejs') {
             $pm2Name = 'deploy-' . (int)($dep['id'] ?? 0);
-            // Instalar PM2 globalmente se não existir
-            $runCmd('which pm2 >/dev/null 2>&1 || npm install -g pm2 2>&1');
-            // Parar processo anterior se existir
-            $runCmd('pm2 delete ' . escapeshellarg($pm2Name) . ' 2>/dev/null; true');
-            // Iniciar com PM2 — usa ecosystem ou npm start
-            $startScript = 'cd ' . escapeshellarg($deployPath)
+            // Tudo numa única conexão: instalar PM2 + parar + iniciar + salvar
+            $startScript = '(which pm2 >/dev/null 2>&1 || npm install -g pm2 2>&1)'
+                . ' && (pm2 delete ' . escapeshellarg($pm2Name) . ' 2>/dev/null; true)'
+                . ' && cd ' . escapeshellarg($deployPath)
                 . ' && export PORT=' . $appPort
                 . ' && if test -f ecosystem.config.js || test -f ecosystem.config.cjs; then'
                 . '   pm2 start ecosystem.config.* --name ' . escapeshellarg($pm2Name) . ' 2>&1;'
@@ -547,21 +551,12 @@ final class GitDeployController
                 . ' elif test -f index.js; then'
                 . '   pm2 start index.js --name ' . escapeshellarg($pm2Name) . ' 2>&1;'
                 . ' else'
-                . '   echo "Nenhum arquivo de entrada encontrado (package.json, server.js, index.js)";'
+                . '   echo "Nenhum arquivo de entrada encontrado";'
                 . ' fi'
                 . ' && pm2 save 2>&1';
             $pm2Result = $runCmd($startScript);
             $output .= "\n--- PM2 ---\n" . $this->filtrarOutputSsh((string)($pm2Result['saida'] ?? ''));
         }
-
-        // Get last commit info
-        $logCmd = 'cd ' . escapeshellarg($deployPath) . ' && git log -1 --format="%H|%s|%an" 2>&1';
-        $logResult = $runCmd($logCmd);
-        $logLine = $this->filtrarOutputSsh(trim((string)($logResult['saida'] ?? '')));
-        $parts = explode('|', $logLine, 3);
-        $hash = substr(trim($parts[0] ?? ''), 0, 40);
-        $message = trim($parts[1] ?? '');
-        $author = trim($parts[2] ?? '');
 
         return ['hash' => $hash, 'message' => $message, 'author' => $author, 'output' => $output];
     }
