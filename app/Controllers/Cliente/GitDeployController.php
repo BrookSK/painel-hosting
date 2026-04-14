@@ -78,6 +78,7 @@ final class GitDeployController
         }
         // Verificar se o path já está em uso por outro deploy (evitar conflito)
         if ($id <= 0) {
+            $pdo = BancoDeDados::pdo();
             $pathCheck = $pdo->prepare('SELECT id FROM git_deployments WHERE deploy_path = :dp AND client_id = :c LIMIT 1');
             $pathCheck->execute([':dp' => $deployPath, ':c' => $clienteId]);
             if ($pathCheck->fetch()) {
