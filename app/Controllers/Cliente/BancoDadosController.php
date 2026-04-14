@@ -114,9 +114,9 @@ final class BancoDadosController
 
         // Encontrar porta livre para expor o MySQL (3307+)
         $mysqlPort = 3307 + ($dbId % 1000);
-        // Atualizar host e porta para acesso via localhost
-        $pdo->prepare('UPDATE client_databases SET db_host = :h, db_port = :p WHERE id = :id')
-            ->execute([':h' => '127.0.0.1', ':p' => $mysqlPort, ':id' => $dbId]);
+        // Atualizar porta para acesso externo (host fica como container name para phpMyAdmin)
+        $pdo->prepare('UPDATE client_databases SET db_port = :p WHERE id = :id')
+            ->execute([':p' => $mysqlPort, ':id' => $dbId]);
 
         try {
             $exec = new SshExecutor();

@@ -115,6 +115,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     $dbPassEnc = (string)($b['db_password_enc_raw'] ?? '');
     $dbHost = (string)($b['db_host'] ?? '127.0.0.1');
     $dbPort = (string)($b['db_port'] ?? '3306');
+    $containerId = (string)($b['container_id'] ?? '');
+    // Para phpMyAdmin (dentro do Docker): usar nome do container na porta 3306
+    // Para aplicação (fora do Docker): usar 127.0.0.1 com porta mapeada
+    $pmaHost = $containerId !== '' ? $containerId : $dbHost;
   ?>
   <div class="card-new">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
@@ -141,9 +145,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <!-- Credenciais inline -->
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+      <!-- Host para phpMyAdmin (nome do container Docker) -->
       <div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
         <span style="font-size:11px;color:#64748b;width:55px;flex-shrink:0;">Host</span>
-        <code id="db-host-<?php echo $bid; ?>" style="flex:1;font-size:12px;color:#1e293b;"><?php echo View::e($dbHost); ?></code>
+        <code id="db-host-<?php echo $bid; ?>" style="flex:1;font-size:12px;color:#1e293b;"><?php echo View::e($pmaHost); ?></code>
         <button type="button" onclick="copiarDb('db-host-<?php echo $bid; ?>')" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;">Copiar</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
