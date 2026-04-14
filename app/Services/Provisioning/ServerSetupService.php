@@ -313,8 +313,13 @@ final class ServerSetupService
 
         $sshdCmd = 'grep -q ' . escapeshellarg('Match User ' . $termUser) . ' /etc/ssh/sshd_config'
             . ' && echo "already exists"'
-            . ' || { printf ' . escapeshellarg("\n" . $matchBlock . "\n") . ' >> /etc/ssh/sshd_config'
-            . ' && (systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>&1) && echo lrv-sshd-ok; }';
+            . ' || { cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak'
+            . ' && printf ' . escapeshellarg("\n" . $matchBlock . "\n") . ' >> /etc/ssh/sshd_config'
+            . ' && if sshd -t 2>&1; then'
+            . '   (systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>&1) && echo lrv-sshd-ok;'
+            . ' else'
+            . '   echo "ERRO: sshd_config invalido, revertendo..." && cp /etc/ssh/sshd_config.bak /etc/ssh/sshd_config && echo lrv-sshd-reverted;'
+            . ' fi; }';
 
         // ── Script de monitoramento (cron) ──
         // Coleta CPU/RAM/Disco e envia para o painel via curl
