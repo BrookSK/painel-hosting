@@ -32,7 +32,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="grid" style="margin-bottom:14px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:5px;">Nome da integração</label>
-        <input class="input" type="text" name="name" value="<?php echo View::e((string)($dep['name'] ?? '')); ?>" placeholder="Meu site" required />
+        <input class="input" type="text" name="name" id="deployName" value="<?php echo View::e((string)($dep['name'] ?? '')); ?>" placeholder="Meu site" required <?php if (!$isEdit): ?>oninput="var s=this.value.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');var p='/var/www/'+(s||'app');document.getElementById('deployPathInput').value=p;document.getElementById('deployPathDisplay').textContent=p;var f=document.getElementById('deployPathField');if(f)f.value=p;"<?php endif; ?> />
       </div>
       <div>
         <label style="display:block;font-size:13px;margin-bottom:5px;">VPS</label>
@@ -145,16 +145,24 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <?php endif; ?>
 
     <div style="margin-bottom:14px;">
-      <label style="display:block;font-size:13px;margin-bottom:5px;">Caminho de deploy no servidor</label>
       <?php
         $defaultPath = (string)($dep['deploy_path'] ?? '');
         if ($defaultPath === '' || $defaultPath === '/var/www/html') {
             $slugName = strtolower(preg_replace('/[^a-z0-9]/', '-', strtolower((string)($dep['name'] ?? ''))));
-            $defaultPath = $isEdit && !empty($dep['deploy_path']) ? (string)$dep['deploy_path'] : '/var/www/' . ($slugName !== '' ? $slugName : 'html');
+            $slugName = trim($slugName, '-');
+            $defaultPath = '/var/www/' . ($slugName !== '' ? $slugName : 'app-' . time());
         }
       ?>
-      <input class="input" type="text" name="deploy_path" value="<?php echo View::e($defaultPath); ?>" placeholder="/var/www/meu-projeto" />
-      <p style="font-size:12px;color:#64748b;margin-top:4px;">Cada projeto deve ter seu próprio diretório. Ex: <code>/var/www/meu-site</code></p>
+      <input type="hidden" name="deploy_path" id="deployPathInput" value="<?php echo View::e($defaultPath); ?>" />
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:#64748b;">📂 Deploy em: <code id="deployPathDisplay"><?php echo View::e($defaultPath); ?></code></span>
+        <button type="button" onclick="document.getElementById('deployPathAdvanced').style.display=document.getElementById('deployPathAdvanced').style.display==='none'?'block':'none'" style="background:none;border:none;color:#4F46E5;font-size:11px;cursor:pointer;text-decoration:underline;">Alterar</button>
+      </div>
+      <div id="deployPathAdvanced" style="display:<?php echo $isEdit ? 'block' : 'none'; ?>;margin-top:8px;">
+        <label style="display:block;font-size:13px;margin-bottom:5px;">Caminho de deploy no servidor</label>
+        <input class="input" type="text" id="deployPathField" value="<?php echo View::e($defaultPath); ?>" placeholder="/var/www/meu-projeto" onchange="document.getElementById('deployPathInput').value=this.value;document.getElementById('deployPathDisplay').textContent=this.value;" />
+        <p style="font-size:12px;color:#64748b;margin-top:4px;">Cada projeto deve ter seu próprio diretório.</p>
+      </div>
     </div>
 
     <div style="margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">

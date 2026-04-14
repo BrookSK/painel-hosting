@@ -72,9 +72,17 @@ final class GitDeployController
         $subdomain = trim((string)($req->post['subdomain'] ?? ''));
         $deployPath = trim((string)($req->post['deploy_path'] ?? ''));
         if ($deployPath === '' || $deployPath === '/var/www/html') {
-            // Gerar path único baseado no nome
             $slugPath = strtolower(preg_replace('/[^a-z0-9]/', '-', strtolower($name)));
+            $slugPath = trim($slugPath, '-');
             $deployPath = '/var/www/' . ($slugPath !== '' ? $slugPath : 'app-' . time());
+        }
+        // Verificar se o path já está em uso por outro deploy (evitar conflito)
+        if ($id <= 0) {
+            $pathCheck = $pdo->prepare('SELECT id FROM git_deployments WHERE deploy_path = :dp AND client_id = :c LIMIT 1');
+            $pathCheck->execute([':dp' => $deployPath, ':c' => $clienteId]);
+            if ($pathCheck->fetch()) {
+                $deployPath .= '-' . substr(bin2hex(random_bytes(2)), 0, 4);
+            }
         }
         $forceOverwrite = (int)($req->post['force_overwrite'] ?? 1) === 1 ? 1 : 0;
         $gerarTempDomain = (int)($req->post['gerar_temp_domain'] ?? 0) === 1;
