@@ -521,12 +521,20 @@ final class GitDeployController
         }
 
         // Corrigir permissões + buscar commit info — tudo numa única conexão
-        $finalCmd = 'chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null; chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
-            . ' echo "LRV_COMMIT_START" && cd ' . escapeshellarg($deployPath) . ' && git log -1 --format="%H|%s|%an" 2>/dev/null && echo "LRV_COMMIT_END"';
+        $finalCmd = '(chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' && chmod -R 755 ' . escapeshellarg($deployPath) . ') >/dev/null 2>&1;'
+            . ' cd ' . escapeshellarg($deployPath) . ' && echo "LRV_COMMIT_START" && git log -1 --format="%H|%s|%an" 2>/dev/null; echo "LRV_COMMIT_END"';
         $finalResult = $runCmd($finalCmd);
         $finalOutput = (string)($finalResult['saida'] ?? '');
+        // Limpar warnings SSH antes de parsear
+        $cleanLines = [];
+        foreach (explode("\n", $finalOutput) as $l) {
+            if (str_contains($l, 'Warning: Permanently added')) continue;
+            if (str_contains($l, 'known_hosts')) continue;
+            $cleanLines[] = $l;
+        }
+        $cleanOutput = implode("\n", $cleanLines);
         $hash = ''; $message = ''; $author = '';
-        if (preg_match('/LRV_COMMIT_START\s*\n?(.*?)\s*\n?LRV_COMMIT_END/s', $finalOutput, $m)) {
+        if (preg_match('/LRV_COMMIT_START\s*\n(.*?)\nLRV_COMMIT_END/s', $cleanOutput, $m)) {
             $commitLine = trim($m[1]);
             $parts = explode('|', $commitLine, 3);
             $hash = substr(trim($parts[0] ?? ''), 0, 40);
