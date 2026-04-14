@@ -106,24 +106,31 @@ final class SubdomainVerificationService
         $txtHost = '_lrv-verify.' . $subdomain;
         $expected = 'lrv-verify=' . $token;
 
-        // Tentar via dns_get_record
-        $records = @dns_get_record($txtHost, DNS_TXT);
-        $found = false;
-        if (is_array($records)) {
-            foreach ($records as $r) {
-                $txt = (string)($r['txt'] ?? '');
-                if (str_contains($txt, $expected)) {
-                    $found = true;
-                    break;
-                }
-            }
+        // Tentar via dns_get_record com resolvers públicos (mais rápido que o cache local)
+        $records = null;
+        // 1. Tentar dig com Google DNS (atualiza rápido)
+        $digOutput = @shell_exec('dig +short TXT ' . escapeshellarg($txtHost) . ' @8.8.8.8 2>/dev/null') ?? '';
+        if (str_contains($digOutput, $expected)) {
+            $found = true;
         }
-
-        // Fallback: tentar via shell dig/nslookup
+        // 2. Tentar dig com Cloudflare DNS
         if (!$found) {
-            $digOutput = @shell_exec('dig +short TXT ' . escapeshellarg($txtHost) . ' 2>/dev/null') ?? '';
+            $digOutput = @shell_exec('dig +short TXT ' . escapeshellarg($txtHost) . ' @1.1.1.1 2>/dev/null') ?? '';
             if (str_contains($digOutput, $expected)) {
                 $found = true;
+            }
+        }
+        // 3. Fallback: dns_get_record (usa resolver local, pode ter cache)
+        if (!$found) {
+            $records = @dns_get_record($txtHost, DNS_TXT);
+            if (is_array($records)) {
+                foreach ($records as $r) {
+                    $txt = (string)($r['txt'] ?? '');
+                    if (str_contains($txt, $expected)) {
+                        $found = true;
+                        break;
+                    }
+                }
             }
         }
 
@@ -181,14 +188,29 @@ final class SubdomainVerificationService
         $subdomain = (string)$row['subdomain'];
         $cnameTarget = strtolower(trim((string)$row['cname_target']));
 
-        $records = @dns_get_record($subdomain, DNS_CNAME);
         $found = false;
-        if (is_array($records)) {
-            foreach ($records as $r) {
-                $target = strtolower(trim((string)($r['target'] ?? '')));
-                if ($target === $cnameTarget || $target === $cnameTarget . '.') {
-                    $found = true;
-                    break;
+        // 1. dig com Google DNS (rápido)
+        $digOutput = strtolower(trim(@shell_exec('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? ''));
+        if ($digOutput !== '' && ($digOutput === $cnameTarget || $digOutput === $cnameTarget . '.')) {
+            $found = true;
+        }
+        // 2. dig com Cloudflare DNS
+        if (!$found) {
+            $digOutput = strtolower(trim(@shell_exec('dig +short CNAME ' . escapeshellarg($subdomain) . ' @1.1.1.1 2>/dev/null') ?? ''));
+            if ($digOutput !== '' && ($digOutput === $cnameTarget || $digOutput === $cnameTarget . '.')) {
+                $found = true;
+            }
+        }
+        // 3. Fallback: dns_get_record
+        if (!$found) {
+            $records = @dns_get_record($subdomain, DNS_CNAME);
+            if (is_array($records)) {
+                foreach ($records as $r) {
+                    $target = strtolower(trim((string)($r['target'] ?? '')));
+                    if ($target === $cnameTarget || $target === $cnameTarget . '.') {
+                        $found = true;
+                        break;
+                    }
                 }
             }
         }
@@ -233,14 +255,32 @@ final class SubdomainVerificationService
             return ['ok' => false, 'erro' => 'Nenhuma VPS ativa encontrada para verificar o apontamento.'];
         }
 
-        $records = @dns_get_record($domain, DNS_A);
+        $records = null;
         $found = false;
-        if (is_array($records)) {
-            foreach ($records as $r) {
-                $ip = trim((string)($r['ip'] ?? ''));
-                if ($ip === $expectedIp) {
-                    $found = true;
-                    break;
+        // 1. dig com Google DNS (rápido)
+        $digOutput = trim(@shell_exec('dig +short A ' . escapeshellarg($domain) . ' @8.8.8.8 2>/dev/null') ?? '');
+        $digIps = array_filter(array_map('trim', explode("\n", $digOutput)));
+        if (in_array($expectedIp, $digIps, true)) {
+            $found = true;
+        }
+        // 2. dig com Cloudflare DNS
+        if (!$found) {
+            $digOutput = trim(@shell_exec('dig +short A ' . escapeshellarg($domain) . ' @1.1.1.1 2>/dev/null') ?? '');
+            $digIps = array_filter(array_map('trim', explode("\n", $digOutput)));
+            if (in_array($expectedIp, $digIps, true)) {
+                $found = true;
+            }
+        }
+        // 3. Fallback: dns_get_record
+        if (!$found) {
+            $records = @dns_get_record($domain, DNS_A);
+            if (is_array($records)) {
+                foreach ($records as $r) {
+                    $ip = trim((string)($r['ip'] ?? ''));
+                    if ($ip === $expectedIp) {
+                        $found = true;
+                        break;
+                    }
                 }
             }
         }
