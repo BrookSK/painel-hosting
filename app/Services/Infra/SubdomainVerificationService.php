@@ -9,6 +9,19 @@ use LRV\Core\Settings;
 
 final class SubdomainVerificationService
 {
+    /** Executa dig via shell_exec com fallback se desabilitado */
+    private function dig(string $cmd): string
+    {
+        // shell_exec pode estar em disable_functions
+        $disabled = array_map('trim', explode(',', strtolower((string)ini_get('disable_functions'))));
+        if (in_array('shell_exec', $disabled, true)) return '';
+        try {
+            $result = @\shell_exec($cmd);
+            return is_string($result) ? $result : '';
+        } catch (\Throwable) {
+            return '';
+        }
+    }
     public function adicionarSubdominio(int $clientId, string $subdomain): array
     {
         $subdomain = strtolower(trim($subdomain));
@@ -109,13 +122,13 @@ final class SubdomainVerificationService
         // Tentar via dns_get_record com resolvers públicos (mais rápido que o cache local)
         $records = null;
         // 1. Tentar dig com Google DNS (atualiza rápido)
-        $digOutput = @shell_exec('dig +short TXT ' . escapeshellarg($txtHost) . ' @8.8.8.8 2>/dev/null') ?? '';
+        $digOutput = $this->dig('dig +short TXT ' . escapeshellarg($txtHost) . ' @8.8.8.8 2>/dev/null') ?? '';
         if (str_contains($digOutput, $expected)) {
             $found = true;
         }
         // 2. Tentar dig com Cloudflare DNS
         if (!$found) {
-            $digOutput = @shell_exec('dig +short TXT ' . escapeshellarg($txtHost) . ' @1.1.1.1 2>/dev/null') ?? '';
+            $digOutput = $this->dig('dig +short TXT ' . escapeshellarg($txtHost) . ' @1.1.1.1 2>/dev/null') ?? '';
             if (str_contains($digOutput, $expected)) {
                 $found = true;
             }
@@ -190,13 +203,13 @@ final class SubdomainVerificationService
 
         $found = false;
         // 1. dig com Google DNS (rápido)
-        $digOutput = strtolower(trim(@shell_exec('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? ''));
+        $digOutput = strtolower(trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? ''));
         if ($digOutput !== '' && ($digOutput === $cnameTarget || $digOutput === $cnameTarget . '.')) {
             $found = true;
         }
         // 2. dig com Cloudflare DNS
         if (!$found) {
-            $digOutput = strtolower(trim(@shell_exec('dig +short CNAME ' . escapeshellarg($subdomain) . ' @1.1.1.1 2>/dev/null') ?? ''));
+            $digOutput = strtolower(trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @1.1.1.1 2>/dev/null') ?? ''));
             if ($digOutput !== '' && ($digOutput === $cnameTarget || $digOutput === $cnameTarget . '.')) {
                 $found = true;
             }
@@ -258,14 +271,14 @@ final class SubdomainVerificationService
         $records = null;
         $found = false;
         // 1. dig com Google DNS (rápido)
-        $digOutput = trim(@shell_exec('dig +short A ' . escapeshellarg($domain) . ' @8.8.8.8 2>/dev/null') ?? '');
+        $digOutput = trim($this->dig('dig +short A ' . escapeshellarg($domain) . ' @8.8.8.8 2>/dev/null') ?? '');
         $digIps = array_filter(array_map('trim', explode("\n", $digOutput)));
         if (in_array($expectedIp, $digIps, true)) {
             $found = true;
         }
         // 2. dig com Cloudflare DNS
         if (!$found) {
-            $digOutput = trim(@shell_exec('dig +short A ' . escapeshellarg($domain) . ' @1.1.1.1 2>/dev/null') ?? '');
+            $digOutput = trim($this->dig('dig +short A ' . escapeshellarg($domain) . ' @1.1.1.1 2>/dev/null') ?? '');
             $digIps = array_filter(array_map('trim', explode("\n", $digOutput)));
             if (in_array($expectedIp, $digIps, true)) {
                 $found = true;
