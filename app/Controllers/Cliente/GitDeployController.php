@@ -496,7 +496,10 @@ final class GitDeployController
             // Atualizar remote origin para a URL correta (pode ter mudado)
             $runCmd('cd ' . escapeshellarg($deployPath) . ' && git remote set-url origin ' . escapeshellarg($repoUrl) . ' 2>/dev/null');
             if ($forceOverwrite) {
-                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1 && git clean -fd 2>&1';
+                // git reset --hard: restaura todos os arquivos rastreados para o estado do remote
+                // Não usar git clean: preserva arquivos não rastreados (uploads, imports, .env, etc.)
+                // mesmo que não estejam no .gitignore
+                $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1 && git reset --hard origin/' . escapeshellarg($branch) . ' 2>&1';
             } else {
                 $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
             }
