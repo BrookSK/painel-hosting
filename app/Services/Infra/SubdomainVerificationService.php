@@ -204,14 +204,23 @@ final class SubdomainVerificationService
         $found = false;
         // 1. dig com Google DNS (rápido)
         $digOutput = strtolower(trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? ''));
-        if ($digOutput !== '' && ($digOutput === $cnameTarget || $digOutput === $cnameTarget . '.')) {
-            $found = true;
+        // dig pode retornar múltiplas linhas; pegar a primeira não-vazia
+        foreach (explode("\n", $digOutput) as $digLine) {
+            $digLine = rtrim(trim($digLine), '.');
+            if ($digLine !== '' && $digLine === rtrim($cnameTarget, '.')) {
+                $found = true;
+                break;
+            }
         }
         // 2. dig com Cloudflare DNS
         if (!$found) {
             $digOutput = strtolower(trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @1.1.1.1 2>/dev/null') ?? ''));
-            if ($digOutput !== '' && ($digOutput === $cnameTarget || $digOutput === $cnameTarget . '.')) {
-                $found = true;
+            foreach (explode("\n", $digOutput) as $digLine) {
+                $digLine = rtrim(trim($digLine), '.');
+                if ($digLine !== '' && $digLine === rtrim($cnameTarget, '.')) {
+                    $found = true;
+                    break;
+                }
             }
         }
         // 3. Fallback: dns_get_record
@@ -219,8 +228,8 @@ final class SubdomainVerificationService
             $records = @dns_get_record($subdomain, DNS_CNAME);
             if (is_array($records)) {
                 foreach ($records as $r) {
-                    $target = strtolower(trim((string)($r['target'] ?? '')));
-                    if ($target === $cnameTarget || $target === $cnameTarget . '.') {
+                    $target = strtolower(rtrim(trim((string)($r['target'] ?? '')), '.'));
+                    if ($target === rtrim($cnameTarget, '.')) {
                         $found = true;
                         break;
                     }
@@ -236,7 +245,17 @@ final class SubdomainVerificationService
 
         $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
             ->execute([':e' => 'CNAME não encontrado apontando para ' . $cnameTarget, ':id' => $subId]);
-        return ['ok' => false, 'erro' => 'CNAME não encontrado. Aponte ' . $subdomain . ' para ' . $cnameTarget];
+
+        // Debug: mostrar o que foi encontrado
+        $debugDig = trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? '');
+        $debugDns = '';
+        $dnsRecs = @dns_get_record($subdomain, DNS_CNAME);
+        if (is_array($dnsRecs)) {
+            foreach ($dnsRecs as $dr) $debugDns .= ($dr['target'] ?? '') . ' ';
+        }
+        $debugInfo = $debugDig !== '' ? 'dig retornou: ' . $debugDig : ($debugDns !== '' ? 'dns_get_record: ' . trim($debugDns) : 'Nenhum CNAME encontrado');
+
+        return ['ok' => false, 'erro' => 'CNAME não encontrado. Aponte ' . $subdomain . ' para ' . $cnameTarget . '. ' . $debugInfo];
     }
 
     /** Verifica se o registro A de um domínio raiz aponta para o IP do servidor da VPS do cliente. */
