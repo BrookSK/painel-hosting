@@ -330,6 +330,16 @@ final class ArquivosController
             if (!($scpResult['ok'] ?? false)) {
                 return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr((string)($scpResult['saida'] ?? ''), 0, 300)]);
             }
+
+            // Corrigir permissões do arquivo enviado (SCP copia com permissões do tmp)
+            try {
+                $chmodCmd = 'chmod 644 ' . escapeshellarg($fullPath) . ' && chown www-data:www-data ' . escapeshellarg($fullPath) . ' 2>/dev/null; true';
+                if ($authType === 'password') {
+                    $ssh->executarComSenha($ip, $porta, $usuario, $senha, $chmodCmd, 10);
+                } else {
+                    $ssh->executar($ip, $porta, $usuario, $keyPath, $chmodCmd, 10);
+                }
+            } catch (\Throwable) {}
         } else {
             // Upload para container Docker (VPS ou App)
             $stmt = $appId > 0
