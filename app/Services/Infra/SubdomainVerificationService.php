@@ -9,19 +9,92 @@ use LRV\Core\Settings;
 
 final class SubdomainVerificationService
 {
-    /** Executa dig via shell_exec com fallback se desabilitado */
+    /** Executa comando shell com fallback se desabilitado */
     private function dig(string $cmd): string
     {
         // shell_exec pode estar em disable_functions
         $disabled = array_map('trim', explode(',', strtolower((string)ini_get('disable_functions'))));
-        if (in_array('shell_exec', $disabled, true)) return '';
-        try {
-            $result = @\shell_exec($cmd);
-            return is_string($result) ? $result : '';
-        } catch (\Throwable) {
-            return '';
+
+        // Tentar shell_exec
+        if (!in_array('shell_exec', $disabled, true)) {
+            try {
+                $result = @\shell_exec($cmd);
+                if (is_string($result) && trim($result) !== '') return $result;
+            } catch (\Throwable) {}
         }
+
+        // Tentar exec
+        if (!in_array('exec', $disabled, true)) {
+            try {
+                $output = [];
+                @\exec($cmd, $output);
+                $result = implode("\n", $output);
+                if (trim($result) !== '') return $result;
+            } catch (\Throwable) {}
+        }
+
+        return '';
     }
+
+    /**
+     * Resolve CNAME de um domínio usando múltiplos métodos.
+     * Retorna o target (sem ponto final) ou '' se não encontrado.
+     */
+    private function resolverCname(string $subdomain): string
+    {
+        // 1. dig com Google DNS
+        $output = trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null'));
+        if ($output !== '') {
+            foreach (explode("\n", $output) as $line) {
+                $line = strtolower(rtrim(trim($line), '.'));
+                if ($line !== '' && !str_starts_with($line, ';')) return $line;
+            }
+        }
+
+        // 2. dig com Cloudflare DNS
+        $output = trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @1.1.1.1 2>/dev/null'));
+        if ($output !== '') {
+            foreach (explode("\n", $output) as $line) {
+                $line = strtolower(rtrim(trim($line), '.'));
+                if ($line !== '' && !str_starts_with($line, ';')) return $line;
+            }
+        }
+
+        // 3. nslookup (mais disponível que dig em alguns servidores)
+        $output = trim($this->dig('nslookup -type=CNAME ' . escapeshellarg($subdomain) . ' 8.8.8.8 2>/dev/null'));
+        if ($output !== '' && preg_match('/canonical name\s*=\s*(\S+)/i', $output, $m)) {
+            return strtolower(rtrim(trim($m[1]), '.'));
+        }
+
+        // 4. host command
+        $output = trim($this->dig('host -t CNAME ' . escapeshellarg($subdomain) . ' 8.8.8.8 2>/dev/null'));
+        if ($output !== '' && preg_match('/is an alias for\s+(\S+)/i', $output, $m)) {
+            return strtolower(rtrim(trim($m[1]), '.'));
+        }
+
+        // 5. dns_get_record (usa resolver local — pode ter cache)
+        $records = @dns_get_record($subdomain, DNS_CNAME);
+        if (is_array($records)) {
+            foreach ($records as $r) {
+                $target = strtolower(rtrim(trim((string)($r['target'] ?? '')), '.'));
+                if ($target !== '') return $target;
+            }
+        }
+
+        // 6. dns_get_record com DNS_ANY como último recurso
+        $records = @dns_get_record($subdomain, DNS_ANY);
+        if (is_array($records)) {
+            foreach ($records as $r) {
+                if (strtoupper((string)($r['type'] ?? '')) === 'CNAME') {
+                    $target = strtolower(rtrim(trim((string)($r['target'] ?? '')), '.'));
+                    if ($target !== '') return $target;
+                }
+            }
+        }
+
+        return '';
+    }
+
     public function adicionarSubdominio(int $clientId, string $subdomain): array
     {
         $subdomain = strtolower(trim($subdomain));
@@ -199,43 +272,10 @@ final class SubdomainVerificationService
         }
 
         $subdomain = (string)$row['subdomain'];
-        $cnameTarget = strtolower(trim((string)$row['cname_target']));
+        $cnameTarget = strtolower(rtrim(trim((string)$row['cname_target']), '.'));
 
-        $found = false;
-        // 1. dig com Google DNS (rápido)
-        $digOutput = strtolower(trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? ''));
-        // dig pode retornar múltiplas linhas; pegar a primeira não-vazia
-        foreach (explode("\n", $digOutput) as $digLine) {
-            $digLine = rtrim(trim($digLine), '.');
-            if ($digLine !== '' && $digLine === rtrim($cnameTarget, '.')) {
-                $found = true;
-                break;
-            }
-        }
-        // 2. dig com Cloudflare DNS
-        if (!$found) {
-            $digOutput = strtolower(trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @1.1.1.1 2>/dev/null') ?? ''));
-            foreach (explode("\n", $digOutput) as $digLine) {
-                $digLine = rtrim(trim($digLine), '.');
-                if ($digLine !== '' && $digLine === rtrim($cnameTarget, '.')) {
-                    $found = true;
-                    break;
-                }
-            }
-        }
-        // 3. Fallback: dns_get_record
-        if (!$found) {
-            $records = @dns_get_record($subdomain, DNS_CNAME);
-            if (is_array($records)) {
-                foreach ($records as $r) {
-                    $target = strtolower(rtrim(trim((string)($r['target'] ?? '')), '.'));
-                    if ($target === rtrim($cnameTarget, '.')) {
-                        $found = true;
-                        break;
-                    }
-                }
-            }
-        }
+        $resolved = $this->resolverCname($subdomain);
+        $found = ($resolved !== '' && $resolved === $cnameTarget);
 
         if ($found) {
             $pdo->prepare("UPDATE client_subdomains SET status = 'active', error_msg = NULL WHERE id = :id")
@@ -246,15 +286,7 @@ final class SubdomainVerificationService
         $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
             ->execute([':e' => 'CNAME não encontrado apontando para ' . $cnameTarget, ':id' => $subId]);
 
-        // Debug: mostrar o que foi encontrado
-        $debugDig = trim($this->dig('dig +short CNAME ' . escapeshellarg($subdomain) . ' @8.8.8.8 2>/dev/null') ?? '');
-        $debugDns = '';
-        $dnsRecs = @dns_get_record($subdomain, DNS_CNAME);
-        if (is_array($dnsRecs)) {
-            foreach ($dnsRecs as $dr) $debugDns .= ($dr['target'] ?? '') . ' ';
-        }
-        $debugInfo = $debugDig !== '' ? 'dig retornou: ' . $debugDig : ($debugDns !== '' ? 'dns_get_record: ' . trim($debugDns) : 'Nenhum CNAME encontrado');
-
+        $debugInfo = $resolved !== '' ? 'Encontrado: ' . $resolved . ' (esperado: ' . $cnameTarget . ')' : 'Nenhum CNAME encontrado';
         return ['ok' => false, 'erro' => 'CNAME não encontrado. Aponte ' . $subdomain . ' para ' . $cnameTarget . '. ' . $debugInfo];
     }
 
