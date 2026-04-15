@@ -132,6 +132,105 @@ final class SshExecutor
         return $this->executarProcesso($cmd, $timeoutSegundos);
     }
 
+    /**
+     * SCP upload com autenticação por senha (usa SSH_ASKPASS).
+     */
+    public function scpUploadComSenha(
+        string $host,
+        int $porta,
+        string $usuario,
+        string $senha,
+        string $arquivoLocalTmp,
+        string $caminhoRemoto,
+        int $timeoutSegundos = 60
+    ): array {
+        if (!is_file($arquivoLocalTmp)) {
+            throw new \RuntimeException('Arquivo local não encontrado.');
+        }
+
+        $caminhoRemoto = trim($caminhoRemoto);
+        if ($caminhoRemoto === '' || str_contains($caminhoRemoto, '..') || preg_match('/[;&|`$]/', $caminhoRemoto)) {
+            throw new \InvalidArgumentException('Caminho remoto inválido.');
+        }
+
+        $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+        $destino = $usuario . '@' . $host . ':' . $caminhoRemoto;
+
+        $storageDir = defined('BASE_PATH') ? BASE_PATH . '/storage' : dirname(__DIR__, 3) . '/storage';
+        if (!is_dir($storageDir)) @mkdir($storageDir, 0700, true);
+
+        $senhaFile = $storageDir . '/ssh_pw_' . bin2hex(random_bytes(8));
+        file_put_contents($senhaFile, $senha);
+        chmod($senhaFile, 0600);
+
+        $askpassScript = $storageDir . '/askpass_' . bin2hex(random_bytes(8)) . '.sh';
+        file_put_contents($askpassScript, "#!/bin/sh\ncat " . escapeshellarg($senhaFile) . "\n");
+        chmod($askpassScript, 0700);
+
+        $scpCmd = implode(' ', [
+            'setsid',
+            'scp',
+            '-P ' . (int)$porta,
+            '-o ConnectTimeout=8',
+            '-o StrictHostKeyChecking=no',
+            '-o UserKnownHostsFile=' . $knownHosts,
+            '-o PasswordAuthentication=yes',
+            '-o PubkeyAuthentication=no',
+            '-o NumberOfPasswordPrompts=1',
+            escapeshellarg($arquivoLocalTmp),
+            escapeshellarg($destino),
+        ]);
+
+        $env = [
+            'SSH_ASKPASS' => $askpassScript,
+            'SSH_ASKPASS_REQUIRE' => 'force',
+            'DISPLAY' => ':0',
+            'PATH' => getenv('PATH') ?: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        ];
+
+        $descriptorspec = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $process = @proc_open($scpCmd, $descriptorspec, $pipes, null, $env);
+
+        $cleanup = function () use ($askpassScript, $senhaFile) {
+            @unlink($askpassScript);
+            @unlink($senhaFile);
+        };
+
+        if (!is_resource($process)) {
+            $cleanup();
+            return ['ok' => false, 'saida' => 'Falha ao iniciar SCP.', 'codigo' => 255];
+        }
+
+        @fclose($pipes[0]);
+        @stream_set_blocking($pipes[1], false);
+        @stream_set_blocking($pipes[2], false);
+
+        $stdout = '';
+        $stderr = '';
+        $inicio = microtime(true);
+
+        while (true) {
+            $stdout .= (string)@stream_get_contents($pipes[1]);
+            $stderr .= (string)@stream_get_contents($pipes[2]);
+            $status = proc_get_status($process);
+            if (!is_array($status) || empty($status['running'])) break;
+            if ($timeoutSegundos > 0 && (microtime(true) - $inicio) > $timeoutSegundos) {
+                @proc_terminate($process);
+                foreach ([1, 2] as $i) { if (isset($pipes[$i]) && is_resource($pipes[$i])) @fclose($pipes[$i]); }
+                @proc_close($process);
+                $cleanup();
+                return ['ok' => false, 'saida' => trim($stdout . "\n" . $stderr), 'codigo' => 124];
+            }
+            usleep(50_000);
+        }
+
+        foreach ([1, 2] as $i) { if (isset($pipes[$i]) && is_resource($pipes[$i])) @fclose($pipes[$i]); }
+        $codigo = (int)@proc_close($process);
+        $cleanup();
+
+        return ['ok' => $codigo === 0, 'saida' => trim($stdout . "\n" . $stderr), 'codigo' => $codigo];
+    }
+
     public function scpDownload(
         string $host,
         int $porta,

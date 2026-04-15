@@ -293,15 +293,9 @@ final class ArquivosController
             return Resposta::json(['ok' => false, 'erro' => 'Arquivo muito grande (máx 50MB).']);
         }
 
-        $content = file_get_contents($tmpFile);
-        if ($content === false) {
-            return Resposta::json(['ok' => false, 'erro' => 'Erro ao ler arquivo temporário.']);
-        }
-
         $fullPath = $destPath . '/' . $fileName;
 
-        // Estratégia: salvar arquivo local temporário, SCP para o servidor, mover para destino
-        // Isso evita o limite de 2MB do escapeshellarg
+        // Usar SCP para enviar o arquivo diretamente (evita limite de 2MB do escapeshellarg)
         $pdo = BancoDeDados::pdo();
         $ssh = new SshExecutor();
 
@@ -317,44 +311,21 @@ final class ArquivosController
             $usuario = (string)($row['ssh_user'] ?? 'root');
             $authType = (string)($row['ssh_auth_type'] ?? 'key');
 
-            // Caminho temporário no servidor remoto
-            $remoteTmp = '/tmp/lrv_upload_' . bin2hex(random_bytes(8));
-
             try {
                 if ($authType === 'password') {
-                    // Com senha: enviar em chunks via múltiplos comandos SSH
                     $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
-                    $b64 = base64_encode($content);
-                    $chunkSize = 500000; // ~500KB por chunk (seguro para escapeshellarg)
-                    $chunks = str_split($b64, $chunkSize);
-
-                    // Primeiro chunk: criar arquivo
-                    $cmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[0]) . ' > ' . escapeshellarg($remoteTmp);
-                    $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 30);
-
-                    // Chunks seguintes: append
-                    for ($i = 1; $i < count($chunks); $i++) {
-                        $cmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[$i]) . ' >> ' . escapeshellarg($remoteTmp);
-                        $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 30);
-                    }
-
-                    // Decodificar e mover
-                    $cmd = 'base64 -d ' . escapeshellarg($remoteTmp) . ' > ' . escapeshellarg($fullPath) . ' && rm -f ' . escapeshellarg($remoteTmp) . ' && echo OK';
-                    $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 60);
+                    $scpResult = $ssh->scpUploadComSenha($ip, $porta, $usuario, $senha, $tmpFile, $fullPath, 120);
                 } else {
-                    // Com chave: usar SCP (mais eficiente)
                     $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
                     $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
                     $scpResult = $ssh->scpUpload($ip, $porta, $usuario, $keyPath, $tmpFile, $fullPath, 120);
-                    $result = ['saida' => ($scpResult['ok'] ?? false) ? 'OK' : ($scpResult['saida'] ?? 'Erro SCP'), 'ok' => $scpResult['ok'] ?? false];
                 }
             } catch (\Throwable $e) {
                 return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
             }
 
-            $output = (string)($result['saida'] ?? '');
-            if (!str_contains($output, 'OK')) {
-                return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr($output, 0, 300)]);
+            if (!($scpResult['ok'] ?? false)) {
+                return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr((string)($scpResult['saida'] ?? ''), 0, 300)]);
             }
         } else {
             // Upload para container Docker (VPS ou App)
@@ -377,42 +348,39 @@ final class ArquivosController
                 $containerName = 'vps_client_' . $clienteId . '_' . $vpsId;
             }
 
+            // SCP para /tmp no host, depois docker cp para o container
             $remoteTmp = '/tmp/lrv_upload_' . bin2hex(random_bytes(8));
 
             try {
-                $b64 = base64_encode($content);
-                $chunkSize = 500000;
-                $chunks = str_split($b64, $chunkSize);
-
-                $runSsh = function(string $cmd) use ($ssh, $ip, $porta, $usuario, $authType, $row) {
-                    if ($authType === 'password') {
-                        $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
-                        return $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 30);
-                    }
+                if ($authType === 'password') {
+                    $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                    $scpResult = $ssh->scpUploadComSenha($ip, $porta, $usuario, $senha, $tmpFile, $remoteTmp, 120);
+                } else {
                     $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
                     $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
-                    return $ssh->executar($ip, $porta, $usuario, $keyPath, $cmd, 30);
-                };
-
-                // Enviar chunks para arquivo temporário no host
-                $runSsh('printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[0]) . ' > ' . escapeshellarg($remoteTmp));
-                for ($i = 1; $i < count($chunks); $i++) {
-                    $runSsh('printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[$i]) . ' >> ' . escapeshellarg($remoteTmp));
+                    $scpResult = $ssh->scpUpload($ip, $porta, $usuario, $keyPath, $tmpFile, $remoteTmp, 120);
                 }
 
-                // Decodificar no host, copiar para container, limpar
-                $cmd = 'base64 -d ' . escapeshellarg($remoteTmp) . ' > ' . escapeshellarg($remoteTmp . '.bin')
-                    . ' && docker cp ' . escapeshellarg($remoteTmp . '.bin') . ' ' . escapeshellarg($containerName . ':' . $fullPath)
-                    . ' && rm -f ' . escapeshellarg($remoteTmp) . ' ' . escapeshellarg($remoteTmp . '.bin')
-                    . ' && echo OK';
-                $result = $runSsh($cmd);
+                if (!($scpResult['ok'] ?? false)) {
+                    return Resposta::json(['ok' => false, 'erro' => 'Falha no SCP: ' . substr((string)($scpResult['saida'] ?? ''), 0, 300)]);
+                }
+
+                // docker cp do host para o container
+                $cpCmd = 'docker cp ' . escapeshellarg($remoteTmp) . ' ' . escapeshellarg($containerName . ':' . $fullPath)
+                    . ' && rm -f ' . escapeshellarg($remoteTmp) . ' && echo OK';
+
+                if ($authType === 'password') {
+                    $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cpCmd, 30);
+                } else {
+                    $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $cpCmd, 30);
+                }
+
+                $output = (string)($result['saida'] ?? '');
+                if (!str_contains($output, 'OK')) {
+                    return Resposta::json(['ok' => false, 'erro' => 'Falha ao copiar para container: ' . substr($output, 0, 300)]);
+                }
             } catch (\Throwable $e) {
                 return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
-            }
-
-            $output = (string)($result['saida'] ?? '');
-            if (!str_contains($output, 'OK')) {
-                return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr($output, 0, 300)]);
             }
         }
 
