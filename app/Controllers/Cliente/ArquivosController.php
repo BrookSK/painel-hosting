@@ -286,6 +286,9 @@ final class ArquivosController
 
         $tmpFile = $_FILES['file']['tmp_name'];
         $fileName = basename((string)($_FILES['file']['name'] ?? 'upload'));
+        // Sanitizar nome do arquivo: remover caracteres problemáticos para shell/SCP
+        $fileName = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $fileName);
+        if ($fileName === '' || $fileName === '.' || $fileName === '..') $fileName = 'upload_' . time();
         $fileSize = (int)($_FILES['file']['size'] ?? 0);
 
         // Limitar a 50MB

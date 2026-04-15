@@ -115,7 +115,9 @@ final class SshExecutor
         }
 
         $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
-        $destino    = $usuario . '@' . $host . ':' . $caminhoRemoto;
+        // Escapar caminho remoto para o shell do servidor (aspas simples dentro do destino SCP)
+        $remoteEscaped = "'" . str_replace("'", "'\\''", $caminhoRemoto) . "'";
+        $destino    = $usuario . '@' . $host . ':' . $remoteEscaped;
 
         $cmd = implode(' ', [
             'scp',
@@ -126,7 +128,7 @@ final class SshExecutor
             '-o StrictHostKeyChecking=no',
             '-o UserKnownHostsFile=' . $knownHosts,
             escapeshellarg($arquivoLocalTmp),
-            escapeshellarg($destino),
+            $destino,
         ]);
 
         return $this->executarProcesso($cmd, $timeoutSegundos);
@@ -154,7 +156,9 @@ final class SshExecutor
         }
 
         $knownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
-        $destino = $usuario . '@' . $host . ':' . $caminhoRemoto;
+        // Escapar caminho remoto para o shell do servidor
+        $remoteEscaped = "'" . str_replace("'", "'\\''", $caminhoRemoto) . "'";
+        $destino = $usuario . '@' . $host . ':' . $remoteEscaped;
 
         $storageDir = defined('BASE_PATH') ? BASE_PATH . '/storage' : dirname(__DIR__, 3) . '/storage';
         if (!is_dir($storageDir)) @mkdir($storageDir, 0700, true);
@@ -178,7 +182,7 @@ final class SshExecutor
             '-o PubkeyAuthentication=no',
             '-o NumberOfPasswordPrompts=1',
             escapeshellarg($arquivoLocalTmp),
-            escapeshellarg($destino),
+            $destino,
         ]);
 
         $env = [
