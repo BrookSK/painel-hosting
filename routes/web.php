@@ -225,6 +225,8 @@ $roteador->get('/cliente/arquivos/ler', [\LRV\App\Controllers\Cliente\ArquivosCo
 $roteador->post('/cliente/arquivos/salvar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
 $roteador->post('/cliente/arquivos/criar-pasta', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'criarPasta'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
 $roteador->post('/cliente/arquivos/deletar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
+$roteador->get('/cliente/arquivos/download', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'download'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/arquivos/upload', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);

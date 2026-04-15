@@ -196,6 +196,153 @@ final class ArquivosController
         return Resposta::json($result);
     }
 
+    /**
+     * Download de arquivo via SSH (base64 encode no servidor, decode aqui).
+     */
+    public function download(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $vpsId = (int)($req->query['vps_id'] ?? 0);
+        $appId = (int)($req->query['app_id'] ?? 0);
+        $direct = (int)($req->query['direct'] ?? 0);
+        $path = (string)($req->query['path'] ?? '');
+        if ($path === '') return Resposta::texto('Caminho vazio.', 400);
+
+        // Limitar tamanho do download (50MB)
+        $checkCmd = 'stat -c%s ' . escapeshellarg($path) . ' 2>/dev/null || echo 0';
+        if ($appId > 0) {
+            $sizeResult = $this->execInAppContainer($clienteId, $appId, $checkCmd);
+        } elseif ($direct === 1) {
+            $sizeResult = $this->execDirectOnServer($clienteId, $vpsId, $checkCmd);
+        } else {
+            $sizeResult = $this->execInContainer($clienteId, $vpsId, $checkCmd);
+        }
+        $fileSize = (int)trim($sizeResult['output'] ?? '0');
+        if ($fileSize > 52428800) {
+            return Resposta::texto('Arquivo muito grande (máx 50MB).', 400);
+        }
+
+        $cmd = 'base64 ' . escapeshellarg($path) . ' 2>&1';
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
+        }
+        if (!($result['ok'] ?? false)) {
+            return Resposta::texto($result['erro'] ?? 'Erro ao ler arquivo.', 500);
+        }
+
+        $b64 = trim($result['output'] ?? '');
+        $decoded = base64_decode($b64, true);
+        if ($decoded === false) {
+            return Resposta::texto('Erro ao decodificar arquivo.', 500);
+        }
+
+        $filename = basename($path);
+        $mime = $this->detectarMime($filename);
+
+        // Salvar em arquivo temporário para usar Resposta::arquivo()
+        $tmpFile = sys_get_temp_dir() . '/lrv_download_' . bin2hex(random_bytes(8));
+        file_put_contents($tmpFile, $decoded);
+
+        // Registrar cleanup
+        register_shutdown_function(function() use ($tmpFile) { @unlink($tmpFile); });
+
+        return Resposta::arquivo($tmpFile, $filename, $mime);
+    }
+
+    /**
+     * Upload de arquivo via SSH (base64 encode aqui, decode no servidor).
+     */
+    public function upload(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $appId = (int)($req->post['app_id'] ?? 0);
+        $direct = (int)($req->post['direct'] ?? 0);
+        $destPath = rtrim((string)($req->post['path'] ?? '/'), '/');
+        if ($destPath === '') $destPath = '/';
+
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            $errCode = $_FILES['file']['error'] ?? -1;
+            $errMsg = match ($errCode) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Arquivo muito grande.',
+                UPLOAD_ERR_NO_FILE => 'Nenhum arquivo enviado.',
+                default => 'Erro no upload (código ' . $errCode . ').',
+            };
+            return Resposta::json(['ok' => false, 'erro' => $errMsg]);
+        }
+
+        $tmpFile = $_FILES['file']['tmp_name'];
+        $fileName = basename((string)($_FILES['file']['name'] ?? 'upload'));
+        $fileSize = (int)($_FILES['file']['size'] ?? 0);
+
+        // Limitar a 50MB
+        if ($fileSize > 52428800) {
+            return Resposta::json(['ok' => false, 'erro' => 'Arquivo muito grande (máx 50MB).']);
+        }
+
+        $content = file_get_contents($tmpFile);
+        if ($content === false) {
+            return Resposta::json(['ok' => false, 'erro' => 'Erro ao ler arquivo temporário.']);
+        }
+
+        $b64 = base64_encode($content);
+        $fullPath = $destPath . '/' . $fileName;
+
+        // Para arquivos grandes, dividir em chunks para evitar limite de argumento do shell
+        if (strlen($b64) > 100000) {
+            // Usar heredoc via stdin
+            $cmd = 'cat << \'LRVEOF\' | base64 -d > ' . escapeshellarg($fullPath) . "\n" . $b64 . "\nLRVEOF\n" . 'echo OK';
+        } else {
+            $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($fullPath) . ' 2>&1 && echo OK';
+        }
+
+        if ($appId > 0) {
+            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+        } elseif ($direct === 1) {
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+        } else {
+            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
+        }
+
+        if (!($result['ok'] ?? false) || !str_contains($result['output'] ?? '', 'OK')) {
+            return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar arquivo: ' . ($result['output'] ?? $result['erro'] ?? '')]);
+        }
+
+        return Resposta::json(['ok' => true, 'path' => $fullPath]);
+    }
+
+    private function detectarMime(string $filename): string
+    {
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        return match ($ext) {
+            'txt', 'log', 'md', 'csv' => 'text/plain',
+            'html', 'htm' => 'text/html',
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'json' => 'application/json',
+            'xml' => 'application/xml',
+            'pdf' => 'application/pdf',
+            'zip' => 'application/zip',
+            'gz', 'tgz' => 'application/gzip',
+            'tar' => 'application/x-tar',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'sql' => 'application/sql',
+            'php' => 'text/plain',
+            default => 'application/octet-stream',
+        };
+    }
+
     private function execInContainer(int $clienteId, int $vpsId, string $cmd): array
     {
         if ($vpsId <= 0) return ['ok' => false, 'erro' => 'VPS inválida.'];

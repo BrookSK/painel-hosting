@@ -48,9 +48,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
     <span id="breadcrumb" style="font-size:13px;color:#475569;flex:1;font-family:monospace;">/</span>
     <button class="botao ghost sm" onclick="goUp()">⬆ Subir</button>
+    <button class="botao ghost sm" onclick="triggerUpload()">📤 Upload</button>
     <button class="botao ghost sm" onclick="promptNewFolder()">📁 Nova pasta</button>
     <button class="botao ghost sm" onclick="promptNewFile()">📄 Novo arquivo</button>
     <button class="botao ghost sm" onclick="refreshFiles()">🔄</button>
+    <input type="file" id="uploadInput" style="display:none;" multiple onchange="uploadFiles(this.files)" />
   </div>
 
   <!-- File list -->
@@ -141,7 +143,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       html+='<td style="padding:8px;"><span style="cursor:pointer;color:#4F46E5;" onclick="'+(f.type==='dir'?'navigateTo(\''+escHtml(f.name)+'\')':'openFile(\''+escHtml(f.name)+'\')')+'">'+icon+' '+escHtml(f.name)+'</span></td>';
       html+='<td style="padding:8px;text-align:right;color:#64748b;">'+size+'</td>';
       html+='<td style="padding:8px;color:#94a3b8;font-size:12px;">'+escHtml(f.date)+'</td>';
-      html+='<td style="padding:8px;"><button class="botao danger sm" style="font-size:11px;padding:2px 8px;" onclick="deleteItem(\''+escHtml(f.name)+'\')">✕</button></td>';
+      html+='<td style="padding:8px;display:flex;gap:4px;">';
+      if(f.type==='file') html+='<button class="botao ghost sm" style="font-size:11px;padding:2px 8px;" onclick="downloadFile(\''+escHtml(f.name)+'\')" title="Download">⬇</button>';
+      html+='<button class="botao danger sm" style="font-size:11px;padding:2px 8px;" onclick="deleteItem(\''+escHtml(f.name)+'\')">✕</button>';
+      html+='</td>';
       html+='</tr>';
     });
     html+='</tbody></table>';
@@ -213,6 +218,56 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       .then(function(r){return r.json();}).then(function(){loadFiles();});
   };
   window.refreshFiles=loadFiles;
+
+  window.downloadFile=function(name){
+    var fullPath=currentPath.replace(/\/$/,'')+'/'+name;
+    var url='/cliente/arquivos/download?'+qsRead()+'&path='+encodeURIComponent(fullPath);
+    window.open(url,'_blank');
+  };
+
+  window.triggerUpload=function(){
+    document.getElementById('uploadInput').click();
+  };
+
+  window.uploadFiles=function(files){
+    if(!files||files.length===0)return;
+    var total=files.length;var done=0;var errors=[];
+    var statusEl=document.getElementById('breadcrumb');
+    var origText=statusEl.textContent;
+
+    function uploadNext(i){
+      if(i>=total){
+        document.getElementById('uploadInput').value='';
+        statusEl.textContent=origText;
+        if(errors.length>0) alert('Erros:\n'+errors.join('\n'));
+        loadFiles();
+        return;
+      }
+      var f=files[i];
+      statusEl.textContent='Enviando '+f.name+' ('+(i+1)+'/'+total+')...';
+      var fd=new FormData();
+      fd.append('_csrf',csrf);
+      fd.append('file',f);
+      fd.append('path',currentPath);
+      if(appIdParam) fd.append('app_id',appIdParam);
+      else{
+        fd.append('vps_id',currentVps);
+        if(directParam) fd.append('direct','1');
+      }
+      fetch('/cliente/arquivos/upload',{method:'POST',body:fd})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          done++;
+          if(!d.ok) errors.push(f.name+': '+(d.erro||'Erro'));
+          uploadNext(i+1);
+        })
+        .catch(function(){
+          done++;errors.push(f.name+': Erro de rede');
+          uploadNext(i+1);
+        });
+    }
+    uploadNext(0);
+  };
 
   loadFiles();
 })();
