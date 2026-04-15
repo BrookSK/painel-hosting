@@ -298,22 +298,122 @@ final class ArquivosController
             return Resposta::json(['ok' => false, 'erro' => 'Erro ao ler arquivo temporário.']);
         }
 
-        $b64 = base64_encode($content);
         $fullPath = $destPath . '/' . $fileName;
 
-        // Usar printf com base64 — funciona em todos os ambientes (Docker, SSH direto)
-        $cmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($fullPath) . ' 2>&1 && echo OK';
+        // Estratégia: salvar arquivo local temporário, SCP para o servidor, mover para destino
+        // Isso evita o limite de 2MB do escapeshellarg
+        $pdo = BancoDeDados::pdo();
+        $ssh = new SshExecutor();
 
-        if ($appId > 0) {
-            $result = $this->execWithTimeout($clienteId, $vpsId, $appId, $direct, $cmd, 60);
-        } elseif ($direct === 1) {
-            $result = $this->execWithTimeout($clienteId, $vpsId, 0, 1, $cmd, 60);
+        if ($direct === 1) {
+            // Upload direto no servidor (Git Deploy)
+            $stmt = $pdo->prepare("SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+            $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
+            $row = $stmt->fetch();
+            if (!is_array($row)) return Resposta::json(['ok' => false, 'erro' => 'VPS não encontrada.']);
+
+            $ip = (string)($row['ip_address'] ?? '');
+            $porta = (int)($row['ssh_port'] ?? 22);
+            $usuario = (string)($row['ssh_user'] ?? 'root');
+            $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+            // Caminho temporário no servidor remoto
+            $remoteTmp = '/tmp/lrv_upload_' . bin2hex(random_bytes(8));
+
+            try {
+                if ($authType === 'password') {
+                    // Com senha: enviar em chunks via múltiplos comandos SSH
+                    $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                    $b64 = base64_encode($content);
+                    $chunkSize = 500000; // ~500KB por chunk (seguro para escapeshellarg)
+                    $chunks = str_split($b64, $chunkSize);
+
+                    // Primeiro chunk: criar arquivo
+                    $cmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[0]) . ' > ' . escapeshellarg($remoteTmp);
+                    $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 30);
+
+                    // Chunks seguintes: append
+                    for ($i = 1; $i < count($chunks); $i++) {
+                        $cmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[$i]) . ' >> ' . escapeshellarg($remoteTmp);
+                        $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 30);
+                    }
+
+                    // Decodificar e mover
+                    $cmd = 'base64 -d ' . escapeshellarg($remoteTmp) . ' > ' . escapeshellarg($fullPath) . ' && rm -f ' . escapeshellarg($remoteTmp) . ' && echo OK';
+                    $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 60);
+                } else {
+                    // Com chave: usar SCP (mais eficiente)
+                    $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                    $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                    $scpResult = $ssh->scpUpload($ip, $porta, $usuario, $keyPath, $tmpFile, $fullPath, 120);
+                    $result = ['saida' => ($scpResult['ok'] ?? false) ? 'OK' : ($scpResult['saida'] ?? 'Erro SCP'), 'ok' => $scpResult['ok'] ?? false];
+                }
+            } catch (\Throwable $e) {
+                return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+            }
+
+            $output = (string)($result['saida'] ?? '');
+            if (!str_contains($output, 'OK')) {
+                return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr($output, 0, 300)]);
+            }
         } else {
-            $result = $this->execWithTimeout($clienteId, $vpsId, 0, 0, $cmd, 60);
-        }
+            // Upload para container Docker (VPS ou App)
+            $stmt = $appId > 0
+                ? $pdo->prepare("SELECT a.container_id, t.slug, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM applications a INNER JOIN vps v ON v.id = a.vps_id INNER JOIN servers s ON s.id = v.server_id LEFT JOIN app_templates t ON t.id = a.template_id WHERE a.id = :id AND v.client_id = :c LIMIT 1")
+                : $pdo->prepare("SELECT v.container_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+            $stmt->execute([':id' => $appId > 0 ? $appId : $vpsId, ':c' => $clienteId]);
+            $row = $stmt->fetch();
+            if (!is_array($row)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.']);
 
-        if (!($result['ok'] ?? false) || !str_contains($result['output'] ?? '', 'OK')) {
-            return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar arquivo: ' . ($result['output'] ?? $result['erro'] ?? '')]);
+            $ip = (string)($row['ip_address'] ?? '');
+            $porta = (int)($row['ssh_port'] ?? 22);
+            $usuario = (string)($row['ssh_user'] ?? 'root');
+            $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+            if ($appId > 0) {
+                $slug = (string)($row['slug'] ?? 'app');
+                $containerName = 'app_' . $slug . '_' . $appId;
+            } else {
+                $containerName = 'vps_client_' . $clienteId . '_' . $vpsId;
+            }
+
+            $remoteTmp = '/tmp/lrv_upload_' . bin2hex(random_bytes(8));
+
+            try {
+                $b64 = base64_encode($content);
+                $chunkSize = 500000;
+                $chunks = str_split($b64, $chunkSize);
+
+                $runSsh = function(string $cmd) use ($ssh, $ip, $porta, $usuario, $authType, $row) {
+                    if ($authType === 'password') {
+                        $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                        return $ssh->executarComSenha($ip, $porta, $usuario, $senha, $cmd, 30);
+                    }
+                    $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                    $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                    return $ssh->executar($ip, $porta, $usuario, $keyPath, $cmd, 30);
+                };
+
+                // Enviar chunks para arquivo temporário no host
+                $runSsh('printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[0]) . ' > ' . escapeshellarg($remoteTmp));
+                for ($i = 1; $i < count($chunks); $i++) {
+                    $runSsh('printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($chunks[$i]) . ' >> ' . escapeshellarg($remoteTmp));
+                }
+
+                // Decodificar no host, copiar para container, limpar
+                $cmd = 'base64 -d ' . escapeshellarg($remoteTmp) . ' > ' . escapeshellarg($remoteTmp . '.bin')
+                    . ' && docker cp ' . escapeshellarg($remoteTmp . '.bin') . ' ' . escapeshellarg($containerName . ':' . $fullPath)
+                    . ' && rm -f ' . escapeshellarg($remoteTmp) . ' ' . escapeshellarg($remoteTmp . '.bin')
+                    . ' && echo OK';
+                $result = $runSsh($cmd);
+            } catch (\Throwable $e) {
+                return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+            }
+
+            $output = (string)($result['saida'] ?? '');
+            if (!str_contains($output, 'OK')) {
+                return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr($output, 0, 300)]);
+            }
         }
 
         return Resposta::json(['ok' => true, 'path' => $fullPath]);
