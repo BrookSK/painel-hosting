@@ -255,14 +255,17 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         if(directParam) fd.append('direct','1');
       }
       fetch('/cliente/arquivos/upload',{method:'POST',body:fd})
-        .then(function(r){return r.json();})
+        .then(function(r){
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          return r.json();
+        })
         .then(function(d){
           done++;
           if(!d.ok) errors.push(f.name+': '+(d.erro||'Erro'));
           uploadNext(i+1);
         })
-        .catch(function(){
-          done++;errors.push(f.name+': Erro de rede');
+        .catch(function(e){
+          done++;errors.push(f.name+': '+(e.message||'Erro de rede'));
           uploadNext(i+1);
         });
     }

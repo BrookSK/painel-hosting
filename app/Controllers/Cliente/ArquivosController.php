@@ -263,6 +263,11 @@ final class ArquivosController
         $clienteId = Auth::clienteId();
         if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
 
+        // Verificar se o upload foi recebido (pode falhar silenciosamente se post_max_size for excedido)
+        if (empty($_FILES) && empty($_POST)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Upload rejeitado pelo servidor (post_max_size excedido). Limite: ' . ini_get('post_max_size')]);
+        }
+
         $vpsId = (int)($req->post['vps_id'] ?? 0);
         $appId = (int)($req->post['app_id'] ?? 0);
         $direct = (int)($req->post['direct'] ?? 0);
@@ -296,20 +301,15 @@ final class ArquivosController
         $b64 = base64_encode($content);
         $fullPath = $destPath . '/' . $fileName;
 
-        // Para arquivos grandes, dividir em chunks para evitar limite de argumento do shell
-        if (strlen($b64) > 100000) {
-            // Usar heredoc via stdin
-            $cmd = 'cat << \'LRVEOF\' | base64 -d > ' . escapeshellarg($fullPath) . "\n" . $b64 . "\nLRVEOF\n" . 'echo OK';
-        } else {
-            $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($fullPath) . ' 2>&1 && echo OK';
-        }
+        // Usar printf com base64 — funciona em todos os ambientes (Docker, SSH direto)
+        $cmd = 'printf ' . escapeshellarg('%s') . ' ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($fullPath) . ' 2>&1 && echo OK';
 
         if ($appId > 0) {
-            $result = $this->execInAppContainer($clienteId, $appId, $cmd);
+            $result = $this->execWithTimeout($clienteId, $vpsId, $appId, $direct, $cmd, 60);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execWithTimeout($clienteId, $vpsId, 0, 1, $cmd, 60);
         } else {
-            $result = $this->execInContainer($clienteId, $vpsId, $cmd);
+            $result = $this->execWithTimeout($clienteId, $vpsId, 0, 0, $cmd, 60);
         }
 
         if (!($result['ok'] ?? false) || !str_contains($result['output'] ?? '', 'OK')) {
@@ -341,6 +341,81 @@ final class ArquivosController
             'php' => 'text/plain',
             default => 'application/octet-stream',
         };
+    }
+
+    /**
+     * Executa comando com timeout customizado (para upload/download).
+     */
+    private function execWithTimeout(int $clienteId, int $vpsId, int $appId, int $direct, string $cmd, int $timeout): array
+    {
+        if ($appId > 0) {
+            // App container
+            $pdo = BancoDeDados::pdo();
+            $stmt = $pdo->prepare(
+                "SELECT a.container_id, a.status, t.slug,
+                        s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password
+                 FROM applications a
+                 INNER JOIN vps v ON v.id = a.vps_id
+                 INNER JOIN servers s ON s.id = v.server_id
+                 LEFT JOIN app_templates t ON t.id = a.template_id
+                 WHERE a.id = :id AND v.client_id = :c LIMIT 1"
+            );
+            $stmt->execute([':id' => $appId, ':c' => $clienteId]);
+            $row = $stmt->fetch();
+            if (!is_array($row)) return ['ok' => false, 'erro' => 'Aplicação não encontrada.'];
+            $slug = (string)($row['slug'] ?? 'app');
+            $containerName = 'app_' . $slug . '_' . $appId;
+            $containerId = trim((string)($row['container_id'] ?? ''));
+            $sshCmd = 'docker exec ' . escapeshellarg($containerName) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
+            if ($containerId !== '') $sshCmd .= ' || docker exec ' . escapeshellarg($containerId) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
+        } elseif ($direct === 1) {
+            // Direct on server
+            $pdo = BancoDeDados::pdo();
+            $stmt = $pdo->prepare("SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+            $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
+            $row = $stmt->fetch();
+            if (!is_array($row)) return ['ok' => false, 'erro' => 'VPS não encontrada.'];
+            $sshCmd = $cmd;
+        } else {
+            // Docker container
+            $pdo = BancoDeDados::pdo();
+            $stmt = $pdo->prepare("SELECT v.container_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+            $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
+            $row = $stmt->fetch();
+            if (!is_array($row)) return ['ok' => false, 'erro' => 'VPS não encontrada.'];
+            $containerId = trim((string)($row['container_id'] ?? ''));
+            $containerName = 'vps_client_' . $clienteId . '_' . $vpsId;
+            $sshCmd = 'docker exec ' . escapeshellarg($containerName) . ' bash -c ' . escapeshellarg($cmd)
+                . ' 2>&1 || docker exec ' . escapeshellarg($containerId) . ' bash -c ' . escapeshellarg($cmd) . ' 2>&1';
+        }
+
+        $ssh = new SshExecutor();
+        $ip = (string)($row['ip_address'] ?? '');
+        $porta = (int)($row['ssh_port'] ?? 22);
+        $usuario = (string)($row['ssh_user'] ?? 'root');
+        $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+        try {
+            if ($authType === 'password') {
+                $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $sshCmd, $timeout);
+            } else {
+                $keyDir = rtrim(ConfiguracoesSistema::sshKeyDir(), "/\\");
+                $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $sshCmd, $timeout);
+            }
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'erro' => $e->getMessage()];
+        }
+
+        $output = (string)($result['saida'] ?? '');
+        $lines = explode("\n", $output);
+        $clean = [];
+        foreach ($lines as $l) {
+            if (str_contains($l, 'Warning:') || str_contains($l, 'Permanently added') || str_contains($l, 'known_hosts')) continue;
+            $clean[] = $l;
+        }
+        return ['ok' => true, 'output' => implode("\n", $clean)];
     }
 
     private function execInContainer(int $clienteId, int $vpsId, string $cmd): array

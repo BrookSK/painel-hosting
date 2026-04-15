@@ -1,5 +1,13 @@
 DirectoryIndex index.php
 
+# Limites de upload (funciona com mod_php; ignorado com PHP-FPM)
+<IfModule mod_php.c>
+  php_value upload_max_filesize 64M
+  php_value post_max_size 64M
+  php_value max_execution_time 300
+  php_value max_input_time 300
+</IfModule>
+
 # CSP com Stripe permitido
 <IfModule mod_headers.c>
   Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self' https://checkout.stripe.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://js.stripe.com; connect-src 'self' https://api.stripe.com ws: wss:; frame-src https://js.stripe.com https://hooks.stripe.com;"
