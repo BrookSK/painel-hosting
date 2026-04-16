@@ -70,13 +70,28 @@ final class InicialController
             $stmt = $pdo->query(
                 "SELECT id, name, price_monthly AS price, price_monthly_usd AS price_usd, currency, specs_json, description, is_featured,
                         cpu, ram, storage
-                 FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC LIMIT 6"
+                 FROM plans WHERE status = 'active' AND client_id IS NULL AND (plan_type = 'vps' OR plan_type IS NULL OR plan_type = '') ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
             foreach ($planos as &$_pp) {
                 $_pp['badge'] = ((int)($_pp['is_featured'] ?? 0) === 1) ? 'POPULAR' : '';
             }
             unset($_pp);
+
+            // Buscar addons para cada plano
+            if (!empty($planos)) {
+                $ids = implode(',', array_map('intval', array_column($planos, 'id')));
+                $stmtA = $pdo->query("SELECT * FROM plan_addons WHERE plan_id IN ($ids) AND active = 1 ORDER BY plan_id, sort_order ASC");
+                $allAddons = $stmtA ? ($stmtA->fetchAll() ?: []) : [];
+                $addonsByPlan = [];
+                foreach ($allAddons as $a) {
+                    $addonsByPlan[(int)$a['plan_id']][] = $a;
+                }
+                foreach ($planos as &$_p) {
+                    $_p['addons'] = $addonsByPlan[(int)$_p['id']] ?? [];
+                }
+                unset($_p);
+            }
         } catch (\Throwable) {}
 
         $html = View::renderizar(__DIR__ . '/../Views/infraestrutura.php', [

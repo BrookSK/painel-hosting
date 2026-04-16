@@ -84,7 +84,7 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
     </div>
   </div>
   <div class="pn-mega-footer">
-    <a href="/infraestrutura"><?php echo View::e(I18n::t('mega.prod_ver_todos')); ?> →</a>
+    <a href="/infraestrutura#produtos"><?php echo View::e(I18n::t('mega.prod_ver_todos')); ?> →</a>
   </div>
 </div>
 

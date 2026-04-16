@@ -209,48 +209,50 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
 
 <section class="section alt" id="planos">
   <div class="section-inner">
-    <div class="section-label"><?php echo View::e(I18n::t('infra.plans_label')); ?></div>
-    <h2 class="section-title"><?php echo View::e(I18n::t('infra.plans_titulo')); ?></h2>
-    <p class="section-sub"><?php echo View::e(I18n::t('infra.plans_sub')); ?></p>
-    <?php if (!empty($_planos)): ?>
-    <div class="plans-grid">
-      <?php foreach ($_planos as $_i => $_p):
-        $_specs = [];
-        if (!empty($_p['specs_json'])) { $_specs = json_decode((string)$_p['specs_json'], true) ?: []; }
-        $_vcpu  = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
-        $_ram   = (int)($_specs['ram_gb'] ?? 0);
-        $_ramMb = (int)($_specs['ram_mb'] ?? 0);
-        $_disco = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
-        $_bw    = (int)($_specs['bandwidth_gb'] ?? 0);
-        $_price = (float)$_p['price'];
-        $_cycle = (string)($_p['billing_cycle'] ?? 'monthly');
-        $_cycleLabel = $_cycle === 'yearly' ? I18n::t('infra.plans_ano') : I18n::t('infra.plans_mes');
-        $_cycleBillingLabel = $_cycle === 'yearly' ? I18n::t('infra.plans_anual') : I18n::t('infra.plans_mensal');
-        $_destaque = $_i === 1;
+    <?php
+      // Reusar o partial de planos com carousel
+      $planos = $_planos;
+      $_accent = '#4F46E5';
+      $_plan_type = 'vps';
+      $_cta_base = '/contratar?plan_id=';
+      require __DIR__ . '/solucoes/_planos-section.php';
+    ?>
+  </div>
+</section>
+
+<!-- TODOS OS PRODUTOS -->
+<section class="section" id="produtos">
+  <div class="section-inner">
+    <div class="section-label">Nossos Produtos</div>
+    <h2 class="section-title">Soluções para cada necessidade</h2>
+    <p class="section-sub">Do WordPress ao C/C++, temos o produto certo para o seu projeto.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:40px;">
+      <?php
+        $produtos = [
+          ['/solucoes/vps',       '🖥️', 'VPS Gerenciada',       'Servidor virtual completo com acesso total, terminal web e monitoramento.',       '#4F46E5'],
+          ['/solucoes/wordpress', '📝', 'WordPress Gerenciado', 'Hospedagem otimizada para WordPress com instalação em 1 clique.',                  '#1d4ed8'],
+          ['/solucoes/webhosting','🌐', 'Web Hosting',          'Hospedagem com catálogo de apps, git deploy e gerenciador de arquivos.',            '#16a34a'],
+          ['/solucoes/nodejs',    '⬢',  'Node.js App',          'Deploy de aplicações Node.js com banco de dados e git deploy.',                     '#d97706'],
+          ['/solucoes/php',       '🐘', 'PHP / Laravel',        'Hospedagem PHP otimizada com Composer, MySQL e git deploy.',                        '#ea580c'],
+          ['/solucoes/python',    '🐍', 'Python App',           'Deploy de Django, Flask e FastAPI com banco de dados e pip.',                        '#0891b2'],
+          ['/solucoes/cpp',       '⚙️', 'C/C++ App',            'Aplicações compiladas de alta performance com GCC, CMake e git deploy.',             '#db2777'],
+          ['/solucoes/aplicacoes','🚀', 'Deploy Automático',    'Pipeline de deploy via Git com catálogo de 50+ apps e zero downtime.',               '#8b5cf6'],
+          ['/solucoes/email',     '💬', 'Comunicação',          'E-mail profissional, chat em tempo real e sistema de tickets.',                      '#e11d48'],
+          ['/solucoes/devops',    '⚡', 'DevOps & Ferramentas', 'Terminal web, monitoramento, backups automáticos e logs centralizados.',              '#059669'],
+          ['/solucoes/seguranca', '🔐', 'Segurança',            'Proteção DDoS, SSL automático, 2FA e isolamento de containers.',                    '#334155'],
+        ];
+        foreach ($produtos as [$href, $icon, $name, $desc, $color]):
       ?>
-      <div class="plan-card <?php echo $_destaque ? 'destaque' : ''; ?>">
-        <?php if ($_destaque): ?><div class="plan-badge"><?php echo View::e(I18n::t('infra.plans_popular')); ?></div><?php endif; ?>
-        <div class="plan-name"><?php echo View::e((string)$_p['name']); ?></div>
-        <?php if (!empty($_p['description'])): ?><div class="plan-desc"><?php echo View::e((string)$_p['description']); ?></div><?php endif; ?>
-        <div class="plan-price"><?php echo View::e(I18n::preco($_price)); ?><span><?php echo View::e($_cycleLabel); ?></span></div>
-        <div class="plan-cycle"><?php echo View::e($_cycleBillingLabel); ?></div>
-        <ul class="plan-specs">
-          <?php if ($_vcpu > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_vcpu; ?> vCPU</li><?php endif; ?>
-          <?php if ($_ram > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_ram; ?> GB RAM</li><?php elseif ($_ramMb > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_ramMb; ?> MB RAM</li><?php endif; ?>
-          <?php if ($_disco > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_disco; ?> GB SSD</li><?php endif; ?>
-          <?php if ($_bw > 0): ?><li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo $_bw; ?> GB bandwidth</li><?php endif; ?>
-          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.plans_backups')); ?></li>
-          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.plans_monitor')); ?></li>
-          <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><?php echo View::e(I18n::t('infra.plans_suporte')); ?></li>
-        </ul>
-        <div class="plan-cta"><a href="/cliente/criar-conta" class="botao" style="width:100%;justify-content:center;"><?php echo $_trial_ativo ? View::e($_trial_label) : View::e(I18n::t('infra.plans_comecar')); ?></a></div>
-      </div>
+      <a href="<?php echo $href; ?>" style="background:#fff;border:2px solid #e2e8f0;border-radius:16px;padding:24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:10px;transition:all .2s;"
+         onmouseover="this.style.borderColor='<?php echo $color; ?>';this.style.boxShadow='0 8px 30px <?php echo $color; ?>18';this.style.transform='translateY(-4px)'"
+         onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none';this.style.transform='none'">
+        <div style="width:48px;height:48px;border-radius:12px;background:<?php echo $color; ?>12;display:flex;align-items:center;justify-content:center;font-size:24px;"><?php echo $icon; ?></div>
+        <div style="font-weight:700;font-size:15px;color:#0f172a;"><?php echo View::e($name); ?></div>
+        <div style="font-size:13px;color:#64748b;line-height:1.5;"><?php echo View::e($desc); ?></div>
+        <div style="font-size:12px;font-weight:600;color:<?php echo $color; ?>;margin-top:auto;">Saiba mais →</div>
+      </a>
       <?php endforeach; ?>
     </div>
-    <?php else: ?>
-    <div class="plans-grid"><div class="plan-empty"><?php echo View::e(I18n::t('infra.plans_empty')); ?> <a href="/contato"><?php echo View::e(I18n::t('infra.plans_contato')); ?></a> <?php echo View::e(I18n::t('infra.plans_saber_mais')); ?></div></div>
-    <?php endif; ?>
-    <p style="text-align:center;margin-top:24px;font-size:13px;color:#94a3b8;"><?php echo View::e(I18n::t('infra.plans_custom')); ?> <a href="/contato"><?php echo View::e(I18n::t('infra.plans_fale')); ?></a></p>
   </div>
 </section>
 
