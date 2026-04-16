@@ -68,13 +68,15 @@ final class InicialController
         try {
             $pdo  = BancoDeDados::pdo();
             $stmt = $pdo->query(
-                "SELECT id, name, price_monthly AS price, price_monthly_usd AS price_usd, currency, specs_json, description, is_featured,
-                        cpu, ram, storage
+                "SELECT id, name, price_monthly, price_monthly_usd, currency, specs_json, description, is_featured,
+                        cpu, ram, storage, support_channels
                  FROM plans WHERE status = 'active' AND client_id IS NULL AND (plan_type = 'vps' OR plan_type IS NULL OR plan_type = '') ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
             foreach ($planos as &$_pp) {
                 $_pp['badge'] = ((int)($_pp['is_featured'] ?? 0) === 1) ? 'POPULAR' : '';
+                // Compatibilidade: manter 'price' pra views antigas
+                $_pp['price'] = (float)($_pp['price_monthly'] ?? 0);
             }
             unset($_pp);
 

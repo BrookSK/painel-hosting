@@ -214,7 +214,6 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-s
       $planos = $_planos;
       $_accent = '#4F46E5';
       $_plan_type = 'vps';
-      $_cta_base = '/contratar?plan_id=';
       require __DIR__ . '/solucoes/_planos-section.php';
     ?>
   </div>
