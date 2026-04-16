@@ -62,12 +62,12 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
     <div class="pn-mega-col">
       <h4>📦 <?php echo View::e(I18n::t('mega.prod_apps')); ?></h4>
       <a href="/solucoes/wordpress"><strong><?php echo View::e(I18n::t('mega.prod_wordpress')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_wordpress_desc')); ?></span></a>
-      <a href="/solucoes/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_nodejs_desc')); ?></span></a>
+      <a href="/solucoes/nodejs"><strong><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_nodejs_desc')); ?></span></a>
       <a href="/solucoes/webhosting"><strong>Web Hosting</strong><span>Hospedagem com catálogo de apps e git deploy</span></a>
-      <a href="/solucoes/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_php')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_php_desc')); ?></span></a>
-      <a href="/solucoes/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_python')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_python_desc')); ?></span></a>
+      <a href="/solucoes/php"><strong><?php echo View::e(I18n::t('mega.prod_php')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_php_desc')); ?></span></a>
+      <a href="/solucoes/python"><strong><?php echo View::e(I18n::t('mega.prod_python')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_python_desc')); ?></span></a>
       <a href="/solucoes/cpp"><strong>C/C++ App</strong><span>Aplicações compiladas de alta performance</span></a>
-      <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.prod_deploy')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_deploy_desc')); ?></span></a>
+      <a href="/solucoes/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_deploy')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_deploy_desc')); ?></span></a>
     </div>
     <div class="pn-mega-col">
       <h4>⚙️ <?php echo View::e(I18n::t('mega.prod_devops')); ?></h4>
@@ -130,10 +130,10 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
     <a href="/infraestrutura"><?php echo View::e(I18n::t('mega.prod_dedicado')); ?></a>
     <span class="pn-acc-heading">📦 <?php echo View::e(I18n::t('mega.prod_apps')); ?></span>
     <a href="/solucoes/wordpress"><?php echo View::e(I18n::t('mega.prod_wordpress')); ?></a>
-    <a href="/solucoes/aplicacoes"><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></a>
+    <a href="/solucoes/nodejs"><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></a>
     <a href="/solucoes/webhosting">Web Hosting</a>
-    <a href="/solucoes/aplicacoes"><?php echo View::e(I18n::t('mega.prod_php')); ?></a>
-    <a href="/solucoes/aplicacoes"><?php echo View::e(I18n::t('mega.prod_python')); ?></a>
+    <a href="/solucoes/php"><?php echo View::e(I18n::t('mega.prod_php')); ?></a>
+    <a href="/solucoes/python"><?php echo View::e(I18n::t('mega.prod_python')); ?></a>
     <a href="/solucoes/cpp">C/C++ App</a>
     <span class="pn-acc-heading">⚙️ <?php echo View::e(I18n::t('mega.prod_devops')); ?></span>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.prod_terminal')); ?></a>
