@@ -42,8 +42,40 @@ mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_25_0038_client_datab
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_25_0041_chat_flows.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0042_billing_discounts.sql
 mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0043_client_hidden.sql
-mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0044_client_last_login.sql</pre>
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_03_26_0044_client_last_login.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_07_0061_plan_multi_pricing.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0062_plan_types_and_limits.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0063_cpp_app_template.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0064_seed_product_plans_and_addons.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0065_subscription_upgrades.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0066_subscription_addons_active.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0067_remove_unimplemented_addons.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0068_addon_slug.sql
+mysql -u root -p lrv_cloud &lt; database/migrations/2026_04_16_0069_client_support_priority.sql</pre>
   <p style="font-size:13px;color:#64748b;margin-top:8px;">Ou via painel: <a href="/equipe/inicializacao">/equipe/inicializacao</a> → "Aplicar migrations".</p>
+
+  <div class="section-title">1.1 Tipos de Produto (v3.0)</div>
+  <p style="font-size:14px;color:#475569;margin-bottom:10px;">O sistema suporta 8 tipos de plano. Cada tipo define quais features o cliente vê no painel e quais limites se aplicam:</p>
+  <ul style="font-size:13px;color:#475569;line-height:2;padding-left:18px;">
+    <li><span class="badge-cmd">vps</span> — Acesso total (terminal, monitoramento, apps, banco, etc.)</li>
+    <li><span class="badge-cmd">wordpress</span> — WordPress, banco de dados, arquivos, domínios, backups</li>
+    <li><span class="badge-cmd">webhosting</span> — Catálogo de apps, git deploy, banco, arquivos, domínios, backups</li>
+    <li><span class="badge-cmd">nodejs</span> — Node.js, banco de dados, domínios, git deploy</li>
+    <li><span class="badge-cmd">php</span> — PHP/Laravel, banco, arquivos, domínios, git deploy, backups</li>
+    <li><span class="badge-cmd">python</span> — Python, banco de dados, domínios, git deploy</li>
+    <li><span class="badge-cmd">cpp</span> — C/C++, banco de dados, domínios, git deploy</li>
+    <li><span class="badge-cmd">app</span> — Features customizáveis via JSON</li>
+  </ul>
+  <p style="font-size:13px;color:#64748b;margin-top:8px;">Configure o tipo ao criar/editar planos em <a href="/equipe/planos">/equipe/planos</a>. Planos existentes são automaticamente <code>vps</code> (acesso total).</p>
+
+  <div class="section-title">1.2 Upgrade/Downgrade e Addons (v3.0)</div>
+  <p style="font-size:14px;color:#475569;margin-bottom:10px;">Clientes podem alterar plano e contratar addons pela tela de Assinaturas:</p>
+  <ul style="font-size:13px;color:#475569;line-height:2;padding-left:18px;">
+    <li><strong>Upgrade</strong>: cobrança imediata da diferença proporcional + resize da VPS via <code>docker update</code></li>
+    <li><strong>Downgrade</strong>: validação de uso (bloqueia se exceder limites) + novo valor na próxima cobrança</li>
+    <li><strong>Addons</strong>: Storage +10GB, Backup Extra, E-mail Profissional, Domínio Extra, Suporte Prioritário</li>
+    <li>Todos os addons aplicam efeito técnico real (storage, backup_slots, prioridade de tickets, etc.)</li>
+  </ul>
 
   <div class="section-title">2. Worker (Jobs)</div>
   <pre>php worker.php          # loop contínuo (recomendado via systemd/supervisor)

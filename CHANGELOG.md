@@ -5,6 +5,102 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.0.0] — 2026-04-16
+
+### Adicionado
+
+#### Planos por Tipo de Produto
+- **8 tipos de plano**: VPS, WordPress Gerenciado, Web Hosting, Node.js, PHP/Laravel, Python, C/C++, App Genérico
+- **Limites por plano**: `max_sites`, `max_databases`, `max_cron_jobs`, `max_storage_per_site_mb`, `allowed_features`
+- **Sidebar adaptativa**: menu do cliente mostra apenas features permitidas pelo plano contratado
+- **Middleware de acesso** (`verificarFeaturePlano`): bloqueia rotas não permitidas pelo plano, aplicado em 50+ rotas
+- **Enforcement de limites**: verificação antes de criar sites, bancos de dados e cron jobs com mensagens claras
+- **Painel com uso vs limites**: barras de progresso mostrando sites, bancos e cron jobs (atual/limite)
+- **28 planos pré-configurados**: 4 por tipo de produto com preços BRL e USD
+- **Plano Sob Medida**: card especial em todas as landing pages com WhatsApp e e-mail
+
+#### Landing Pages de Produto (12 páginas únicas)
+- `/solucoes/vps` — VPS Gerenciada (indigo, mock de dashboard com gauges)
+- `/solucoes/wordpress` — WordPress Gerenciado (azul, mock de painel WordPress)
+- `/solucoes/webhosting` — Web Hosting (verde, mock de gerenciador de arquivos)
+- `/solucoes/nodejs` — Node.js App (amber, mock de terminal com git push)
+- `/solucoes/php` — PHP/Laravel (laranja, mock de composer install)
+- `/solucoes/python` — Python App (teal, mock de pip install + gunicorn)
+- `/solucoes/cpp` — C/C++ App (magenta, mock de cmake + g++ build)
+- `/solucoes/aplicacoes` — Deploy Automático (violet, mock de pipeline CI/CD)
+- `/solucoes/devops` — DevOps & Ferramentas (emerald, mock de monitoring)
+- `/solucoes/email` — Comunicação (rose, mock de inbox + chat)
+- `/solucoes/seguranca` — Segurança (slate, mock de shield + threat counter)
+- Cada página com: hero visual, stats, comparação, 9 features, 3 passos, planos com carousel, 6 FAQs, CTA
+
+#### Carousel de Planos com Addons
+- Seção de planos com slide horizontal (setas + dots + swipe mobile)
+- Addons selecionáveis em cada card com recálculo de preço em tempo real
+- Card "Sob Medida" sempre no final do carousel
+- Botão "Contratar agora" leva direto pro checkout com addons pré-selecionados
+- Respeita moeda do visitante (R$ ou US$) via `I18n::moedaCodigo()`
+
+#### Upgrade e Downgrade de Plano
+- Botão "⬆ Alterar plano" na tela de assinaturas
+- Tela com planos do mesmo tipo, mostrando diferença de preço e recursos
+- **Upgrade**: cobrança imediata da diferença proporcional (pro-rata) + atualização do gateway
+- **Downgrade**: validação de uso (bloqueia se exceder limites do novo plano)
+- Resize automático da VPS via `docker update` (CPU/RAM sem downtime)
+- Atualização automática no Asaas (`atualizarAssinatura`) e Stripe (`subscriptions->update`)
+- Tabela `subscription_upgrades` para histórico
+
+#### Contratação de Addons Separados
+- Botão "📦 Serviços adicionais" na tela de assinaturas
+- Tela com addons disponíveis e contratados, com contratar/cancelar
+- Cobrança imediata ao contratar (Asaas PIX avulso / Stripe proration)
+- Valor da assinatura recorrente atualizado automaticamente (plano + addons)
+- Tabela `subscription_addon_items` para registro separado
+
+#### Efeitos Reais dos Addons
+- **Storage +10GB**: incrementa `vps.storage` em 10GB
+- **Backup Extra**: soma +1 ao `backup_slots` (verificado em runtime pelo BackupsController)
+- **E-mail Profissional**: soma +5 contas ao limite de e-mail
+- **Domínio Extra**: soma +1 ao limite de domínios
+- **Suporte Prioritário**: marca `clients.support_priority = 1`, tickets criados com prioridade alta
+- `AddonEffectService` aplica/reverte efeitos automaticamente
+
+#### Planos Anuais Recorrentes
+- Novas contratações anuais usam subscription recorrente (`cycle: YEARLY` no Asaas, `interval: year` no Stripe)
+- Cobrança automática todo ano sem intervenção do cliente
+- Botão "🔄 Renovar" para clientes existentes com plano anual perto do vencimento
+
+#### Catálogo de Apps
+- Template C/C++ App (`gcc:latest`) com build automático (CMake/Makefile/compilação direta)
+- Git Deploy aceita tipo `cpp` com reverse proxy e porta configurável
+
+#### Chat Bot
+- Novos produtos no menu do bot (WordPress, Web Hosting, Node.js, C/C++, PHP, Python)
+- Flows de FAQ dedicados para cada produto com links para landing pages
+
+#### Infraestrutura
+- Página `/infraestrutura` com carousel de planos VPS e seção "Nossos Produtos" (11 cards)
+- Mega menu "Ver todos os produtos" leva para `/infraestrutura#produtos`
+
+### Alterado
+- Home mostra apenas planos VPS (filtro `plan_type = 'vps'`)
+- Mega menu: links corrigidos para páginas dedicadas (Node.js, PHP, Python)
+- Assinaturas: badge de tipo de produto (VPS, WordPress, etc.) nos cards
+- Assinaturas: seletor de tipo de produto no "Contratar nova"
+- Admin: seletor de tipo de produto no form de planos com limites condicionais
+- Admin: coluna "Tipo" na listagem de planos com badges coloridos
+
+### Migrations
+- `0062` — `plan_type`, `max_sites`, `max_databases`, `max_storage_per_site_mb`, `max_cron_jobs`, `allowed_features`
+- `0063` — Template C/C++ App
+- `0064` — Seed: 28 planos + addons por tipo de produto
+- `0065` — Tabela `subscription_upgrades`
+- `0066` — Tabela `subscription_addon_items`
+- `0067` — Remoção de addons não implementados (CDN, SSL Wildcard, CI/CD, Staging)
+- `0068` — Campo `slug` nos addons
+- `0069` — Campo `support_priority` nos clientes
+
+---
+
 ## [2.4.0] — 2026-03-27
 
 ### Adicionado

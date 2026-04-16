@@ -253,4 +253,59 @@ details ul{padding-left:18px;}
   </div>
 </div>
 
+<!-- Seção: Planos e Upgrade (v3.0) -->
+<div class="card-new" style="max-width:760px;margin-top:20px;">
+  <div class="card-new-title" style="margin-bottom:16px;">Planos, Upgrade e Serviços Adicionais</div>
+
+  <div class="faq-section">Alterar plano (Upgrade/Downgrade)</div>
+
+  <details>
+    <summary>Como fazer upgrade do meu plano?</summary>
+    <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a> e clique em "⬆ Alterar plano" na sua assinatura ativa. Você verá os planos disponíveis do mesmo tipo com a diferença de preço. O upgrade é imediato — os novos recursos (CPU, RAM, disco) são aplicados automaticamente e a diferença proporcional é cobrada na hora.</p>
+  </details>
+
+  <details>
+    <summary>Posso fazer downgrade?</summary>
+    <p>Sim, mas o sistema verifica se seu uso atual cabe no novo plano. Se você tem 5 sites e o plano menor permite 3, será necessário remover 2 sites antes. O novo valor vale a partir da próxima cobrança.</p>
+  </details>
+
+  <details>
+    <summary>Como contratar serviços adicionais?</summary>
+    <p>Acesse <a href="/cliente/assinaturas">Assinaturas</a> e clique em "📦 Serviços adicionais". Você pode contratar Storage Extra (+10GB), Backup Extra, E-mail Profissional, Domínio Extra ou Suporte Prioritário. A cobrança é imediata e o serviço é ativado na hora.</p>
+  </details>
+
+  <details>
+    <summary>Posso cancelar um serviço adicional?</summary>
+    <p>Sim. Na mesma tela de serviços adicionais, clique em "Cancelar serviço". O valor é descontado da próxima cobrança.</p>
+  </details>
+
+  <details>
+    <summary>O que cada serviço adicional faz?</summary>
+    <p>
+      <strong>Storage +10GB</strong>: aumenta o armazenamento da sua VPS em 10GB.<br>
+      <strong>Backup Extra</strong>: adiciona +1 slot de backup automático diário.<br>
+      <strong>E-mail Profissional</strong>: adiciona +5 contas de e-mail com domínio próprio.<br>
+      <strong>Domínio Extra</strong>: permite cadastrar +1 domínio adicional.<br>
+      <strong>Suporte Prioritário</strong>: seus tickets são tratados com prioridade alta automaticamente.
+    </p>
+  </details>
+
+  <div class="faq-section">Limites do plano</div>
+
+  <details>
+    <summary>Onde vejo os limites do meu plano?</summary>
+    <p>No <a href="/cliente/painel">Painel</a>, o card "Uso do plano" mostra barras de progresso com seu uso atual vs limite para sites, bancos de dados e cron jobs.</p>
+  </details>
+
+  <details>
+    <summary>O que acontece se eu atingir o limite?</summary>
+    <p>Você recebe uma mensagem clara informando o limite atingido (ex: "Limite de aplicações atingido 3/3"). Para criar mais, faça upgrade do plano ou contrate addons.</p>
+  </details>
+
+  <details>
+    <summary>Por que não vejo algumas opções no menu?</summary>
+    <p>O menu mostra apenas as funcionalidades incluídas no seu plano. Por exemplo, planos WordPress não incluem Terminal ou Monitoramento. Para acesso completo, contrate um plano VPS.</p>
+  </details>
+</div>
+
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

@@ -1,8 +1,8 @@
 # LRV Cloud Manager
 
-> Versão atual: **2.4.0**
+> Versão atual: **3.0.0**
 
-Plataforma de gerenciamento de VPS em PHP MVC próprio, sem frameworks externos.
+Plataforma de gerenciamento de hospedagem cloud em PHP MVC próprio, sem frameworks externos. Suporta múltiplos tipos de produto: VPS, WordPress Gerenciado, Web Hosting, Node.js, PHP/Laravel, Python, C/C++ e App Genérico.
 
 ## Requisitos
 
@@ -72,6 +72,21 @@ mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0051_client_database
 mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0052_client_managed.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0053_server_managed_flag.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0054_plan_client_id.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_27_0055_subdomain_type_root_vps.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_28_0056_git_deploy_auth_token.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_31_0057_server_phpmyadmin_url.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_03_31_0058_git_deploy_php_config.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_01_0059_git_deploy_app_type.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_04_0060_client_cron_jobs.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_07_0061_plan_multi_pricing.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0062_plan_types_and_limits.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0063_cpp_app_template.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0064_seed_product_plans_and_addons.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0065_subscription_upgrades.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0066_subscription_addons_active.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0067_remove_unimplemented_addons.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0068_addon_slug.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0069_client_support_priority.sql
 ```
 
 ### 3. Configuração do banco
