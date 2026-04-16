@@ -23,7 +23,7 @@ final class InicialController
             $stmt  = $pdo->query(
                 "SELECT id, name, price_monthly AS price, price_monthly_usd AS price_usd, currency, specs_json, description, is_featured,
                         cpu, ram, storage, support_channels
-                 FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC LIMIT 6"
+                 FROM plans WHERE status = 'active' AND client_id IS NULL AND (plan_type = 'vps' OR plan_type IS NULL OR plan_type = '') ORDER BY price_monthly ASC LIMIT 6"
             );
             $planos = $stmt ? ($stmt->fetchAll() ?: []) : [];
 

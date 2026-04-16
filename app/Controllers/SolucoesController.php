@@ -85,13 +85,31 @@ final class SolucoesController
             $pdo = \LRV\Core\BancoDeDados::pdo();
             $stmt = $pdo->prepare(
                 "SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, currency,
-                        specs_json, is_featured, max_sites, max_databases, plan_type
+                        specs_json, is_featured, max_sites, max_databases, plan_type, support_channels
                  FROM plans
                  WHERE status = 'active' AND client_id IS NULL AND plan_type = :t
                  ORDER BY price_monthly ASC"
             );
             $stmt->execute([':t' => $tipo]);
-            return $stmt->fetchAll() ?: [];
+            $planos = $stmt->fetchAll() ?: [];
+
+            // Buscar addons para cada plano
+            if (!empty($planos)) {
+                $ids = implode(',', array_map('intval', array_column($planos, 'id')));
+                $stmtA = $pdo->query("SELECT * FROM plan_addons WHERE plan_id IN ($ids) AND active = 1 ORDER BY plan_id, sort_order ASC");
+                $allAddons = $stmtA ? ($stmtA->fetchAll() ?: []) : [];
+                $addonsByPlan = [];
+                foreach ($allAddons as $a) {
+                    $addonsByPlan[(int)$a['plan_id']][] = $a;
+                }
+                foreach ($planos as &$p) {
+                    $p['addons'] = $addonsByPlan[(int)$p['id']] ?? [];
+                    $p['badge'] = ((int)($p['is_featured'] ?? 0) === 1) ? 'POPULAR' : '';
+                }
+                unset($p);
+            }
+
+            return $planos;
         } catch (\Throwable) {
             return [];
         }
