@@ -523,6 +523,20 @@ final class UpgradeService
             } catch (\Throwable) {}
         }
 
+        // Aplicar efeito técnico do addon
+        $addonSlug = '';
+        try {
+            $slugStmt = $pdo->prepare('SELECT slug FROM plan_addons WHERE id = :id LIMIT 1');
+            $slugStmt->execute([':id' => $addonId]);
+            $slugRow = $slugStmt->fetch();
+            $addonSlug = (string)($slugRow['slug'] ?? '');
+        } catch (\Throwable) {}
+
+        if ($addonSlug !== '') {
+            $effectSvc = new AddonEffectService();
+            $effectSvc->aplicar($addonSlug, $subscriptionId, $clientId);
+        }
+
         return ['ok' => true, 'addon_name' => $addonName, 'item_id' => $itemId];
     }
 
@@ -534,7 +548,7 @@ final class UpgradeService
         $pdo = BancoDeDados::pdo();
 
         $stmt = $pdo->prepare(
-            "SELECT id, subscription_id, addon_name FROM subscription_addon_items WHERE id = :id AND client_id = :c AND status = 'active' LIMIT 1"
+            "SELECT id, subscription_id, addon_id, addon_name FROM subscription_addon_items WHERE id = :id AND client_id = :c AND status = 'active' LIMIT 1"
         );
         $stmt->execute([':id' => $itemId, ':c' => $clientId]);
         $item = $stmt->fetch();
@@ -557,6 +571,21 @@ final class UpgradeService
                 $this->atualizarValorAssinaturaAsaas($asaasSubId, $subId, $pdo);
             } catch (\Throwable) {}
         }
+
+        // Reverter efeito técnico do addon
+        try {
+            $addonId = (int)($item['addon_id'] ?? 0);
+            if ($addonId > 0) {
+                $slugStmt = $pdo->prepare('SELECT slug FROM plan_addons WHERE id = :id LIMIT 1');
+                $slugStmt->execute([':id' => $addonId]);
+                $slugRow = $slugStmt->fetch();
+                $addonSlug = (string)($slugRow['slug'] ?? '');
+                if ($addonSlug !== '') {
+                    $effectSvc = new AddonEffectService();
+                    $effectSvc->reverter($addonSlug, $subId, $clientId);
+                }
+            }
+        } catch (\Throwable) {}
 
         return ['ok' => true, 'addon_name' => (string)$item['addon_name']];
     }

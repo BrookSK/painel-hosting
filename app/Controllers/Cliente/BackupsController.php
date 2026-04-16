@@ -67,6 +67,9 @@ final class BackupsController
         $plan = $planStmt->fetch();
         $maxBackups = (int)($plan['backup_slots'] ?? 0);
 
+        // Somar addons de backup extra ativos
+        $maxBackups += \LRV\App\Services\Billing\AddonEffectService::contarAddonsAtivos($clienteId, 'backup_extra');
+
         if ($maxBackups <= 0) {
             return Resposta::redirecionar('/cliente/backups?erro=sem_slots');
         }

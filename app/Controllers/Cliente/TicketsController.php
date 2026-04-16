@@ -58,6 +58,16 @@ final class TicketsController
 
         $subject = $in->postString('subject', 190, true);
         $priority = $in->postEnum('priority', ['low', 'medium', 'high'], 'medium');
+        // Clientes com suporte prioritário sempre têm prioridade alta
+        try {
+            $_priPdo = \LRV\Core\BancoDeDados::pdo();
+            $priStmt = $_priPdo->prepare('SELECT support_priority FROM clients WHERE id = :id LIMIT 1');
+            $priStmt->execute([':id' => $clienteId]);
+            $priRow = $priStmt->fetch();
+            if ((int)($priRow['support_priority'] ?? 0) === 1) {
+                $priority = 'high';
+            }
+        } catch (\Throwable) {}
         $department = $in->postEnum('department', ['suporte', 'financeiro', 'devops', 'comercial'], 'suporte');
         $message = $in->postString('message', 5000, true);
 
