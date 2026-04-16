@@ -184,6 +184,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <option value="static" <?php echo $appType === 'static' ? 'selected' : ''; ?>>📄 Site estático (HTML/CSS/JS)</option>
           <option value="nodejs" <?php echo $appType === 'nodejs' ? 'selected' : ''; ?>>🟢 Node.js</option>
           <option value="python" <?php echo $appType === 'python' ? 'selected' : ''; ?>>🐍 Python</option>
+          <option value="cpp" <?php echo $appType === 'cpp' ? 'selected' : ''; ?>>⚙️ C/C++</option>
         </select>
       </div>
       <div id="appPortField" style="<?php echo in_array($appType, ['nodejs', 'python']) ? '' : 'display:none;'; ?>">

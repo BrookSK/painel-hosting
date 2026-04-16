@@ -75,6 +75,16 @@ final class CronJobsController
             return Resposta::redirecionar('/cliente/cron-jobs');
         }
 
+        // Verificar limite de cron jobs do plano (apenas para novos)
+        if ($id <= 0) {
+            [$podeCriar, $atual, $limite] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarCronJob($clienteId);
+            if (!$podeCriar) {
+                // Redirecionar com flash message
+                $_SESSION['flash_warning'] = "Limite de cron jobs atingido ({$atual}/{$limite}). Faça upgrade do seu plano.";
+                return Resposta::redirecionar('/cliente/cron-jobs');
+            }
+        }
+
         $pdo = BancoDeDados::pdo();
 
         // Validar VPS

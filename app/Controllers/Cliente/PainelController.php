@@ -113,6 +113,26 @@ final class PainelController
             } catch (\Throwable) {}
         }
 
+        // Limites e uso do plano
+        $planLimits = null;
+        try {
+            $planoAtivo = \LRV\App\Services\Plans\PlanFeatureService::planoAtivo($id);
+            if ($planoAtivo !== null && (string)($planoAtivo['plan_type'] ?? 'vps') !== 'vps') {
+                [$podeSite, $atualSites, $maxSites] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarSite($id);
+                [$podeBanco, $atualBancos, $maxBancos] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarBanco($id);
+                [$podeCron, $atualCrons, $maxCrons] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarCronJob($id);
+                $badge = \LRV\App\Services\Plans\PlanFeatureService::tipoPlanoBadge((string)($planoAtivo['plan_type'] ?? 'vps'));
+                $planLimits = [
+                    'plan_type'    => (string)($planoAtivo['plan_type'] ?? 'vps'),
+                    'plan_name'    => (string)($planoAtivo['name'] ?? ''),
+                    'badge'        => $badge,
+                    'sites'        => ['atual' => $atualSites, 'max' => $maxSites],
+                    'databases'    => ['atual' => $atualBancos, 'max' => $maxBancos],
+                    'cron_jobs'    => ['atual' => $atualCrons, 'max' => $maxCrons],
+                ];
+            }
+        } catch (\Throwable) {}
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/painel.php', [
             'cliente'        => is_array($c) ? $c : ['name' => 'Cliente', 'email' => ''],
             'notificacoes'   => $notifs,
@@ -123,6 +143,7 @@ final class PainelController
             'onboardingDone' => $onboardingDone,
             'trialInfo'      => $trialInfo,
             'planoExclusivo' => $planoExclusivo,
+            'planLimits'     => $planLimits,
         ]);
 
         return Resposta::html($html);

@@ -15,7 +15,7 @@ final class PlanosController
     public function listar(Requisicao $req): Resposta
     {
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->query('SELECT p.id, p.name, p.cpu, p.ram, p.storage, p.price_monthly, p.price_monthly_usd, p.currency, p.status, p.client_id, c.name AS client_name FROM plans p LEFT JOIN clients c ON c.id = p.client_id ORDER BY p.id DESC');
+        $stmt = $pdo->query('SELECT p.id, p.name, p.plan_type, p.cpu, p.ram, p.storage, p.price_monthly, p.price_monthly_usd, p.currency, p.status, p.client_id, c.name AS client_name FROM plans p LEFT JOIN clients c ON c.id = p.client_id ORDER BY p.id DESC');
         $planos = $stmt->fetchAll();
 
         $html = View::renderizar(__DIR__ . '/../../Views/equipe/planos-listar.php', [
@@ -33,6 +33,7 @@ final class PlanosController
             'plano' => [
                 'id' => null,
                 'name' => '',
+                'plan_type' => 'vps',
                 'description' => '',
                 'cpu' => 2,
                 'ram' => 4 * 1024,
@@ -91,6 +92,15 @@ final class PlanosController
         $isFeatured = (int) ($req->post['is_featured'] ?? 0) === 1 ? 1 : 0;
         $clientId = (int) ($req->post['client_id'] ?? 0);
         $clientIdVal = $clientId > 0 ? $clientId : null;
+
+        // Plan type and limits
+        $validPlanTypes = ['vps', 'wordpress', 'webhosting', 'nodejs', 'cpp', 'app'];
+        $planType = in_array((string)($req->post['plan_type'] ?? 'vps'), $validPlanTypes, true) ? (string)$req->post['plan_type'] : 'vps';
+        $maxSites = trim((string)($req->post['max_sites'] ?? ''));
+        $maxDatabases = trim((string)($req->post['max_databases'] ?? ''));
+        $maxStoragePerSiteMb = trim((string)($req->post['max_storage_per_site_mb'] ?? ''));
+        $maxCronJobs = trim((string)($req->post['max_cron_jobs'] ?? ''));
+        $allowedFeatures = trim((string)($req->post['allowed_features'] ?? ''));
 
         // Multi-pricing fields
         $currency = in_array((string)($req->post['currency'] ?? 'BRL'), ['BRL', 'USD']) ? (string)$req->post['currency'] : 'BRL';
@@ -193,6 +203,20 @@ final class PlanosController
                         ':mia' => $maxInstallmentsAnnual,
                         ':mis' => $maxInstallmentsSemiannual,
                         ':id' => $auditId,
+                    ]);
+            } catch (\Throwable) {}
+
+            // Salvar plan_type e limites
+            try {
+                $pdo->prepare('UPDATE plans SET plan_type=:pt, max_sites=:ms, max_databases=:md, max_storage_per_site_mb=:msp, max_cron_jobs=:mcj, allowed_features=:af WHERE id=:id')
+                    ->execute([
+                        ':pt'  => $planType,
+                        ':ms'  => $maxSites !== '' ? (int)$maxSites : null,
+                        ':md'  => $maxDatabases !== '' ? (int)$maxDatabases : null,
+                        ':msp' => $maxStoragePerSiteMb !== '' ? (int)$maxStoragePerSiteMb : null,
+                        ':mcj' => $maxCronJobs !== '' ? (int)$maxCronJobs : null,
+                        ':af'  => $allowedFeatures !== '' ? $allowedFeatures : null,
+                        ':id'  => $auditId,
                     ]);
             } catch (\Throwable) {}
         }

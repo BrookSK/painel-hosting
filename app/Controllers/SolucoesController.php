@@ -34,4 +34,24 @@ final class SolucoesController
     {
         return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/seguranca.php'));
     }
+
+    public function wordpress(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/wordpress.php'));
+    }
+
+    public function webhosting(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/webhosting.php'));
+    }
+
+    public function nodejs(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/nodejs.php'));
+    }
+
+    public function cpp(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/cpp.php'));
+    }
 }

@@ -4,6 +4,7 @@ use LRV\Core\View;
 use LRV\Core\SistemaConfig;
 use LRV\Core\I18n;
 use LRV\Core\Auth;
+use LRV\App\Services\Plans\PlanFeatureService;
 
 $_uri = (string)($_SERVER['REQUEST_URI'] ?? '');
 $_seg = strtok($_uri, '?');
@@ -11,8 +12,24 @@ $_seg = strtok($_uri, '?');
 // Cliente gerenciado vê apenas: Painel, Assinaturas, Tickets, Minha Conta, Segurança, Sair
 $_isManaged = Auth::clienteGerenciado() && !Auth::estaImpersonando();
 
+// Features permitidas pelo plano
+$_clienteIdSidebar = Auth::clienteId();
+$_featuresPermitidas = [];
+if ($_clienteIdSidebar !== null) {
+    try {
+        $_featuresPermitidas = PlanFeatureService::featuresPermitidas($_clienteIdSidebar);
+    } catch (\Throwable) {
+        // Fallback: mostrar tudo
+        $_featuresPermitidas = ['vps','monitoramento','aplicacoes','catalogo','git_deploy','banco_dados','arquivos','terminal','cron_jobs','backups','emails','dominios'];
+    }
+}
+
 function _nav_ativo_cli(string $path, string $uri): string {
     return str_starts_with($uri, $path) ? ' nav-ativo' : '';
+}
+
+function _temFeature(array $features, string $feature): bool {
+    return in_array($feature, $features, true);
 }
 ?>
 <aside class="sidebar" id="sidebar">
@@ -43,60 +60,84 @@ function _nav_ativo_cli(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="2" fill="currentColor" opacity=".9"/><rect x="11" y="2" width="7" height="7" rx="2" fill="currentColor" opacity=".5"/><rect x="2" y="11" width="7" height="7" rx="2" fill="currentColor" opacity=".5"/><rect x="11" y="11" width="7" height="7" rx="2" fill="currentColor" opacity=".9"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.painel')); ?></span>
     </a>
+    <?php if (_temFeature($_featuresPermitidas, 'vps')): ?>
     <a href="/cliente/vps" class="nav-item<?php echo _nav_ativo_cli('/cliente/vps', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.vps')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.vps')); ?></span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'monitoramento')): ?>
     <a href="/cliente/monitoramento" class="nav-item<?php echo _nav_ativo_cli('/cliente/monitoramento', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.monitoramento')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 13l4-4 3 3 4-5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.monitoramento')); ?></span>
     </a>
+    <?php endif; ?>
     <a href="/cliente/tickets" class="nav-item<?php echo _nav_ativo_cli('/cliente/tickets', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.tickets')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.tickets')); ?></span>
     </a>
     <?php if (!$_isManaged): ?>
+    <?php if (_temFeature($_featuresPermitidas, 'emails')): ?>
     <a href="/cliente/emails" class="nav-item<?php echo _nav_ativo_cli('/cliente/emails', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.emails')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.emails')); ?></span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'dominios')): ?>
     <a href="/cliente/dominios" class="nav-item<?php echo _nav_ativo_cli('/cliente/dominios', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.dominios')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h14M10 3c-2 2.5-2 11 0 14M10 3c2 2.5 2 11 0 14" stroke="currentColor" stroke-width="1.4"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.dominios')); ?></span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'aplicacoes')): ?>
     <a href="/cliente/aplicacoes" class="nav-item<?php echo _nav_ativo_cli('/cliente/aplicacoes', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.aplicacoes')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 4l4 4-4 4M10 16h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.aplicacoes')); ?></span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'catalogo')): ?>
     <a href="/cliente/aplicacoes/catalogo" class="nav-item<?php echo _nav_ativo_cli('/cliente/aplicacoes/catalogo', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.catalogo')); ?>" style="padding-left:32px;font-size:13px;">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.catalogo')); ?></span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'git_deploy')): ?>
     <a href="/cliente/git-deploy" class="nav-item<?php echo _nav_ativo_cli('/cliente/git-deploy', $_seg); ?>" data-tooltip="Git Deploy">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 7v3a3 3 0 003 3h4a3 3 0 003-3V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Git Deploy</span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'banco_dados')): ?>
     <a href="/cliente/banco-dados" class="nav-item<?php echo _nav_ativo_cli('/cliente/banco-dados', $_seg); ?>" data-tooltip="Bancos de Dados">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><ellipse cx="10" cy="5" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 5v5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5V5" stroke="currentColor" stroke-width="1.5"/><path d="M3 10v5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5v-5" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Bancos de Dados</span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'arquivos')): ?>
     <a href="/cliente/arquivos" class="nav-item<?php echo _nav_ativo_cli('/cliente/arquivos', $_seg); ?>" data-tooltip="Arquivos">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 6V4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Arquivos</span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'terminal')): ?>
     <a href="/cliente/vps/terminal" class="nav-item<?php echo _nav_ativo_cli('/cliente/vps/terminal', $_seg); ?>" data-tooltip="Terminal">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l3 2-3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Terminal</span>
     </a>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'cron_jobs')): ?>
     <a href="/cliente/cron-jobs" class="nav-item<?php echo _nav_ativo_cli('/cliente/cron-jobs', $_seg); ?>" data-tooltip="Cron Jobs">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Cron Jobs</span>
     </a>
     <?php endif; ?>
+    <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'backups')): ?>
     <a href="/cliente/backups" class="nav-item<?php echo _nav_ativo_cli('/cliente/backups', $_seg); ?>" data-tooltip="Backups">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2M10 3v10M10 3l3 3M10 3L7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Backups</span>
     </a>
+    <?php endif; ?>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.assinaturas')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>

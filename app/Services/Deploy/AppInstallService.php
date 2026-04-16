@@ -182,6 +182,17 @@ final class AppInstallService
             unset($envVars['SITE_TITLE']);
         }
 
+        // C/C++ App: compilar e executar
+        if ($slug === 'cpp') {
+            $appPort = trim($envVars['APP_PORT'] ?? '8080');
+            $buildType = trim($envVars['BUILD_TYPE'] ?? 'release');
+            unset($envVars['APP_PORT'], $envVars['BUILD_TYPE']);
+            $envVars['PORT'] = $appPort;
+
+            // O docker command já compila e executa, mas podemos customizar
+            $dockerCmd = 'sh -c "cd /app && if [ -f CMakeLists.txt ]; then mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=' . ($buildType === 'debug' ? 'Debug' : 'Release') . ' && make -j$(nproc); elif [ -f Makefile ]; then make -j$(nproc); elif ls *.cpp 1>/dev/null 2>&1; then g++ -O2 -o app *.cpp -lpthread; elif ls *.c 1>/dev/null 2>&1; then gcc -O2 -o app *.c -lpthread; fi && if [ -f build/app ]; then ./build/app; elif [ -f app ]; then ./app; else echo No binary found && sleep infinity; fi"';
+        }
+
         // Roundcube: injetar host do Mailcow das configurações do sistema
         if ($slug === 'roundcube') {
             $mailcowHost = parse_url(rtrim((string) Settings::obter('email.mailcow_url', ''), '/'), PHP_URL_HOST) ?: '';
@@ -227,6 +238,9 @@ final class AppInstallService
         $templateDockerCmd = trim((string) ($app['docker_command'] ?? ''));
         // Slug-specific command overrides
         if ($slug === 'nodejs' && isset($dockerCmd) && $dockerCmd !== '') {
+            $templateDockerCmd = $dockerCmd;
+        }
+        if ($slug === 'cpp' && isset($dockerCmd) && $dockerCmd !== '') {
             $templateDockerCmd = $dockerCmd;
         }
         $cmd .= ' ' . escapeshellarg($image);

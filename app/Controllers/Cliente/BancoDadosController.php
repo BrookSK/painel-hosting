@@ -83,6 +83,12 @@ final class BancoDadosController
             return $this->renderizarErro($clienteId, 'Preencha o nome e selecione a VPS.');
         }
 
+        // Verificar limite de bancos de dados do plano
+        [$podeCriar, $atual, $limite] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarBanco($clienteId);
+        if (!$podeCriar) {
+            return $this->renderizarErro($clienteId, "Limite de bancos de dados atingido ({$atual}/{$limite}). Faça upgrade do seu plano para criar mais.");
+        }
+
         $dbName = 'db_' . $clienteId . '_' . preg_replace('/[^a-z0-9_]/', '_', strtolower($name));
         $dbUser = $customUser !== '' ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $customUser) : 'u_' . $clienteId . '_' . substr(md5($name . time()), 0, 8);
         $dbPass = $customPass !== '' ? $customPass : bin2hex(random_bytes(12));

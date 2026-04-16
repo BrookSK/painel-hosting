@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
+use LRV\App\Services\Plans\PlanFeatureService;
 
 $pageTitle = I18n::t('assinaturas.titulo');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -90,7 +91,14 @@ function _badgeVps(string $st): string {
       ?>
         <div class="card-new">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="font-weight:600;font-size:14px;"><?php echo View::e((string)($a['plan_name'] ?? '')); ?></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="font-weight:600;font-size:14px;"><?php echo View::e((string)($a['plan_name'] ?? '')); ?></div>
+              <?php
+                $planType = (string)($a['plan_type'] ?? 'vps');
+                $badge = PlanFeatureService::tipoPlanoBadge($planType);
+              ?>
+              <span style="background:<?php echo $badge[1]; ?>;color:<?php echo $badge[2]; ?>;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;"><?php echo $badge[3]; ?> <?php echo View::e($badge[0]); ?></span>
+            </div>
             <?php echo _badgeSt((string)($a['status'] ?? '')); ?>
           </div>
 
@@ -156,12 +164,33 @@ function _badgeVps(string $st): string {
     </div>
   <?php endif; ?>
 
-  <!-- Botão contratar nova -->
-  <div class="card-new" style="text-align:center;padding:24px;border:2px dashed #e2e8f0;">
-    <div style="font-size:24px;margin-bottom:8px;">➕</div>
-    <div style="font-size:14px;font-weight:600;margin-bottom:6px;"><?php echo View::e(I18n::t('assinaturas.contratar_nova')); ?></div>
-    <div style="font-size:13px;color:#64748b;margin-bottom:14px;"><?php echo View::e(I18n::t('assinaturas.contratar_desc')); ?></div>
-    <a class="botao" href="/cliente/planos"><?php echo View::e(I18n::t('assinaturas.ver_planos')); ?></a>
+  <!-- Contratar novo produto -->
+  <div class="card-new" style="padding:24px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:24px;margin-bottom:8px;">➕</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px;"><?php echo View::e(I18n::t('assinaturas.contratar_nova')); ?></div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:14px;">Escolha o tipo de produto que deseja contratar</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+      <?php
+        $produtos = [
+          ['vps',       '🖥️', 'VPS',                'Servidor virtual completo com acesso total',       '/cliente/planos?tipo=vps'],
+          ['wordpress', '📝', 'WordPress',           'WordPress gerenciado com banco e backups',         '/cliente/planos?tipo=wordpress'],
+          ['webhosting','🌐', 'Web Hosting',         'Hospedagem com catálogo de apps e git deploy',     '/cliente/planos?tipo=webhosting'],
+          ['nodejs',    '⬢',  'Node.js',             'Deploy de aplicações Node.js com banco de dados',  '/cliente/planos?tipo=nodejs'],
+          ['cpp',       '⚙️', 'C/C++',               'Deploy de aplicações compiladas em C/C++',         '/cliente/planos?tipo=cpp'],
+        ];
+        foreach ($produtos as [$pType, $pIcon, $pName, $pDesc, $pHref]):
+      ?>
+        <a href="<?php echo $pHref; ?>" style="background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,box-shadow .15s,transform .15s;"
+           onmouseover="this.style.borderColor='#4F46E5';this.style.boxShadow='0 4px 16px rgba(79,70,229,.12)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none';this.style.transform='none'">
+          <div style="font-size:28px;"><?php echo $pIcon; ?></div>
+          <div style="font-weight:700;font-size:14px;color:#0f172a;"><?php echo View::e($pName); ?></div>
+          <div style="font-size:12px;color:#64748b;line-height:1.4;"><?php echo View::e($pDesc); ?></div>
+        </a>
+      <?php endforeach; ?>
+    </div>
   </div>
 
 <?php endif; ?>

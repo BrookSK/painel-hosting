@@ -76,6 +76,38 @@ final class Middlewares
         };
     }
 
+    /**
+     * Verifica se o cliente tem acesso à rota com base no tipo de plano.
+     * Redireciona para o painel se a feature não é permitida.
+     */
+    public static function verificarFeaturePlano(): callable
+    {
+        return static function (Requisicao $req): ?Resposta {
+            $clienteId = Auth::clienteId();
+            if ($clienteId === null) {
+                return null; // Sem login, outro middleware cuida
+            }
+
+            // Equipe impersonando tem acesso total
+            if (Auth::estaImpersonando()) {
+                return null;
+            }
+
+            try {
+                $permitida = \LRV\App\Services\Plans\PlanFeatureService::rotaPermitida($clienteId, $req->caminho);
+            } catch (\Throwable) {
+                return null; // Em caso de erro, não bloquear
+            }
+
+            if (!$permitida) {
+                $_SESSION['flash_warning'] = 'Seu plano não inclui acesso a este recurso. Faça upgrade para desbloquear.';
+                return Resposta::redirecionar('/cliente/painel');
+            }
+
+            return null;
+        };
+    }
+
     public static function exigirPermissao(string $permissao): callable
     {
         return static function (Requisicao $req) use ($permissao): ?Resposta {

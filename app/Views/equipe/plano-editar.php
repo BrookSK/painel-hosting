@@ -17,11 +17,33 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
     <input type="hidden" name="id" value="<?php echo View::e((string)($plano['id']??'')); ?>" />
 
+    <?php
+      $planTypes = [
+        'vps'       => ['🖥️ VPS (Completo)', 'Acesso total: terminal, monitoramento, apps, banco de dados, etc.'],
+        'wordpress' => ['📝 WordPress Gerenciado', 'Apenas WordPress, banco de dados, arquivos, domínios e backups.'],
+        'webhosting'=> ['🌐 Web Hosting', 'Apps do catálogo, banco de dados, arquivos, domínios, git deploy e backups.'],
+        'nodejs'    => ['⬢ Node.js App', 'Apenas Node.js, banco de dados, domínios e git deploy.'],
+        'cpp'       => ['⚙️ C/C++ App', 'Aplicações compiladas em C/C++, banco de dados, domínios e git deploy.'],
+        'app'       => ['📦 App Genérico', 'Configuração personalizada de features permitidas.'],
+      ];
+      $currentType = (string)($plano['plan_type'] ?? 'vps');
+    ?>
     <div class="grid">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Nome</label>
         <input class="input" type="text" name="name" value="<?php echo View::e((string)($plano['name']??'')); ?>" />
       </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🏷️ Tipo de produto</label>
+        <select class="input" name="plan_type" id="planTypeSelect" onchange="togglePlanTypeFields()">
+          <?php foreach ($planTypes as $ptKey => $ptInfo): ?>
+            <option value="<?php echo $ptKey; ?>" <?php echo $currentType === $ptKey ? 'selected' : ''; ?>><?php echo View::e($ptInfo[0]); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="texto" style="font-size:12px;margin-top:4px;" id="planTypeDesc"><?php echo View::e($planTypes[$currentType][1] ?? ''); ?></p>
+      </div>
+    </div>
+    <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;">Status</label>
         <select class="input" name="status">
@@ -239,6 +261,71 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <input type="hidden" name="specs_json" id="specs_json_hidden" value="<?php echo View::e($specsRaw); ?>" />
     </div>
 
+    <!-- Limites por tipo de produto -->
+    <div id="planLimitsSection" style="margin-top:16px;border:1px solid #e2e8f0;border-radius:12px;padding:16px;<?php echo $currentType === 'vps' ? 'display:none;' : ''; ?>">
+      <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:4px;">📊 Limites do produto</div>
+      <p class="texto" style="font-size:12px;margin:0 0 12px;">Defina os limites específicos para este tipo de plano. Deixe vazio para ilimitado.</p>
+
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;color:#475569;">Máx. sites / aplicações</label>
+          <input class="input" type="number" name="max_sites" value="<?php echo View::e((string)($plano['max_sites']??'')); ?>" min="0" placeholder="Ilimitado" />
+          <p class="texto" style="font-size:11px;margin-top:3px;">Ex: 3 sites WordPress, 5 apps web hosting</p>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;color:#475569;">Máx. bancos de dados</label>
+          <input class="input" type="number" name="max_databases" value="<?php echo View::e((string)($plano['max_databases']??'')); ?>" min="0" placeholder="Ilimitado" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;color:#475569;">Storage por site (MB)</label>
+          <input class="input" type="number" name="max_storage_per_site_mb" value="<?php echo View::e((string)($plano['max_storage_per_site_mb']??'')); ?>" min="0" placeholder="Ilimitado" />
+          <p class="texto" style="font-size:11px;margin-top:3px;">Ex: 5120 = 5 GB por site</p>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:10px;">
+        <div>
+          <label style="display:block;font-size:12px;margin-bottom:4px;color:#475569;">Máx. cron jobs</label>
+          <input class="input" type="number" name="max_cron_jobs" value="<?php echo View::e((string)($plano['max_cron_jobs']??'')); ?>" min="0" placeholder="Ilimitado" />
+        </div>
+      </div>
+
+      <!-- Features permitidas (para tipo 'app' genérico) -->
+      <?php
+        $allowedFeaturesRaw = (string)($plano['allowed_features'] ?? '');
+        $allowedFeatures = [];
+        if ($allowedFeaturesRaw !== '') {
+            $af = json_decode($allowedFeaturesRaw, true);
+            if (is_array($af)) $allowedFeatures = $af;
+        }
+        $allFeatures = [
+            'vps'           => '🖥️ VPS',
+            'monitoramento' => '📊 Monitoramento',
+            'aplicacoes'    => '🚀 Aplicações',
+            'catalogo'      => '📦 Catálogo',
+            'git_deploy'    => '🔀 Git Deploy',
+            'banco_dados'   => '🗄️ Banco de Dados',
+            'arquivos'      => '📁 Arquivos',
+            'terminal'      => '💻 Terminal',
+            'cron_jobs'     => '⏰ Cron Jobs',
+            'backups'       => '💾 Backups',
+            'emails'        => '📧 E-mails',
+            'dominios'      => '🌐 Domínios',
+        ];
+      ?>
+      <div id="allowedFeaturesSection" style="margin-top:14px;<?php echo $currentType !== 'app' ? 'display:none;' : ''; ?>">
+        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:8px;color:#475569;">Features habilitadas (apenas para tipo "App Genérico")</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <?php foreach ($allFeatures as $fKey => $fLabel): ?>
+            <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid <?php echo in_array($fKey, $allowedFeatures, true) ? '#4F46E5' : '#e2e8f0'; ?>;border-radius:8px;cursor:pointer;font-size:12px;background:<?php echo in_array($fKey, $allowedFeatures, true) ? '#f5f3ff' : '#fff'; ?>;transition:all .15s;" class="feature-label">
+              <input type="checkbox" name="allowed_features_check[]" value="<?php echo $fKey; ?>" <?php echo in_array($fKey, $allowedFeatures, true) ? 'checked' : ''; ?> style="accent-color:#4F46E5;width:14px;height:14px;" />
+              <?php echo $fLabel; ?>
+            </label>
+          <?php endforeach; ?>
+        </div>
+        <input type="hidden" name="allowed_features" id="allowed_features_json" value="<?php echo View::e($allowedFeaturesRaw); ?>" />
+      </div>
+    </div>
+
     <div style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div>
@@ -336,10 +423,57 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     div.querySelector('input').focus();
   });
 
+  // Allowed features — atualiza hidden ao mudar checkbox
+  function atualizarAllowedFeaturesJson() {
+    var checks = document.querySelectorAll('input[name="allowed_features_check[]"]:checked');
+    var vals = Array.from(checks).map(function(c){ return c.value; });
+    document.getElementById('allowed_features_json').value = vals.length ? JSON.stringify(vals) : '';
+    document.querySelectorAll('.feature-label').forEach(function(lbl) {
+      var cb = lbl.querySelector('input[type=checkbox]');
+      if (cb.checked) {
+        lbl.style.borderColor = '#4F46E5';
+        lbl.style.background = '#f5f3ff';
+      } else {
+        lbl.style.borderColor = '#e2e8f0';
+        lbl.style.background = '#fff';
+      }
+    });
+  }
+  document.querySelectorAll('input[name="allowed_features_check[]"]').forEach(function(cb) {
+    cb.addEventListener('change', atualizarAllowedFeaturesJson);
+  });
+
+  // Plan type toggle — mostra/esconde seção de limites e features
+  var planTypeDescs = {
+    'vps': 'Acesso total: terminal, monitoramento, apps, banco de dados, etc.',
+    'wordpress': 'Apenas WordPress, banco de dados, arquivos, domínios e backups.',
+    'webhosting': 'Apps do catálogo, banco de dados, arquivos, domínios, git deploy e backups.',
+    'nodejs': 'Apenas Node.js, banco de dados, domínios e git deploy.',
+    'cpp': 'Aplicações compiladas em C/C++, banco de dados, domínios e git deploy.',
+    'app': 'Configuração personalizada de features permitidas.'
+  };
+  window.togglePlanTypeFields = function() {
+    var sel = document.getElementById('planTypeSelect');
+    var type = sel.value;
+    var limitsSection = document.getElementById('planLimitsSection');
+    var featuresSection = document.getElementById('allowedFeaturesSection');
+    var descEl = document.getElementById('planTypeDesc');
+
+    // Atualizar descrição
+    descEl.textContent = planTypeDescs[type] || '';
+
+    // Mostrar limites para todos exceto VPS
+    limitsSection.style.display = type === 'vps' ? 'none' : '';
+
+    // Mostrar features customizáveis apenas para 'app'
+    featuresSection.style.display = type === 'app' ? '' : 'none';
+  };
+
   // Garantir que o JSON está atualizado antes do submit
   document.querySelector('form').addEventListener('submit', function() {
     atualizarCanaisJson();
     window.atualizarSpecsJson();
+    atualizarAllowedFeaturesJson();
   });
 })();
 </script>

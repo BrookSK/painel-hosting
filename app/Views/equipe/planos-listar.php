@@ -23,16 +23,28 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   <div style="overflow:auto;">
     <table>
       <thead>
-        <tr><th>Nome</th><th>CPU</th><th>Memoria</th><th>Armazenamento</th><th>Preco/mes</th><th>Status</th><th>Acoes</th></tr>
+        <tr><th>Nome</th><th>Tipo</th><th>CPU</th><th>Memoria</th><th>Armazenamento</th><th>Preco/mes</th><th>Status</th><th>Acoes</th></tr>
       </thead>
       <tbody>
+        <?php
+          $typeLabels = [
+            'vps'        => ['🖥️ VPS',       '#e0e7ff','#1e3a8a'],
+            'wordpress'  => ['📝 WordPress',  '#dbeafe','#1d4ed8'],
+            'webhosting' => ['🌐 Web Host',   '#dcfce7','#166534'],
+            'nodejs'     => ['⬢ Node.js',     '#fef3c7','#92400e'],
+            'cpp'        => ['⚙️ C/C++',      '#fce7f3','#9d174d'],
+            'app'        => ['📦 App',         '#f3e8ff','#6b21a8'],
+          ];
+        ?>
         <?php foreach (($planos??[]) as $p): ?>
+          <?php $pt = (string)($p['plan_type'] ?? 'vps'); $tl = $typeLabels[$pt] ?? $typeLabels['vps']; ?>
           <tr>
             <td><?php echo View::e((string)($p['name']??'')); ?>
               <?php if (!empty($p['client_id'])): ?>
                 <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#dbeafe;color:#1e40af;">🔒 <?php echo View::e((string)($p['client_name'] ?? 'Cliente #' . (int)$p['client_id'])); ?></span>
               <?php endif; ?>
             </td>
+            <td><span class="badge-new" style="font-size:10px;padding:2px 8px;background:<?php echo $tl[1]; ?>;color:<?php echo $tl[2]; ?>;"><?php echo $tl[0]; ?></span></td>
             <td><?php echo View::e((string)($p['cpu']??'')); ?></td>
             <td><?php echo View::e(fmtGbPlano((int)($p['ram']??0))); ?></td>
             <td><?php echo View::e(fmtGbPlano((int)($p['storage']??0))); ?></td>
@@ -55,7 +67,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
           </tr>
         <?php endforeach; ?>
         <?php if (empty($planos)): ?>
-          <tr><td colspan="7">Nenhum plano cadastrado ainda.</td></tr>
+          <tr><td colspan="8">Nenhum plano cadastrado ainda.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>

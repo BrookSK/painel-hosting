@@ -20,27 +20,44 @@ final class PlanosController
         $clienteId = Auth::clienteId() ?? 0;
         $isManaged = Auth::clienteGerenciado();
 
+        // Filtro por tipo de produto
+        $tipoFiltro = trim((string)($req->query['tipo'] ?? ''));
+        $validTypes = ['vps', 'wordpress', 'webhosting', 'nodejs', 'cpp', 'app'];
+        if ($tipoFiltro !== '' && !in_array($tipoFiltro, $validTypes, true)) {
+            $tipoFiltro = '';
+        }
+
         try {
+            $tipoClause = '';
+            $params = [];
+
+            if ($tipoFiltro !== '') {
+                $tipoClause = ' AND plan_type = :tipo';
+                $params[':tipo'] = $tipoFiltro;
+            }
+
             if ($isManaged && $clienteId > 0) {
                 // Cliente gerenciado: só planos exclusivos dele
-                try {
-                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, currency, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
-                    $stmt->execute([':cid' => $clienteId]);
-                    $planos = $stmt->fetchAll();
-                } catch (\Throwable $e) {
-                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
-                    $stmt->execute([':cid' => $clienteId]);
-                    $planos = $stmt->fetchAll();
-                }
+                $sql = "SELECT id, name, description, plan_type, cpu, ram, storage, price_monthly, price_monthly_usd, currency, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id = :cid{$tipoClause} ORDER BY price_monthly ASC";
+                $params[':cid'] = $clienteId;
             } else {
                 // Cliente normal: só planos públicos
-                try {
-                    $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly, price_monthly_usd, currency, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
-                    $planos = $stmt->fetchAll();
-                } catch (\Throwable $e) {
+                $sql = "SELECT id, name, description, plan_type, cpu, ram, storage, price_monthly, price_monthly_usd, currency, stripe_price_id, support_channels, specs_json, is_featured FROM plans WHERE status = 'active' AND client_id IS NULL{$tipoClause} ORDER BY price_monthly ASC";
+            }
+
+            try {
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $planos = $stmt->fetchAll();
+            } catch (\Throwable $e) {
+                // Fallback sem plan_type (migration não rodou ainda)
+                if ($isManaged && $clienteId > 0) {
+                    $stmt = $pdo->prepare("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' AND client_id = :cid ORDER BY price_monthly ASC");
+                    $stmt->execute([':cid' => $clienteId]);
+                } else {
                     $stmt = $pdo->query("SELECT id, name, description, cpu, ram, storage, price_monthly FROM plans WHERE status = 'active' AND client_id IS NULL ORDER BY price_monthly ASC");
-                    $planos = $stmt->fetchAll();
                 }
+                $planos = $stmt->fetchAll();
             }
         } catch (\Throwable $e) {
             $planos = [];
@@ -67,9 +84,10 @@ final class PlanosController
         }
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/planos.php', [
-            'planos'  => is_array($planos) ? $planos : [],
-            'erro'    => $erro,
-            'cliente' => $cliente,
+            'planos'      => is_array($planos) ? $planos : [],
+            'erro'        => $erro,
+            'cliente'     => $cliente,
+            'tipoFiltro'  => $tipoFiltro,
         ]);
 
         return Resposta::html($html);

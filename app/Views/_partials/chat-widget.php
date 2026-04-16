@@ -192,6 +192,11 @@ if(LOGADO && MANAGED){
 } else {
   welcomeEl.textContent='Olá! Sou o assistente virtual. Como posso ajudar?';
   addMenuBtn('💡 Tirar uma dúvida',function(){showScreen('bot');});
+  addMenuBtn('🖥️ VPS Cloud',function(){window.location.href='/solucoes/vps';closeW();});
+  addMenuBtn('📝 WordPress Gerenciado',function(){window.location.href='/solucoes/wordpress';closeW();});
+  addMenuBtn('🌐 Web Hosting',function(){window.location.href='/solucoes/webhosting';closeW();});
+  addMenuBtn('⬢ Node.js App',function(){window.location.href='/solucoes/nodejs';closeW();});
+  addMenuBtn('⚙️ C/C++ App',function(){window.location.href='/solucoes/cpp';closeW();});
   addMenuBtn('📋 Ver planos',function(){window.location.href='/#planos';closeW();});
   addMenuBtn('🏢 Plano personalizado',function(){window.open('https://wa.me/5517988093160?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados','_blank');});
   addMenuBtn('🔑 Entrar na minha conta',function(){window.location.href='/cliente/entrar';});
@@ -215,8 +220,29 @@ var botInpArea=document.getElementById('cw-bot-inp'),botInput=document.getElemen
 
 var FLOW={
   start:{msg:'Sobre o que você precisa de ajuda?',opts:[
-    {l:'🖥️ VPS / Servidores',n:'vps'},{l:'💳 Planos e preços',n:'planos'},{l:'📧 E-mail profissional',n:'email_faq'},
+    {l:'🖥️ VPS / Servidores',n:'vps'},{l:'📝 WordPress Gerenciado',n:'wordpress'},{l:'🌐 Web Hosting',n:'webhosting'},{l:'⬢ Node.js App',n:'nodejs'},{l:'⚙️ C/C++ App',n:'cpp'},
+    {l:'💳 Planos e preços',n:'planos'},{l:'📧 E-mail profissional',n:'email_faq'},
     {l:'🚀 Deploy de aplicações',n:'deploy'},{l:'🔒 Segurança e backups',n:'seguranca'},{l:'🏢 Plano personalizado',n:'personalizado'},{l:'❓ Outra dúvida',n:'outro'}
+  ]},
+  wordpress:{msg:'Nosso WordPress Gerenciado inclui instalação em 1 clique, banco de dados dedicado, SSL grátis, backups diários e gerenciador de arquivos.',opts:[
+    {l:'📋 Ver planos WordPress',a:function(){window.location.href='/cliente/planos?tipo=wordpress';}},
+    {l:'📖 Saiba mais',a:function(){window.location.href='/solucoes/wordpress';closeW();}},
+    {l:'💬 Falar com atendente',n:'escalate'}
+  ]},
+  webhosting:{msg:'Web Hosting é ideal para quem quer hospedar sites e apps sem a complexidade de um VPS. Inclui catálogo de apps, git deploy, banco de dados e gerenciador de arquivos.',opts:[
+    {l:'📋 Ver planos Web Hosting',a:function(){window.location.href='/cliente/planos?tipo=webhosting';}},
+    {l:'📖 Saiba mais',a:function(){window.location.href='/solucoes/webhosting';closeW();}},
+    {l:'💬 Falar com atendente',n:'escalate'}
+  ]},
+  nodejs:{msg:'Deploy de aplicações Node.js com banco de dados incluso, domínio customizado com SSL e git deploy integrado.',opts:[
+    {l:'📋 Ver planos Node.js',a:function(){window.location.href='/cliente/planos?tipo=nodejs';}},
+    {l:'📖 Saiba mais',a:function(){window.location.href='/solucoes/nodejs';closeW();}},
+    {l:'💬 Falar com atendente',n:'escalate'}
+  ]},
+  cpp:{msg:'Hospede aplicações compiladas em C/C++ com build automatizado (GCC, CMake), banco de dados, domínio com SSL e git deploy.',opts:[
+    {l:'📋 Ver planos C/C++',a:function(){window.location.href='/cliente/planos?tipo=cpp';}},
+    {l:'📖 Saiba mais',a:function(){window.location.href='/solucoes/cpp';closeW();}},
+    {l:'💬 Falar com atendente',n:'escalate'}
   ]},
   vps:{msg:'Oferecemos VPS com recursos dedicados, SSD NVMe e uptime 99.9%.',opts:[
     {l:'📦 Quais recursos?',n:'vps_recursos'},{l:'⚡ Como é o provisionamento?',n:'vps_prov'},{l:'🔑 Como acesso minha VPS?',n:'vps_acesso'},{l:'💬 Falar com atendente',n:'escalate'}

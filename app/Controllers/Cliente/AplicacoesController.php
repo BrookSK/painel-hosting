@@ -92,6 +92,12 @@ final class AplicacoesController
             return Resposta::json(['ok' => false, 'erro' => 'Dados inválidos.'], 422);
         }
 
+        // Verificar limite de sites/aplicações do plano
+        [$podeCriar, $atual, $limite] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarSite($clienteId);
+        if (!$podeCriar) {
+            return Resposta::json(['ok' => false, 'erro' => "Limite de aplicações atingido ({$atual}/{$limite}). Faça upgrade do seu plano para instalar mais."], 403);
+        }
+
         $pdo = BancoDeDados::pdo();
 
         // Validar template

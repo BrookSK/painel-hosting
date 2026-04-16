@@ -90,8 +90,8 @@ final class GitDeployController
         $authToken = trim((string)($req->post['auth_token'] ?? ''));
         $postDeployCmd = trim((string)($req->post['post_deploy_cmd'] ?? ''));
         $appType = trim((string)($req->post['app_type'] ?? 'php'));
-        if (!in_array($appType, ['php', 'static', 'nodejs', 'python'], true)) $appType = 'php';
-        $appPort = in_array($appType, ['nodejs', 'python']) ? max(1024, min(65535, (int)($req->post['app_port'] ?? 3000))) : null;
+        if (!in_array($appType, ['php', 'static', 'nodejs', 'python', 'cpp'], true)) $appType = 'php';
+        $appPort = in_array($appType, ['nodejs', 'python', 'cpp']) ? max(1024, min(65535, (int)($req->post['app_port'] ?? 3000))) : null;
         $phpVersion = trim((string)($req->post['php_version'] ?? '8.3'));
         $phpSettings = json_encode([
             'memory_limit' => trim((string)($req->post['php_memory_limit'] ?? '256M')),
@@ -282,7 +282,7 @@ final class GitDeployController
         if ($deployDomain !== '' && $deployServerId > 0) {
             try {
                 $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
-                if (in_array($appType, ['nodejs', 'python'])) {
+                if (in_array($appType, ['nodejs', 'python', 'cpp'])) {
                     // Reverse proxy para Node.js/Python
                     $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
                 } else {

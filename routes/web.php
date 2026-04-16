@@ -196,37 +196,37 @@ $roteador->get('/cliente/pagamento', [\LRV\App\Controllers\Cliente\PagamentoCont
 $roteador->get('/cliente/pagamento/status', [\LRV\App\Controllers\Cliente\PagamentoController::class, 'statusApi'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/pagamento/cartao', [\LRV\App\Controllers\Cliente\PagamentoController::class, 'pagarCartao'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('pay_card', 5, 60)]);
 $roteador->get('/cliente/faturas', [\LRV\App\Controllers\Cliente\FaturasController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
-$roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/aplicacoes/catalogo', [ClienteAplicacoesController::class, 'catalogo'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/aplicacoes/instalar', [ClienteAplicacoesController::class, 'instalar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('app_install', 10, 60)]);
-$roteador->post('/cliente/aplicacoes/reinstalar', [ClienteAplicacoesController::class, 'reinstalar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('app_install', 10, 60)]);
-$roteador->post('/cliente/aplicacoes/deletar', [ClienteAplicacoesController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/aplicacoes/status', [ClienteAplicacoesController::class, 'status'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/aplicacoes/logs', [ClienteAplicacoesController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/monitoramento', [ClienteMonitoramentoController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
-$roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
+$roteador->get('/cliente/aplicacoes', [ClienteAplicacoesController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/aplicacoes/catalogo', [ClienteAplicacoesController::class, 'catalogo'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/aplicacoes/instalar', [ClienteAplicacoesController::class, 'instalar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('app_install', 10, 60)]);
+$roteador->post('/cliente/aplicacoes/reinstalar', [ClienteAplicacoesController::class, 'reinstalar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('app_install', 10, 60)]);
+$roteador->post('/cliente/aplicacoes/deletar', [ClienteAplicacoesController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/aplicacoes/status', [ClienteAplicacoesController::class, 'status'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/aplicacoes/logs', [ClienteAplicacoesController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/monitoramento', [ClienteMonitoramentoController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
+$roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::class, 'ver'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
 $roteador->get('/cliente/status', [ClienteStatusController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/tickets', [ClienteTicketsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/tickets/novo', [ClienteTicketsController::class, 'novo'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/tickets/criar', [ClienteTicketsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('ticket_create', 10, 60)]);
 $roteador->get('/cliente/tickets/ver', [ClienteTicketsController::class, 'ver'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/tickets/responder', [ClienteTicketsController::class, 'responder'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('ticket_reply', 20, 60)]);
-$roteador->get('/cliente/vps', [ClienteVpsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
-$roteador->get('/cliente/vps/terminal', [ClienteTerminalController::class, 'vps'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class, 'emitirToken'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('terminal_token', 30, 60)]);
-$roteador->post('/cliente/vps/terminal/exec', [ClienteTerminalController::class, 'exec'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('terminal_exec', 120, 60)]);
-$roteador->post('/cliente/vps/terminal/upload', [ClienteTerminalController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('terminal_upload', 20, 60)]);
-$roteador->get('/cliente/vps/terminal/download', [ClienteTerminalController::class, 'download'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/vps', [ClienteVpsController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
+$roteador->get('/cliente/vps/terminal', [ClienteTerminalController::class, 'vps'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/vps/terminal/token', [ClienteTerminalController::class, 'emitirToken'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('terminal_token', 30, 60)]);
+$roteador->post('/cliente/vps/terminal/exec', [ClienteTerminalController::class, 'exec'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('terminal_exec', 120, 60)]);
+$roteador->post('/cliente/vps/terminal/upload', [ClienteTerminalController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('terminal_upload', 20, 60)]);
+$roteador->get('/cliente/vps/terminal/download', [ClienteTerminalController::class, 'download'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 
 // Gerenciador de arquivos
-$roteador->get('/cliente/arquivos', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/arquivos/listar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/arquivos/ler', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'ler'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/arquivos/salvar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
-$roteador->post('/cliente/arquivos/criar-pasta', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'criarPasta'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
-$roteador->post('/cliente/arquivos/deletar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
-$roteador->get('/cliente/arquivos/download', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'download'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/arquivos/upload', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
+$roteador->get('/cliente/arquivos', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/arquivos/listar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/arquivos/ler', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'ler'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/arquivos/salvar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
+$roteador->post('/cliente/arquivos/criar-pasta', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'criarPasta'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 60, 60)]);
+$roteador->post('/cliente/arquivos/deletar', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
+$roteador->get('/cliente/arquivos/download', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'download'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/arquivos/upload', [\LRV\App\Controllers\Cliente\ArquivosController::class, 'upload'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('file_write', 30, 60)]);
 $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlewares::exigirLoginCliente()]);
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
@@ -283,10 +283,10 @@ $roteador->get('/equipe/chat/poll', [EquipeChatController::class, 'poll'], [Midd
 $roteador->post('/equipe/chat/enviar', [EquipeChatController::class, 'enviar'], [Middlewares::exigirPermissao('reply_tickets'), Middlewares::rateLimitEquipe('chat_send', 30, 60)]);
 
 // Email cliente
-$roteador->get('/cliente/emails', [ClienteEmailController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/emails/criar', [ClienteEmailController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('email_create', 5, 60)]);
-$roteador->post('/cliente/emails/remover', [ClienteEmailController::class, 'remover'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/emails/alterar-senha', [ClienteEmailController::class, 'alterarSenha'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('email_pw', 10, 60)]);
+$roteador->get('/cliente/emails', [ClienteEmailController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/emails/criar', [ClienteEmailController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('email_create', 5, 60)]);
+$roteador->post('/cliente/emails/remover', [ClienteEmailController::class, 'remover'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/emails/alterar-senha', [ClienteEmailController::class, 'alterarSenha'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('email_pw', 10, 60)]);
 
 // Domínios de email cliente
 $roteador->get('/cliente/emails/dominios', [ClienteDominiosEmailController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
@@ -325,43 +325,43 @@ $roteador->get('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, '
 $roteador->post('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 'verificar'], [Middlewares::rateLimitIp('2fa_verify_cli', 10, 60)]);
 
 // Git Deploy
-$roteador->get('/cliente/git-deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/git-deploy/novo', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'novo'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/git-deploy/editar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'editar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
-$roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regenerarChave'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/console', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'console'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_console', 60, 60)]);
-$roteador->get('/cliente/git-deploy/server-logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'serverLogs'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/git-deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/git-deploy/novo', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'novo'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/git-deploy/editar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'editar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
+$roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regenerarChave'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/console', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'console'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_console', 60, 60)]);
+$roteador->get('/cliente/git-deploy/server-logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'serverLogs'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 
 // Cron Jobs
-$roteador->get('/cliente/cron-jobs', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/cron-jobs/salvar', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('cron_save', 10, 60)]);
-$roteador->post('/cliente/cron-jobs/excluir', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/cron-jobs/toggle', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'toggle'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/cron-jobs/executar', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'executarAgora'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('cron_exec', 10, 60)]);
+$roteador->get('/cliente/cron-jobs', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/cron-jobs/salvar', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('cron_save', 10, 60)]);
+$roteador->post('/cliente/cron-jobs/excluir', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/cron-jobs/toggle', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'toggle'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/cron-jobs/executar', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'executarAgora'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('cron_exec', 10, 60)]);
 
 // Bancos de Dados
-$roteador->get('/cliente/banco-dados', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/banco-dados/criar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/banco-dados/salvar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('db_create', 5, 60)]);
-$roteador->get('/cliente/banco-dados/ver', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'ver'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/banco-dados/sql', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'executarSql'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('db_sql', 30, 60)]);
-$roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/banco-dados/senha', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'senha'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/banco-dados/nota', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'nota'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/banco-dados/phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'phpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/banco-dados/config-phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'configPhpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('pma_config', 5, 60)]);
-$roteador->get('/cliente/banco-dados/config-phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'lerConfigPhpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/banco-dados', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/banco-dados/criar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/banco-dados/salvar', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('db_create', 5, 60)]);
+$roteador->get('/cliente/banco-dados/ver', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'ver'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/banco-dados/sql', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'executarSql'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('db_sql', 30, 60)]);
+$roteador->post('/cliente/banco-dados/excluir', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/banco-dados/senha', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'senha'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/banco-dados/nota', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'nota'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/banco-dados/phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'phpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/banco-dados/config-phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'configPhpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('pma_config', 5, 60)]);
+$roteador->get('/cliente/banco-dados/config-phpmyadmin', [\LRV\App\Controllers\Cliente\BancoDadosController::class, 'lerConfigPhpmyadmin'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->post('/cliente/onboarding/concluir', [ClientePainelController::class, 'concluirOnboarding'], [Middlewares::exigirLoginCliente()]);
 
 // Backups cliente
-$roteador->get('/cliente/backups', [\LRV\App\Controllers\Cliente\BackupsController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
-$roteador->post('/cliente/backups/criar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('backup_create', 3, 60)]);
-$roteador->get('/cliente/backups/baixar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'baixar'], [Middlewares::exigirLoginCliente()]);
-$roteador->post('/cliente/backups/restaurar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'restaurar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('backup_restore', 2, 60)]);
+$roteador->get('/cliente/backups', [\LRV\App\Controllers\Cliente\BackupsController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
+$roteador->post('/cliente/backups/criar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_create', 3, 60)]);
+$roteador->get('/cliente/backups/baixar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'baixar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
+$roteador->post('/cliente/backups/restaurar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'restaurar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_restore', 2, 60)]);
 
 // Soluções (landing pages públicas)
 $roteador->get('/solucoes/vps', [\LRV\App\Controllers\SolucoesController::class, 'vps']);
@@ -369,6 +369,10 @@ $roteador->get('/solucoes/aplicacoes', [\LRV\App\Controllers\SolucoesController:
 $roteador->get('/solucoes/devops', [\LRV\App\Controllers\SolucoesController::class, 'devops']);
 $roteador->get('/solucoes/email', [\LRV\App\Controllers\SolucoesController::class, 'email']);
 $roteador->get('/solucoes/seguranca', [\LRV\App\Controllers\SolucoesController::class, 'seguranca']);
+$roteador->get('/solucoes/wordpress', [\LRV\App\Controllers\SolucoesController::class, 'wordpress']);
+$roteador->get('/solucoes/webhosting', [\LRV\App\Controllers\SolucoesController::class, 'webhosting']);
+$roteador->get('/solucoes/nodejs', [\LRV\App\Controllers\SolucoesController::class, 'nodejs']);
+$roteador->get('/solucoes/cpp', [\LRV\App\Controllers\SolucoesController::class, 'cpp']);
 
 // Páginas públicas legais e changelog
 $roteador->get('/termos', [LegalController::class, 'termos']);

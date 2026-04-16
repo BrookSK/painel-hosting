@@ -128,28 +128,78 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 
 <!-- Cards de navegação -->
+<?php
+  $planLimits = $planLimits ?? null;
+  if ($planLimits !== null):
+    $badge = $planLimits['badge'];
+?>
+<div class="card-new" style="margin-bottom:20px;padding:20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;"><?php echo $badge[3]; ?></span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#0f172a;">Uso do plano</div>
+        <div style="font-size:12px;color:#64748b;"><?php echo View::e($planLimits['plan_name']); ?> — <span style="background:<?php echo $badge[1]; ?>;color:<?php echo $badge[2]; ?>;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;"><?php echo View::e($badge[0]); ?></span></div>
+      </div>
+    </div>
+    <a href="/cliente/planos" class="botao ghost sm" style="font-size:12px;">Upgrade</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+    <?php
+      $usageItems = [
+        ['🚀', 'Sites / Apps', $planLimits['sites']['atual'], $planLimits['sites']['max']],
+        ['🗄️', 'Bancos de dados', $planLimits['databases']['atual'], $planLimits['databases']['max']],
+        ['⏰', 'Cron Jobs', $planLimits['cron_jobs']['atual'], $planLimits['cron_jobs']['max']],
+      ];
+      foreach ($usageItems as [$uIcon, $uLabel, $uAtual, $uMax]):
+        if ($uMax === null) continue; // Sem limite = não mostrar
+        $pct = $uMax > 0 ? min(100, (int)round($uAtual / $uMax * 100)) : 0;
+        $barColor = $pct >= 90 ? '#ef4444' : ($pct >= 70 ? '#f59e0b' : '#4F46E5');
+    ?>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:14px;"><?php echo $uIcon; ?></span>
+        <span style="font-size:12px;font-weight:600;color:#334155;"><?php echo View::e($uLabel); ?></span>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:4px;"><?php echo $uAtual; ?> <span style="font-size:12px;font-weight:400;color:#64748b;">/ <?php echo $uMax; ?></span></div>
+      <div style="background:#e2e8f0;border-radius:999px;height:5px;overflow:hidden;">
+        <div style="background:<?php echo $barColor; ?>;height:100%;border-radius:999px;width:<?php echo $pct; ?>%;transition:width .3s;"></div>
+      </div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
+
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
   <?php
   $navCards = [
-    ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais'],
-    ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real'],
-    ['/cliente/tickets',      '🎫',  'Tickets',       'Suporte técnico e solicitações'],
-    ['/cliente/emails',       '📧',  'E-mails',       'Gerenciar caixas de entrada'],
-    ['/cliente/aplicacoes',   '🚀',  'Aplicações',    'Deploy e gerenciamento de apps'],
-    ['/cliente/assinaturas',  '💳',  'Assinaturas',   'Planos e histórico de pagamentos'],
-    ['/cliente/ajuda',        '📚',  'Ajuda',         'Documentação e tutoriais'],
+    ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais',    'vps'],
+    ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real',        'monitoramento'],
+    ['/cliente/tickets',      '🎫',  'Tickets',       'Suporte técnico e solicitações',        null],
+    ['/cliente/emails',       '📧',  'E-mails',       'Gerenciar caixas de entrada',           'emails'],
+    ['/cliente/aplicacoes',   '🚀',  'Aplicações',    'Deploy e gerenciamento de apps',        'aplicacoes'],
+    ['/cliente/assinaturas',  '💳',  'Assinaturas',   'Planos e histórico de pagamentos',      null],
+    ['/cliente/ajuda',        '📚',  'Ajuda',         'Documentação e tutoriais',               null],
   ];
   // Cliente gerenciado vê apenas tickets e assinaturas
   $_isManagedPainel = \LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando();
   if ($_isManagedPainel) {
     $navCards = [
-      ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais'],
-      ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real'],
-      ['/cliente/tickets',     '🎫',  'Tickets',      'Suporte técnico e solicitações'],
-      ['/cliente/assinaturas', '💳',  'Assinaturas',  'Planos e histórico de pagamentos'],
+      ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais',  'vps'],
+      ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real',      'monitoramento'],
+      ['/cliente/tickets',     '🎫',  'Tickets',      'Suporte técnico e solicitações',        null],
+      ['/cliente/assinaturas', '💳',  'Assinaturas',  'Planos e histórico de pagamentos',      null],
     ];
   }
-  foreach ($navCards as [$href, $icon, $title, $desc]):
+  // Filtrar por features do plano
+  $_clienteIdPainel = \LRV\Core\Auth::clienteId();
+  $_featuresPainel = [];
+  if ($_clienteIdPainel !== null) {
+      try { $_featuresPainel = \LRV\App\Services\Plans\PlanFeatureService::featuresPermitidas($_clienteIdPainel); } catch (\Throwable) {}
+  }
+  foreach ($navCards as [$href, $icon, $title, $desc, $requiredFeature]):
+    if ($requiredFeature !== null && !empty($_featuresPainel) && !in_array($requiredFeature, $_featuresPainel, true)) continue;
   ?>
   <a href="<?php echo $href; ?>" style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:20px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,box-shadow .15s,transform .15s;"
      onmouseover="this.style.borderColor='#4F46E5';this.style.boxShadow='0 4px 20px rgba(79,70,229,.1)';this.style.transform='translateY(-2px)'"
