@@ -89,9 +89,10 @@ final class AssinarPlanoController
             };
 
             $service = new AssinaturasService(new AsaasApi(new ClienteHttp()));
+            $periodo = (int)($req->post['periodo'] ?? 1);
 
             try {
-                $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados);
+                $resultado = $service->criarAssinaturaDoPlano($clienteId, $planId, $billingType, $addonsSelecionados, $periodo);
             } catch (\Throwable $e) {
                 $erroDetalhe = $e->getMessage();
                 $erroApi = [];

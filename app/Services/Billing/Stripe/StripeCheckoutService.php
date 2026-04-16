@@ -92,8 +92,8 @@ final class StripeCheckoutService
 
             $lineItems = [];
             if ($isAnnualUpfront) {
-                // Anual à vista: pagamento único (one-time)
-                $planPrice = $stripe->prices->create(['product' => $planProduct->id, 'unit_amount' => $planUsdCents, 'currency' => 'usd']);
+                // Anual recorrente: subscription com interval year
+                $planPrice = $stripe->prices->create(['product' => $planProduct->id, 'unit_amount' => $planUsdCents, 'currency' => 'usd', 'recurring' => ['interval' => 'year']]);
                 $lineItems[] = ['price' => $planPrice->id, 'quantity' => 1];
             } else {
                 // Mensal: subscription recorrente
@@ -121,7 +121,7 @@ final class StripeCheckoutService
                 try {
                     $ap = $stripe->products->create(['name' => (string)($addon['name'] ?? 'Addon')]);
                     if ($isAnnualUpfront) {
-                        $apr = $stripe->prices->create(['product' => $ap->id, 'unit_amount' => $addonCents, 'currency' => 'usd']);
+                        $apr = $stripe->prices->create(['product' => $ap->id, 'unit_amount' => $addonCents, 'currency' => 'usd', 'recurring' => ['interval' => 'year']]);
                     } else {
                         $apr = $stripe->prices->create(['product' => $ap->id, 'unit_amount' => $addonCents, 'currency' => 'usd', 'recurring' => ['interval' => 'month']]);
                     }
@@ -129,9 +129,9 @@ final class StripeCheckoutService
                 } catch (\Throwable) {}
             }
 
-            // Criar sessão: payment (one-time) ou subscription
+            // Criar sessão: subscription (mensal ou anual recorrente)
             $sessionParams = [
-                'mode' => $isAnnualUpfront ? 'payment' : 'subscription',
+                'mode' => 'subscription',
                 'customer' => $customerId,
                 'client_reference_id' => (string)$localSubId,
                 'metadata' => ['local_subscription_id' => (string)$localSubId, 'local_client_id' => (string)$clientId, 'local_vps_id' => (string)$vpsId, 'local_plan_id' => (string)$planId, 'periodo' => (string)$periodo],
@@ -139,9 +139,8 @@ final class StripeCheckoutService
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
             ];
-            if (!$isAnnualUpfront) {
-                $sessionParams['subscription_data'] = ['metadata' => ['local_subscription_id' => (string)$localSubId, 'local_client_id' => (string)$clientId, 'local_vps_id' => (string)$vpsId, 'local_plan_id' => (string)$planId]];
-            }
+            // Sempre subscription agora (mensal ou anual)
+            $sessionParams['subscription_data'] = ['metadata' => ['local_subscription_id' => (string)$localSubId, 'local_client_id' => (string)$clientId, 'local_vps_id' => (string)$vpsId, 'local_plan_id' => (string)$planId]];
 
             $session = $stripe->checkout->sessions->create($sessionParams);
 

@@ -132,6 +132,21 @@ function _badgeVps(string $st): string {
               <a class="botao ghost sm" href="/cliente/assinaturas/upgrade?sub=<?php echo $subId; ?>" style="border-color:#4F46E5;color:#4F46E5;">⬆ Alterar plano</a>
               <a class="botao ghost sm" href="/cliente/assinaturas/addons?sub=<?php echo $subId; ?>" style="border-color:#16a34a;color:#16a34a;">📦 Serviços adicionais</a>
             <?php endif; ?>
+            <?php
+              // Mostrar botão "Renovar" se assinatura anual perto do vencimento (30 dias) ou vencida
+              $diasParaVencer = null;
+              if ($proxVenc !== '—' && $proxVenc !== '') {
+                  try {
+                      $dtVenc = new \DateTimeImmutable($proxVenc);
+                      $dtHoje = new \DateTimeImmutable('today');
+                      $diasParaVencer = (int)$dtHoje->diff($dtVenc)->format('%r%a');
+                  } catch (\Throwable) {}
+              }
+              $mostrarRenovar = ($diasParaVencer !== null && $diasParaVencer <= 30) || in_array($status, ['OVERDUE', 'EXPIRED'], true);
+            ?>
+            <?php if ($mostrarRenovar): ?>
+              <a class="botao sm" href="/contratar?plan_id=<?php echo (int)($a['plan_id'] ?? 0); ?>&renew=<?php echo $subId; ?>" style="background:#f59e0b;">🔄 Renovar</a>
+            <?php endif; ?>
           </div>
         </div>
       <?php endforeach; ?>

@@ -79,11 +79,11 @@ final class AssinaturasService
         return $novoId;
     }
 
-    public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType, array $addons = []): array
+    public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType, array $addons = [], int $periodo = 1): array
     {
         $pdo = BancoDeDados::pdo();
 
-        $stmt = $pdo->prepare('SELECT id, name, price_monthly, price_monthly_usd, currency, cpu, ram, storage FROM plans WHERE id = :id AND status = \'active\'');
+        $stmt = $pdo->prepare('SELECT id, name, price_monthly, price_monthly_usd, price_annual_upfront, currency, cpu, ram, storage FROM plans WHERE id = :id AND status = \'active\'');
         $stmt->execute([':id' => $planId]);
         $plano = $stmt->fetch();
 
@@ -118,11 +118,29 @@ final class AssinaturasService
         $customerId = $this->garantirClienteAsaas($clientId);
 
         $agora = date('Y-m-d H:i:s');
+        $isAnual = $periodo >= 12;
 
         // Normalizar billing type
         $billingTypeNorm = strtoupper(trim($billingType));
         if (!in_array($billingTypeNorm, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
             $billingTypeNorm = 'PIX';
+        }
+
+        // Para anual: usar preço anual à vista se disponível, senão mensal * 12
+        $valorCobranca = $precoTotal;
+        $ciclo = 'MONTHLY';
+        $dueDelta = '+1 day';
+        if ($isAnual) {
+            // Recalcular do zero pra anual
+            $upfront = (float)($plano['price_annual_upfront'] ?? 0);
+            $valorCobranca = $upfront > 0 ? $upfront : ($precoBrl * 12);
+            foreach ($addons as $a) {
+                $addonAnual = (float)($a['price_annual'] ?? 0);
+                $addonMensal = (float)($a['price'] ?? 0);
+                $valorCobranca += ($addonAnual > 0 ? $addonAnual : $addonMensal) * 12;
+            }
+            $ciclo = 'YEARLY';
+            $dueDelta = '+1 year';
         }
 
         $pdo->beginTransaction();
@@ -152,14 +170,14 @@ final class AssinaturasService
 
             $vpsId = (int) $pdo->lastInsertId();
 
-            $due = (new DateTimeImmutable('now'))->modify('+1 day')->format('Y-m-d');
+            $due = (new DateTimeImmutable('now'))->modify($dueDelta)->format('Y-m-d');
 
             $respAss = $this->asaas->criarAssinatura([
                 'customer' => $customerId,
                 'billingType' => $billingTypeNorm,
-                'value' => $precoTotal,
-                'cycle' => 'MONTHLY',
-                'description' => 'Assinatura ' . (string) $plano['name'] . (!empty($addons) ? ' + addons' : ''),
+                'value' => $isAnual ? $valorCobranca : $precoTotal,
+                'cycle' => $ciclo,
+                'description' => 'Assinatura ' . (string) $plano['name'] . ($isAnual ? ' (Anual)' : '') . (!empty($addons) ? ' + addons' : ''),
                 'nextDueDate' => $due,
             ]);
 
