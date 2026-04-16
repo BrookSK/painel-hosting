@@ -13,6 +13,10 @@ $_plan_type = $_plan_type ?? 'vps';
 $_emailAdmin = '';
 try { $_emailAdmin = (string)\LRV\Core\ConfiguracoesSistema::emailAdmin(); } catch (\Throwable) {}
 $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
+$_visitorUsd = I18n::moedaCodigo() === 'USD';
+$_curSymbol = $_visitorUsd ? 'US$' : 'R$';
+$_convRate = 1.0;
+try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (\Throwable) { $_convRate = 5.0; }
 ?>
 <section class="lps-section" id="planos">
   <div class="lps-inner">
@@ -28,9 +32,8 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
           $_pid = (int)($_p['id'] ?? 0);
           $_pName = (string)($_p['name'] ?? '');
           $_pDesc = (string)($_p['description'] ?? '');
-          $_pPrice = (float)($_p['price_monthly'] ?? 0);
+          $_pPriceBrl = (float)($_p['price_monthly'] ?? 0);
           $_pPriceUsd = (float)($_p['price_monthly_usd'] ?? 0);
-          $_pCur = (string)($_p['currency'] ?? 'BRL');
           $_pCpu = (int)($_p['cpu'] ?? 0);
           $_pRam = round((int)($_p['ram'] ?? 0) / 1024);
           $_pDisco = round((int)($_p['storage'] ?? 0) / 1024);
@@ -39,17 +42,22 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
           $_pMaxDbs = $_p['max_databases'] ?? null;
           $_pAddons = is_array($_p['addons'] ?? null) ? $_p['addons'] : [];
           $_specs = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
-          $_displayPrice = $_pCur === 'USD' && $_pPriceUsd > 0 ? $_pPriceUsd : $_pPrice;
-          $_displayCur = $_pCur === 'USD' ? 'US$' : 'R$';
-          if ($_pPrice <= 0 && $_pPriceUsd <= 0) continue; // Pular plano sob consulta (vai no card custom)
+
+          // Determinar preço a exibir baseado na moeda do visitante
+          if ($_visitorUsd) {
+              $_displayPrice = $_pPriceUsd > 0 ? $_pPriceUsd : round($_pPriceBrl / $_convRate, 2);
+          } else {
+              $_displayPrice = $_pPriceBrl;
+          }
+          if ($_displayPrice <= 0) continue; // Pular plano sob consulta
         ?>
         <div class="lps-card<?php echo $_pFeatured ? ' featured' : ''; ?>" data-plan-id="<?php echo $_pid; ?>" data-base-price="<?php echo $_displayPrice; ?>">
           <?php if ($_pFeatured): ?><div class="lps-badge" style="background:<?php echo $_accent; ?>;">Popular</div><?php endif; ?>
           <div class="lps-name"><?php echo View::e($_pName); ?></div>
           <?php if ($_pDesc !== ''): ?><div class="lps-desc"><?php echo View::e($_pDesc); ?></div><?php endif; ?>
           <div class="lps-price">
-            <span class="lps-cur"><?php echo $_displayCur; ?></span>
-            <span class="lps-amount" id="<?php echo $_uniqId; ?>-price-<?php echo $_pid; ?>"><?php echo number_format($_displayPrice, 2, ',', '.'); ?></span>
+            <span class="lps-cur"><?php echo $_curSymbol; ?></span>
+            <span class="lps-amount" id="<?php echo $_uniqId; ?>-price-<?php echo $_pid; ?>"><?php echo $_visitorUsd ? number_format($_displayPrice, 2, '.', ',') : number_format($_displayPrice, 2, ',', '.'); ?></span>
             <span class="lps-period">/mês</span>
           </div>
           <ul class="lps-features">
@@ -67,9 +75,13 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
             <div class="lps-addons-title">Serviços adicionais</div>
             <?php foreach ($_pAddons as $_a):
               $_aid = (int)($_a['id'] ?? 0);
-              $_aprice = (float)($_a['price'] ?? 0);
+              $_apriceBrl = (float)($_a['price'] ?? 0);
               $_apriceUsd = (float)($_a['price_usd'] ?? 0);
-              $_adisplay = $_pCur === 'USD' && $_apriceUsd > 0 ? $_apriceUsd : $_aprice;
+              if ($_visitorUsd) {
+                  $_adisplay = $_apriceUsd > 0 ? $_apriceUsd : round($_apriceBrl / $_convRate, 2);
+              } else {
+                  $_adisplay = $_apriceBrl;
+              }
             ?>
             <div class="lps-addon" data-addon-price="<?php echo $_adisplay; ?>" onclick="lpsToggleAddon(this,'<?php echo $_uniqId; ?>',<?php echo $_pid; ?>)">
               <div class="lps-addon-check">✓</div>
@@ -77,13 +89,13 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
                 <div class="lps-addon-name"><?php echo View::e((string)($_a['name'] ?? '')); ?></div>
                 <?php if (!empty($_a['description'])): ?><div class="lps-addon-desc"><?php echo View::e((string)$_a['description']); ?></div><?php endif; ?>
               </div>
-              <div class="lps-addon-price">+<?php echo $_displayCur; ?> <?php echo number_format($_adisplay, 2, ',', '.'); ?></div>
+              <div class="lps-addon-price">+<?php echo $_curSymbol; ?> <?php echo $_visitorUsd ? number_format($_adisplay, 2, '.', ',') : number_format($_adisplay, 2, ',', '.'); ?></div>
             </div>
             <?php endforeach; ?>
           </div>
           <div class="lps-total" style="background:<?php echo $_accent; ?>;">
             <div class="lps-total-label">Total mensal</div>
-            <div class="lps-total-value"><?php echo $_displayCur; ?> <span id="<?php echo $_uniqId; ?>-total-<?php echo $_pid; ?>"><?php echo number_format($_displayPrice, 2, ',', '.'); ?></span></div>
+            <div class="lps-total-value"><?php echo $_curSymbol; ?> <span id="<?php echo $_uniqId; ?>-total-<?php echo $_pid; ?>"><?php echo $_visitorUsd ? number_format($_displayPrice, 2, '.', ',') : number_format($_displayPrice, 2, ',', '.'); ?></span></div>
           </div>
           <?php endif; ?>
           <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="lps-cta" style="background:<?php echo $_accent; ?>;">Contratar agora</a>
@@ -132,14 +144,10 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
 .lps-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
 .lps-title{font-size:clamp(24px,3.5vw,36px);font-weight:800;color:#0f172a;margin-bottom:10px;letter-spacing:-.02em}
 .lps-sub{font-size:15px;color:#64748b;max-width:500px;margin:0 auto}
-
-/* Carousel */
 .lps-carousel{position:relative;padding:0 60px}
 @media(max-width:640px){.lps-carousel{padding:0 12px}}
 .lps-track{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:20px 4px;scrollbar-width:none}
 .lps-track::-webkit-scrollbar{display:none}
-
-/* Cards */
 .lps-card{background:#fff;border:2px solid #e2e8f0;border-radius:18px;padding:32px 24px;min-width:320px;max-width:360px;flex:0 0 auto;scroll-snap-align:start;position:relative;transition:all .3s;display:flex;flex-direction:column}
 @media(max-width:640px){.lps-card{min-width:280px;max-width:calc(100vw - 48px);padding:24px 18px}}
 .lps-card:hover{transform:translateY(-6px);box-shadow:0 12px 40px rgba(0,0,0,.1)}
@@ -154,8 +162,6 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
 .lps-period{font-size:14px;color:#94a3b8}
 .lps-features{list-style:none;padding:0;margin:0 0 20px;flex:1}
 .lps-features li{padding:7px 0;font-size:13px;color:#475569;border-bottom:1px solid #f8fafc}
-
-/* Addons */
 .lps-addons{border-top:2px solid #f1f5f9;padding-top:14px;margin-bottom:12px}
 .lps-addons-title{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:10px}
 .lps-addon{display:flex;align-items:center;gap:10px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s;background:#fff}
@@ -167,17 +173,11 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
 .lps-addon-name{font-weight:700;font-size:13px;color:#0f172a}
 .lps-addon-desc{font-size:11px;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lps-addon-price{font-weight:700;font-size:13px;color:<?php echo $_accent; ?>;flex-shrink:0;white-space:nowrap}
-
-/* Total */
 .lps-total{color:#fff;padding:14px;border-radius:10px;margin-bottom:12px;text-align:center}
 .lps-total-label{font-size:12px;opacity:.85;margin-bottom:4px}
 .lps-total-value{font-size:28px;font-weight:900;line-height:1}
-
-/* CTA */
 .lps-cta{display:block;text-align:center;padding:14px;color:#fff;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;transition:opacity .15s,transform .1s;margin-top:auto}
 .lps-cta:hover{opacity:.9;transform:translateY(-2px)}
-
-/* Arrows */
 .lps-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;background:#fff;border:2px solid #e2e8f0;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .lps-arrow:hover{background:<?php echo $_accent; ?>;border-color:<?php echo $_accent; ?>}
 .lps-arrow:hover svg{stroke:#fff}
@@ -185,8 +185,6 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
 .lps-arrow-prev{left:0}
 .lps-arrow-next{right:0}
 @media(max-width:640px){.lps-arrow{display:none}}
-
-/* Dots */
 .lps-dots{display:flex;justify-content:center;gap:8px;margin-top:24px}
 .lps-dot{width:10px;height:10px;border-radius:50%;background:#e2e8f0;cursor:pointer;transition:all .2s}
 .lps-dot.active{background:<?php echo $_accent; ?>;width:28px;border-radius:5px}
@@ -195,6 +193,7 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
 <script>
 (function(){
   var uid='<?php echo $_uniqId; ?>';
+  var isUsd=<?php echo $_visitorUsd ? 'true' : 'false'; ?>;
   var track=document.getElementById(uid+'-track');
   if(!track)return;
   var cards=track.querySelectorAll('.lps-card');
@@ -203,57 +202,32 @@ $_uniqId = 'ps' . substr(md5($_plan_type), 0, 6);
   var perView=Math.max(1,Math.floor(track.parentElement.offsetWidth/cardW));
   var maxIdx=Math.max(0,cards.length-perView);
   var curIdx=0;
-
-  // Build dots
-  if(dotsC&&cards.length>1){
-    for(var i=0;i<=maxIdx;i++){
-      var d=document.createElement('div');d.className='lps-dot'+(i===0?' active':'');
-      d.setAttribute('data-i',i);
-      d.addEventListener('click',function(){goTo(parseInt(this.getAttribute('data-i')));});
-      dotsC.appendChild(d);
-    }
-  }
-
-  function goTo(idx){
-    curIdx=Math.max(0,Math.min(idx,maxIdx));
-    track.scrollTo({left:curIdx*cardW,behavior:'smooth'});
-    if(dotsC){dotsC.querySelectorAll('.lps-dot').forEach(function(d,i){d.className='lps-dot'+(i===curIdx?' active':'');});}
-  }
-
+  if(dotsC&&cards.length>1){for(var i=0;i<=maxIdx;i++){var d=document.createElement('div');d.className='lps-dot'+(i===0?' active':'');d.setAttribute('data-i',i);d.addEventListener('click',function(){goTo(parseInt(this.getAttribute('data-i')));});dotsC.appendChild(d);}}
+  function goTo(idx){curIdx=Math.max(0,Math.min(idx,maxIdx));track.scrollTo({left:curIdx*cardW,behavior:'smooth'});if(dotsC){dotsC.querySelectorAll('.lps-dot').forEach(function(d,i){d.className='lps-dot'+(i===curIdx?' active':'');});}}
   window['lpsMove_'+uid]=function(dir){goTo(curIdx+dir);};
-  // Global alias
   window.lpsMove=function(id,dir){if(window['lpsMove_'+id])window['lpsMove_'+id](dir);};
-
-  // Scroll sync dots
   var scrollTimer;
-  track.addEventListener('scroll',function(){
-    clearTimeout(scrollTimer);
-    scrollTimer=setTimeout(function(){
-      var newIdx=Math.round(track.scrollLeft/cardW);
-      if(newIdx!==curIdx){curIdx=newIdx;if(dotsC){dotsC.querySelectorAll('.lps-dot').forEach(function(d,i){d.className='lps-dot'+(i===curIdx?' active':'');});}}
-    },100);
-  });
-})();
+  track.addEventListener('scroll',function(){clearTimeout(scrollTimer);scrollTimer=setTimeout(function(){var newIdx=Math.round(track.scrollLeft/cardW);if(newIdx!==curIdx){curIdx=newIdx;if(dotsC){dotsC.querySelectorAll('.lps-dot').forEach(function(d,i){d.className='lps-dot'+(i===curIdx?' active':'');});}}},100);});
 
-// Toggle addon and recalculate total
-function lpsToggleAddon(el,uid,planId){
-  el.classList.toggle('selected');
-  var card=el.closest('.lps-card');
-  var base=parseFloat(card.getAttribute('data-base-price'))||0;
-  var total=base;
-  card.querySelectorAll('.lps-addon.selected').forEach(function(a){
-    total+=parseFloat(a.getAttribute('data-addon-price'))||0;
-  });
-  var priceEl=document.getElementById(uid+'-price-'+planId);
-  var totalEl=document.getElementById(uid+'-total-'+planId);
-  var formatted=total.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  if(totalEl)totalEl.textContent=formatted;
-  if(priceEl)priceEl.textContent=formatted;
-}
+  function fmt(v){
+    if(isUsd) return v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+    return v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  }
+  window.lpsToggleAddon=function(el,uid2,planId){
+    el.classList.toggle('selected');
+    var card=el.closest('.lps-card');
+    var base=parseFloat(card.getAttribute('data-base-price'))||0;
+    var total=base;
+    card.querySelectorAll('.lps-addon.selected').forEach(function(a){total+=parseFloat(a.getAttribute('data-addon-price'))||0;});
+    var priceEl=document.getElementById(uid2+'-price-'+planId);
+    var totalEl=document.getElementById(uid2+'-total-'+planId);
+    if(totalEl)totalEl.textContent=fmt(total);
+    if(priceEl)priceEl.textContent=fmt(total);
+  };
+})();
 </script>
 
 <?php if (empty($_planos)): ?>
-<!-- Sem planos cadastrados — CTA genérico -->
 <section style="padding:60px 20px;background:#f8fafc;text-align:center;" id="planos">
   <div style="max-width:600px;margin:0 auto;">
     <h2 style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:12px;">Planos em breve</h2>
