@@ -22,7 +22,7 @@ final class PlanosController
 
         // Filtro por tipo de produto
         $tipoFiltro = trim((string)($req->query['tipo'] ?? ''));
-        $validTypes = ['vps', 'wordpress', 'webhosting', 'nodejs', 'cpp', 'app'];
+        $validTypes = ['vps', 'wordpress', 'webhosting', 'nodejs', 'cpp', 'php', 'python', 'app'];
         if ($tipoFiltro !== '' && !in_array($tipoFiltro, $validTypes, true)) {
             $tipoFiltro = '';
         }

@@ -373,6 +373,8 @@ $roteador->get('/solucoes/wordpress', [\LRV\App\Controllers\SolucoesController::
 $roteador->get('/solucoes/webhosting', [\LRV\App\Controllers\SolucoesController::class, 'webhosting']);
 $roteador->get('/solucoes/nodejs', [\LRV\App\Controllers\SolucoesController::class, 'nodejs']);
 $roteador->get('/solucoes/cpp', [\LRV\App\Controllers\SolucoesController::class, 'cpp']);
+$roteador->get('/solucoes/php', [\LRV\App\Controllers\SolucoesController::class, 'php']);
+$roteador->get('/solucoes/python', [\LRV\App\Controllers\SolucoesController::class, 'python']);
 
 // Páginas públicas legais e changelog
 $roteador->get('/termos', [LegalController::class, 'termos']);

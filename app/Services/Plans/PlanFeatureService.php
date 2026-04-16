@@ -36,6 +36,13 @@ final class PlanFeatureService
         'cpp' => [
             'aplicacoes', 'banco_dados', 'dominios', 'git_deploy',
         ],
+        'php' => [
+            'aplicacoes', 'catalogo', 'banco_dados', 'arquivos',
+            'dominios', 'git_deploy', 'backups',
+        ],
+        'python' => [
+            'aplicacoes', 'banco_dados', 'dominios', 'git_deploy',
+        ],
         // 'app' usa allowed_features do plano
     ];
 
@@ -281,6 +288,8 @@ final class PlanFeatureService
             'webhosting' => ['Web Hosting',        '#dcfce7', '#166534', '🌐'],
             'nodejs'     => ['Node.js',            '#fef3c7', '#92400e', '⬢'],
             'cpp'        => ['C/C++',              '#fce7f3', '#9d174d', '⚙️'],
+            'php'        => ['PHP/Laravel',        '#fef3c7', '#78350f', '🐘'],
+            'python'     => ['Python',             '#e0f2fe', '#075985', '🐍'],
             'app'        => ['App',                '#f3e8ff', '#6b21a8', '📦'],
         ];
 

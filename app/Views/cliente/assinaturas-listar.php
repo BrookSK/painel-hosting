@@ -179,6 +179,8 @@ function _badgeVps(string $st): string {
           ['webhosting','🌐', 'Web Hosting',         'Hospedagem com catálogo de apps e git deploy',     '/cliente/planos?tipo=webhosting'],
           ['nodejs',    '⬢',  'Node.js',             'Deploy de aplicações Node.js com banco de dados',  '/cliente/planos?tipo=nodejs'],
           ['cpp',       '⚙️', 'C/C++',               'Deploy de aplicações compiladas em C/C++',         '/cliente/planos?tipo=cpp'],
+          ['php',       '🐘', 'PHP / Laravel',        'Hospedagem PHP com banco, arquivos e git deploy',  '/cliente/planos?tipo=php'],
+          ['python',    '🐍', 'Python',               'Deploy de aplicações Python com banco de dados',   '/cliente/planos?tipo=python'],
         ];
         foreach ($produtos as [$pType, $pIcon, $pName, $pDesc, $pHref]):
       ?>

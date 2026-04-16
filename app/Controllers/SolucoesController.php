@@ -12,7 +12,9 @@ final class SolucoesController
 {
     public function vps(Requisicao $req): Resposta
     {
-        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/vps.php'));
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/vps.php', [
+            'planos' => $this->buscarPlanosPorTipo('vps'),
+        ]));
     }
 
     public function aplicacoes(Requisicao $req): Resposta
@@ -60,6 +62,20 @@ final class SolucoesController
     {
         return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/cpp.php', [
             'planos' => $this->buscarPlanosPorTipo('cpp'),
+        ]));
+    }
+
+    public function php(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/php.php', [
+            'planos' => $this->buscarPlanosPorTipo('php'),
+        ]));
+    }
+
+    public function python(Requisicao $req): Resposta
+    {
+        return Resposta::html(View::renderizar(__DIR__ . '/../Views/solucoes/python.php', [
+            'planos' => $this->buscarPlanosPorTipo('python'),
         ]));
     }
 

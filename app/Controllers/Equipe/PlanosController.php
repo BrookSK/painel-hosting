@@ -94,7 +94,7 @@ final class PlanosController
         $clientIdVal = $clientId > 0 ? $clientId : null;
 
         // Plan type and limits
-        $validPlanTypes = ['vps', 'wordpress', 'webhosting', 'nodejs', 'cpp', 'app'];
+        $validPlanTypes = ['vps', 'wordpress', 'webhosting', 'nodejs', 'cpp', 'php', 'python', 'app'];
         $planType = in_array((string)($req->post['plan_type'] ?? 'vps'), $validPlanTypes, true) ? (string)$req->post['plan_type'] : 'vps';
         $maxSites = trim((string)($req->post['max_sites'] ?? ''));
         $maxDatabases = trim((string)($req->post['max_databases'] ?? ''));

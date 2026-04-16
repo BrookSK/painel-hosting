@@ -24,6 +24,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         'webhosting'=> ['🌐 Web Hosting', 'Apps do catálogo, banco de dados, arquivos, domínios, git deploy e backups.'],
         'nodejs'    => ['⬢ Node.js App', 'Apenas Node.js, banco de dados, domínios e git deploy.'],
         'cpp'       => ['⚙️ C/C++ App', 'Aplicações compiladas em C/C++, banco de dados, domínios e git deploy.'],
+        'php'       => ['🐘 PHP / Laravel', 'Aplicações PHP/Laravel, banco de dados, arquivos, domínios e git deploy.'],
+        'python'    => ['🐍 Python App', 'Aplicações Python, banco de dados, domínios e git deploy.'],
         'app'       => ['📦 App Genérico', 'Configuração personalizada de features permitidas.'],
       ];
       $currentType = (string)($plano['plan_type'] ?? 'vps');
@@ -450,6 +452,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     'webhosting': 'Apps do catálogo, banco de dados, arquivos, domínios, git deploy e backups.',
     'nodejs': 'Apenas Node.js, banco de dados, domínios e git deploy.',
     'cpp': 'Aplicações compiladas em C/C++, banco de dados, domínios e git deploy.',
+    'php': 'Aplicações PHP/Laravel, banco de dados, arquivos, domínios e git deploy.',
+    'python': 'Aplicações Python, banco de dados, domínios e git deploy.',
     'app': 'Configuração personalizada de features permitidas.'
   };
   window.togglePlanTypeFields = function() {

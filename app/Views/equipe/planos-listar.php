@@ -33,6 +33,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             'webhosting' => ['🌐 Web Host',   '#dcfce7','#166534'],
             'nodejs'     => ['⬢ Node.js',     '#fef3c7','#92400e'],
             'cpp'        => ['⚙️ C/C++',      '#fce7f3','#9d174d'],
+            'php'        => ['🐘 PHP',        '#fef3c7','#78350f'],
+            'python'     => ['🐍 Python',     '#e0f2fe','#075985'],
             'app'        => ['📦 App',         '#f3e8ff','#6b21a8'],
           ];
         ?>
