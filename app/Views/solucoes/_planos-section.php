@@ -83,7 +83,7 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
                   $_adisplay = $_apriceBrl;
               }
             ?>
-            <div class="lps-addon" data-addon-price="<?php echo $_adisplay; ?>" onclick="lpsToggleAddon(this,'<?php echo $_uniqId; ?>',<?php echo $_pid; ?>)">
+            <div class="lps-addon" data-addon-price="<?php echo $_adisplay; ?>" data-addon-id="<?php echo $_aid; ?>" onclick="lpsToggleAddon(this,'<?php echo $_uniqId; ?>',<?php echo $_pid; ?>)">
               <div class="lps-addon-check">✓</div>
               <div class="lps-addon-info">
                 <div class="lps-addon-name"><?php echo View::e((string)($_a['name'] ?? '')); ?></div>
@@ -98,7 +98,7 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
             <div class="lps-total-value"><?php echo $_curSymbol; ?> <span id="<?php echo $_uniqId; ?>-total-<?php echo $_pid; ?>"><?php echo $_visitorUsd ? number_format($_displayPrice, 2, '.', ',') : number_format($_displayPrice, 2, ',', '.'); ?></span></div>
           </div>
           <?php endif; ?>
-          <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="lps-cta" style="background:<?php echo $_accent; ?>;">Contratar agora</a>
+          <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="lps-cta" style="background:<?php echo $_accent; ?>;" data-plan-id="<?php echo $_pid; ?>" onclick="return lpsGoCheckout(this,<?php echo $_pid; ?>)">Contratar agora</a>
         </div>
         <?php endforeach; ?>
 
@@ -223,6 +223,20 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
     var totalEl=document.getElementById(uid2+'-total-'+planId);
     if(totalEl)totalEl.textContent=fmt(total);
     if(priceEl)priceEl.textContent=fmt(total);
+  };
+
+  // Navegar pro checkout com addons selecionados na URL
+  window.lpsGoCheckout=function(btn,planId){
+    var card=btn.closest('.lps-card');
+    var addonIds=[];
+    card.querySelectorAll('.lps-addon.selected').forEach(function(a){
+      var id=a.getAttribute('data-addon-id');
+      if(id)addonIds.push(id);
+    });
+    var url='/contratar?plan_id='+planId;
+    if(addonIds.length>0)url+='&addons='+addonIds.join(',');
+    window.location.href=url;
+    return false;
   };
 })();
 </script>
