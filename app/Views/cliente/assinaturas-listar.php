@@ -128,6 +128,10 @@ function _badgeVps(string $st): string {
             <?php if ($vpsId > 0 && $vpsSt === 'running'): ?>
               <a class="botao ghost sm" href="/cliente/vps"><?php echo View::e(I18n::t('assinaturas.gerenciar_vps')); ?></a>
             <?php endif; ?>
+            <?php if ($status === 'ACTIVE' || $status === 'active'): ?>
+              <a class="botao ghost sm" href="/cliente/assinaturas/upgrade?sub=<?php echo $subId; ?>" style="border-color:#4F46E5;color:#4F46E5;">⬆ Alterar plano</a>
+              <a class="botao ghost sm" href="/cliente/assinaturas/addons?sub=<?php echo $subId; ?>" style="border-color:#16a34a;color:#16a34a;">📦 Serviços adicionais</a>
+            <?php endif; ?>
           </div>
         </div>
       <?php endforeach; ?>

@@ -99,6 +99,146 @@ final class AssinaturasController
         return Resposta::html($html);
     }
 
+    /**
+     * Tela de upgrade/downgrade: mostra planos disponíveis do mesmo tipo.
+     */
+    public function upgrade(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $subId = (int)($req->query['sub'] ?? 0);
+        if ($subId <= 0) return Resposta::redirecionar('/cliente/assinaturas');
+
+        $svc = new \LRV\App\Services\Billing\UpgradeService();
+        $result = $svc->planosDisponiveis($subId, $clienteId);
+
+        if (!($result['ok'] ?? false)) {
+            $_SESSION['flash_warning'] = $result['erro'] ?? 'Assinatura não encontrada.';
+            return Resposta::redirecionar('/cliente/assinaturas');
+        }
+
+        return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-upgrade.php', [
+            'subscription' => $result['subscription'],
+            'planos' => $result['planos'],
+            'current_plan_id' => $result['current_plan_id'],
+        ]));
+    }
+
+    /**
+     * Executa o upgrade/downgrade.
+     */
+    public function executarUpgrade(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $subId = (int)($req->post['subscription_id'] ?? 0);
+        $newPlanId = (int)($req->post['new_plan_id'] ?? 0);
+
+        if ($subId <= 0 || $newPlanId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Dados inválidos.'], 422);
+        }
+
+        $svc = new \LRV\App\Services\Billing\UpgradeService();
+
+        try {
+            $result = $svc->executar($subId, $newPlanId, $clienteId);
+
+            (new \LRV\App\Services\Audit\AuditLogService())->registrar(
+                'client', $clienteId, 'billing.upgrade_plan', 'subscription', $subId,
+                ['subscription_id' => $subId, 'new_plan_id' => $newPlanId, 'type' => $result['type'] ?? 'upgrade'], $req
+            );
+
+            return Resposta::json([
+                'ok' => true,
+                'type' => $result['type'],
+                'mensagem' => ($result['type'] === 'upgrade' ? 'Upgrade' : 'Downgrade') . ' realizado com sucesso! Plano alterado de ' . ($result['old_plan'] ?? '') . ' para ' . ($result['new_plan'] ?? '') . '.',
+            ]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Tela de addons: mostra addons disponíveis e contratados.
+     */
+    public function addons(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $subId = (int)($req->query['sub'] ?? 0);
+        if ($subId <= 0) return Resposta::redirecionar('/cliente/assinaturas');
+
+        $svc = new \LRV\App\Services\Billing\UpgradeService();
+        $result = $svc->addonsDisponiveis($subId, $clienteId);
+
+        if (!($result['ok'] ?? false)) {
+            $_SESSION['flash_warning'] = $result['erro'] ?? 'Assinatura não encontrada.';
+            return Resposta::redirecionar('/cliente/assinaturas');
+        }
+
+        return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/assinatura-addons.php', [
+            'subscription' => $result['subscription'],
+            'addons' => $result['addons'],
+            'active_addon_ids' => $result['active_addon_ids'],
+            'sub_id' => $subId,
+        ]));
+    }
+
+    /**
+     * Contrata um addon avulso.
+     */
+    public function contratarAddon(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $subId = (int)($req->post['subscription_id'] ?? 0);
+        $addonId = (int)($req->post['addon_id'] ?? 0);
+
+        if ($subId <= 0 || $addonId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Dados inválidos.'], 422);
+        }
+
+        $svc = new \LRV\App\Services\Billing\UpgradeService();
+
+        try {
+            $result = $svc->contratarAddon($subId, $addonId, $clienteId);
+
+            (new \LRV\App\Services\Audit\AuditLogService())->registrar(
+                'client', $clienteId, 'billing.addon_subscribe', 'subscription', $subId,
+                ['subscription_id' => $subId, 'addon_id' => $addonId, 'addon_name' => $result['addon_name'] ?? ''], $req
+            );
+
+            return Resposta::json(['ok' => true, 'mensagem' => 'Serviço adicional "' . ($result['addon_name'] ?? '') . '" contratado com sucesso!']);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Cancela um addon contratado.
+     */
+    public function cancelarAddon(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $itemId = (int)($req->post['item_id'] ?? 0);
+        if ($itemId <= 0) return Resposta::json(['ok' => false, 'erro' => 'Dados inválidos.'], 422);
+
+        $svc = new \LRV\App\Services\Billing\UpgradeService();
+
+        try {
+            $result = $svc->cancelarAddon($itemId, $clienteId);
+            return Resposta::json(['ok' => true, 'mensagem' => 'Serviço "' . ($result['addon_name'] ?? '') . '" cancelado.']);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()], 400);
+        }
+    }
+
     public function solicitarReembolso(Requisicao $req): Resposta
     {
         $clienteId = Auth::clienteId();

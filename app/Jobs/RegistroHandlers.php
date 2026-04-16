@@ -422,6 +422,90 @@ final class RegistroHandlers
             $svc->remover($vpsId, fn (string $m) => $ctx->log($m));
         });
 
+        // Resize VPS: atualiza limites de CPU/RAM do container Docker
+        $p->registrar('resize_vps', static function (array $payload, ContextoJob $ctx): void {
+            $vpsId = (int)($payload['vps_id'] ?? 0);
+            $newCpu = (int)($payload['cpu'] ?? 0);
+            $newRam = (int)($payload['ram'] ?? 0);
+            $upgradeId = (int)($payload['upgrade_id'] ?? 0);
+
+            if ($vpsId <= 0) {
+                throw new \InvalidArgumentException('vps_id inválido.');
+            }
+
+            $pdo = BancoDeDados::pdo();
+            $stmt = $pdo->prepare(
+                'SELECT v.id, v.container_id, v.server_id,
+                        s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+                 FROM vps v
+                 JOIN servers s ON s.id = v.server_id
+                 WHERE v.id = :id LIMIT 1'
+            );
+            $stmt->execute([':id' => $vpsId]);
+            $vps = $stmt->fetch();
+
+            if (!is_array($vps)) {
+                $ctx->log('VPS não encontrada ou sem servidor associado.');
+                return;
+            }
+
+            $containerId = trim((string)($vps['container_id'] ?? ''));
+            if ($containerId === '') {
+                $ctx->log('VPS sem container_id — resize não necessário (será aplicado no próximo provisionamento).');
+                return;
+            }
+
+            $ctx->log("Resize VPS #{$vpsId}: CPU={$newCpu}, RAM={$newRam}MB");
+
+            // Montar comando docker update
+            $cmd = 'docker update';
+            if ($newCpu > 0) {
+                $cmd .= ' --cpus=' . escapeshellarg((string)$newCpu);
+            }
+            if ($newRam > 0) {
+                $cmd .= ' -m ' . escapeshellarg($newRam . 'm');
+                $cmd .= ' --memory-swap ' . escapeshellarg($newRam . 'm');
+            }
+            $cmd .= ' ' . escapeshellarg($containerId) . ' 2>&1';
+
+            try {
+                $docker = new DockerCli();
+                $authType = (string)($vps['ssh_auth_type'] ?? 'password');
+                if ($authType === 'password') {
+                    $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
+                    $docker->definirRemotoComSenha(
+                        (string)$vps['ip_address'], (int)$vps['ssh_port'],
+                        (string)$vps['ssh_user'], $senha
+                    );
+                } else {
+                    $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
+                    $docker->definirRemoto(
+                        (string)$vps['ip_address'], (int)$vps['ssh_port'],
+                        (string)$vps['ssh_user'], $keyPath
+                    );
+                }
+
+                $result = $docker->executar($cmd);
+                $output = trim((string)($result['saida'] ?? ''));
+                $ctx->log('docker update: ' . $output);
+
+                if (str_contains(strtolower($output), 'error')) {
+                    $ctx->log('Aviso: docker update retornou erro. O container pode precisar de restart.');
+                    // Tentar restart pra aplicar os novos limites
+                    try {
+                        $docker->executar('docker restart ' . escapeshellarg($containerId) . ' 2>&1');
+                        $ctx->log('Container reiniciado com sucesso.');
+                    } catch (\Throwable $re) {
+                        $ctx->log('Falha ao reiniciar: ' . $re->getMessage());
+                    }
+                } else {
+                    $ctx->log('Resize concluído com sucesso.');
+                }
+            } catch (\Throwable $e) {
+                $ctx->log('Falha no resize: ' . $e->getMessage());
+            }
+        });
+
         $p->registrar('coletar_status', static function (array $payload, ContextoJob $ctx): void {
             $svc = new StatusCollectorService();
             $svc->coletar(fn (string $m) => $ctx->log($m));

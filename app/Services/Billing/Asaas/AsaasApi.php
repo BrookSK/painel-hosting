@@ -29,6 +29,11 @@ final class AsaasApi
         return $this->post('/subscriptions', $dados);
     }
 
+    public function atualizarAssinatura(string $subscriptionId, array $dados): array
+    {
+        return $this->post('/subscriptions/' . rawurlencode($subscriptionId), $dados);
+    }
+
     public function listarCobrancasDaAssinatura(string $subscriptionId): array
     {
         return $this->get('/subscriptions/' . rawurlencode($subscriptionId) . '/payments');
@@ -37,6 +42,11 @@ final class AsaasApi
     public function buscarCobranca(string $paymentId): array
     {
         return $this->get('/payments/' . rawurlencode($paymentId));
+    }
+
+    public function criarCobrancaAvulsa(array $dados): array
+    {
+        return $this->post('/payments', $dados);
     }
 
     public function buscarPixQrCode(string $paymentId): array
