@@ -110,8 +110,21 @@ final class VpsProvisioningService
         $this->atualizarStatusVps($vpsId, 'provisioning');
 
         $rede = (string) Settings::obter('infra.docker_rede', 'lrvcloud_network');
-        $volumeBase = (string) Settings::obter('infra.volume_base', '/vps');
+        $volumeBaseGlobal = (string) Settings::obter('infra.volume_base', '/vps');
         $imagemBase = (string) Settings::obter('infra.imagem_base', 'debian:12-slim');
+
+        // Usar volume_base_path do servidor se configurado, senão fallback pro global
+        $volumeBase = $volumeBaseGlobal;
+        try {
+            $srvStmt = $pdo->prepare('SELECT volume_base_path FROM servers WHERE id = :id LIMIT 1');
+            $srvStmt->execute([':id' => $serverId]);
+            $srvRow = $srvStmt->fetch();
+            $srvVolume = trim((string)($srvRow['volume_base_path'] ?? ''));
+            if ($srvVolume !== '') {
+                $volumeBase = $srvVolume;
+                $log('Usando volume base do servidor: ' . $volumeBase);
+            }
+        } catch (\Throwable) {}
 
         $nomeContainer = 'vps_client_' . (int) $vps['client_id'] . '_' . $vpsId;
         $volumeHost = rtrim($volumeBase, '/') . '/client_' . (int) $vps['client_id'];

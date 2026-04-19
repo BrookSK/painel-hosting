@@ -103,6 +103,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">VPS de clientes gerenciados são provisionadas neste servidor sem limites de recursos (overselling). Os recursos do plano aparecem para o cliente, mas o container não tem caps.</p>
     </div>
 
+    <div style="margin-top:14px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">📂 Caminho base dos volumes (storage)</label>
+      <input class="input" type="text" name="volume_base_path" value="<?php echo View::e((string)($servidor['volume_base_path'] ?? '')); ?>" placeholder="/vps" />
+      <p class="texto" style="font-size:12px;margin-top:4px;">Diretório onde os dados das VPS serão armazenados neste servidor. Deixe vazio para usar o padrão global (<code>infra.volume_base</code>, normalmente <code>/vps</code>). Útil quando o servidor tem discos/partições separados (ex: <code>/desenvolvimento</code>, <code>/mnt/ssd2</code>).</p>
+    </div>
+
     <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.ip')); ?></label>

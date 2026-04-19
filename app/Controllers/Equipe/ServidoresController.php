@@ -255,6 +255,13 @@ final class ServidoresController
             BancoDeDados::pdo()->prepare('UPDATE servers SET is_test = :t, is_managed_server = :m, role = :r WHERE id = :id')->execute([':t' => $isTest, ':m' => $isManagedServer, ':r' => $role, ':id' => $savedId]);
         } catch (\Throwable) {}
 
+        // Salvar volume_base_path
+        $volumeBasePath = trim((string)($req->post['volume_base_path'] ?? ''));
+        try {
+            BancoDeDados::pdo()->prepare('UPDATE servers SET volume_base_path = :v WHERE id = :id')
+                ->execute([':v' => $volumeBasePath !== '' ? $volumeBasePath : null, ':id' => $savedId]);
+        } catch (\Throwable) {}
+
         // Marca online
         try {
             BancoDeDados::pdo()->prepare('UPDATE servers SET is_online=1, last_check_at=:c, last_error=NULL WHERE id=:id')

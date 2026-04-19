@@ -116,6 +116,16 @@ final class VpsBackupService
 
         $volumeBase = (string) Settings::obter('infra.volume_base', '/vps');
         $volumeBase = rtrim($volumeBase, '/');
+
+        // Usar volume_base_path do servidor se configurado
+        try {
+            $srvPathStmt = $pdo->prepare('SELECT s.volume_base_path FROM vps v JOIN servers s ON s.id = v.server_id WHERE v.id = :vid LIMIT 1');
+            $srvPathStmt->execute([':vid' => $vpsId]);
+            $srvPathRow = $srvPathStmt->fetch();
+            $srvPath = trim((string)($srvPathRow['volume_base_path'] ?? ''));
+            if ($srvPath !== '') $volumeBase = rtrim($srvPath, '/');
+        } catch (\Throwable) {}
+
         $dirCliente = $volumeBase . '/client_' . $clientId;
 
         $remoteFile = '/tmp/backup_vps_' . $vpsId . '_' . $backupId . '_' . date('Ymd_His') . '.tar.gz';
