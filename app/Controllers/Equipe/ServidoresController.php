@@ -255,11 +255,13 @@ final class ServidoresController
             BancoDeDados::pdo()->prepare('UPDATE servers SET is_test = :t, is_managed_server = :m, role = :r WHERE id = :id')->execute([':t' => $isTest, ':m' => $isManagedServer, ':r' => $role, ':id' => $savedId]);
         } catch (\Throwable) {}
 
-        // Salvar volume_base_path
+        // Salvar volume_base_path e nginx_vhost_path
         $volumeBasePath = trim((string)($req->post['volume_base_path'] ?? ''));
+        $nginxVhostPath = trim((string)($req->post['nginx_vhost_path'] ?? ''));
+        $nginxReloadCmd = trim((string)($req->post['nginx_reload_cmd'] ?? ''));
         try {
-            BancoDeDados::pdo()->prepare('UPDATE servers SET volume_base_path = :v WHERE id = :id')
-                ->execute([':v' => $volumeBasePath !== '' ? $volumeBasePath : null, ':id' => $savedId]);
+            BancoDeDados::pdo()->prepare('UPDATE servers SET volume_base_path = :v, nginx_vhost_path = :n, nginx_reload_cmd = :nr WHERE id = :id')
+                ->execute([':v' => $volumeBasePath !== '' ? $volumeBasePath : null, ':n' => $nginxVhostPath !== '' ? $nginxVhostPath : null, ':nr' => $nginxReloadCmd !== '' ? $nginxReloadCmd : null, ':id' => $savedId]);
         } catch (\Throwable) {}
 
         // Marca online

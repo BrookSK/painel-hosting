@@ -109,6 +109,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">Diretório onde os dados das VPS serão armazenados neste servidor. Deixe vazio para usar o padrão global (<code>infra.volume_base</code>, normalmente <code>/vps</code>). Útil quando o servidor tem discos/partições separados (ex: <code>/desenvolvimento</code>, <code>/mnt/ssd2</code>).</p>
     </div>
 
+    <div style="margin-top:14px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🌐 Caminho dos vhosts Nginx</label>
+      <input class="input" type="text" name="nginx_vhost_path" value="<?php echo View::e((string)($servidor['nginx_vhost_path'] ?? '')); ?>" placeholder="/etc/nginx/sites-available/lrv" />
+      <p class="texto" style="font-size:12px;margin-top:4px;">Diretório onde os vhosts Nginx são criados. Deixe vazio para o padrão (<code>/etc/nginx/sites-available/lrv</code>). Para servidores com aaPanel, use <code>/www/server/panel/vhost/nginx</code>.</p>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🔄 Comando de reload do Nginx</label>
+      <input class="input" type="text" name="nginx_reload_cmd" value="<?php echo View::e((string)($servidor['nginx_reload_cmd'] ?? '')); ?>" placeholder="systemctl reload nginx" />
+      <p class="texto" style="font-size:12px;margin-top:4px;">Comando para recarregar o Nginx após criar/remover vhosts. Padrão: <code>systemctl reload nginx</code>. Para aaPanel: <code>/etc/init.d/nginx reload</code>.</p>
+    </div>
+
     <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.ip')); ?></label>

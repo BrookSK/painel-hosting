@@ -13,6 +13,35 @@ use LRV\Core\ConfiguracoesSistema;
  */
 final class NginxVhostService
 {
+    /**
+     * Retorna o caminho dos vhosts Nginx para o servidor.
+     * Se tem nginx_vhost_path customizado (ex: aaPanel), usa ele.
+     * Senão usa o padrão /etc/nginx/sites-available/lrv.
+     */
+    private function getVhostPath(array $srv): string
+    {
+        $custom = trim((string)($srv['nginx_vhost_path'] ?? ''));
+        return $custom !== '' ? rtrim($custom, '/') : '/etc/nginx/sites-available/lrv';
+    }
+
+    /**
+     * Verifica se o servidor usa caminho customizado de vhosts (aaPanel, etc).
+     * Nesse caso, não precisa de symlink pra sites-enabled.
+     */
+    private function isCustomNginxPath(array $srv): bool
+    {
+        return trim((string)($srv['nginx_vhost_path'] ?? '')) !== '';
+    }
+
+    /**
+     * Retorna o comando de reload do Nginx para o servidor.
+     */
+    private function getNginxReloadCmd(array $srv): string
+    {
+        $custom = trim((string)($srv['nginx_reload_cmd'] ?? ''));
+        return $custom !== '' ? $custom : 'systemctl reload nginx';
+    }
+
     public function criarVhost(int $serverId, string $domain, int $port, bool $ssl = true): array
     {
         $pdo = BancoDeDados::pdo();
@@ -20,6 +49,9 @@ final class NginxVhostService
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
 
         $logs = [];
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
 
         // 1. Criar config Nginx
         $vhostName = str_replace('.', '_', $domain);
@@ -28,11 +60,17 @@ final class NginxVhostService
         $ssh = new SshExecutor();
         $this->configurarSsh($ssh, $srv);
 
-        // Escrever config
+        // Escrever config — se caminho customizado (aaPanel), não faz symlink
         $b64 = base64_encode($config);
-        $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok';
+        if ($isCustom) {
+            $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+        } else {
+            $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+                . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+        }
 
         $result = $this->exec($ssh, $srv, $cmd);
         $logs[] = 'Vhost: ' . trim($result['saida'] ?? '');
@@ -63,13 +101,21 @@ final class NginxVhostService
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return;
 
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
         $vhostName = str_replace('.', '_', $domain);
         $ssh = new SshExecutor();
         $this->configurarSsh($ssh, $srv);
 
-        $cmd = 'rm -f /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . ' /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1';
+        if ($isCustom) {
+            $cmd = 'rm -f ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1';
+        } else {
+            $cmd = 'rm -f /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+                . ' /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1';
+        }
 
         try { $this->exec($ssh, $srv, $cmd); } catch (\Throwable) {}
     }
@@ -144,6 +190,10 @@ final class NginxVhostService
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
 
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
+
         $logs = [];
         $ssh = new SshExecutor();
 
@@ -171,17 +221,30 @@ final class NginxVhostService
 
         $b64 = base64_encode($config);
         // Se o vhost já existe com SSL (Certbot), atualizar root e try_files sem sobrescrever SSL
+        if ($isCustom) {
+            $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
+                . ' && if grep -q "listen 443 ssl" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' 2>/dev/null; then'
+                . '   sed -i "s|root .*|root ' . $actualRoot . ';|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
+                . ' else'
+                . '   echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
+                . ' fi';
+        } else {
         $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
             . ' && if grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
             . '   sed -i "s|root .*|root ' . $actualRoot . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
+            . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' else'
             . '   echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . '   && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok;'
+            . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' fi';
+        } // end else (default nginx path)
 
         $result = $this->exec($ssh, $srv, $cmd);
         $logs[] = 'Vhost: ' . trim($result['saida'] ?? '');
@@ -233,15 +296,24 @@ final class NginxVhostService
         $logs = [];
         $ssh = new SshExecutor();
 
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
         $vhostName = str_replace('.', '_', $domain);
         $config = $this->gerarConfig($domain, $appPort);
 
         $b64 = base64_encode($config);
         // Sempre sobrescrever — se tinha SSL, o certbot vai re-adicionar
-        $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
-            . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . ' && nginx -t 2>&1 && systemctl reload nginx 2>&1 && echo lrv-vhost-ok';
+        if ($isCustom) {
+            $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+        } else {
+            $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+                . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+        }
 
         $result = $this->exec($ssh, $srv, $cmd);
         $logs[] = 'Vhost proxy: ' . trim($result['saida'] ?? '');
@@ -263,7 +335,7 @@ final class NginxVhostService
 
     private function getServer(\PDO $pdo, int $id): ?array
     {
-        $stmt = $pdo->prepare('SELECT id, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password FROM servers WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, ip_address, ssh_port, ssh_user, ssh_auth_type, ssh_key_id, ssh_password, nginx_vhost_path, nginx_reload_cmd FROM servers WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $srv = $stmt->fetch();
         return is_array($srv) ? $srv : null;
