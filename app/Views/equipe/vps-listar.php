@@ -74,9 +74,32 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             <td>
               <div class="linha" style="gap:4px;flex-wrap:wrap;">
                 <?php foreach ($acoes as $acao => [$label, $cls, $habilitado]): ?>
-                  <form method="post" action="/equipe/vps/<?php echo $acao; ?>"<?php echo $acao==='remover' ? ' data-confirm="Remover VPS #'.$vid.'?"' : ''; ?>>
+                  <form method="post" action="/equipe/vps/<?php echo $acao; ?>"<?php echo $acao==='remover' ? ' data-confirm="Remover VPS #'.$vid.'?"' : ''; ?> style="display:flex;align-items:center;gap:4px;">
                     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
                     <input type="hidden" name="vps_id" value="<?php echo $vid; ?>" />
+                    <?php if ($acao === 'provisionar' && $habilitado): ?>
+                      <select name="server_id" style="font-size:11px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:4px;max-width:120px;">
+                        <option value="0">Auto</option>
+                        <?php
+                          static $_managedServers = null;
+                          if ($_managedServers === null) {
+                              try {
+                                  $_managedServers = \LRV\Core\BancoDeDados::pdo()->query("SELECT id, hostname FROM servers WHERE status = 'active' AND is_managed_server = 1 ORDER BY hostname")->fetchAll() ?: [];
+                              } catch (\Throwable) { $_managedServers = []; }
+                          }
+                          // Também listar servidores normais
+                          static $_allActiveServers = null;
+                          if ($_allActiveServers === null) {
+                              try {
+                                  $_allActiveServers = \LRV\Core\BancoDeDados::pdo()->query("SELECT id, hostname, is_managed_server FROM servers WHERE status = 'active' ORDER BY hostname")->fetchAll() ?: [];
+                              } catch (\Throwable) { $_allActiveServers = []; }
+                          }
+                          foreach ($_allActiveServers as $_ms):
+                        ?>
+                          <option value="<?php echo (int)$_ms['id']; ?>"><?php echo View::e((string)$_ms['hostname']); ?><?php echo !empty($_ms['is_managed_server']) ? ' 🔧' : ''; ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    <?php endif; ?>
                     <button class="btn-sm <?php echo $cls; ?>" type="submit"<?php echo $habilitado ? '' : ' disabled style="opacity:.4;cursor:not-allowed;"'; ?>><?php echo $label; ?></button>
                   </form>
                 <?php endforeach; ?>

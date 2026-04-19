@@ -35,16 +35,23 @@ final class VpsController
     public function provisionar(Requisicao $req): Resposta
     {
         $vpsId = (int) ($req->post['vps_id'] ?? 0);
+        $forceServerId = (int) ($req->post['server_id'] ?? 0);
         if ($vpsId <= 0) {
             return Resposta::texto('VPS inválida.', 400);
         }
 
         $pdo = \LRV\Core\BancoDeDados::pdo();
-        $stmt = $pdo->prepare('SELECT id, status FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, status, client_id FROM vps WHERE id = :id AND deleted_at IS NULL LIMIT 1');
         $stmt->execute([':id' => $vpsId]);
         $vps = $stmt->fetch();
         if (!is_array($vps)) {
             return Resposta::texto('VPS não encontrada.', 404);
+        }
+
+        // Se admin escolheu servidor específico, vincular antes de provisionar
+        if ($forceServerId > 0) {
+            $pdo->prepare('UPDATE vps SET server_id = :sid WHERE id = :id')
+                ->execute([':sid' => $forceServerId, ':id' => $vpsId]);
         }
 
         // Marcar status imediatamente
