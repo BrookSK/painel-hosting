@@ -66,12 +66,17 @@ final class SshExecutor
             return $this->executarViaSsh2($host, $porta, $usuario, $senha, $cmd, $timeoutSegundos);
         }
 
-        // 2) proc_open com pseudo-terminal (pty)
+        // 2) phpseclib (PHP puro — funciona em qualquer servidor, inclusive compartilhado)
+        if (class_exists('\\phpseclib3\\Net\\SSH2')) {
+            return $this->executarViaPhpseclib($host, $porta, $usuario, $senha, $cmd, $timeoutSegundos);
+        }
+
+        // 3) proc_open com pseudo-terminal (pty) — precisa de setsid
         if (function_exists('proc_open')) {
             return $this->executarViaPty($host, $porta, $usuario, $senha, $cmd, $timeoutSegundos);
         }
 
-        throw new \RuntimeException('Nenhum método disponível para SSH com senha. Instale a extensão ssh2 ou habilite proc_open.');
+        throw new \RuntimeException('Nenhum método disponível para SSH com senha. Instale phpseclib (composer require phpseclib/phpseclib) ou a extensão ssh2.');
     }
 
     /**
@@ -291,6 +296,33 @@ final class SshExecutor
             escapeshellarg($usuario . '@' . $host),
             escapeshellarg($cmd),
         ]);
+    }
+
+    /**
+     * Executa via phpseclib3 (PHP puro — sem dependências de binários).
+     */
+    private function executarViaPhpseclib(string $host, int $porta, string $usuario, string $senha, string $cmd, int $timeout): array
+    {
+        try {
+            $ssh = new \phpseclib3\Net\SSH2($host, $porta);
+            $ssh->setTimeout($timeout);
+
+            if (!$ssh->login($usuario, $senha)) {
+                return ['ok' => false, 'comando' => $cmd, 'saida' => 'Autenticação SSH por senha falhou (phpseclib).', 'codigo' => 255];
+            }
+
+            $output = $ssh->exec($cmd);
+            $exitCode = $ssh->getExitStatus();
+
+            return [
+                'ok'      => $exitCode === 0 || $exitCode === false,
+                'comando' => $cmd,
+                'saida'   => trim((string)$output),
+                'codigo'  => is_int($exitCode) ? $exitCode : 0,
+            ];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'comando' => $cmd, 'saida' => 'Erro phpseclib: ' . $e->getMessage(), 'codigo' => 255];
+        }
     }
 
     /**
