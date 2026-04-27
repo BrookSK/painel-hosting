@@ -477,6 +477,9 @@ final class GitDeployController
             }
         }
 
+        // Garantir permissões antes de qualquer operação git
+        $runCmd('sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+
         // Check if repo already cloned (and if it's the correct repo)
         $checkResult = $runCmd('test -d ' . escapeshellarg($deployPath . '/.git') . ' && git -C ' . escapeshellarg($deployPath) . ' remote get-url origin 2>/dev/null || echo "new"');
         $currentRemote = trim((string)($checkResult['saida'] ?? 'new'));
@@ -489,13 +492,17 @@ final class GitDeployController
         $output = '';
 
         if ($isNew) {
-            // Garantir que o diretório pai existe e tem permissão
-            $parentDir = dirname($deployPath);
+            // Garantir que o diretório existe e tem permissão
             $runCmd('sudo mkdir -p ' . escapeshellarg($deployPath) . ' 2>/dev/null; sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
 
-            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath . '/*') . ' ' . escapeshellarg($deployPath . '/.[!.]*') . ' 2>/dev/null; '
-                . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
-            $r = $runCmd($cloneCmd);
+            // Usar git init + fetch + reset em vez de clone para preservar arquivos locais
+            // (database.php, .env, uploads, etc. que não estão no repositório)
+            $initCmd = 'cd ' . escapeshellarg($deployPath)
+                . ' && (test -d .git || git init) 2>&1'
+                . ' && git remote remove origin 2>/dev/null; git remote add origin ' . escapeshellarg($repoUrl) . ' 2>&1'
+                . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1'
+                . ' && git checkout -B ' . escapeshellarg($branch) . ' origin/' . escapeshellarg($branch) . ' 2>&1';
+            $r = $runCmd($initCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
             // Atualizar remote origin para a URL correta (pode ter mudado)
