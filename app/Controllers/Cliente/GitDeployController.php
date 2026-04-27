@@ -489,7 +489,12 @@ final class GitDeployController
         $output = '';
 
         if ($isNew) {
-            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath) . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
+            // Garantir que o diretório pai existe e tem permissão
+            $parentDir = dirname($deployPath);
+            $runCmd('sudo mkdir -p ' . escapeshellarg($deployPath) . ' 2>/dev/null; sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+
+            $cloneCmd = 'rm -rf ' . escapeshellarg($deployPath . '/*') . ' ' . escapeshellarg($deployPath . '/.[!.]*') . ' 2>/dev/null; '
+                . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git clone --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($deployPath) . ' 2>&1';
             $r = $runCmd($cloneCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
@@ -533,7 +538,8 @@ final class GitDeployController
         }
 
         // Corrigir permissões + buscar commit info — tudo numa única conexão
-        $finalCmd = '(chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' && chmod -R 755 ' . escapeshellarg($deployPath) . ') >/dev/null 2>&1;'
+        $finalCmd = '(sudo chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
+            . ' && (sudo chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || true);'
             . ' cd ' . escapeshellarg($deployPath) . ' && echo "LRV_COMMIT_START" && git log -1 --format="%H|%s|%an" 2>/dev/null; echo "LRV_COMMIT_END"';
         $finalResult = $runCmd($finalCmd);
         $finalOutput = (string)($finalResult['saida'] ?? '');
