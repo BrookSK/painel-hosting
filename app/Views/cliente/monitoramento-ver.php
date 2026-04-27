@@ -45,8 +45,18 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     ?></div>
   </div>
   <div class="stat-card">
-    <div class="stat-val" style="font-size:18px;"><?php echo View::e($stats['block_io']); ?></div>
-    <div class="stat-label">I/O Disco</div>
+    <?php if (\LRV\Core\Auth::clienteGerenciado() && isset($stats['disk_usage_mb'])): ?>
+      <?php
+        $diskUsedMb = (int)$stats['disk_usage_mb'];
+        $diskUsedGb = round($diskUsedMb / 1024, 2);
+        $diskUsedDisplay = $diskUsedMb >= 1024 ? $diskUsedGb . 'GB' : $diskUsedMb . 'MB';
+      ?>
+      <div class="stat-val" style="font-size:18px;"><?php echo View::e($diskUsedDisplay); ?></div>
+      <div class="stat-label">Disco usado</div>
+    <?php else: ?>
+      <div class="stat-val" style="font-size:18px;"><?php echo View::e($stats['block_io']); ?></div>
+      <div class="stat-label">I/O Disco</div>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -77,10 +87,12 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div style="font-weight:600;font-size:13px;color:#16a34a;margin-bottom:8px;">RAM (%)</div>
     <canvas id="chartRam" height="120"></canvas>
   </div>
+  <?php if (!\LRV\Core\Auth::clienteGerenciado()): ?>
   <div class="card">
     <div style="font-weight:600;font-size:13px;color:#f59e0b;margin-bottom:8px;">Disco (%)</div>
     <canvas id="chartDisco" height="120"></canvas>
   </div>
+  <?php endif; ?>
 </div>
 
 <!-- Histórico (últimas 12 coletas) -->
@@ -89,7 +101,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div style="overflow:auto;">
     <table style="font-size:13px;">
       <thead>
-        <tr><th>Data/Hora</th><th>CPU</th><th>RAM</th><th>Disco</th></tr>
+        <tr><th>Data/Hora</th><th>CPU</th><th>RAM</th><?php if (!\LRV\Core\Auth::clienteGerenciado()): ?><th>Disco</th><?php endif; ?></tr>
       </thead>
       <tbody>
         <?php foreach ($metricas as $m): ?>
@@ -97,7 +109,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <td><?php echo View::e((string)($m['timestamp'] ?? '')); ?></td>
           <td style="color:#4F46E5;"><?php echo number_format((float)($m['cpu_usage'] ?? 0), 2); ?>%</td>
           <td style="color:#16a34a;"><?php echo number_format((float)($m['ram_usage'] ?? 0), 2); ?>%</td>
+          <?php if (!\LRV\Core\Auth::clienteGerenciado()): ?>
           <td style="color:#f59e0b;"><?php echo number_format((float)($m['disk_usage'] ?? 0), 2); ?>%</td>
+          <?php endif; ?>
         </tr>
         <?php endforeach; ?>
       </tbody>
@@ -138,7 +152,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   }
   drawChart('chartCpu','cpu_usage','rgb(79,70,229)');
   drawChart('chartRam','ram_usage','rgb(22,163,74)');
+  <?php if (!\LRV\Core\Auth::clienteGerenciado()): ?>
   drawChart('chartDisco','disk_usage','rgb(245,158,11)');
+  <?php endif; ?>
 })();
 </script>
 <?php endif; ?>

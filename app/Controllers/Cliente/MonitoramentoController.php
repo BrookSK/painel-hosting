@@ -98,13 +98,35 @@ final class MonitoramentoController
                 if ($ip === '') {
                     $statsErro = 'Servidor sem IP configurado.';
                 } else {
+                    // Para clientes gerenciados, coletar tamanho da pasta do deploy junto
+                    $diskCmd = '';
+                    if (\LRV\Core\Auth::clienteGerenciado()) {
+                        try {
+                            $dpStmt = $pdo->prepare('SELECT deploy_path FROM git_deployments WHERE client_id = :c AND status != \'inactive\'');
+                            $dpStmt->execute([':c' => $clienteId]);
+                            $deployPaths = $dpStmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+                            if (!empty($deployPaths)) {
+                                $duPaths = [];
+                                foreach ($deployPaths as $dp) {
+                                    $dp = trim((string)$dp);
+                                    if ($dp !== '') $duPaths[] = escapeshellarg($dp);
+                                }
+                                if (!empty($duPaths)) {
+                                    $diskCmd = '; echo "LRV_DISK_START"; du -sm ' . implode(' ', $duPaths) . ' 2>/dev/null | awk \'{s+=$1} END {print s}\'; echo "LRV_DISK_END"';
+                                }
+                            }
+                        } catch (\Throwable) {}
+                    }
+
+                    $fullCmd = $dockerCmd . $diskCmd;
+
                     if ($authType === 'password') {
                         $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
-                        $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $dockerCmd, 15);
+                        $result = $ssh->executarComSenha($ip, $porta, $usuario, $senha, $fullCmd, 15);
                     } else {
                         $keyDir = rtrim(\LRV\Core\ConfiguracoesSistema::sshKeyDir(), "/\\");
                         $keyPath = $keyDir . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
-                        $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $dockerCmd, 15);
+                        $result = $ssh->executar($ip, $porta, $usuario, $keyPath, $fullCmd, 15);
                     }
 
                     $output = trim((string)($result['saida'] ?? ''));
@@ -144,6 +166,13 @@ final class MonitoramentoController
                             'mem_percent' => $rawMemPct,
                             'block_io'    => trim($parts[3] ?? '0'),
                         ];
+
+                        // Para clientes gerenciados: extrair disco real da pasta do deploy
+                        if (\LRV\Core\Auth::clienteGerenciado() && str_contains($output, 'LRV_DISK_START')) {
+                            if (preg_match('/LRV_DISK_START\s*\n(\d+)\s*\nLRV_DISK_END/s', $output, $diskMatch)) {
+                                $containerStats['disk_usage_mb'] = (int)$diskMatch[1];
+                            }
+                        }
                     } else {
                         $statsErro = $output !== '' ? $output : 'Sem resposta do docker stats (exit: ' . $exitCode . ')';
                     }
