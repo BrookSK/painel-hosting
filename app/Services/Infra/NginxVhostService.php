@@ -52,6 +52,7 @@ final class NginxVhostService
         $vhostPath = $this->getVhostPath($srv);
         $isCustom = $this->isCustomNginxPath($srv);
         $reloadCmd = $this->getNginxReloadCmd($srv);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
         // 1. Criar config Nginx
         $vhostName = str_replace('.', '_', $domain);
@@ -63,13 +64,14 @@ final class NginxVhostService
         // Escrever config — se caminho customizado (aaPanel), não faz symlink
         $b64 = base64_encode($config);
         if ($isCustom) {
-            $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
-                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+            $cmd = $sudo . 'mkdir -p ' . escapeshellarg($vhostPath)
+                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
+                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         } else {
-            $cmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-                . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+            $cmd = $sudo . 'mkdir -p /etc/nginx/sites-available/lrv'
+                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
+                . ' && ' . $sudo . 'ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         }
 
         $result = $this->exec($ssh, $srv, $cmd);
@@ -104,17 +106,18 @@ final class NginxVhostService
         $vhostPath = $this->getVhostPath($srv);
         $isCustom = $this->isCustomNginxPath($srv);
         $reloadCmd = $this->getNginxReloadCmd($srv);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
         $vhostName = str_replace('.', '_', $domain);
         $ssh = new SshExecutor();
         $this->configurarSsh($ssh, $srv);
 
         if ($isCustom) {
-            $cmd = 'rm -f ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1';
+            $cmd = $sudo . 'rm -f ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1';
         } else {
-            $cmd = 'rm -f /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            $cmd = $sudo . 'rm -f /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
                 . ' /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1';
+                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1';
         }
 
         try { $this->exec($ssh, $srv, $cmd); } catch (\Throwable) {}
@@ -218,31 +221,32 @@ final class NginxVhostService
 
         $vhostName = str_replace('.', '_', $domain);
         $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
         $b64 = base64_encode($config);
         // Se o vhost já existe com SSL (Certbot), atualizar root e try_files sem sobrescrever SSL
         if ($isCustom) {
-            $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
-                . ' && if grep -q "listen 443 ssl" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' 2>/dev/null; then'
-                . '   sed -i "s|root .*|root ' . $actualRoot . ';|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . '   && sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . '   && sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
+            $cmd = $sudo . 'mkdir -p ' . escapeshellarg($vhostPath)
+                . ' && if ' . $sudo . 'grep -q "listen 443 ssl" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' 2>/dev/null; then'
+                . '   ' . $sudo . 'sed -i "s|root .*|root ' . $actualRoot . ';|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && ' . $sudo . 'sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
                 . ' else'
-                . '   echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
+                . '   echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
+                . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
                 . ' fi';
         } else {
-        $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
-            . ' && if grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
-            . '   sed -i "s|root .*|root ' . $actualRoot . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
+        $cmd = $sudo . 'mkdir -p /etc/nginx/sites-available/lrv'
+            . ' && if ' . $sudo . 'grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
+            . '   ' . $sudo . 'sed -i "s|root .*|root ' . $actualRoot . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ' . $sudo . 'sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' else'
-            . '   echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-            . '   && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
+            . '   echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
+            . '   && ' . $sudo . 'ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' fi';
         } // end else (default nginx path)
 
@@ -254,7 +258,7 @@ final class NginxVhostService
         }
 
         if ($ssl) {
-            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
+            $certCmd = $sudo . 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
             $certResult = $this->exec($ssh, $srv, $certCmd);
             $logs[] = 'SSL: ' . trim($certResult['saida'] ?? '');
         }
@@ -270,8 +274,8 @@ final class NginxVhostService
             if ($iniLines !== '') {
                 $iniB64 = base64_encode($iniLines);
                 $iniPath = '/etc/php/' . $phpVersion . '/fpm/conf.d/99-lrv-' . str_replace('.', '_', $domain) . '.ini';
-                $phpCmd = 'echo ' . escapeshellarg($iniB64) . ' | base64 -d > ' . escapeshellarg($iniPath)
-                    . ' && systemctl reload php' . $phpVersion . '-fpm 2>&1 && echo lrv-php-ok';
+                $phpCmd = 'echo ' . escapeshellarg($iniB64) . ' | ' . $sudo . 'tee ' . escapeshellarg($iniPath) . ' > /dev/null'
+                    . ' && ' . $sudo . 'systemctl reload php' . $phpVersion . '-fpm 2>&1 && echo lrv-php-ok';
                 $phpResult = $this->exec($ssh, $srv, $phpCmd);
                 $logs[] = 'PHP config: ' . trim($phpResult['saida'] ?? '');
             }
@@ -301,18 +305,19 @@ final class NginxVhostService
         $reloadCmd = $this->getNginxReloadCmd($srv);
         $vhostName = str_replace('.', '_', $domain);
         $config = $this->gerarConfig($domain, $appPort);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
         $b64 = base64_encode($config);
         // Sempre sobrescrever — se tinha SSL, o certbot vai re-adicionar
         if ($isCustom) {
-            $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
-                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+            $cmd = $sudo . 'mkdir -p ' . escapeshellarg($vhostPath)
+                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
+                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         } else {
-            $cmd = 'mkdir -p /etc/nginx/sites-available/lrv'
-                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-                . ' && ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
-                . ' && nginx -t 2>&1 && ' . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
+            $cmd = $sudo . 'mkdir -p /etc/nginx/sites-available/lrv'
+                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
+                . ' && ' . $sudo . 'ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
+                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         }
 
         $result = $this->exec($ssh, $srv, $cmd);
@@ -332,6 +337,15 @@ final class NginxVhostService
         return ['ok' => true, 'logs' => $logs];
     }
 
+
+    /**
+     * Verifica se o servidor precisa de sudo (usuário SSH não é root).
+     */
+    private function needsSudo(array $srv): bool
+    {
+        $user = trim((string)($srv['ssh_user'] ?? 'root'));
+        return $user !== 'root';
+    }
 
     private function getServer(\PDO $pdo, int $id): ?array
     {
