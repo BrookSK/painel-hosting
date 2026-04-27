@@ -87,6 +87,7 @@ mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0066_subscription_ad
 mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0067_remove_unimplemented_addons.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0068_addon_slug.sql
 mysql -u root -p lrv_cloud < database/migrations/2026_04_16_0069_client_support_priority.sql
+mysql -u root -p lrv_cloud < database/migrations/2026_04_27_0073_database_engine_and_phpmyadmin.sql
 ```
 
 ### 3. Configuração do banco

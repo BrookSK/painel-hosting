@@ -259,9 +259,16 @@ final class ServidoresController
         $volumeBasePath = trim((string)($req->post['volume_base_path'] ?? ''));
         $nginxVhostPath = trim((string)($req->post['nginx_vhost_path'] ?? ''));
         $nginxReloadCmd = trim((string)($req->post['nginx_reload_cmd'] ?? ''));
+        $phpmyadminUrl  = trim((string)($req->post['phpmyadmin_url'] ?? ''));
         try {
-            BancoDeDados::pdo()->prepare('UPDATE servers SET volume_base_path = :v, nginx_vhost_path = :n, nginx_reload_cmd = :nr WHERE id = :id')
-                ->execute([':v' => $volumeBasePath !== '' ? $volumeBasePath : null, ':n' => $nginxVhostPath !== '' ? $nginxVhostPath : null, ':nr' => $nginxReloadCmd !== '' ? $nginxReloadCmd : null, ':id' => $savedId]);
+            BancoDeDados::pdo()->prepare('UPDATE servers SET volume_base_path = :v, nginx_vhost_path = :n, nginx_reload_cmd = :nr, phpmyadmin_url = :pma WHERE id = :id')
+                ->execute([
+                    ':v' => $volumeBasePath !== '' ? $volumeBasePath : null,
+                    ':n' => $nginxVhostPath !== '' ? $nginxVhostPath : null,
+                    ':nr' => $nginxReloadCmd !== '' ? $nginxReloadCmd : null,
+                    ':pma' => $phpmyadminUrl !== '' ? $phpmyadminUrl : null,
+                    ':id' => $savedId,
+                ]);
         } catch (\Throwable) {}
 
         // Marca online

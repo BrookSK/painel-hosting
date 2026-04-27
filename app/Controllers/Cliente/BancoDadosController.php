@@ -95,66 +95,116 @@ final class BancoDadosController
 
         $pdo = BancoDeDados::pdo();
 
-        $vStmt = $pdo->prepare("SELECT v.id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id FROM vps v JOIN servers s ON s.id = v.server_id WHERE v.id = :v AND v.client_id = :c AND v.status = 'running' LIMIT 1");
+        // Buscar dados da VPS + flags do servidor (is_managed_server)
+        $vStmt = $pdo->prepare(
+            "SELECT v.id, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id, s.is_managed_server
+             FROM vps v JOIN servers s ON s.id = v.server_id
+             WHERE v.id = :v AND v.client_id = :c AND v.status = 'running' LIMIT 1"
+        );
         $vStmt->execute([':v' => $vpsId, ':c' => $clienteId]);
         $vps = $vStmt->fetch();
         if (!is_array($vps)) {
             return $this->renderizarErro($clienteId, 'VPS não encontrada ou inativa.');
         }
 
-        // Nome do container MySQL dedicado
-        $containerName = 'db_client_' . $clienteId . '_' . preg_replace('/[^a-z0-9]/', '', strtolower($name));
-        $rede = (string)\LRV\Core\Settings::obter('infra.docker_rede', 'lrvcloud_network');
+        // Determinar engine: servidores gerenciados usam MySQL nativo do host
+        $isManaged = !empty($vps['is_managed_server']);
+        $engine = $isManaged ? 'native' : 'docker';
 
-        $pdo->prepare('INSERT INTO client_databases (client_id, vps_id, name, db_name, db_user, db_password_enc, db_host, db_port, container_id, status, created_at) VALUES (:c,:v,:n,:dn,:du,:dp,:dh,:dport,:ci,:s,:cr)')
-            ->execute([
+        if ($engine === 'native') {
+            // MySQL nativo: host é localhost, porta 3306, sem container
+            $pdo->prepare(
+                'INSERT INTO client_databases (client_id, vps_id, name, db_name, db_user, db_password_enc, db_host, db_port, container_id, engine, status, created_at)
+                 VALUES (:c,:v,:n,:dn,:du,:dp,:dh,:dport,NULL,:eng,:s,:cr)'
+            )->execute([
+                ':c' => $clienteId, ':v' => $vpsId, ':n' => $name,
+                ':dn' => $dbName, ':du' => $dbUser,
+                ':dp' => SshCrypto::cifrar($dbPass),
+                ':dh' => 'localhost',
+                ':dport' => 3306,
+                ':eng' => 'native',
+                ':s' => 'creating', ':cr' => date('Y-m-d H:i:s'),
+            ]);
+            $dbId = (int)$pdo->lastInsertId();
+
+            // Criar banco e usuário no MySQL nativo do host via SSH
+            try {
+                $createSql = "CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+                    . " CREATE USER IF NOT EXISTS '{$dbUser}'@'localhost' IDENTIFIED BY " . "'" . addslashes($dbPass) . "';"
+                    . " CREATE USER IF NOT EXISTS '{$dbUser}'@'%' IDENTIFIED BY " . "'" . addslashes($dbPass) . "';"
+                    . " GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'localhost';"
+                    . " GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'%';"
+                    . " FLUSH PRIVILEGES;";
+
+                $cmd = 'mysql -u root -e ' . escapeshellarg($createSql) . ' 2>&1 && echo lrv-db-ok';
+
+                $result = $this->executarSshServidor($vps, $cmd, 30);
+                $output = (string)($result['saida'] ?? '');
+
+                if (str_contains($output, 'lrv-db-ok')) {
+                    $pdo->prepare('UPDATE client_databases SET status="active" WHERE id=:id')->execute([':id' => $dbId]);
+                } else {
+                    $pdo->prepare('UPDATE client_databases SET status="error" WHERE id=:id')->execute([':id' => $dbId]);
+                }
+            } catch (\Throwable $e) {
+                $pdo->prepare('UPDATE client_databases SET status="error" WHERE id=:id')->execute([':id' => $dbId]);
+            }
+        } else {
+            // Docker: container MySQL dedicado (comportamento original)
+            $containerName = 'db_client_' . $clienteId . '_' . preg_replace('/[^a-z0-9]/', '', strtolower($name));
+            $rede = (string)Settings::obter('infra.docker_rede', 'lrvcloud_network');
+
+            $pdo->prepare(
+                'INSERT INTO client_databases (client_id, vps_id, name, db_name, db_user, db_password_enc, db_host, db_port, container_id, engine, status, created_at)
+                 VALUES (:c,:v,:n,:dn,:du,:dp,:dh,:dport,:ci,:eng,:s,:cr)'
+            )->execute([
                 ':c' => $clienteId, ':v' => $vpsId, ':n' => $name,
                 ':dn' => $dbName, ':du' => $dbUser,
                 ':dp' => SshCrypto::cifrar($dbPass),
                 ':dh' => $containerName,
                 ':dport' => 3306,
                 ':ci' => $containerName,
+                ':eng' => 'docker',
                 ':s' => 'creating', ':cr' => date('Y-m-d H:i:s'),
             ]);
-        $dbId = (int)$pdo->lastInsertId();
+            $dbId = (int)$pdo->lastInsertId();
 
-        // Encontrar porta livre para expor o MySQL (3307+)
-        $mysqlPort = 3307 + ($dbId % 1000);
-        // Atualizar porta para acesso externo (host fica como container name para phpMyAdmin)
-        $pdo->prepare('UPDATE client_databases SET db_port = :p WHERE id = :id')
-            ->execute([':p' => $mysqlPort, ':id' => $dbId]);
+            // Encontrar porta livre para expor o MySQL (3307+)
+            $mysqlPort = 3307 + ($dbId % 1000);
+            $pdo->prepare('UPDATE client_databases SET db_port = :p WHERE id = :id')
+                ->execute([':p' => $mysqlPort, ':id' => $dbId]);
 
-        try {
-            $exec = new SshExecutor();
-            $authType = (string)($vps['ssh_auth_type'] ?? 'password');
-            $host = (string)($vps['ip_address'] ?? '');
-            $port = (int)($vps['ssh_port'] ?? 22);
-            $user = (string)($vps['ssh_user'] ?? 'root');
+            try {
+                $exec = new SshExecutor();
+                $authType = (string)($vps['ssh_auth_type'] ?? 'password');
+                $host = (string)($vps['ip_address'] ?? '');
+                $port = (int)($vps['ssh_port'] ?? 22);
+                $user = (string)($vps['ssh_user'] ?? 'root');
 
-            // Criar container MySQL dedicado com porta exposta
-            $dockerCmd = 'docker ps -a --format "{{.Names}}" | grep -q ' . escapeshellarg($containerName) . ' && echo "already exists"'
-                . ' || docker run -d'
-                . ' --name ' . escapeshellarg($containerName)
-                . ' --network ' . escapeshellarg($rede)
-                . ' --restart unless-stopped'
-                . ' -p 127.0.0.1:' . $mysqlPort . ':3306'
-                . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
-                . ' -e MYSQL_DATABASE=' . escapeshellarg($dbName)
-                . ' -e MYSQL_USER=' . escapeshellarg($dbUser)
-                . ' -e MYSQL_PASSWORD=' . escapeshellarg($dbPass)
-                . ' mysql:8 2>&1 && echo lrv-db-ok';
+                $dockerCmd = 'docker ps -a --format "{{.Names}}" | grep -q ' . escapeshellarg($containerName) . ' && echo "already exists"'
+                    . ' || docker run -d'
+                    . ' --name ' . escapeshellarg($containerName)
+                    . ' --network ' . escapeshellarg($rede)
+                    . ' --restart unless-stopped'
+                    . ' -p 127.0.0.1:' . $mysqlPort . ':3306'
+                    . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
+                    . ' -e MYSQL_DATABASE=' . escapeshellarg($dbName)
+                    . ' -e MYSQL_USER=' . escapeshellarg($dbUser)
+                    . ' -e MYSQL_PASSWORD=' . escapeshellarg($dbPass)
+                    . ' mysql:8 2>&1 && echo lrv-db-ok';
 
-            if ($authType === 'password') {
-                $senha = SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $dockerCmd, 60);
-            } else {
-                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
-                $result = $exec->executar($host, $port, $user, $keyPath, $dockerCmd, 60);
+                if ($authType === 'password') {
+                    $senha = SshCrypto::decifrar((string)($vps['ssh_password'] ?? ''));
+                    $result = $exec->executarComSenha($host, $port, $user, $senha, $dockerCmd, 60);
+                } else {
+                    $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($vps['ssh_key_id'] ?? '');
+                    $result = $exec->executar($host, $port, $user, $keyPath, $dockerCmd, 60);
+                }
+
+                $pdo->prepare('UPDATE client_databases SET status="active" WHERE id=:id')->execute([':id' => $dbId]);
+            } catch (\Throwable $e) {
+                $pdo->prepare('UPDATE client_databases SET status="error" WHERE id=:id')->execute([':id' => $dbId]);
             }
-
-            $pdo->prepare('UPDATE client_databases SET status="active" WHERE id=:id')->execute([':id' => $dbId]);
-        } catch (\Throwable $e) {
-            $pdo->prepare('UPDATE client_databases SET status="error" WHERE id=:id')->execute([':id' => $dbId]);
         }
 
         return Resposta::redirecionar('/cliente/banco-dados');
@@ -211,26 +261,21 @@ final class BancoDadosController
         $dbName = (string)$banco['db_name'];
         $dbUser = (string)$banco['db_user'];
         $dbPass = SshCrypto::decifrar((string)$banco['db_password_enc']);
+        $engine = (string)($banco['engine'] ?? 'docker');
 
         // Escape SQL for shell
         $sqlEscaped = str_replace("'", "'\\''", $sql);
-        $cmd = "mysql -u " . escapeshellarg($dbUser) . " -p" . escapeshellarg($dbPass) . " " . escapeshellarg($dbName) . " -e '" . $sqlEscaped . "' 2>&1";
+
+        if ($engine === 'native') {
+            // MySQL nativo: executar direto no host
+            $cmd = "mysql -u " . escapeshellarg($dbUser) . " -p" . escapeshellarg($dbPass) . " " . escapeshellarg($dbName) . " -e '" . $sqlEscaped . "' 2>&1";
+        } else {
+            // Docker: executar dentro do container (mesmo comando, roda no host que tem acesso)
+            $cmd = "mysql -u " . escapeshellarg($dbUser) . " -p" . escapeshellarg($dbPass) . " " . escapeshellarg($dbName) . " -e '" . $sqlEscaped . "' 2>&1";
+        }
 
         try {
-            $exec = new SshExecutor();
-            $authType = (string)($banco['ssh_auth_type'] ?? 'password');
-            $host = (string)($banco['ip_address'] ?? '');
-            $port = (int)($banco['ssh_port'] ?? 22);
-            $user = (string)($banco['ssh_user'] ?? 'root');
-
-            if ($authType === 'password') {
-                $senha = SshCrypto::decifrar((string)($banco['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $cmd, 60);
-            } else {
-                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($banco['ssh_key_id'] ?? '');
-                $result = $exec->executar($cmd, $host, $port, $user, $keyPath, 60);
-            }
-
+            $result = $this->executarSshServidor($banco, $cmd, 60);
             return Resposta::json(['ok' => true, 'output' => (string)($result['saida'] ?? '')]);
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
@@ -246,33 +291,45 @@ final class BancoDadosController
         $pdo = BancoDeDados::pdo();
 
         // Buscar dados do banco para dropar no servidor
-        $stmt = $pdo->prepare('SELECT cd.db_name, cd.db_user, cd.vps_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id FROM client_databases cd JOIN vps v ON v.id = cd.vps_id JOIN servers s ON s.id = v.server_id WHERE cd.id = :id AND cd.client_id = :c LIMIT 1');
+        $stmt = $pdo->prepare(
+            'SELECT cd.db_name, cd.db_user, cd.container_id, cd.engine, cd.vps_id,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM client_databases cd
+             JOIN vps v ON v.id = cd.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE cd.id = :id AND cd.client_id = :c LIMIT 1'
+        );
         $stmt->execute([':id' => $id, ':c' => $clienteId]);
         $db = $stmt->fetch();
 
         if (is_array($db)) {
             $dbName = (string)($db['db_name'] ?? '');
             $dbUser = (string)($db['db_user'] ?? '');
+            $engine = (string)($db['engine'] ?? 'docker');
 
-            // Dropar banco e usuário no servidor via SSH
             if ($dbName !== '') {
                 try {
-                    $exec = new SshExecutor();
-                    $host = (string)($db['ip_address'] ?? '');
-                    $port = (int)($db['ssh_port'] ?? 22);
-                    $user = (string)($db['ssh_user'] ?? 'root');
-                    $authType = (string)($db['ssh_auth_type'] ?? 'password');
-
-                    $dropCmd = 'mysql -u root -e '
-                        . escapeshellarg("DROP DATABASE IF EXISTS `{$dbName}`; DROP USER IF EXISTS '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
-                        . ' 2>&1';
-
-                    if ($authType === 'password') {
-                        $senha = SshCrypto::decifrar((string)($db['ssh_password'] ?? ''));
-                        $exec->executarComSenha($host, $port, $user, $senha, $dropCmd, 15);
+                    if ($engine === 'native') {
+                        // MySQL nativo: dropar banco e usuário
+                        $dropCmd = 'mysql -u root -e '
+                            . escapeshellarg("DROP DATABASE IF EXISTS `{$dbName}`; DROP USER IF EXISTS '{$dbUser}'@'localhost'; DROP USER IF EXISTS '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
+                            . ' 2>&1';
+                        $this->executarSshServidor($db, $dropCmd, 15);
                     } else {
-                        $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($db['ssh_key_id'] ?? '');
-                        $exec->executar($host, $port, $user, $keyPath, $dropCmd, 15);
+                        // Docker: parar e remover container + dropar no MySQL do container
+                        $containerId = (string)($db['container_id'] ?? '');
+                        if ($containerId !== '') {
+                            $dropCmd = 'docker stop ' . escapeshellarg($containerId) . ' 2>/dev/null;'
+                                . ' docker rm ' . escapeshellarg($containerId) . ' 2>/dev/null;'
+                                . ' echo lrv-drop-ok';
+                            $this->executarSshServidor($db, $dropCmd, 15);
+                        } else {
+                            // Fallback: dropar no MySQL do host
+                            $dropCmd = 'mysql -u root -e '
+                                . escapeshellarg("DROP DATABASE IF EXISTS `{$dbName}`; DROP USER IF EXISTS '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
+                                . ' 2>&1';
+                            $this->executarSshServidor($db, $dropCmd, 15);
+                        }
                     }
                 } catch (\Throwable) {
                     // Continuar mesmo se falhar — pelo menos remove o registro

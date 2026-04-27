@@ -116,9 +116,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     $dbHost = (string)($b['db_host'] ?? '127.0.0.1');
     $dbPort = (string)($b['db_port'] ?? '3306');
     $containerId = (string)($b['container_id'] ?? '');
-    // Para phpMyAdmin (dentro do Docker): usar nome do container na porta 3306
+    $dbEngine = (string)($b['engine'] ?? 'docker');
+    // Para bancos nativos: host é localhost:3306
+    // Para Docker/phpMyAdmin: usar nome do container na porta 3306
     // Para aplicação (fora do Docker): usar 127.0.0.1 com porta mapeada
-    $pmaHost = $containerId !== '' ? $containerId : $dbHost;
+    $pmaHost = $dbEngine === 'native' ? 'localhost' : ($containerId !== '' ? $containerId : $dbHost);
   ?>
   <div class="card-new">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">

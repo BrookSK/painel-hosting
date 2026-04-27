@@ -121,6 +121,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">Comando para recarregar o Nginx após criar/remover vhosts. Padrão: <code>systemctl reload nginx</code>. Para aaPanel: <code>/etc/init.d/nginx reload</code>.</p>
     </div>
 
+    <div style="margin-top:14px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🐬 URL do phpMyAdmin</label>
+      <input class="input" type="text" name="phpmyadmin_url" value="<?php echo View::e((string)($servidor['phpmyadmin_url'] ?? '')); ?>" placeholder="http://ip:888/phpmyadmin_xxx/index.php" />
+      <p class="texto" style="font-size:12px;margin-top:4px;">URL do phpMyAdmin deste servidor. Para aaPanel, copie a URL do phpMyAdmin do painel (ex: <code>http://ip:888/phpmyadmin_xxx/</code>). Quando preenchida, o botão "phpMyAdmin" aparece para os clientes na tela de bancos de dados.</p>
+    </div>
+
     <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.ip')); ?></label>

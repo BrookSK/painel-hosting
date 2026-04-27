@@ -30,7 +30,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <?php
       $containerId = (string)($b['container_id'] ?? '');
-      $pmaHost = $containerId !== '' ? $containerId : (string)($b['db_host'] ?? '127.0.0.1');
+      $dbEngine = (string)($b['engine'] ?? 'docker');
+      // Bancos nativos: host é localhost
+      // Docker: host é o nome do container (para phpMyAdmin) ou 127.0.0.1 (para app)
+      $pmaHost = $dbEngine === 'native' ? 'localhost' : ($containerId !== '' ? $containerId : (string)($b['db_host'] ?? '127.0.0.1'));
       $campos = [
         'Host' => $pmaHost,
         'Banco' => (string)($b['db_name'] ?? ''),
@@ -54,7 +57,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <code id="campo-dsn" style="word-break:break-all;">mysql:host=<?php echo View::e($pmaHost); ?>;port=3306;dbname=<?php echo View::e((string)($b['db_name'] ?? '')); ?></code>
       <button type="button" onclick="copiar('campo-dsn')" style="margin-left:8px;background:none;border:1px solid #bbf7d0;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">Copiar</button>
     </div>
-    <?php if ($containerId !== ''): ?>
+    <?php if ($dbEngine === 'docker' && $containerId !== ''): ?>
     <div style="margin-top:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e40af;">
       <strong>Conexão externa (fora do Docker):</strong> <code>127.0.0.1:<?php echo View::e((string)($b['db_port'] ?? '3306')); ?></code>
       <button type="button" onclick="copiar('campo-ext')" style="margin-left:8px;background:none;border:1px solid #bfdbfe;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">Copiar</button>
