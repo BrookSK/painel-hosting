@@ -143,11 +143,15 @@ final class NginxVhostService
             . "}\n";
     }
 
-    private function gerarConfigStaticSite(string $domain, string $rootPath, string $phpVersion = '8.3'): string
+    private function gerarConfigStaticSite(string $domain, string $rootPath, string $phpVersion = '8.3', bool $isAaPanel = false): string
     {
-        $fpmSock = 'php' . $phpVersion . '-fpm.sock';
+        // aaPanel usa /tmp/php-cgi-XX.sock, instalação padrão usa /run/php/phpX.X-fpm.sock
+        $phpShort = str_replace('.', '', $phpVersion); // "8.3" → "83"
+        $fpmSocket = $isAaPanel
+            ? '/tmp/php-cgi-' . $phpShort . '.sock'
+            : '/run/php/php' . $phpVersion . '-fpm.sock';
+
         // Se o root termina em /public, adicionar alias para /public/ → root
-        // Isso resolve apps que geram URLs com /public/ no path
         $publicAlias = '';
         if (str_ends_with($rootPath, '/public')) {
             $publicAlias = "\n    location ^~ /public/ {\n"
@@ -168,7 +172,7 @@ final class NginxVhostService
             . "    location ~ \\.php\$ {\n"
             . "        include fastcgi_params;\n"
             . "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n"
-            . "        fastcgi_pass unix:/run/php/{$fpmSock};\n"
+            . "        fastcgi_pass unix:{$fpmSocket};\n"
             . "        fastcgi_index index.php;\n"
             . "        fastcgi_read_timeout 300;\n"
             . "    }\n"
@@ -220,7 +224,7 @@ final class NginxVhostService
         $logs[] = 'Root detectado: ' . $actualRoot;
 
         $vhostName = str_replace('.', '_', $domain);
-        $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion);
+        $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion, $isCustom);
         $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
         $b64 = base64_encode($config);
@@ -230,7 +234,7 @@ final class NginxVhostService
                 . ' && if ' . $sudo . 'grep -q "listen 443 ssl" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' 2>/dev/null; then'
                 . '   ' . $sudo . 'sed -i "s|root .*|root ' . $actualRoot . ';|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
                 . '   && ' . $sudo . 'sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
-                . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
+                . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:[^;]*;|fastcgi_pass unix:' . ($isCustom ? '/tmp/php-cgi-' . str_replace('.', '', $phpVersion) . '.sock' : '/run/php/php' . $phpVersion . '-fpm.sock') . ';|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
                 . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
                 . ' else'
                 . '   echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
@@ -241,7 +245,7 @@ final class NginxVhostService
             . ' && if ' . $sudo . 'grep -q "listen 443 ssl" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf 2>/dev/null; then'
             . '   ' . $sudo . 'sed -i "s|root .*|root ' . $actualRoot . ';|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && ' . $sudo . 'sed -i "s|try_files .*|try_files \\$uri \\$uri/ /index.php?\\$query_string;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
-            . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
+            . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:[^;]*;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' else'
             . '   echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
