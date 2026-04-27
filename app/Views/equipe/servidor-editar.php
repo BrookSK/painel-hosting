@@ -127,6 +127,15 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">URL do phpMyAdmin deste servidor. Para aaPanel, copie a URL do phpMyAdmin do painel (ex: <code>http://ip:888/phpmyadmin_xxx/</code>). Quando preenchida, o botão "phpMyAdmin" aparece para os clientes na tela de bancos de dados.</p>
     </div>
 
+    <div style="margin-top:14px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🔑 Senha root do MySQL</label>
+      <input class="input" type="password" name="mysql_root_password" value="" autocomplete="new-password" placeholder="<?php echo !empty($servidor['mysql_root_password']) ? '(configurada — deixe vazio para manter)' : ''; ?>" />
+      <p class="texto" style="font-size:12px;margin-top:4px;">Senha do usuário root do MySQL/MariaDB neste servidor. Necessária para servidores gerenciados com aaPanel — o sistema usa para criar e excluir bancos de dados dos clientes. Para aaPanel: <code>sudo sqlite3 /www/server/panel/data/default.db "SELECT mysql_root FROM config LIMIT 1;"</code></p>
+      <?php if (!empty($servidor['mysql_root_password'])): ?>
+        <p class="texto" style="font-size:12px;margin-top:2px;color:#10b981;">✓ Senha root do MySQL configurada</p>
+      <?php endif; ?>
+    </div>
+
     <div class="grid" style="margin-top:12px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_srv_edit.ip')); ?></label>

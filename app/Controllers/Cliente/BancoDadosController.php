@@ -97,7 +97,7 @@ final class BancoDadosController
 
         // Buscar dados da VPS + flags do servidor (is_managed_server)
         $vStmt = $pdo->prepare(
-            "SELECT v.id, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id, s.is_managed_server
+            "SELECT v.id, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id, s.is_managed_server, s.mysql_root_password
              FROM vps v JOIN servers s ON s.id = v.server_id
              WHERE v.id = :v AND v.client_id = :c AND v.status = 'running' LIMIT 1"
         );
@@ -127,6 +127,15 @@ final class BancoDadosController
             ]);
             $dbId = (int)$pdo->lastInsertId();
 
+            // Obter senha root do MySQL (cifrada no servidor)
+            $mysqlRootEnc = (string)($vps['mysql_root_password'] ?? '');
+            $mysqlRootPass = $mysqlRootEnc !== '' ? SshCrypto::decifrar($mysqlRootEnc) : '';
+
+            if ($mysqlRootPass === '') {
+                $pdo->prepare('UPDATE client_databases SET status="error" WHERE id=:id')->execute([':id' => $dbId]);
+                return $this->renderizarErro($clienteId, 'Senha root do MySQL não configurada neste servidor. Peça ao administrador para configurar em Equipe → Servidores → Editar.');
+            }
+
             // Criar banco e usuário no MySQL nativo do host via SSH
             try {
                 $createSql = "CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -136,7 +145,7 @@ final class BancoDadosController
                     . " GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'%';"
                     . " FLUSH PRIVILEGES;";
 
-                $cmd = 'mysql -u root -e ' . escapeshellarg($createSql) . ' 2>&1 && echo lrv-db-ok';
+                $cmd = 'mysql -u root -p' . escapeshellarg($mysqlRootPass) . ' -e ' . escapeshellarg($createSql) . ' 2>&1 && echo lrv-db-ok';
 
                 $result = $this->executarSshServidor($vps, $cmd, 30);
                 $output = (string)($result['saida'] ?? '');
@@ -293,7 +302,7 @@ final class BancoDadosController
         // Buscar dados do banco para dropar no servidor
         $stmt = $pdo->prepare(
             'SELECT cd.db_name, cd.db_user, cd.container_id, cd.engine, cd.vps_id,
-                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id, s.mysql_root_password
              FROM client_databases cd
              JOIN vps v ON v.id = cd.vps_id
              JOIN servers s ON s.id = v.server_id
@@ -310,8 +319,12 @@ final class BancoDadosController
             if ($dbName !== '') {
                 try {
                     if ($engine === 'native') {
-                        // MySQL nativo: dropar banco e usuário
-                        $dropCmd = 'mysql -u root -e '
+                        // MySQL nativo: dropar banco e usuário com senha root
+                        $mysqlRootEnc = (string)($db['mysql_root_password'] ?? '');
+                        $mysqlRootPass = $mysqlRootEnc !== '' ? SshCrypto::decifrar($mysqlRootEnc) : '';
+                        $rootAuth = $mysqlRootPass !== '' ? '-u root -p' . escapeshellarg($mysqlRootPass) : '-u root';
+
+                        $dropCmd = 'mysql ' . $rootAuth . ' -e '
                             . escapeshellarg("DROP DATABASE IF EXISTS `{$dbName}`; DROP USER IF EXISTS '{$dbUser}'@'localhost'; DROP USER IF EXISTS '{$dbUser}'@'%'; FLUSH PRIVILEGES;")
                             . ' 2>&1';
                         $this->executarSshServidor($db, $dropCmd, 15);

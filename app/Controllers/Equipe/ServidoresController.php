@@ -260,6 +260,7 @@ final class ServidoresController
         $nginxVhostPath = trim((string)($req->post['nginx_vhost_path'] ?? ''));
         $nginxReloadCmd = trim((string)($req->post['nginx_reload_cmd'] ?? ''));
         $phpmyadminUrl  = trim((string)($req->post['phpmyadmin_url'] ?? ''));
+        $mysqlRootPass  = (string)($req->post['mysql_root_password'] ?? '');
         try {
             BancoDeDados::pdo()->prepare('UPDATE servers SET volume_base_path = :v, nginx_vhost_path = :n, nginx_reload_cmd = :nr, phpmyadmin_url = :pma WHERE id = :id')
                 ->execute([
@@ -269,6 +270,11 @@ final class ServidoresController
                     ':pma' => $phpmyadminUrl !== '' ? $phpmyadminUrl : null,
                     ':id' => $savedId,
                 ]);
+            // Salvar senha root do MySQL (cifrada) — só atualiza se preenchida
+            if ($mysqlRootPass !== '') {
+                BancoDeDados::pdo()->prepare('UPDATE servers SET mysql_root_password = :mrp WHERE id = :id')
+                    ->execute([':mrp' => \LRV\App\Services\Infra\SshCrypto::cifrar($mysqlRootPass), ':id' => $savedId]);
+            }
         } catch (\Throwable) {}
 
         // Marca online
