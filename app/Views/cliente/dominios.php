@@ -186,6 +186,20 @@ function _tipoBadge(string $tipo): string {
       <li>Use o domínio em aplicações, deploys ou e-mails</li>
     </ol>
   </div>
+
+  <div class="card-new" style="margin-top:14px;">
+    <div class="card-new-title" style="margin-bottom:8px;">☁️ Usando Cloudflare?</div>
+    <div style="font-size:12px;color:#475569;line-height:1.8;">
+      <p style="margin:0 0 8px;">Se o DNS do seu domínio está no Cloudflare:</p>
+      <ul style="padding-left:16px;margin:0 0 8px;">
+        <li><strong>Proxy (nuvem laranja)</strong> — funciona normalmente. A verificação de domínio aceita IPs do Cloudflare.</li>
+        <li><strong>SSL/TLS</strong> — use modo <strong>Full</strong> ou <strong>Full (Strict)</strong>. O certificado SSL é gerado automaticamente no servidor.</li>
+      </ul>
+      <div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:8px 10px;border-radius:8px;margin-top:6px;">
+        <strong>Servidor gerenciado (aaPanel)?</strong> Se o servidor não gerar certificado SSL automaticamente, configure o Cloudflare SSL/TLS como <strong>Flexible</strong> para que o HTTPS funcione via Cloudflare.
+      </div>
+    </div>
+  </div>
 </div>
 
 </div><!-- /grid -->
