@@ -65,11 +65,11 @@ final class NginxVhostService
         $b64 = base64_encode($config);
         if ($isCustom) {
             $cmd = $sudo . 'mkdir -p ' . escapeshellarg($vhostPath)
-                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
                 . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         } else {
             $cmd = $sudo . 'mkdir -p /etc/nginx/sites-available/lrv'
-                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
                 . ' && ' . $sudo . 'ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
                 . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         }
@@ -233,7 +233,7 @@ final class NginxVhostService
                 . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf')
                 . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
                 . ' else'
-                . '   echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
+                . '   echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
                 . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
                 . ' fi';
         } else {
@@ -244,7 +244,7 @@ final class NginxVhostService
             . '   && ' . $sudo . 'sed -i "s|fastcgi_pass unix:/run/php/php[0-9.]*-fpm\\.sock;|fastcgi_pass unix:/run/php/php' . $phpVersion . '-fpm.sock;|g" /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf'
             . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' else'
-            . '   echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
+            . '   echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
             . '   && ' . $sudo . 'ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
             . '   && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok;'
             . ' fi';
@@ -274,7 +274,7 @@ final class NginxVhostService
             if ($iniLines !== '') {
                 $iniB64 = base64_encode($iniLines);
                 $iniPath = '/etc/php/' . $phpVersion . '/fpm/conf.d/99-lrv-' . str_replace('.', '_', $domain) . '.ini';
-                $phpCmd = 'echo ' . escapeshellarg($iniB64) . ' | ' . $sudo . 'tee ' . escapeshellarg($iniPath) . ' > /dev/null'
+                $phpCmd = 'echo ' . escapeshellarg($iniB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($iniPath) . ' > /dev/null'
                     . ' && ' . $sudo . 'systemctl reload php' . $phpVersion . '-fpm 2>&1 && echo lrv-php-ok';
                 $phpResult = $this->exec($ssh, $srv, $phpCmd);
                 $logs[] = 'PHP config: ' . trim($phpResult['saida'] ?? '');
@@ -311,11 +311,11 @@ final class NginxVhostService
         // Sempre sobrescrever — se tinha SSL, o certbot vai re-adicionar
         if ($isCustom) {
             $cmd = $sudo . 'mkdir -p ' . escapeshellarg($vhostPath)
-                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
                 . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         } else {
             $cmd = $sudo . 'mkdir -p /etc/nginx/sites-available/lrv'
-                . ' && echo ' . escapeshellarg($b64) . ' | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
+                . ' && echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf > /dev/null'
                 . ' && ' . $sudo . 'ln -sf /etc/nginx/sites-available/lrv/' . escapeshellarg($vhostName) . '.conf /etc/nginx/sites-enabled/' . escapeshellarg($vhostName) . '.conf'
                 . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-vhost-ok';
         }
