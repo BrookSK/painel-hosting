@@ -55,7 +55,7 @@ final class NginxVhostService
         $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
         // 1. Criar config Nginx
-        $vhostName = str_replace('.', '_', $domain);
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
         $config = $this->gerarConfig($domain, $port);
 
         $ssh = new SshExecutor();
@@ -107,7 +107,7 @@ final class NginxVhostService
         $isCustom = $this->isCustomNginxPath($srv);
         $reloadCmd = $this->getNginxReloadCmd($srv);
         $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
-        $vhostName = str_replace('.', '_', $domain);
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
         $ssh = new SshExecutor();
         $this->configurarSsh($ssh, $srv);
 
@@ -223,7 +223,7 @@ final class NginxVhostService
         }
         $logs[] = 'Root detectado: ' . $actualRoot;
 
-        $vhostName = str_replace('.', '_', $domain);
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
         $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion, $isCustom);
         $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
@@ -307,7 +307,7 @@ final class NginxVhostService
         $vhostPath = $this->getVhostPath($srv);
         $isCustom = $this->isCustomNginxPath($srv);
         $reloadCmd = $this->getNginxReloadCmd($srv);
-        $vhostName = str_replace('.', '_', $domain);
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
         $config = $this->gerarConfig($domain, $appPort);
         $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
@@ -349,6 +349,16 @@ final class NginxVhostService
     {
         $user = trim((string)($srv['ssh_user'] ?? 'root'));
         return $user !== 'root';
+    }
+
+    /**
+     * Gera o nome do arquivo vhost.
+     * aaPanel usa domínio com pontos (ex: lumiclinic.com.br.conf)
+     * Instalação padrão usa underscores (ex: lumiclinic_com_br.conf)
+     */
+    private function getVhostFileName(string $domain, bool $isCustom): string
+    {
+        return $isCustom ? $domain : str_replace('.', '_', $domain);
     }
 
     private function getServer(\PDO $pdo, int $id): ?array
