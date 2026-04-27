@@ -545,8 +545,10 @@ final class GitDeployController
         }
 
         // Corrigir permissões + buscar commit info — tudo numa única conexão
+        // Excluir storage/ do chmod 755 para preservar permissões de escrita
         $finalCmd = '(sudo chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
-            . ' && (sudo chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || true);'
+            . ' && (sudo find ' . escapeshellarg($deployPath) . ' -not -path "*/storage/*" -exec chmod 755 {} + 2>/dev/null || chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
+            . ' && (sudo chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || true);'
             . ' cd ' . escapeshellarg($deployPath) . ' && echo "LRV_COMMIT_START" && git log -1 --format="%H|%s|%an" 2>/dev/null; echo "LRV_COMMIT_END"';
         $finalResult = $runCmd($finalCmd);
         $finalOutput = (string)($finalResult['saida'] ?? '');
