@@ -319,11 +319,14 @@ final class SubdomainVerificationService
             return ['ok' => false, 'erro' => 'Nenhuma VPS ativa encontrada para verificar o apontamento.'];
         }
 
-        $records = null;
+        $resolvedIps = [];
         $found = false;
+        $isCloudflareProxy = false;
+
         // 1. dig com Google DNS (rápido)
         $digOutput = trim($this->dig('dig +short A ' . escapeshellarg($domain) . ' @8.8.8.8 2>/dev/null') ?? '');
         $digIps = array_filter(array_map('trim', explode("\n", $digOutput)));
+        $resolvedIps = array_merge($resolvedIps, $digIps);
         if (in_array($expectedIp, $digIps, true)) {
             $found = true;
         }
@@ -331,6 +334,7 @@ final class SubdomainVerificationService
         if (!$found) {
             $digOutput = trim($this->dig('dig +short A ' . escapeshellarg($domain) . ' @1.1.1.1 2>/dev/null') ?? '');
             $digIps = array_filter(array_map('trim', explode("\n", $digOutput)));
+            $resolvedIps = array_merge($resolvedIps, $digIps);
             if (in_array($expectedIp, $digIps, true)) {
                 $found = true;
             }
@@ -341,6 +345,7 @@ final class SubdomainVerificationService
             if (is_array($records)) {
                 foreach ($records as $r) {
                     $ip = trim((string)($r['ip'] ?? ''));
+                    if ($ip !== '') $resolvedIps[] = $ip;
                     if ($ip === $expectedIp) {
                         $found = true;
                         break;
@@ -349,15 +354,66 @@ final class SubdomainVerificationService
             }
         }
 
-        if ($found) {
+        // 4. Se não encontrou IP direto, verificar se está atrás do proxy Cloudflare
+        //    IPs do Cloudflare indicam que o domínio está apontando via proxy (nuvem laranja)
+        if (!$found && !empty($resolvedIps)) {
+            foreach (array_unique($resolvedIps) as $rip) {
+                if ($this->isCloudflareIp($rip)) {
+                    $isCloudflareProxy = true;
+                    break;
+                }
+            }
+        }
+
+        if ($found || $isCloudflareProxy) {
             $pdo->prepare("UPDATE client_subdomains SET status = 'active', error_msg = NULL WHERE id = :id")
                 ->execute([':id' => $subId]);
-            return ['ok' => true, 'status' => 'active'];
+            return ['ok' => true, 'status' => 'active', 'cloudflare_proxy' => $isCloudflareProxy];
         }
 
         $pdo->prepare("UPDATE client_subdomains SET error_msg = :e WHERE id = :id")
             ->execute([':e' => 'Registro A não encontrado apontando para ' . $expectedIp, ':id' => $subId]);
         return ['ok' => false, 'erro' => 'Registro A não encontrado. Aponte ' . $domain . ' para ' . $expectedIp];
+    }
+
+    /**
+     * Verifica se um IP pertence aos ranges conhecidos do Cloudflare.
+     * @see https://www.cloudflare.com/ips-v4/
+     */
+    private function isCloudflareIp(string $ip): bool
+    {
+        // Ranges IPv4 do Cloudflare (atualizados)
+        $cfRanges = [
+            '173.245.48.0/20',
+            '103.21.244.0/22',
+            '103.22.200.0/22',
+            '103.31.4.0/22',
+            '141.101.64.0/18',
+            '108.162.192.0/18',
+            '190.93.240.0/20',
+            '188.114.96.0/20',
+            '197.234.240.0/22',
+            '198.41.128.0/17',
+            '162.158.0.0/15',
+            '104.16.0.0/13',
+            '104.24.0.0/14',
+            '172.64.0.0/13',
+            '131.0.72.0/22',
+        ];
+
+        $ipLong = ip2long($ip);
+        if ($ipLong === false) return false;
+
+        foreach ($cfRanges as $cidr) {
+            [$subnet, $bits] = explode('/', $cidr);
+            $subnetLong = ip2long($subnet);
+            $mask = -1 << (32 - (int)$bits);
+            if (($ipLong & $mask) === ($subnetLong & $mask)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function removerSubdominio(int $clientId, int $subId): void
