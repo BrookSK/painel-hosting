@@ -482,18 +482,48 @@ final class ServidoresController
         }
 
         // Excluir registros relacionados (ordem importa por causa das FKs)
-        // Primeiro: tabelas que referenciam vps (para poder excluir VPS removidas depois)
+        // Buscar IDs de VPS removidas para limpar dependências em cascata
+        $vpsIds = [];
         try {
-            $pdo->prepare("DELETE FROM status_services WHERE server_id = :sid")->execute([':sid' => $id]);
-        } catch (\Throwable) {}
-        try {
-            $pdo->prepare("DELETE FROM client_terminal_sessions WHERE server_id = :sid")->execute([':sid' => $id]);
+            $stmtVpsRemoved = $pdo->prepare("SELECT id FROM vps WHERE server_id = :sid AND status = 'removed'");
+            $stmtVpsRemoved->execute([':sid' => $id]);
+            $vpsIds = array_column($stmtVpsRemoved->fetchAll(), 'id');
         } catch (\Throwable) {}
 
-        // Excluir VPS com status 'removed' que ainda estão no banco
-        try {
-            $pdo->prepare("DELETE FROM vps WHERE server_id = :sid AND status = 'removed'")->execute([':sid' => $id]);
-        } catch (\Throwable) {}
+        // Limpar tabelas filhas das VPS removidas
+        if (!empty($vpsIds)) {
+            $placeholders = implode(',', array_fill(0, count($vpsIds), '?'));
+            $tabelasFilhasVps = [
+                'status_services',
+                'client_terminal_sessions',
+                'client_terminal_tokens',
+                'backups',
+                'subscriptions',
+            ];
+            foreach ($tabelasFilhasVps as $tabela) {
+                try {
+                    $pdo->prepare("DELETE FROM {$tabela} WHERE vps_id IN ({$placeholders})")->execute($vpsIds);
+                } catch (\Throwable) {}
+            }
+
+            // applications → ports (FK em cascata)
+            try {
+                $appIds = [];
+                $stmtApps = $pdo->prepare("SELECT id FROM applications WHERE vps_id IN ({$placeholders})");
+                $stmtApps->execute($vpsIds);
+                $appIds = array_column($stmtApps->fetchAll(), 'id');
+                if (!empty($appIds)) {
+                    $appPh = implode(',', array_fill(0, count($appIds), '?'));
+                    $pdo->prepare("DELETE FROM ports WHERE application_id IN ({$appPh})")->execute($appIds);
+                }
+                $pdo->prepare("DELETE FROM applications WHERE vps_id IN ({$placeholders})")->execute($vpsIds);
+            } catch (\Throwable) {}
+
+            // Excluir as VPS removidas
+            try {
+                $pdo->prepare("DELETE FROM vps WHERE id IN ({$placeholders})")->execute($vpsIds);
+            } catch (\Throwable) {}
+        }
 
         // Demais tabelas que referenciam servers diretamente
         $tabelasRelacionadas = [
@@ -501,6 +531,8 @@ final class ServidoresController
             'server_metrics',
             'terminal_tokens',
             'terminal_sessions',
+            'client_terminal_sessions',
+            'status_services',
         ];
         foreach ($tabelasRelacionadas as $tabela) {
             try {
