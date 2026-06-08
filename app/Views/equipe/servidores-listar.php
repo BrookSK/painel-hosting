@@ -110,6 +110,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <?php else: ?>
                 <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;"><?php echo View::e(I18n::t('eq_servidores.inicializar')); ?></a>
               <?php endif; ?>
+              &nbsp;·&nbsp;
+              <a href="#" onclick="confirmarExcluir(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>);return false;"
+                 style="color:#dc2626;"><?php echo View::e(I18n::t('eq_servidores.excluir')); ?></a>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -156,6 +159,25 @@ var _setupId = 0;
 var _setupRunning = false;
 var _setupRetomar = false;
 var _setupTotal = 8; // número de passos definidos no service
+
+function confirmarExcluir(id, hostname) {
+    if (!confirm('Tem certeza que deseja excluir o servidor "' + hostname + '"?\n\nEsta ação é irreversível.')) return;
+    var csrfVal = (document.querySelector('meta[name=csrf-token]') || {}).content || '';
+    var fd = new FormData();
+    fd.append('id', id);
+    fd.append('_csrf', csrfVal);
+    fetch('/equipe/servidores/excluir', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok) {
+                var row = document.getElementById('row-srv-' + id);
+                if (row) row.remove();
+            } else {
+                alert(data.erro || 'Não foi possível excluir o servidor.');
+            }
+        })
+        .catch(function(e) { alert('Erro de comunicação: ' + e.message); });
+}
 
 function abrirSetup(id, hostname, retomar) {
     _setupId = id;

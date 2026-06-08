@@ -450,6 +450,57 @@ final class ServidoresController
     }
 
     // -------------------------------------------------------------------------
+    // Excluir servidor
+    // -------------------------------------------------------------------------
+
+    public function excluir(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'ID inválido.'], 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        // Verificar se o servidor existe
+        $stmt = $pdo->prepare('SELECT hostname FROM servers WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $servidor = $stmt->fetch();
+        if (!is_array($servidor)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Servidor não encontrado.'], 404);
+        }
+
+        // Bloquear exclusão se houver VPS ativas vinculadas
+        $stmtVps = $pdo->prepare("SELECT COUNT(*) AS total FROM vps WHERE server_id = :sid AND status NOT IN ('removed')");
+        $stmtVps->execute([':sid' => $id]);
+        $totalVps = (int)($stmtVps->fetch()['total'] ?? 0);
+        if ($totalVps > 0) {
+            return Resposta::json([
+                'ok' => false,
+                'erro' => 'Não é possível excluir: este servidor tem ' . $totalVps . ' VPS ativa(s). Remova ou migre as VPS antes de excluir o servidor.',
+            ], 422);
+        }
+
+        // Excluir registros relacionados (logs de setup, etc.)
+        try {
+            $pdo->prepare('DELETE FROM server_setup_logs WHERE server_id = :sid')->execute([':sid' => $id]);
+        } catch (\Throwable) {}
+
+        // Excluir o servidor
+        try {
+            $pdo->prepare('DELETE FROM servers WHERE id = :id')->execute([':id' => $id]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => 'Erro ao excluir: ' . $e->getMessage()], 500);
+        }
+
+        (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
+            'server.delete', 'server', $id,
+            ['hostname' => $servidor['hostname']], $req);
+
+        return Resposta::json(['ok' => true]);
+    }
+
+    // -------------------------------------------------------------------------
     // Terminal seguro
     // -------------------------------------------------------------------------
 

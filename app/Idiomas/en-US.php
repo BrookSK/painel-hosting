@@ -1113,6 +1113,7 @@ return [
     'eq_servidores.reiniciar' => 'Restart',
     'eq_servidores.inicializar' => 'Initialize',
     'eq_servidores.re_inicializar' => 'Re-initialize',
+    'eq_servidores.excluir' => 'Delete',
     'eq_servidores.nenhum' => 'No servers registered yet.',
     'eq_servidores.modal_titulo' => 'Initialize server',
     'eq_servidores.modal_desc' => 'Connects via SSH and prepares the server automatically: Docker, lrv-net network and terminal user.',

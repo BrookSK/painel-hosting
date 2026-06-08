@@ -117,6 +117,7 @@ $roteador->post('/equipe/servidores/inicializar', [ServidoresController::class, 
 $roteador->post('/equipe/servidores/inicializar-passo', [ServidoresController::class, 'inicializarPasso'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/servidores/inicializar-finalizar', [ServidoresController::class, 'inicializarFinalizar'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/servidores/logs-inicializacao', [ServidoresController::class, 'logsInicializacao'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/servidores/excluir', [ServidoresController::class, 'excluir'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->get('/equipe/backups', [BackupsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/backups/criar', [BackupsController::class, 'criar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/backups/baixar', [BackupsController::class, 'baixar'], [Middlewares::exigirPermissao('manage_vps')]);
