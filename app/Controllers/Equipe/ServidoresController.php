@@ -481,10 +481,20 @@ final class ServidoresController
             ], 422);
         }
 
-        // Excluir registros relacionados (logs de setup, etc.)
-        try {
-            $pdo->prepare('DELETE FROM server_setup_logs WHERE server_id = :sid')->execute([':sid' => $id]);
-        } catch (\Throwable) {}
+        // Excluir registros relacionados (ordem importa por causa das FKs)
+        $tabelasRelacionadas = [
+            'server_setup_logs',
+            'server_metrics',
+            'terminal_tokens',
+            'terminal_sessions',
+            'client_terminal_sessions',
+            'status_services',
+        ];
+        foreach ($tabelasRelacionadas as $tabela) {
+            try {
+                $pdo->prepare("DELETE FROM {$tabela} WHERE server_id = :sid")->execute([':sid' => $id]);
+            } catch (\Throwable) {}
+        }
 
         // Excluir o servidor
         try {
