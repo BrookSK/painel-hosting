@@ -482,13 +482,25 @@ final class ServidoresController
         }
 
         // Excluir registros relacionados (ordem importa por causa das FKs)
+        // Primeiro: tabelas que referenciam vps (para poder excluir VPS removidas depois)
+        try {
+            $pdo->prepare("DELETE FROM status_services WHERE server_id = :sid")->execute([':sid' => $id]);
+        } catch (\Throwable) {}
+        try {
+            $pdo->prepare("DELETE FROM client_terminal_sessions WHERE server_id = :sid")->execute([':sid' => $id]);
+        } catch (\Throwable) {}
+
+        // Excluir VPS com status 'removed' que ainda estão no banco
+        try {
+            $pdo->prepare("DELETE FROM vps WHERE server_id = :sid AND status = 'removed'")->execute([':sid' => $id]);
+        } catch (\Throwable) {}
+
+        // Demais tabelas que referenciam servers diretamente
         $tabelasRelacionadas = [
             'server_setup_logs',
             'server_metrics',
             'terminal_tokens',
             'terminal_sessions',
-            'client_terminal_sessions',
-            'status_services',
         ];
         foreach ($tabelasRelacionadas as $tabela) {
             try {
