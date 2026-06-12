@@ -537,10 +537,16 @@ final class StatusCollectorService
                 return;
             }
 
-            // Rate limit: 1 alerta por VPS a cada 2 horas
+            // Verificar se alertas de servidores gerenciados estão habilitados
+            $alertasHabilitados = (int)\LRV\Core\Settings::obter('alertas.managed_server_emails', 1);
+            if ($alertasHabilitados !== 1) {
+                return;
+            }
+
+            // Rate limit: 1 alerta por VPS a cada 24 horas
             $settingKey = 'alert.managed_vps_' . $vpsId;
             $ultimo = (string)\LRV\Core\Settings::obter($settingKey, '');
-            if ($ultimo !== '' && (time() - strtotime($ultimo)) < 7200) {
+            if ($ultimo !== '' && (time() - strtotime($ultimo)) < 86400) {
                 return;
             }
             \LRV\Core\Settings::definir($settingKey, date('Y-m-d H:i:s'));

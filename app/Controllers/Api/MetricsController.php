@@ -144,10 +144,16 @@ final class MetricsController
                 return;
             }
 
-            // Rate limit: 1 alerta por servidor a cada 1 hora
+            // Verificar se alertas de servidores gerenciados estão habilitados
+            $alertasHabilitados = (int) Settings::obter('alertas.managed_server_emails', 1);
+            if ($alertasHabilitados !== 1) {
+                return;
+            }
+
+            // Rate limit: 1 alerta por servidor a cada 24 horas
             $settingKey = 'alert.managed_server_' . $serverId;
             $ultimo = (string) Settings::obter($settingKey, '');
-            if ($ultimo !== '' && (time() - strtotime($ultimo)) < 3600) {
+            if ($ultimo !== '' && (time() - strtotime($ultimo)) < 86400) {
                 return;
             }
             Settings::definir($settingKey, date('Y-m-d H:i:s'));

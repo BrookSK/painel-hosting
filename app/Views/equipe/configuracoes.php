@@ -386,6 +386,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:6px;">Conecta via SSH no servidor de e-mail e instala o script de coleta de métricas (CPU, RAM, disco) com cron a cada 5 min. Salve as configurações acima antes de clicar.</p>
     </div>
 
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Alertas de Servidores Gerenciados</h2>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Alertas de uso alto (servidores gerenciados)</label>
+        <select class="input" name="alertas_managed_server_emails">
+          <option value="1" <?php echo ((string)($alertas_managed_server_emails??'1'))==='1'?'selected':''; ?>>Ativado</option>
+          <option value="0" <?php echo ((string)($alertas_managed_server_emails??'1'))==='0'?'selected':''; ?>>Desativado</option>
+        </select>
+        <p class="texto" style="font-size:12px;margin-top:4px;">Envia e-mail/WhatsApp quando servidores gerenciados ultrapassam os limites de CPU, RAM ou disco. Máximo 1 alerta por dia por servidor.</p>
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Chat ao vivo (WebSocket)</h2>
     <div class="grid">
       <div>

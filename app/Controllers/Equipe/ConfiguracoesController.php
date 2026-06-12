@@ -76,6 +76,7 @@ final class ConfiguracoesController
             'email_alert_ram'      => (string) Settings::obter('email.alert_ram', '85'),
             'email_alert_disk'     => (string) Settings::obter('email.alert_disk', '90'),
             'email_monitoring_enabled' => (string) Settings::obter('email.monitoring_enabled', '0'),
+            'alertas_managed_server_emails' => (string) Settings::obter('alertas.managed_server_emails', '1'),
             'chat_ws_port'         => (string) Settings::obter('chat.ws_port', '8082'),
             'chat_ws_url'          => (string) Settings::obter('chat.ws_url', ''),
             'system_name'           => SistemaConfig::nome(),            'system_logo_url'       => SistemaConfig::logoUrl(),
@@ -179,6 +180,7 @@ final class ConfiguracoesController
         $emailAlertRam       = $in->postInt('email_alert_ram', 50, 100, false);
         $emailAlertDisk      = $in->postInt('email_alert_disk', 50, 100, false);
         $emailMonitoringEnabled = $in->postEnum('email_monitoring_enabled', ['0', '1'], '0');
+        $alertasManagedServerEmails = $in->postEnum('alertas_managed_server_emails', ['0', '1'], '1');
         $chatWsPort          = $in->postInt('chat_ws_port', 1, 65535, false);
         $chatWsUrl           = $in->postString('chat_ws_url', 500, false);
 
@@ -282,6 +284,7 @@ final class ConfiguracoesController
                 'email_alert_ram'      => $emailAlertRam > 0 ? (string) $emailAlertRam : '85',
                 'email_alert_disk'     => $emailAlertDisk > 0 ? (string) $emailAlertDisk : '90',
                 'email_monitoring_enabled' => $emailMonitoringEnabled,
+                'alertas_managed_server_emails' => $alertasManagedServerEmails,
                 'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
                 'chat_ws_url'          => $chatWsUrl,
                 'system_name'           => $systemName,
@@ -382,6 +385,7 @@ final class ConfiguracoesController
         Settings::definir('email.alert_ram', $emailAlertRam > 0 ? $emailAlertRam : 85);
         Settings::definir('email.alert_disk', $emailAlertDisk > 0 ? $emailAlertDisk : 90);
         Settings::definir('email.monitoring_enabled', $emailMonitoringEnabled === '1' ? 1 : 0);
+        Settings::definir('alertas.managed_server_emails', $alertasManagedServerEmails === '1' ? 1 : 0);
         Settings::definir('chat.ws_port', $chatWsPort > 0 ? $chatWsPort : 8082);
         Settings::definir('chat.ws_url', trim($chatWsUrl));
 
@@ -523,6 +527,7 @@ final class ConfiguracoesController
             'email_alert_ram'      => (string) ($emailAlertRam > 0 ? $emailAlertRam : 85),
             'email_alert_disk'     => (string) ($emailAlertDisk > 0 ? $emailAlertDisk : 90),
             'email_monitoring_enabled' => ($emailMonitoringEnabled === '1' ? '1' : '0'),
+            'alertas_managed_server_emails' => ($alertasManagedServerEmails === '1' ? '1' : '0'),
             'chat_ws_port'         => $chatWsPort > 0 ? (string) $chatWsPort : '8082',
             'chat_ws_url'          => $chatWsUrl,
             'system_name'           => $systemName,
