@@ -200,7 +200,7 @@ final class AplicacoesController
         $appId = (int) ($req->query['id'] ?? 0);
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT a.id, a.status, a.logs, a.container_id FROM applications a
+            'SELECT a.id, a.status, a.logs, a.container_id, a.created_at FROM applications a
              INNER JOIN vps v ON v.id = a.vps_id
              WHERE a.id = :id AND v.client_id = :c LIMIT 1'
         );
@@ -209,6 +209,29 @@ final class AplicacoesController
 
         if (!is_array($app)) {
             return Resposta::json(['ok' => false, 'erro' => 'Não encontrada.'], 404);
+        }
+
+        // Timeout: se está "installing" há mais de 10 minutos, marcar como erro
+        if (($app['status'] ?? '') === 'installing') {
+            $criadoEm = strtotime((string) ($app['created_at'] ?? ''));
+            if ($criadoEm > 0 && (time() - $criadoEm) > 600) {
+                // Verificar se o job correspondente está pending/running ou já falhou
+                $jobStmt = $pdo->prepare(
+                    "SELECT id, status FROM jobs WHERE type = 'install_app_template' AND payload LIKE :p ORDER BY id DESC LIMIT 1"
+                );
+                $jobStmt->execute([':p' => '%"application_id":' . $appId . '%']);
+                $job = $jobStmt->fetch();
+
+                $jobFailed = !is_array($job) || in_array(($job['status'] ?? ''), ['failed', 'completed'], true);
+                $jobStuck = is_array($job) && ($job['status'] ?? '') === 'running';
+
+                if ($jobFailed || $jobStuck) {
+                    $pdo->prepare("UPDATE applications SET status = 'error', logs = CONCAT(COALESCE(logs,''), '\n[TIMEOUT] Instalação expirou após 10 minutos.') WHERE id = :id")
+                        ->execute([':id' => $appId]);
+                    $app['status'] = 'error';
+                    $app['logs'] = trim(($app['logs'] ?? '') . "\n[TIMEOUT] Instalação expirou após 10 minutos.");
+                }
+            }
         }
 
         return Resposta::json(['ok' => true, 'status' => $app['status'], 'logs' => $app['logs'], 'container_id' => $app['container_id']]);

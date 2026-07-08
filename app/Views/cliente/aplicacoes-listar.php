@@ -138,6 +138,36 @@ function carregarAppLogs(appId, tipo) {
     })
     .catch(function() { output.textContent = '✘ Erro de rede'; });
 }
+
+// Poll automático para apps em "installing" — atualiza a cada 5s
+(function() {
+  var appsInstalando = <?php
+    $idsInstalando = [];
+    foreach ($aplicacoes as $a) {
+      if (($a['status'] ?? '') === 'installing') $idsInstalando[] = (int)$a['id'];
+    }
+    echo json_encode($idsInstalando);
+  ?>;
+
+  if (appsInstalando.length === 0) return;
+
+  var pollInterval = setInterval(function() {
+    var pending = 0;
+    appsInstalando.forEach(function(appId) {
+      fetch('/cliente/aplicacoes/status?id=' + appId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.ok) return;
+          if (d.status !== 'installing') {
+            window.location.reload();
+          } else {
+            pending++;
+          }
+        })
+        .catch(function() {});
+    });
+  }, 5000);
+})();
 </script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>
