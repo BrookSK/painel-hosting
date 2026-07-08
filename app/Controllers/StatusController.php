@@ -19,6 +19,60 @@ final class StatusController
         $services = $stmt->fetchAll();
         $services = is_array($services) ? $services : [];
 
+        // Se não tem serviços públicos cadastrados, gerar automaticamente a partir dos servidores ativos
+        if (empty($services)) {
+            $srvStmt = $pdo->query("SELECT id, hostname, ip_address, status, is_managed_server FROM servers WHERE status = 'active' ORDER BY hostname ASC");
+            $servers = $srvStmt->fetchAll();
+            if (is_array($servers)) {
+                foreach ($servers as $srv) {
+                    if (!is_array($srv)) continue;
+                    $srvId = (int)($srv['id'] ?? 0);
+                    $hostname = trim((string)($srv['hostname'] ?? ''));
+                    $isManaged = (int)($srv['is_managed_server'] ?? 0);
+                    $srvStatus = (string)($srv['status'] ?? 'active');
+
+                    // Buscar última métrica pra determinar se está online
+                    $metricStmt = $pdo->prepare("SELECT cpu_usage, ram_usage, disk_usage, timestamp FROM server_metrics WHERE server_id = :sid ORDER BY id DESC LIMIT 1");
+                    $metricStmt->execute([':sid' => $srvId]);
+                    $metric = $metricStmt->fetch();
+
+                    $lastCheck = null;
+                    $status = 'operational';
+                    if (is_array($metric)) {
+                        $lastCheck = (string)($metric['timestamp'] ?? '');
+                        // Se última métrica é de mais de 10 minutos atrás, considerar degradado
+                        $metricTime = strtotime($lastCheck);
+                        if ($metricTime > 0 && (time() - $metricTime) > 600) {
+                            $status = 'degraded';
+                        }
+                        if ($metricTime > 0 && (time() - $metricTime) > 1800) {
+                            $status = 'major_outage';
+                        }
+                    } else {
+                        $status = 'unknown';
+                    }
+
+                    // Nome amigável: usar hostname sem expor IP
+                    $displayName = $hostname !== '' ? $hostname : ('Servidor #' . $srvId);
+                    if ($isManaged) {
+                        $displayName .= ' (Gerenciado)';
+                    }
+
+                    $services[] = [
+                        'id' => $srvId,
+                        'key' => 'server_' . $srvId,
+                        'name' => $displayName,
+                        'description' => '',
+                        'status' => $status,
+                        'last_check_at' => $lastCheck,
+                        'last_ok_at' => $lastCheck,
+                        'last_error' => null,
+                        'meta_json' => null,
+                    ];
+                }
+            }
+        }
+
         $serviceIds = [];
         foreach ($services as $s) {
             if (!is_array($s)) {
