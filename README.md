@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **3.0.0**
+> Versão atual: **3.1.0**
 
 Plataforma de gerenciamento de hospedagem cloud em PHP MVC próprio, sem frameworks externos. Suporta múltiplos tipos de produto: VPS, WordPress Gerenciado, Web Hosting, Node.js, PHP/Laravel, Python, C/C++ e App Genérico.
 
@@ -127,6 +127,10 @@ Configurações principais:
 | `email.mailcow_key` | API key do Mailcow |
 | `email.webmail_url` | URL do webmail (Roundcube/SOGo) — fallback global |
 | `alertas.email_admin` | E-mail para alertas |
+| `alertas.managed_server_emails` | `1` para ativar alertas de uso alto em servidores gerenciados |
+| `worker.http_token` | Token de autenticação para o endpoint `/api/worker/run-once` |
+| `cloudflare.api_token` | API Token Cloudflare (Zone:Edit) para DNS automático e SSL |
+| `cloudflare.zone_id` | Zone ID do domínio base para domínios temporários |
 | `system.name` | Nome do sistema (padrão: `LRV Cloud Manager`) |
 | `system.logo_url` | URL do logotipo |
 | `system.favicon_url` | URL do favicon |
@@ -186,6 +190,16 @@ Porta configurável via `chat.ws_port` (padrão: 8082). Configure o proxy revers
 php worker.php          # loop contínuo
 php worker.php --once   # processa um job e sai
 ```
+
+**Worker via URL (recomendado para Plesk/cPanel):**
+
+Alterne para chamar via HTTP se o cron por arquivo não funcionar:
+
+```
+GET https://seudominio.com/api/worker/run-once?token=SEU_TOKEN
+```
+
+Configure o token em `Settings → worker.http_token`. Ideal para crons de 1 minuto via "Obter uma URL".
 
 Ou via painel em `/equipe/inicializacao`.
 

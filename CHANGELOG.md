@@ -5,15 +5,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.1.0] — 2026-07-08
+
+### Adicionado
+- **Configuração de alertas para servidores gerenciados**: opção nas configurações da equipe para ativar/desativar e-mails de uso alto em servidores gerenciados
+- **Polling automático de instalação**: tela de aplicações atualiza automaticamente o status quando uma app está sendo instalada
+- **Timeout de instalação**: aplicações presas em "Instalando" por mais de 10 minutos são marcadas como erro automaticamente
+
+### Melhorado
+- **SSL automático em servidores gerenciados**: instalação de aplicações agora configura HTTPS automaticamente sem intervenção manual
+- **Compatibilidade com painéis de controle**: vhosts e reload funcionam corretamente em servidores com aaPanel, cPanel ou similar
+- **Frequência de alertas de uso alto**: reduzido para no máximo 1 alerta por dia por servidor/VPS
+
+---
+
 ## [3.0.0] — 2026-04-16
 
 ### Adicionado
 
 #### Planos por Tipo de Produto
 - **8 tipos de plano**: VPS, WordPress Gerenciado, Web Hosting, Node.js, PHP/Laravel, Python, C/C++, App Genérico
-- **Limites por plano**: `max_sites`, `max_databases`, `max_cron_jobs`, `max_storage_per_site_mb`, `allowed_features`
+- **Limites por plano**: sites, bancos de dados, cron jobs, armazenamento e features configuráveis por plano
 - **Sidebar adaptativa**: menu do cliente mostra apenas features permitidas pelo plano contratado
-- **Middleware de acesso** (`verificarFeaturePlano`): bloqueia rotas não permitidas pelo plano, aplicado em 50+ rotas
+- **Middleware de acesso**: bloqueia rotas não permitidas pelo plano, aplicado em 50+ rotas
 - **Enforcement de limites**: verificação antes de criar sites, bancos de dados e cron jobs com mensagens claras
 - **Painel com uso vs limites**: barras de progresso mostrando sites, bancos e cron jobs (atual/limite)
 - **28 planos pré-configurados**: 4 por tipo de produto com preços BRL e USD
@@ -38,40 +52,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - Addons selecionáveis em cada card com recálculo de preço em tempo real
 - Card "Sob Medida" sempre no final do carousel
 - Botão "Contratar agora" leva direto pro checkout com addons pré-selecionados
-- Respeita moeda do visitante (R$ ou US$) via `I18n::moedaCodigo()`
+- Respeita moeda do visitante (R$ ou US$) automaticamente
 
 #### Upgrade e Downgrade de Plano
 - Botão "⬆ Alterar plano" na tela de assinaturas
 - Tela com planos do mesmo tipo, mostrando diferença de preço e recursos
 - **Upgrade**: cobrança imediata da diferença proporcional (pro-rata) + atualização do gateway
 - **Downgrade**: validação de uso (bloqueia se exceder limites do novo plano)
-- Resize automático da VPS via `docker update` (CPU/RAM sem downtime)
-- Atualização automática no Asaas (`atualizarAssinatura`) e Stripe (`subscriptions->update`)
-- Tabela `subscription_upgrades` para histórico
+- Resize automático da VPS (CPU/RAM sem downtime)
+- Atualização automática no gateway de pagamento (Asaas e Stripe)
 
 #### Contratação de Addons Separados
 - Botão "📦 Serviços adicionais" na tela de assinaturas
 - Tela com addons disponíveis e contratados, com contratar/cancelar
 - Cobrança imediata ao contratar (Asaas PIX avulso / Stripe proration)
 - Valor da assinatura recorrente atualizado automaticamente (plano + addons)
-- Tabela `subscription_addon_items` para registro separado
 
 #### Efeitos Reais dos Addons
-- **Storage +10GB**: incrementa `vps.storage` em 10GB
-- **Backup Extra**: soma +1 ao `backup_slots` (verificado em runtime pelo BackupsController)
+- **Storage +10GB**: incrementa o armazenamento da VPS em 10GB
+- **Backup Extra**: soma +1 slot de backup disponível
 - **E-mail Profissional**: soma +5 contas ao limite de e-mail
-- **Domínio Extra**: soma +1 ao limite de domínios
-- **Suporte Prioritário**: marca `clients.support_priority = 1`, tickets criados com prioridade alta
-- `AddonEffectService` aplica/reverte efeitos automaticamente
+- **Suporte Prioritário**: soma +1 ao limite de domínios
+- **Suporte Prioritário**: tickets criados com prioridade alta
+- Efeitos aplicados/revertidos automaticamente ao contratar/cancelar addons
 
 #### Planos Anuais Recorrentes
-- Novas contratações anuais usam subscription recorrente (`cycle: YEARLY` no Asaas, `interval: year` no Stripe)
+- Novas contratações anuais usam assinatura recorrente (cobrança automática no Asaas e Stripe)
 - Cobrança automática todo ano sem intervenção do cliente
 - Botão "🔄 Renovar" para clientes existentes com plano anual perto do vencimento
 
 #### Catálogo de Apps
-- Template C/C++ App (`gcc:latest`) com build automático (CMake/Makefile/compilação direta)
-- Git Deploy aceita tipo `cpp` com reverse proxy e porta configurável
+- Template C/C++ App com build automático (CMake/Makefile/compilação direta)
+- Git Deploy aceita tipo C/C++ com reverse proxy e porta configurável
 
 #### Chat Bot
 - Novos produtos no menu do bot (WordPress, Web Hosting, Node.js, C/C++, PHP, Python)
@@ -82,22 +94,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - Mega menu "Ver todos os produtos" leva para `/infraestrutura#produtos`
 
 ### Alterado
-- Home mostra apenas planos VPS (filtro `plan_type = 'vps'`)
+- Home mostra apenas planos VPS na listagem principal
 - Mega menu: links corrigidos para páginas dedicadas (Node.js, PHP, Python)
 - Assinaturas: badge de tipo de produto (VPS, WordPress, etc.) nos cards
 - Assinaturas: seletor de tipo de produto no "Contratar nova"
 - Admin: seletor de tipo de produto no form de planos com limites condicionais
 - Admin: coluna "Tipo" na listagem de planos com badges coloridos
-
-### Migrations
-- `0062` — `plan_type`, `max_sites`, `max_databases`, `max_storage_per_site_mb`, `max_cron_jobs`, `allowed_features`
-- `0063` — Template C/C++ App
-- `0064` — Seed: 28 planos + addons por tipo de produto
-- `0065` — Tabela `subscription_upgrades`
-- `0066` — Tabela `subscription_addon_items`
-- `0067` — Remoção de addons não implementados (CDN, SSL Wildcard, CI/CD, Staging)
-- `0068` — Campo `slug` nos addons
-- `0069` — Campo `support_priority` nos clientes
 
 ---
 
@@ -106,8 +108,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ### Adicionado
 - **Clientes gerenciados** — novo tipo de cliente (`is_managed`) com acesso restrito ao painel: VPS, Monitoramento, Tickets, Assinaturas, Minha Conta e Segurança. Ideal para clientes com hospedagem gerenciada onde a equipe cuida da infraestrutura
 - **Impersonação de clientes** — equipe pode "Logar como cliente" na tela de detalhes do cliente, com acesso completo a todas as funcionalidades. Botão "Voltar para equipe" na sidebar. Auditoria registrada
-- **Planos exclusivos por cliente** — campo `client_id` na tabela `plans` permite vincular um plano a um cliente específico. Planos exclusivos não aparecem na página pública nem para outros clientes
-- **Servidores para clientes gerenciados** — flag `is_managed_server` nos servidores. VPS de clientes gerenciados são provisionadas sem limites de CPU/RAM (overselling). Recursos não são contabilizados no servidor
+- **Planos exclusivos por cliente** — permite vincular um plano a um cliente específico. Planos exclusivos não aparecem na página pública nem para outros clientes
+- **Servidores para clientes gerenciados** — servidores dedicados para clientes gerenciados. VPS são provisionadas sem limites de CPU/RAM (overselling). Recursos não são contabilizados no servidor
 - **Overselling com visibilidade** — listagem de servidores mostra "vendido vs real" para servidores gerenciados (ex: "480 GB vendido / 128 GB real · 16 VPS")
 - **Alertas de uso alto em servidores gerenciados** — quando uso real do host atinge CPU 80%, RAM 75% ou Disco 85%, admin recebe alerta por email + WhatsApp + notificação interna com detalhes do overselling
 - **Alertas de uso alto por VPS gerenciada** — quando um cliente gerenciado usa mais de 80% da RAM do plano, admin é notificado (rate limit 2h por VPS)
@@ -118,19 +120,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Banner de plano exclusivo no painel** — cliente gerenciado sem assinatura vê banner destacado com detalhes do plano e botão "Assinar agora"
 - Validação de segurança: servidor não pode ser marcado como gerenciado se já tem VPS de clientes normais (e vice-versa)
 - Validação de segurança: cliente gerenciado não pode assinar planos públicos; ninguém pode assinar plano exclusivo de outro cliente
-- Migrations: `0052_client_managed`, `0053_server_managed_flag`, `0054_plan_client_id`
 
 ### Alterado
 - Sidebar do cliente gerenciado mostra apenas: Painel, VPS, Monitoramento, Tickets, Assinaturas, Minha Conta, Segurança
 - Botão de Terminal escondido na tela de VPS para clientes gerenciados
 - Tela de planos do cliente gerenciado mostra "✓ Seu plano personalizado" + card de contato para alterações
-- Servidores normais excluem `is_managed_server` da seleção automática de node
-- `DockerCli::criarEIniciarContainer` aceita cpu=0 e ram=0 para containers sem limites
+- Servidores normais excluem servidores gerenciados da seleção automática de node
+- Containers de clientes gerenciados podem ser criados sem limites de CPU/RAM
 - Listagem de planos da equipe mostra badge 🔒 com nome do cliente para planos exclusivos
 - Formulário de edição de plano tem dropdown "Cliente exclusivo"
 - Formulário de edição de servidor tem checkbox "🔧 Servidor para clientes gerenciados"
 - Domínios: formulário de adicionar subdomínio agora aceita domínios raiz também
-- Todas as listagens públicas de planos filtram `client_id IS NULL`
+- Todas as listagens públicas de planos filtram planos exclusivos automaticamente
 
 ---
 
@@ -139,11 +140,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ### Adicionado
 - **Gerenciamento centralizado de domínios** (`/cliente/dominios`) — tela única para domínios raiz (email) e subdomínios (apps/deploy), com fluxo de verificação TXT + CNAME
 - **Verificação de subdomínio em 2 passos** — passo 1: registro TXT `_lrv-verify.sub.dominio.com` para provar propriedade; passo 2: CNAME apontando para subdomínio do sistema com proxy Cloudflare. IP nunca exposto
-- **Subdomínio automático da VPS** — ao provisionar, o sistema cria `vpsN.clientes.DOMINIO` no Cloudflare com proxy ativado e salva em `vps.temp_subdomain`
+- **Subdomínio automático da VPS** — ao provisionar, o sistema cria um subdomínio temporário no Cloudflare com proxy ativado
 - **Select de subdomínios** — catálogo de aplicações e Git Deploy agora usam select de subdomínios verificados ao invés de campo de texto livre
-- **Bind em 127.0.0.1** — containers Docker agora bindam portas em localhost, impedindo acesso direto via IP:porta sem SSL
-- Tabela `client_subdomains` com campos: subdomain, root_domain, verify_token, cname_target, status, used_by_type/id
-- `SubdomainVerificationService` com verificação TXT/CNAME, controle de uso e listagem de disponíveis
+- **Bind em localhost** — containers agora bindam portas em localhost, impedindo acesso direto via IP:porta sem SSL
+- Tabela de subdomínios com verificação TXT/CNAME, controle de uso e listagem de disponíveis
 - Item "Domínios" na sidebar do cliente entre E-mails e Aplicações
 - FAQ de domínios na ajuda do cliente
 - Migration: `0047_client_subdomains`
@@ -151,7 +151,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ### Alterado
 - Aplicações e Git Deploy não aceitam mais domínio raiz — apenas subdomínios verificados
 - Links de "Domínios de E-mail" redirecionam para a tela centralizada `/cliente/dominios`
-- `AppInstallService` e `AplicacaoDeployService` bindam em `127.0.0.1:PORTA` ao invés de `0.0.0.0:PORTA`
+- Aplicações e Git Deploy bindam em localhost ao invés de expor portas publicamente
 
 ---
 
@@ -162,27 +162,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Múltiplas assinaturas por cliente** — cada assinatura corresponde a 1 VPS; cliente pode contratar quantas quiser
 - **Descontos por período** — 5% semestral e 10% anual (configuráveis pelo admin em Configurações); addons acompanham o desconto do período
 - **Pagamento inline no wizard** — PIX mostra QR code e copia-cola, Boleto mostra linha digitável e botão de download, Cartão de crédito com campos inline (Asaas), tudo sem sair da página
-- **Seletor de moeda independente** — dropdown R$/$ ao lado do seletor de idioma; moeda e idioma são independentes; cookie `currency` persiste a escolha
+- **Seletor de moeda independente** — dropdown R$/$ ao lado do seletor de idioma; moeda e idioma são independentes
 - **Tela de assinaturas reestruturada** — cards por assinatura ativa mostrando VPS vinculada (specs, status), assinaturas encerradas em tabela, botão "Contratar nova VPS"
 - **Histórico de cobranças** — tela separada `/cliente/assinaturas/historico` com todas as faturas e cobranças do Asaas
 - **Dar plano grátis** — na página de detalhes do cliente (equipe), botão "🎁 Dar plano grátis" cria VPS + assinatura ativa sem cobrança
-- **Ocultar/deletar clientes** — botão para ocultar (soft hide com `hidden_at`) e deletar (cascade completo de todos os dados relacionados) na página de detalhes do cliente
+- **Ocultar/deletar clientes** — botão para ocultar e deletar (cascade completo de todos os dados relacionados) na página de detalhes do cliente
 - **Ordenação na listagem de clientes** — por nome, cadastro, última atividade, VPS, assinaturas, uso de recursos
-- **Última atividade do cliente** — coluna `last_login_at` registrada automaticamente a cada login
+- **Última atividade do cliente** — registrada automaticamente a cada login
 - **Máscaras visuais** — CPF/CNPJ, celular, CEP, número do cartão e validade com formatação automática no wizard e em Minha Conta
 - **Addons pré-selecionados** — addons escolhidos na home são passados para o wizard via query string e já vêm marcados
 - **Pop-up de upsell** — entre configuração e dados pessoais, oferece desconto anual ou plano superior
-- Migrations: `0042_billing_discounts`, `0043_client_hidden`, `0044_client_last_login`
 
 ### Corrigido
-- **Domínio do sistema no campo de e-mail** — campo de domínio na criação de e-mail mostrava o domínio do sistema ao invés dos domínios do cliente; agora prioriza domínios do cliente (incluindo `pending_dns`)
+- **Domínio do sistema no campo de e-mail** — campo de domínio na criação de e-mail agora prioriza domínios do cliente
 - **Nome do cliente no header** — todas as telas mostravam "Área do cliente" ao invés do nome; layout agora busca do banco quando não passado pelo controller
-- **Badge `pending_provisioning`** — status de VPS aparecia em inglês; adicionado ao mapa de tradução
-- **Reembolso escondido** — botão de solicitar reembolso movido para dentro do histórico de cobranças (discreto, dentro de `<details>`)
-- Coluna "Telefone" trocada por "Celular" na listagem de clientes (campo `mobile_phone`)
+- **Badge de status** — status de VPS traduzidos corretamente
+- **Reembolso escondido** — botão de solicitar reembolso movido para dentro do histórico de cobranças (discreto)
+- Coluna "Telefone" trocada por "Celular" na listagem de clientes
 
 ### Alterado
-- Moeda agora é decidida por `I18n::moedaCodigo()` (cookie `currency`) ao invés de `I18n::idioma()`; gateway de pagamento (Asaas/Stripe) segue a moeda, não o idioma
+- Moeda agora é decidida pelo seletor de moeda (independente do idioma); gateway de pagamento (Asaas/Stripe) segue a moeda
 - Wizard de contratação usa navbar pública, footer e estilos do site (mesma tipografia, cores, border-radius)
 - Resumo do pedido mostra valores por período (`/mês`, `/sem`, `/ano`) com equivalente mensal e valor total cobrado
 
@@ -199,8 +198,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Inicialização parcial de servidores** — tela de edição do servidor mostra todos os 20 passos individualmente com badges de risco (Sem risco / Risco baixo / Risco alto) e botão "Executar" por passo
 - **Role de servidor** — coluna `role` na tabela `servers` (vps/email); servidores de e-mail não entram no pool de provisionamento de VPS
 - **Gráficos de monitoramento** — tela de monitoramento da equipe reescrita com gauges circulares, gráficos de linha (Canvas puro) e tabela limitada às últimas 12 coletas
-- **Botão instalar agente de monitoramento** — nas configurações, botão que conecta via SSH no servidor de e-mail e instala o `lrv-monitor` automaticamente
-- Migrations: `0034_server_role`, `0035_subscription_addons`, `0036_plan_featured_and_seed`
+- **Botão instalar agente de monitoramento** — nas configurações, botão que conecta via SSH no servidor de e-mail e instala o agente automaticamente
 
 ### Corrigido
 - Logo + nome do sistema apareciam juntos nas telas de login (cliente e equipe) e na navbar pública — agora só mostra o texto quando não há logo configurada
@@ -224,7 +222,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Redirect pós-login** — ao acessar uma URL protegida sem login, o sistema salva a URL e redireciona de volta após autenticação (funciona com 2FA)
 - Categoria "E-mail" no catálogo de aplicações
 - Rota `POST /api/metrics/servers` para receber métricas de monitoramento dos servidores
-- Migrations: `0030_plan_backup_slots`, `0031_domain_webmail_subdomain`, `0032_roundcube_template`, `0033_client_webmail_app`
 
 ### Corrigido
 - **Monitoramento não recebia métricas** — rota `/api/metrics/servers` não existia no `routes/web.php`; adicionada
