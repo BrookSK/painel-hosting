@@ -174,7 +174,18 @@ $_geral_label = match($geral) {
                     <?php endforeach; ?>
                   </div>
                 </td>
-                <td><code style="font-size:12px;color:#64748b;"><?php echo View::e((string) ($s['last_check_at'] ?? '')); ?></code></td>
+                <td><code style="font-size:12px;color:#64748b;"><?php
+                  $lca = (string)($s['last_check_at'] ?? '');
+                  if ($lca !== '') {
+                    $ts = strtotime($lca);
+                    $lang = I18n::idioma();
+                    if ($lang === 'en-US') {
+                      echo View::e(date('m/d/Y H:i', $ts));
+                    } else {
+                      echo View::e(date('d/m/Y H:i', $ts));
+                    }
+                  }
+                ?></code></td>
               </tr>
             <?php endforeach; ?>
             <?php if (empty($servicesArr)): ?>
