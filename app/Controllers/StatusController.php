@@ -52,11 +52,9 @@ final class StatusController
                         $status = 'unknown';
                     }
 
-                    // Nome amigável: usar hostname sem expor IP
-                    $displayName = $hostname !== '' ? $hostname : ('Servidor #' . $srvId);
-                    if ($isManaged) {
-                        $displayName .= ' (Gerenciado)';
-                    }
+                    // Nome genérico: Servidor 1, Servidor 2, etc (não expor hostname/IP)
+                    $serverNum = count($services) + 1;
+                    $displayName = 'Servidor ' . $serverNum;
 
                     $services[] = [
                         'id' => $srvId,
