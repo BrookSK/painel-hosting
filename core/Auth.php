@@ -163,13 +163,22 @@ final class Auth
         // Cache em sessão para evitar query repetida
         if (!isset($_SESSION['_cache_is_managed']) || ($_SESSION['_cache_is_managed_id'] ?? 0) !== $id) {
             $pdo = BancoDeDados::pdo();
-            $s = $pdo->prepare('SELECT is_managed FROM clients WHERE id = :id');
+            $s = $pdo->prepare('SELECT is_managed, managed_show_all_tabs FROM clients WHERE id = :id');
             $s->execute([':id' => $id]);
             $r = $s->fetch();
             $_SESSION['_cache_is_managed'] = (bool) (int) ($r['is_managed'] ?? 0);
+            $_SESSION['_cache_managed_show_all_tabs'] = (bool) (int) ($r['managed_show_all_tabs'] ?? 0);
             $_SESSION['_cache_is_managed_id'] = $id;
         }
         return (bool) $_SESSION['_cache_is_managed'];
+    }
+
+    /** Retorna true se o cliente gerenciado tem permissão para ver todas as abas. */
+    public static function clienteGerenciadoMostrarTodasAbas(): bool
+    {
+        // Garante que o cache esteja populado
+        self::clienteGerenciado();
+        return (bool) ($_SESSION['_cache_managed_show_all_tabs'] ?? false);
     }
 
     public static function equipeExiste(): bool

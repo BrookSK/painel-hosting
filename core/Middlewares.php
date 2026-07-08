@@ -61,7 +61,7 @@ final class Middlewares
 
     /**
      * Bloqueia acesso para clientes gerenciados (is_managed),
-     * exceto quando a equipe está impersonando.
+     * exceto quando a equipe está impersonando ou managed_show_all_tabs está ativo.
      */
     public static function bloquearClienteGerenciado(): callable
     {
@@ -70,6 +70,9 @@ final class Middlewares
                 return null; // equipe impersonando → acesso total
             }
             if (Auth::clienteGerenciado()) {
+                if (Auth::clienteGerenciadoMostrarTodasAbas()) {
+                    return null; // cliente gerenciado com acesso total às abas
+                }
                 return Resposta::redirecionar('/cliente/painel');
             }
             return null;

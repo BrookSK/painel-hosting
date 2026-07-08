@@ -144,9 +144,18 @@ final class ClientesController
         // Toggle managed flag (cliente gerenciado)
         if (!empty($req->post['toggle_managed']) && $id > 0) {
             $pdo = BancoDeDados::pdo();
-            $pdo->prepare('UPDATE clients SET is_managed = IF(is_managed = 1, 0, 1) WHERE id = :id')->execute([':id' => $id]);
+            $pdo->prepare('UPDATE clients SET is_managed = IF(is_managed = 1, 0, 1), managed_show_all_tabs = IF(is_managed = 1, 0, managed_show_all_tabs) WHERE id = :id')->execute([':id' => $id]);
             // Limpar cache de sessão se existir
-            unset($_SESSION['_cache_is_managed'], $_SESSION['_cache_is_managed_id']);
+            unset($_SESSION['_cache_is_managed'], $_SESSION['_cache_managed_show_all_tabs'], $_SESSION['_cache_is_managed_id']);
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+        }
+
+        // Toggle managed_show_all_tabs flag
+        if (!empty($req->post['toggle_managed_show_all_tabs']) && $id > 0) {
+            $pdo = BancoDeDados::pdo();
+            $pdo->prepare('UPDATE clients SET managed_show_all_tabs = IF(managed_show_all_tabs = 1, 0, 1) WHERE id = :id')->execute([':id' => $id]);
+            // Limpar cache de sessão se existir
+            unset($_SESSION['_cache_is_managed'], $_SESSION['_cache_managed_show_all_tabs'], $_SESSION['_cache_is_managed_id']);
             return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
         }
 

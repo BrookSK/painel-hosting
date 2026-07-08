@@ -10,7 +10,8 @@ $_uri = (string)($_SERVER['REQUEST_URI'] ?? '');
 $_seg = strtok($_uri, '?');
 
 // Cliente gerenciado vê apenas: Painel, Assinaturas, Tickets, Minha Conta, Segurança, Sair
-$_isManaged = Auth::clienteGerenciado() && !Auth::estaImpersonando();
+// (exceto se managed_show_all_tabs estiver ativo)
+$_isManaged = Auth::clienteGerenciado() && !Auth::estaImpersonando() && !Auth::clienteGerenciadoMostrarTodasAbas();
 
 // Features permitidas pelo plano
 $_clienteIdSidebar = Auth::clienteId();

@@ -71,6 +71,9 @@ if (count($nomePartes) >= 2) {
           <?php if (!empty($cliente['is_managed'])): ?>
             <span class="badge-new" style="background:#dbeafe;color:#1e40af;">🔧 Gerenciado</span>
           <?php endif; ?>
+          <?php if (!empty($cliente['managed_show_all_tabs'])): ?>
+            <span class="badge-new" style="background:#ede9fe;color:#6b21a8;">📑 Todas as abas</span>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -89,6 +92,16 @@ if (count($nomePartes) >= 2) {
           <?php echo !empty($cliente['is_managed']) ? '✕ Remover gerenciado' : '🔧 Marcar como gerenciado'; ?>
         </button>
       </form>
+      <?php if (!empty($cliente['is_managed'])): ?>
+      <form method="post" action="/equipe/clientes/salvar" style="display:inline;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <input type="hidden" name="toggle_managed_show_all_tabs" value="1" />
+        <button class="botao sm <?php echo !empty($cliente['managed_show_all_tabs']) ? 'ghost' : ''; ?>" type="submit" style="<?php echo !empty($cliente['managed_show_all_tabs']) ? '' : 'background:#8b5cf6;'; ?>">
+          <?php echo !empty($cliente['managed_show_all_tabs']) ? '✕ Ocultar abas extras' : '📑 Mostrar todas as abas'; ?>
+        </button>
+      </form>
+      <?php endif; ?>
       <form method="post" action="/equipe/clientes/salvar" style="display:inline;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
