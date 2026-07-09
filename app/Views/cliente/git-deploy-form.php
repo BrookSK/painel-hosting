@@ -24,6 +24,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div class="erro"><?php echo View::e((string)$erro); ?></div>
 <?php endif; ?>
 
+<?php if ($isEdit && !empty($_GET['criado'])): ?>
+<div style="margin-bottom:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px 20px;display:flex;align-items:flex-start;gap:12px;">
+  <span style="font-size:22px;line-height:1;">✅</span>
+  <div>
+    <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:4px;">Repositório conectado com sucesso!</div>
+    <div style="font-size:13px;color:#475569;">Se o repositório for privado, copie a <strong>Deploy Key</strong> abaixo e adicione nas configurações do seu repositório (GitHub/GitLab). Sem isso, o deploy não terá acesso ao código.</div>
+  </div>
+</div>
+<?php endif; ?>
+
 <div class="card-new" style="max-width:680px;">
   <form method="post" action="/cliente/git-deploy/salvar">
     <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />

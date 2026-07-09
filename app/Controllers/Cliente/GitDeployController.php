@@ -195,6 +195,11 @@ final class GitDeployController
             }
         }
 
+        // Se é criação, redirecionar para edição (onde a deploy key aparece)
+        if ($id <= 0 && isset($newDeployId) && $newDeployId > 0) {
+            return Resposta::redirecionar('/cliente/git-deploy/editar?id=' . $newDeployId . '&criado=1');
+        }
+
         return Resposta::redirecionar('/cliente/git-deploy');
     }
 
