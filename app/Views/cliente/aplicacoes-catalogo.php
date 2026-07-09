@@ -13,7 +13,7 @@ $csrf = Csrf::token();
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px;}
 .cat-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
 .cat-card:hover{border-color:#7C3AED;box-shadow:0 4px 20px rgba(124,58,237,.08);}
-.cat-icon{font-size:32px;margin-bottom:8px;line-height:1;width:32px;height:32px;display:flex;align-items:center;justify-content:flex-start;}
+.cat-icon{font-size:32px;margin-bottom:8px;line-height:1;}
 .cat-name{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px;}
 .cat-desc{font-size:13px;color:#64748b;line-height:1.5;flex:1;margin-bottom:12px;}
 .cat-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#475569;font-weight:600;margin-bottom:10px;}
@@ -53,11 +53,12 @@ $csrf = Csrf::token();
     <div class="cat-grid">
       <?php foreach ($items as $t): ?>
         <div class="cat-card">
-          <div class="cat-icon"><?php echo (string)($t['icon'] ?? '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'); ?></div>
+          <div class="cat-icon"><?php echo (string)($t['icon'] ?? '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'); ?></div>
           <div class="cat-name"><?php echo View::e((string)($t['name']??'')); ?></div>
           <div class="cat-desc"><?php echo View::e((string)($t['description']??'')); ?></div>
           <span class="cat-tag"><?php echo View::e((string)($t['docker_image']??'')); ?></span>
-          <button class="botao sm" onclick="openInstall(<?php echo (int)$t['id']; ?>,<?php echo View::e(json_encode($t)); ?>)"><?php echo View::e(I18n::t('apps.instalar')); ?></button>
+          <?php $tSafe = $t; unset($tSafe['icon']); ?>
+          <button class="botao sm" onclick="openInstall(<?php echo (int)$t['id']; ?>,<?php echo View::e(json_encode($tSafe)); ?>)"><?php echo View::e(I18n::t('apps.instalar')); ?></button>
         </div>
       <?php endforeach; ?>
     </div>
