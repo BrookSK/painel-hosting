@@ -417,6 +417,7 @@ $roteador->post('/equipe/chat-flows/dispatch', [\LRV\App\Controllers\Equipe\Chat
 
 // API Keys (cliente — gerenciamento de chaves da Public API)
 $roteador->get('/cliente/api-keys', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
+$roteador->get('/cliente/api-keys/novo', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'formularioCriar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
 $roteador->post('/cliente/api-keys/criar', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('api_key_create', 5, 60)]);
 $roteador->post('/cliente/api-keys/revogar', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'revogar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
 $roteador->post('/cliente/api-keys/rotacionar', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'rotacionar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('api_key_rotate', 5, 60)]);

@@ -40,6 +40,22 @@ final class ApiKeysController
         return Resposta::html($html);
     }
 
+    public function formularioCriar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::redirecionar('/cliente/entrar');
+        }
+
+        $erro = (string) ($req->query['erro'] ?? '');
+
+        $html = View::renderizar(__DIR__ . '/../../Views/cliente/api-keys-criar.php', [
+            'erro' => $erro,
+        ]);
+
+        return Resposta::html($html);
+    }
+
     public function criar(Requisicao $req): Resposta
     {
         $clienteId = Auth::clienteId();
@@ -61,7 +77,7 @@ final class ApiKeysController
         $expiraEm = trim((string) ($req->post['expira_em'] ?? ''));
 
         if ($nome === '') {
-            return Resposta::redirecionar('/cliente/api-keys?erro=nome_obrigatorio');
+            return Resposta::redirecionar('/cliente/api-keys/novo?erro=nome_obrigatorio');
         }
 
         if ($rateLimit < 1 || $rateLimit > 1000) {
@@ -85,7 +101,7 @@ final class ApiKeysController
         $escopos = array_values(array_intersect($escopos, $escoposValidos));
 
         if (empty($escopos)) {
-            return Resposta::redirecionar('/cliente/api-keys?erro=escopos_obrigatorio');
+            return Resposta::redirecionar('/cliente/api-keys/novo?erro=escopos_obrigatorio');
         }
 
         $service = new ApiKeyService();

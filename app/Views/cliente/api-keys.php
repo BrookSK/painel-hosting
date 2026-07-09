@@ -79,33 +79,6 @@ function _apiKeyEnvBadge(string $env): string {
 .scope-item:hover { border-color: #6366f1; }
 .scope-item:has(input:checked) { border-color: #6366f1; background: rgba(99,102,241,.08); color: #e2e8f0; }
 .scope-item input[type="checkbox"] { accent-color: #6366f1; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
-.modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 9999;
-    align-items: center; justify-content: center; padding: 20px;
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-}
-.modal-overlay.active { display: flex; }
-.modal-box {
-    background: #0f172a; border-radius: 20px; padding: 32px; width: 100%; max-width: 540px;
-    max-height: 82vh; overflow-y: auto; box-shadow: 0 32px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06);
-}
-.modal-box::-webkit-scrollbar { width: 6px; }
-.modal-box::-webkit-scrollbar-track { background: transparent; }
-.modal-box::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-.modal-box h3 { margin: 0 0 24px; font-size: 20px; color: #f1f5f9; font-weight: 800; letter-spacing: -.02em; }
-.form-group { margin-bottom: 18px; }
-.form-group label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
-.form-group input, .form-group select, .form-group textarea {
-    width: 100%; background: #1e293b; border: 1.5px solid #334155; border-radius: 10px;
-    padding: 12px 14px; color: #e2e8f0; font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s;
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
-.form-group input::placeholder, .form-group textarea::placeholder { color: #475569; }
-.form-group textarea { resize: vertical; min-height: 70px; }
-.form-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #1e293b; }
-.btn-cancel { background: #1e293b; color: #94a3b8; border: 1.5px solid #334155; border-radius: 10px; padding: 11px 20px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .15s; }
-.btn-cancel:hover { background: #334155; color: #e2e8f0; }
 .keys-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .keys-table th { padding: 10px 12px; text-align: left; color: #94a3b8; font-weight: 600; border-bottom: 2px solid #334155; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
 .keys-table td { padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
@@ -124,7 +97,7 @@ function _apiKeyEnvBadge(string $env): string {
     <div class="page-title"><?= I18n::t('api_keys.titulo') ?></div>
     <div class="page-subtitle" style="margin-bottom:0;"><?= I18n::t('api_keys.subtitulo') ?></div>
   </div>
-  <button class="botao" onclick="document.getElementById('modalCriar').classList.add('active')">
+  <button class="botao" onclick="window.location='/cliente/api-keys/novo'">
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;margin-right:4px;"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <?= I18n::t('api_keys.criar_btn') ?>
   </button>
@@ -233,66 +206,6 @@ function _apiKeyEnvBadge(string $env): string {
 <?php endif; ?>
 </div>
 
-<!-- Create Modal -->
-<div class="modal-overlay" id="modalCriar">
-  <div class="modal-box">
-    <h3><?= I18n::t('api_keys.criar_titulo') ?></h3>
-    <form method="post" action="/cliente/api-keys/criar">
-      <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
-
-      <div class="form-group">
-        <label for="ak_nome"><?= I18n::t('api_keys.campo_nome') ?> *</label>
-        <input type="text" id="ak_nome" name="nome" required maxlength="100" placeholder="<?= I18n::t('api_keys.campo_nome_placeholder') ?>" />
-      </div>
-
-      <div class="form-group">
-        <label for="ak_descricao"><?= I18n::t('api_keys.campo_descricao') ?></label>
-        <textarea id="ak_descricao" name="descricao" maxlength="255" placeholder="<?= I18n::t('api_keys.campo_descricao_placeholder') ?>"></textarea>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group">
-          <label for="ak_ambiente"><?= I18n::t('api_keys.campo_ambiente') ?></label>
-          <select id="ak_ambiente" name="ambiente">
-            <option value="production"><?= I18n::t('api_keys.env_production') ?></option>
-            <option value="sandbox"><?= I18n::t('api_keys.env_sandbox') ?></option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="ak_rate_limit"><?= I18n::t('api_keys.campo_rate_limit') ?></label>
-          <input type="number" id="ak_rate_limit" name="rate_limit" value="60" min="1" max="1000" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="ak_expira"><?= I18n::t('api_keys.campo_expiracao') ?></label>
-        <input type="date" id="ak_expira" name="expira_em" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" />
-      </div>
-
-      <div class="form-group">
-        <label>Scopes *</label>
-        <div style="margin-bottom:8px;">
-          <button type="button" onclick="toggleAllScopes(true)" class="botao ghost sm" style="font-size:11px;margin-right:4px;"><?= I18n::t('api_keys.selecionar_todos') ?></button>
-          <button type="button" onclick="toggleAllScopes(false)" class="botao ghost sm" style="font-size:11px;"><?= I18n::t('api_keys.desmarcar_todos') ?></button>
-        </div>
-        <div class="scopes-grid">
-          <?php foreach ($escoposDisponiveis as $escopo => $label): ?>
-          <label class="scope-item">
-            <input type="checkbox" name="escopos[]" value="<?php echo View::e($escopo); ?>" />
-            <span><?php echo View::e($label); ?></span>
-          </label>
-          <?php endforeach; ?>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="document.getElementById('modalCriar').classList.remove('active')"><?= I18n::t('geral.cancelar') ?></button>
-        <button type="submit" class="botao"><?= I18n::t('api_keys.criar_btn') ?></button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script>
 function copiarChave() {
     const texto = document.getElementById('novaChaveTexto');
@@ -302,22 +215,6 @@ function copiarChave() {
         if (btn) { btn.textContent = '<?= I18n::t('api_keys.copiado') ?>'; setTimeout(() => btn.textContent = '<?= I18n::t('api_keys.copiar') ?>', 2000); }
     });
 }
-
-function toggleAllScopes(checked) {
-    document.querySelectorAll('.scopes-grid input[type="checkbox"]').forEach(cb => cb.checked = checked);
-}
-
-// Close modal on overlay click
-document.getElementById('modalCriar')?.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('active');
-});
-
-// Close modal on Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        document.getElementById('modalCriar')?.classList.remove('active');
-    }
-});
 </script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>
