@@ -567,9 +567,9 @@ $_trial_dias  = (int)($trial_dias ?? 7);
     <div class="compare-grid">
       <?php foreach ($_planos as $_p):
         $_specs  = json_decode((string)($_p['specs_json'] ?? ''), true) ?: [];
-        $_vcpu   = (int)($_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
-        $_ram    = (int)($_specs['ram_gb'] ?? 0);
-        $_disco  = (int)($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0);
+        $_vcpu   = (int)($_p['cpu'] ?? $_specs['vcpu'] ?? $_specs['cpu'] ?? 0);
+        $_ram    = (int)(($_p['ram'] ?? 0) > 256 ? round((int)$_p['ram'] / 1024) : ($_specs['ram_gb'] ?? 0));
+        $_disco  = (int)(($_p['storage'] ?? 0) > 256 ? round((int)$_p['storage'] / 1024) : ($_specs['disco_gb'] ?? $_specs['storage_gb'] ?? 0));
         $_price  = (float)$_p['price'];
         $_badge  = (string)($_p['badge'] ?? '');
       ?>
