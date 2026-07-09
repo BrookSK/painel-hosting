@@ -165,12 +165,11 @@ final class MinhaContaController
             @mkdir($storageDir, 0775, true);
         }
 
-        $safeName = 'client_' . $id . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+        $safeName = 'client_' . $id . '_' . bin2hex(random_bytes(6)) . '.jpg';
         $destPath = $storageDir . '/' . $safeName;
 
-        if (!move_uploaded_file($tmpPath, $destPath)) {
-            return Resposta::json(['ok' => false, 'erro' => 'Falha ao salvar arquivo.'], 500);
-        }
+        // Redimensionar e cropar para quadrado 200x200
+        $this->processarAvatar($tmpPath, $destPath, 200);
 
         // Remover avatar antigo
         $pdo = BancoDeDados::pdo();
@@ -212,5 +211,46 @@ final class MinhaContaController
             ->execute([':id' => $id]);
 
         return Resposta::json(['ok' => true]);
+    }
+
+    /**
+     * Redimensiona e cropa imagem para quadrado (center crop) e salva como JPEG.
+     */
+    private function processarAvatar(string $srcPath, string $destPath, int $size): void
+    {
+        $info = @getimagesize($srcPath);
+        if ($info === false) {
+            throw new \RuntimeException('Imagem inválida.');
+        }
+
+        $mime = (string)($info['mime'] ?? '');
+        $src = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($srcPath),
+            'image/png'  => @imagecreatefrompng($srcPath),
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($srcPath) : false,
+            'image/gif'  => @imagecreatefromgif($srcPath),
+            default      => false,
+        };
+
+        if ($src === false) {
+            // Fallback: copiar arquivo como está
+            @copy($srcPath, $destPath);
+            return;
+        }
+
+        $origW = imagesx($src);
+        $origH = imagesy($src);
+
+        // Center crop para quadrado
+        $cropSize = min($origW, $origH);
+        $cropX = (int)(($origW - $cropSize) / 2);
+        $cropY = (int)(($origH - $cropSize) / 2);
+
+        $dest = imagecreatetruecolor($size, $size);
+        imagecopyresampled($dest, $src, 0, 0, $cropX, $cropY, $size, $size, $cropSize, $cropSize);
+
+        imagejpeg($dest, $destPath, 85);
+        imagedestroy($src);
+        imagedestroy($dest);
     }
 }
