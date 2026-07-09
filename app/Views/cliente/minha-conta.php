@@ -44,13 +44,13 @@ if (count($partes) >= 2) {
       // Testar se Gravatar existe (usa d=404 pra check, mas mostramos d=blank como fallback visual)
     ?>
     <div style="position:relative;flex-shrink:0;">
-      <div id="avatarContainer" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4F46E5,#7C3AED);font-size:22px;font-weight:700;color:#fff;">
+      <div id="avatarContainer" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#4F46E5,#7C3AED);flex-shrink:0;">
         <?php if ($hasAvatar): ?>
-          <img id="avatarImg" src="<?php echo $avatarUrl; ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';document.getElementById('avatarInitials').style.display='flex';" />
-          <span id="avatarInitials" style="display:none;"><?php echo View::e($iniciais); ?></span>
+          <img id="avatarImg" src="<?php echo $avatarUrl; ?>" alt="Avatar" style="display:block;width:64px;height:64px;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';document.getElementById('avatarInitials').style.display='flex';" />
+          <span id="avatarInitials" style="display:none;width:64px;height:64px;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;"><?php echo View::e($iniciais); ?></span>
         <?php else: ?>
-          <img id="avatarImg" src="<?php echo $gravatarUrl; ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;display:none;" onload="if(this.naturalWidth>1)this.style.display='block'" onerror="this.style.display='none'" />
-          <span id="avatarInitials" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><?php echo View::e($iniciais); ?></span>
+          <img id="avatarImg" src="<?php echo $gravatarUrl; ?>" alt="Avatar" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:50%;" onload="if(this.naturalWidth>1){this.style.display='block';document.getElementById('avatarInitials').style.display='none';}" onerror="this.style.display='none'" />
+          <span id="avatarInitials" style="display:flex;width:64px;height:64px;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;"><?php echo View::e($iniciais); ?></span>
         <?php endif; ?>
       </div>
       <label for="avatarInput" style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#4F46E5;border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Alterar foto">

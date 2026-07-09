@@ -64,9 +64,9 @@ $_t = static fn(string $k): string => I18n::t($k);
         <?php require __DIR__ . '/idioma.php'; ?>
         <div class="header-avatar-wrap" onclick="toggleAvatarDropdownCli()" id="avatarWrapCli">
           <?php if ($_cliAvatar !== ''): ?>
-            <img src="<?php echo View::e($_cliAvatar); ?>" alt="Avatar" class="header-avatar" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML='<div class=\'header-avatar\'><?php echo View::e($_initials); ?></div>'" />
+            <img src="<?php echo View::e($_cliAvatar); ?>" alt="Avatar" style="display:block;width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML='<div class=\'header-avatar\'><?php echo View::e($_initials); ?></div>'" />
           <?php elseif ($_cliEmail !== ''): ?>
-            <img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($_cliEmail))); ?>?s=68&d=blank" alt="" class="header-avatar-gravatar" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:none;" onload="if(this.naturalWidth>1){this.style.display='block';this.nextElementSibling.style.display='none';}" />
+            <img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($_cliEmail))); ?>?s=68&d=blank" alt="" style="display:none;width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;" onload="if(this.naturalWidth>1){this.style.display='block';this.nextElementSibling.style.display='none';}" />
             <div class="header-avatar"><?php echo View::e($_initials); ?></div>
           <?php else: ?>
             <div class="header-avatar"><?php echo View::e($_initials); ?></div>
