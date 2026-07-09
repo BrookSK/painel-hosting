@@ -9,18 +9,16 @@ use LRV\Core\Auth;
 $_cliId   = Auth::clienteId() ?? 0;
 $_cliNome = (string)($clienteNome ?? $cliente['name'] ?? '');
 $_cliEmail= (string)($clienteEmail ?? $cliente['email'] ?? '');
-$_cliAvatar = (string)($cliente['avatar'] ?? '');
 
 // Buscar nome/email do banco se não foram passados pelo controller
 if ($_cliId > 0 && ($_cliNome === '' || $_cliEmail === '')) {
     try {
-        $_cliStmt = \LRV\Core\BancoDeDados::pdo()->prepare('SELECT name, email, avatar FROM clients WHERE id = :id');
+        $_cliStmt = \LRV\Core\BancoDeDados::pdo()->prepare('SELECT name, email FROM clients WHERE id = :id');
         $_cliStmt->execute([':id' => $_cliId]);
         $_cliRow = $_cliStmt->fetch();
         if (is_array($_cliRow)) {
             if ($_cliNome === '') $_cliNome = (string)($_cliRow['name'] ?? '');
             if ($_cliEmail === '') $_cliEmail = (string)($_cliRow['email'] ?? '');
-            if ($_cliAvatar === '') $_cliAvatar = (string)($_cliRow['avatar'] ?? '');
         }
     } catch (\Throwable) {}
 }
@@ -63,14 +61,7 @@ $_t = static fn(string $k): string => I18n::t($k);
       <div class="header-right">
         <?php require __DIR__ . '/idioma.php'; ?>
         <div class="header-avatar-wrap" onclick="toggleAvatarDropdownCli()" id="avatarWrapCli">
-          <?php if ($_cliAvatar !== ''): ?>
-            <img src="<?php echo View::e($_cliAvatar); ?>" alt="Avatar" style="display:block;width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML='<div class=\'header-avatar\'><?php echo View::e($_initials); ?></div>'" />
-          <?php elseif ($_cliEmail !== ''): ?>
-            <img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($_cliEmail))); ?>?s=68&d=blank" alt="" style="display:none;width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;" onload="if(this.naturalWidth>1){this.style.display='block';this.nextElementSibling.style.display='none';}" />
-            <div class="header-avatar"><?php echo View::e($_initials); ?></div>
-          <?php else: ?>
-            <div class="header-avatar"><?php echo View::e($_initials); ?></div>
-          <?php endif; ?>
+          <div class="header-avatar"><?php echo View::e($_initials); ?></div>
           <div class="header-avatar-info">
             <span class="header-avatar-name"><?php echo View::e($_cliNome ?: I18n::t('geral.area_cliente')); ?></span>
             <span class="header-avatar-role"><?php echo View::e(I18n::t('geral.area_cliente')); ?></span>
