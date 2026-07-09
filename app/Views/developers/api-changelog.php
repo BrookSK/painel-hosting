@@ -1,82 +1,83 @@
 <?php
-$t = fn(string $k) => \LRV\Core\I18n::t($k);
+declare(strict_types=1);
+use LRV\Core\I18n;
+use LRV\Core\View;
+$t = fn(string $k) => I18n::t($k);
 ?>
-<!DOCTYPE html>
-<html lang="<?= \LRV\Core\I18n::idioma() ?>">
+<!doctype html>
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Changelog — LRV Cloud Manager</title>
-    <?php require __DIR__ . '/../_partials/estilo.php'; ?>
-    <style>
-        .changelog-container { max-width: 800px; margin: 0 auto; padding: 40px 24px; }
-        .version-block { margin-bottom: 40px; }
-        .version-header {
-            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-        }
-        .version-tag {
-            background: #1e3a5f; color: #60a5fa; padding: 4px 12px; border-radius: 6px;
-            font-weight: 700; font-family: monospace;
-        }
-        .version-date { color: #64748b; font-size: 0.9rem; }
-        .version-badge-major { background: #7c3aed20; color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .version-badge-minor { background: #059669; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .version-badge-patch { background: #d9770620; color: #fbbf24; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .changes-section { margin-bottom: 12px; }
-        .changes-section h4 { color: #e2e8f0; font-size: 0.9rem; margin-bottom: 8px; }
-        .changes-section ul { list-style: none; padding: 0; }
-        .changes-section li {
-            padding: 6px 0; color: #94a3b8; font-size: 0.9rem;
-            border-bottom: 1px solid #1e293b;
-        }
-        .changes-section li::before { content: '•'; color: #3b82f6; margin-right: 8px; }
-        .tag-new::before { content: '✦'; color: #22c55e !important; }
-        .tag-changed::before { content: '↻'; color: #f59e0b !important; }
-        .tag-deprecated::before { content: '⚠'; color: #ef4444 !important; }
-        .tag-fixed::before { content: '✓'; color: #06b6d4 !important; }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<?php require __DIR__ . '/../_partials/seo.php'; ?>
+<?php require __DIR__ . '/../_partials/estilo.php'; ?>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a}
+.cl-hero{background:linear-gradient(135deg,#060d1f 0%,#0B1C3D 30%,#1e3a8a 60%,#4F46E5 85%,#7C3AED 100%);padding:100px 24px 60px;text-align:center;position:relative;overflow:hidden}
+.cl-hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.cl-hero h1{font-size:clamp(28px,5vw,42px);font-weight:900;color:#fff;margin-bottom:12px;position:relative}
+.cl-hero p{font-size:16px;color:rgba(255,255,255,.7);position:relative}
+.cl-content{max-width:760px;margin:0 auto;padding:60px 24px}
+.cl-version{margin-bottom:48px;padding:32px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px}
+.cl-version-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.cl-version-tag{background:#4F46E5;color:#fff;padding:5px 14px;border-radius:8px;font-weight:800;font-size:14px;font-family:monospace}
+.cl-version-date{color:#64748b;font-size:14px}
+.cl-version-badge{background:#EDE9FE;color:#6D28D9;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.cl-changes h4{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:10px;margin-top:16px}
+.cl-changes ul{list-style:none;padding:0}
+.cl-changes li{padding:8px 0;font-size:14px;color:#475569;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+.cl-changes li svg{flex-shrink:0}
+.cl-back{text-align:center;margin-top:40px}
+.cl-back a{color:#4F46E5;font-weight:600;font-size:14px;text-decoration:none}
+.cl-back a:hover{text-decoration:underline}
+</style>
 </head>
 <body>
-    <?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
 
-    <div class="changelog-container">
-        <h1 style="color: #e2e8f0; margin-bottom: 8px;">API Changelog</h1>
-        <p style="color: #94a3b8; margin-bottom: 32px;">Histórico de versões e mudanças da API pública.</p>
+<?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
 
-        <div class="version-block">
-            <div class="version-header">
-                <span class="version-tag">v1.0.0</span>
-                <span class="version-date">2026-07-09</span>
-                <span class="version-badge-major">Major</span>
-            </div>
+<section class="cl-hero">
+    <h1>API Changelog</h1>
+    <p>Histórico de versões e mudanças da API pública</p>
+</section>
 
-            <div class="changes-section">
-                <h4>Novidades</h4>
-                <ul>
-                    <li class="tag-new">API Pública v1 lançada</li>
-                    <li class="tag-new">Autenticação via API Keys e Bearer Tokens</li>
-                    <li class="tag-new">Endpoints: Hosting, Tickets, Subscriptions, Domains</li>
-                    <li class="tag-new">Endpoints: Databases, Backups, Applications, Emails</li>
-                    <li class="tag-new">Sistema de Webhooks com assinatura HMAC SHA-256</li>
-                    <li class="tag-new">Rate limiting configurável por API Key</li>
-                    <li class="tag-new">Logging completo de requisições</li>
-                    <li class="tag-new">Ambientes Sandbox e Production separados</li>
-                    <li class="tag-new">Especificação OpenAPI 3.1</li>
-                    <li class="tag-new">Swagger UI / API Explorer interativo</li>
-                    <li class="tag-new">Coleções Postman, Bruno e Insomnia</li>
-                    <li class="tag-new">Documentação pública multilíngue (PT/EN/ES)</li>
-                    <li class="tag-new">SDKs: PHP, JavaScript/TypeScript, Python (estrutura base)</li>
-                </ul>
-            </div>
+<div class="cl-content">
+    <div class="cl-version">
+        <div class="cl-version-header">
+            <span class="cl-version-tag">v1.0.0</span>
+            <span class="cl-version-date">2026-07-09</span>
+            <span class="cl-version-badge">Major Release</span>
         </div>
 
-        <div style="text-align:center;margin-top:32px;">
-            <a href="/developers/api" style="color:#3b82f6;">&larr; <?= $t('api_docs.documentacao') ?></a>
-            &nbsp;&nbsp;|&nbsp;&nbsp;
-            <a href="/developers/api/swagger" style="color:#3b82f6;">API Explorer &rarr;</a>
+        <div class="cl-changes">
+            <h4>Novidades</h4>
+            <ul>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> API Pública v1 lançada</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Autenticação via API Keys e Bearer Tokens</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Endpoints: Hosting, Tickets, Subscriptions, Domains</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Endpoints: Databases, Backups, Applications, Emails</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Sistema de Webhooks com assinatura HMAC SHA-256</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Rate limiting configurável por API Key</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Logging completo de requisições</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Ambientes Sandbox e Production separados</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Especificação OpenAPI 3.1</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Swagger UI / API Explorer interativo</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Coleções Postman, Bruno e Insomnia</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Documentação pública multilíngue (PT/EN/ES)</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> SDKs: PHP, JavaScript/TypeScript, Python (estrutura base)</li>
+            </ul>
         </div>
     </div>
 
-    <?php require __DIR__ . '/../_partials/footer.php'; ?>
+    <div class="cl-back">
+        <a href="/developers/api">&larr; <?= $t('api_docs.documentacao') ?></a>
+        &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+        <a href="/developers/api/swagger">API Explorer &rarr;</a>
+    </div>
+</div>
+
+<?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

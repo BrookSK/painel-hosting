@@ -1,55 +1,64 @@
-<!DOCTYPE html>
-<html lang="<?= \LRV\Core\I18n::idioma() ?>">
+<?php
+declare(strict_types=1);
+use LRV\Core\I18n;
+use LRV\Core\View;
+$t = fn(string $k) => I18n::t($k);
+?>
+<!doctype html>
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Explorer — LRV Cloud Manager</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
-    <style>
-        body { margin: 0; padding: 0; background: #1a1a2e; }
-        #swagger-ui .topbar { display: none; }
-        #swagger-ui .swagger-ui { max-width: 1200px; margin: 0 auto; }
-        .swagger-ui .info .title { color: #e2e8f0; }
-        .swagger-ui .scheme-container { background: #16213e; }
-        .header-bar {
-            background: #16213e;
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #2a3a5e;
-        }
-        .header-bar a { color: #60a5fa; text-decoration: none; font-weight: 500; }
-        .header-bar h1 { color: #e2e8f0; margin: 0; font-size: 1.2rem; }
-        .header-bar .nav-links { display: flex; gap: 24px; }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>API Explorer — LRV Cloud Manager</title>
+<?php require __DIR__ . '/../_partials/seo.php'; ?>
+<?php require __DIR__ . '/../_partials/estilo.php'; ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a}
+.sw-hero{background:linear-gradient(135deg,#060d1f 0%,#0B1C3D 30%,#1e3a8a 60%,#4F46E5 85%,#7C3AED 100%);padding:100px 24px 40px;text-align:center;position:relative;overflow:hidden}
+.sw-hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.sw-hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;color:#fff;margin-bottom:8px;position:relative;display:flex;align-items:center;justify-content:center;gap:10px}
+.sw-hero p{font-size:15px;color:rgba(255,255,255,.65);position:relative}
+.sw-hero-links{display:flex;gap:16px;justify-content:center;margin-top:16px;position:relative}
+.sw-hero-links a{color:rgba(255,255,255,.7);font-size:13px;font-weight:600;text-decoration:none;transition:color .15s}
+.sw-hero-links a:hover{color:#fff}
+.sw-container{max-width:1200px;margin:0 auto;padding:40px 24px 60px}
+#swagger-ui .topbar{display:none}
+#swagger-ui .swagger-ui .info{margin:0 0 20px}
+</style>
 </head>
 <body>
-    <div class="header-bar">
-        <h1><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="vertical-align:middle;margin-right:6px"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>LRV Cloud Manager API</h1>
-        <div class="nav-links">
-            <a href="/developers/api"><?= \LRV\Core\I18n::t('api_docs.documentacao') ?></a>
-            <a href="/api/v1/openapi.yaml" download>OpenAPI YAML</a>
-            <a href="/"><?= \LRV\Core\I18n::t('nav.inicio') ?></a>
-        </div>
+
+<?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
+
+<section class="sw-hero">
+    <h1><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> API Explorer</h1>
+    <p>Teste endpoints, autentique e veja respostas em tempo real</p>
+    <div class="sw-hero-links">
+        <a href="/developers/api"><?= $t('api_docs.documentacao') ?></a>
+        <a href="/api/v1/openapi.yaml" download>OpenAPI YAML</a>
+        <a href="/developers"><?= $t('nav.inicio') ?></a>
     </div>
+</section>
 
+<div class="sw-container">
     <div id="swagger-ui"></div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-    <script>
-        SwaggerUIBundle({
-            url: '/api/v1/openapi.yaml',
-            dom_id: '#swagger-ui',
-            deepLinking: true,
-            presets: [
-                SwaggerUIBundle.presets.apis,
-                SwaggerUIBundle.SwaggerUIStandalonePreset
-            ],
-            layout: 'BaseLayout',
-            persistAuthorization: true,
-            tryItOutEnabled: true
-        });
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>
+SwaggerUIBundle({
+    url: '/api/v1/openapi.yaml',
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+    layout: 'BaseLayout',
+    persistAuthorization: true,
+    tryItOutEnabled: true
+});
+</script>
+
+<?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>
