@@ -11,18 +11,24 @@ use LRV\Core\View;
 
 /**
  * Controlador de documentação da API Pública.
+ * - GET /developers             → Landing page desenvolvedores
  * - GET /developers/api         → Página de documentação
  * - GET /developers/api/swagger → Interface Swagger UI
  * - GET /api/v1/openapi.json    → Spec em JSON
  */
 final class DocsController
 {
+    private function viewPath(string $arquivo): string
+    {
+        return dirname(__DIR__, 3) . '/Views/developers/' . $arquivo;
+    }
+
     /**
      * GET /developers — Landing page pública para desenvolvedores
      */
     public function landing(Requisicao $req): Resposta
     {
-        $html = View::renderizar(__DIR__ . '/../../Views/developers/landing.php', []);
+        $html = View::renderizar($this->viewPath('landing.php'), []);
         return Resposta::html($html);
     }
 
@@ -31,7 +37,7 @@ final class DocsController
      */
     public function index(Requisicao $req): Resposta
     {
-        $html = View::renderizar(__DIR__ . '/../../Views/developers/api-docs.php', [
+        $html = View::renderizar($this->viewPath('api-docs.php'), [
             'titulo' => I18n::t('api_docs.titulo'),
         ]);
         return Resposta::html($html);
@@ -42,7 +48,7 @@ final class DocsController
      */
     public function swagger(Requisicao $req): Resposta
     {
-        $html = View::renderizar(__DIR__ . '/../../Views/developers/swagger.php', []);
+        $html = View::renderizar($this->viewPath('swagger.php'), []);
         return Resposta::html($html);
     }
 
@@ -51,7 +57,7 @@ final class DocsController
      */
     public function changelog(Requisicao $req): Resposta
     {
-        $html = View::renderizar(__DIR__ . '/../../Views/developers/api-changelog.php', []);
+        $html = View::renderizar($this->viewPath('api-changelog.php'), []);
         return Resposta::html($html);
     }
 
@@ -60,7 +66,7 @@ final class DocsController
      */
     public function statusPage(Requisicao $req): Resposta
     {
-        $html = View::renderizar(__DIR__ . '/../../Views/developers/api-status.php', []);
+        $html = View::renderizar($this->viewPath('api-status.php'), []);
         return Resposta::html($html);
     }
 
@@ -74,10 +80,8 @@ final class DocsController
             return Resposta::json(['error' => 'OpenAPI spec not found'], 404);
         }
 
-        // Parse YAML to JSON
         $content = file_get_contents($yamlPath);
 
-        // Simple YAML to array (for basic specs) — using yaml_parse if available, otherwise serve YAML
         if (function_exists('yaml_parse')) {
             $data = yaml_parse($content);
             if (is_array($data)) {
@@ -85,7 +89,7 @@ final class DocsController
             }
         }
 
-        // Fallback: servir como text/yaml
+        // Fallback: servir como YAML (a maioria dos clientes aceita)
         return Resposta::texto($content)->comHeaders([
             'Content-Type' => 'text/yaml; charset=utf-8',
         ]);

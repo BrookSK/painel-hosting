@@ -81,6 +81,9 @@ return [
     'mega.rec_deploy' => 'Easy deploy',
     'mega.rec_cli' => 'Web Terminal',
 
+    // Mega: Resources > Developers
+    'mega.rec_api_desc' => 'Public API, SDKs and integrations',
+
     // ── Solution pages (landing pages) ──
     // Shared
     'sol.section_beneficios' => 'Why choose LRV?',
