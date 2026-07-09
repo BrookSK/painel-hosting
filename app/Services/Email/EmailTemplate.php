@@ -34,6 +34,11 @@ final class EmailTemplate
         $copyright = htmlspecialchars(SistemaConfig::copyrightText(), ENT_QUOTES, 'UTF-8');
         $appUrl = rtrim(ConfiguracoesSistema::appUrlBase(), '/');
 
+        // Garantir URL absoluta para a logo (clientes de e-mail não carregam paths relativos)
+        if ($logoUrl !== '' && !str_starts_with($logoUrl, 'http://') && !str_starts_with($logoUrl, 'https://')) {
+            $logoUrl = $appUrl . '/' . ltrim($logoUrl, '/');
+        }
+
         $logoHtml = '';
         if ($logoUrl !== '') {
             $logoUrl = htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8');
