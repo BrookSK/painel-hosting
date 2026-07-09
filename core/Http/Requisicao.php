@@ -6,6 +6,9 @@ namespace LRV\Core\Http;
 
 final class Requisicao
 {
+    /** @var array<string, mixed> Atributos extras injetados por middlewares */
+    private array $atributos = [];
+
     public function __construct(
         public readonly string $metodo,
         public readonly string $caminho,
@@ -14,6 +17,24 @@ final class Requisicao
         public readonly array $headers,
         public readonly string $corpoRaw,
     ) {
+    }
+
+    /**
+     * Permite middlewares injetarem dados na requisição (ex: apiKeyData).
+     */
+    public function __set(string $nome, mixed $valor): void
+    {
+        $this->atributos[$nome] = $valor;
+    }
+
+    public function __get(string $nome): mixed
+    {
+        return $this->atributos[$nome] ?? null;
+    }
+
+    public function __isset(string $nome): bool
+    {
+        return isset($this->atributos[$nome]);
     }
 
     public static function aPartirDoPhp(): self

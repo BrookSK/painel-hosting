@@ -80,6 +80,14 @@ final class Resposta
         return new self($this->corpo, $this->status, $novos, $this->arquivoPath);
     }
 
+    /**
+     * Retorna o HTTP status code da resposta.
+     */
+    public function statusCode(): int
+    {
+        return $this->status;
+    }
+
     public function enviar(): void
     {
         http_response_code($this->status);

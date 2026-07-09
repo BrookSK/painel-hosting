@@ -21,6 +21,21 @@ final class Roteador
         $this->adicionar('POST', $caminho, $handler, $middlewares);
     }
 
+    public function put(string $caminho, callable|array $handler, array $middlewares = []): void
+    {
+        $this->adicionar('PUT', $caminho, $handler, $middlewares);
+    }
+
+    public function patch(string $caminho, callable|array $handler, array $middlewares = []): void
+    {
+        $this->adicionar('PATCH', $caminho, $handler, $middlewares);
+    }
+
+    public function delete(string $caminho, callable|array $handler, array $middlewares = []): void
+    {
+        $this->adicionar('DELETE', $caminho, $handler, $middlewares);
+    }
+
     private function adicionar(string $metodo, string $caminho, callable|array $handler, array $middlewares): void
     {
         $caminhoNormalizado = $this->normalizarCaminho($caminho);
@@ -57,7 +72,7 @@ final class Roteador
         $middlewares = $rota['middlewares'] ?? [];
 
         try {
-            if ($metodo === 'POST' && $this->csrfObrigatorio($caminho)) {
+            if (in_array($metodo, ['POST', 'PUT', 'PATCH', 'DELETE'], true) && $this->csrfObrigatorio($caminho)) {
                 $token = (string) ($req->post['_csrf'] ?? ($req->headers['x-csrf-token'] ?? ''));
                 if (!Csrf::validar($token)) {
                     $this->responderCsrfInvalido($req)->enviar();
@@ -76,12 +91,15 @@ final class Roteador
             $resultado = $this->executarHandler($handler, $req);
 
             if ($resultado instanceof Resposta) {
+                $this->logApiPublica($req, $resultado);
                 $resultado->enviar();
                 return;
             }
 
             if (is_array($resultado)) {
-                Resposta::json($resultado)->enviar();
+                $resp = Resposta::json($resultado);
+                $this->logApiPublica($req, $resp);
+                $resp->enviar();
                 return;
             }
 
@@ -125,6 +143,9 @@ final class Roteador
         if (str_starts_with($caminho, '/api/worker/')) {
             return false;
         }
+        if (str_starts_with($caminho, '/api/v1/')) {
+            return false;
+        }
         return true;
     }
 
@@ -166,6 +187,22 @@ final class Roteador
             return Resposta::html($html, $code);
         } catch (\Throwable) {
             return Resposta::texto('Erro ' . $code, $code);
+        }
+    }
+
+    /**
+     * Registra requisição no log da API Pública (apenas /api/v1/).
+     */
+    private function logApiPublica(Requisicao $req, Resposta $resposta): void
+    {
+        if (!str_starts_with($req->caminho, '/api/v1/')) {
+            return;
+        }
+
+        try {
+            \LRV\App\Services\PublicApi\ApiRequestLogger::registrar($req, $resposta->statusCode());
+        } catch (\Throwable) {
+            // Nunca bloquear a resposta por falha de logging
         }
     }
 }

@@ -36,6 +36,7 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 
       <a href="/#planos"><?php echo View::e(I18n::t('nav.planos')); ?></a>
       <a href="/status"><?php echo View::e(I18n::t('nav.status')); ?></a>
+      <a href="/developers"><?php echo View::e(I18n::t('nav.developers')); ?></a>
       <a href="/contato"><?php echo View::e(I18n::t('nav.contato')); ?></a>
     </div>
 

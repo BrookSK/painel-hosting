@@ -173,6 +173,10 @@ function _temFeature(array $features, string $feature): bool {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2l6 2.5V10c0 3.5-2.5 6.5-6 8-3.5-1.5-6-4.5-6-8V4.5L10 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.seguranca')); ?></span>
     </a>
+    <a href="/cliente/api-keys" class="nav-item<?php echo _nav_ativo_cli('/cliente/api-keys', $_seg); ?>" data-tooltip="API Keys">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M12.5 3a4.5 4.5 0 00-3.18 7.68L3 17l1.5 1.5L6 17l1-1 1.5 1.5L10 16l.32-.32A4.5 4.5 0 1012.5 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13.5" cy="6.5" r="1.5" fill="currentColor"/></svg>
+      <span>API Keys</span>
+    </a>
     <a href="/cliente/sair" class="nav-item nav-item-danger" data-tooltip="<?php echo View::e(I18n::t('geral.sair')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M13 10H3M13 10l-3-3M13 10l-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5H6a2 2 0 00-2 2v6a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('geral.sair')); ?></span>

@@ -1,0 +1,754 @@
+openapi: "3.1.0"
+info:
+  title: LRV Cloud Manager - Public API
+  version: "1.0.0"
+  description: |
+    API Pública do LRV Cloud Manager para integrações externas.
+
+    ## Autenticação
+
+    A API suporta dois métodos de autenticação:
+
+    - **API Key** via header `X-API-Key`
+    - **Bearer Token** via header `Authorization: Bearer <token>`
+
+    ## Rate Limiting
+
+    Cada API Key possui um limite configurável de requisições por minuto (padrão: 60/min).
+    Headers de resposta incluem:
+    - `X-RateLimit-Limit` — Limite por janela
+    - `X-RateLimit-Remaining` — Requisições restantes
+    - `X-RateLimit-Reset` — Timestamp de reset
+
+    ## Versionamento
+
+    A API é versionada via URL: `/api/v1/`, `/api/v2/`, etc.
+    Versões anteriores permanecem ativas enquanto suportadas.
+
+    ## Ambientes
+
+    - **Production**: Keys com prefixo `lrv_live_`
+    - **Sandbox**: Keys com prefixo `lrv_test_`
+
+  contact:
+    name: LRV Web
+    url: https://lrvweb.com.br
+  license:
+    name: Proprietary
+
+servers:
+  - url: /
+    description: Servidor atual
+
+tags:
+  - name: Auth
+    description: Autenticação e gestão de tokens
+  - name: API Keys
+    description: Gerenciamento de API Keys
+  - name: Hosting
+    description: VPS e hospedagem
+  - name: Tickets
+    description: Sistema de suporte
+  - name: Subscriptions
+    description: Assinaturas e billing
+  - name: Domains
+    description: Domínios
+  - name: Webhooks
+    description: Webhooks para eventos
+  - name: Status
+    description: Status público da plataforma
+
+paths:
+  /api/v1/auth/token:
+    post:
+      tags: [Auth]
+      summary: Emitir tokens de acesso
+      description: Troca uma API Key por um par access_token + refresh_token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [api_key]
+              properties:
+                api_key:
+                  type: string
+                  description: A API Key completa
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                  description: Subconjunto de escopos (opcional)
+      responses:
+        "201":
+          description: Tokens emitidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Renovar tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: Tokens renovados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/auth/revoke:
+    post:
+      tags: [Auth]
+      summary: Revogar todos os tokens
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
+
+  /api/v1/keys:
+    get:
+      tags: [API Keys]
+      summary: Listar API Keys
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: environment
+          in: query
+          schema:
+            type: string
+            enum: [sandbox, production]
+      responses:
+        "200":
+          description: Lista de API Keys
+    post:
+      tags: [API Keys]
+      summary: Criar nova API Key
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                environment:
+                  type: string
+                  enum: [sandbox, production]
+                  default: production
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                rate_limit_per_minute:
+                  type: integer
+                  default: 60
+                expires_at:
+                  type: string
+                  format: date-time
+      responses:
+        "201":
+          description: API Key criada (chave exibida apenas uma vez)
+
+  /api/v1/keys/revoke:
+    post:
+      tags: [API Keys]
+      summary: Revogar API Key
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/keys/rotate:
+    post:
+      tags: [API Keys]
+      summary: Rotacionar API Key
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Nova chave gerada (anterior revogada)
+
+  /api/v1/hosting:
+    get:
+      tags: [Hosting]
+      summary: Listar VPS
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [running, stopped, provisioning, error]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista paginada de VPS
+
+  /api/v1/hosting/show:
+    get:
+      tags: [Hosting]
+      summary: Detalhes de uma VPS
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dados da VPS
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/hosting/restart:
+    post:
+      tags: [Hosting]
+      summary: Reiniciar VPS
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "202":
+          description: Reinicialização enfileirada
+        "409":
+          description: VPS não está running
+
+  /api/v1/hosting/metrics:
+    get:
+      tags: [Hosting]
+      summary: Métricas de uma VPS
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: hours
+          in: query
+          schema:
+            type: integer
+            default: 24
+      responses:
+        "200":
+          description: Métricas históricas
+
+  /api/v1/tickets:
+    get:
+      tags: [Tickets]
+      summary: Listar tickets
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, waiting_client, closed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista paginada de tickets
+    post:
+      tags: [Tickets]
+      summary: Criar ticket
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, message]
+              properties:
+                subject:
+                  type: string
+                  maxLength: 200
+                message:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+                  default: medium
+                department:
+                  type: string
+                  enum: [suporte, financeiro, devops, comercial]
+                  default: suporte
+      responses:
+        "201":
+          description: Ticket criado
+
+  /api/v1/tickets/show:
+    get:
+      tags: [Tickets]
+      summary: Ver ticket com mensagens
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ticket com histórico de mensagens
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/tickets/reply:
+    post:
+      tags: [Tickets]
+      summary: Responder ticket
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ticket_id, message]
+              properties:
+                ticket_id:
+                  type: integer
+                message:
+                  type: string
+      responses:
+        "201":
+          description: Resposta enviada
+        "409":
+          description: Ticket fechado
+
+  /api/v1/tickets/close:
+    post:
+      tags: [Tickets]
+      summary: Fechar ticket
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
+
+  /api/v1/subscriptions:
+    get:
+      tags: [Subscriptions]
+      summary: Listar assinaturas
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista paginada de assinaturas
+
+  /api/v1/subscriptions/show:
+    get:
+      tags: [Subscriptions]
+      summary: Detalhes de uma assinatura
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dados da assinatura
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/subscriptions/invoices:
+    get:
+      tags: [Subscriptions]
+      summary: Faturas de uma assinatura
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: subscription_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de faturas
+
+  /api/v1/domains:
+    get:
+      tags: [Domains]
+      summary: Listar domínios
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de domínios
+    post:
+      tags: [Domains]
+      summary: Adicionar domínio
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain, vps_id]
+              properties:
+                domain:
+                  type: string
+                vps_id:
+                  type: integer
+                type:
+                  type: string
+                  enum: [primary, addon, subdomain]
+                  default: addon
+      responses:
+        "201":
+          description: Domínio adicionado
+        "409":
+          description: Domínio já registrado
+
+  /api/v1/domains/show:
+    get:
+      tags: [Domains]
+      summary: Detalhes de um domínio
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dados do domínio
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/domains/remove:
+    post:
+      tags: [Domains]
+      summary: Remover domínio
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/webhooks:
+    get:
+      tags: [Webhooks]
+      summary: Listar webhooks
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de webhooks configurados
+    post:
+      tags: [Webhooks]
+      summary: Criar webhook
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL HTTPS para receber os eventos
+                events:
+                  type: array
+                  items:
+                    type: string
+                  description: Lista de eventos a escutar
+                max_retries:
+                  type: integer
+                  default: 5
+                timeout_seconds:
+                  type: integer
+                  default: 30
+      responses:
+        "201":
+          description: Webhook criado (secret exibido apenas uma vez)
+
+  /api/v1/webhooks/events:
+    get:
+      tags: [Webhooks]
+      summary: Listar eventos disponíveis
+      responses:
+        "200":
+          description: Lista de eventos suportados
+
+  /api/v1/webhooks/deliveries:
+    get:
+      tags: [Webhooks]
+      summary: Histórico de entregas
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: webhook_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de deliveries
+
+  /api/v1/webhooks/resend:
+    post:
+      tags: [Webhooks]
+      summary: Reenviar delivery
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: delivery_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
+
+  /api/v1/status:
+    get:
+      tags: [Status]
+      summary: Status atual dos serviços
+      responses:
+        "200":
+          description: Status geral e por serviço
+
+  /api/v1/status/incidents:
+    get:
+      tags: [Status]
+      summary: Histórico de incidentes
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de incidentes
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key direta no header
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer Token obtido via /api/v1/auth/token
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        default: 25
+        maximum: 100
+
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+            refresh_token:
+              type: string
+            expires_in:
+              type: integer
+              description: Seconds until access_token expires
+            token_type:
+              type: string
+              example: Bearer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+
+  responses:
+    Success:
+      description: Operação bem-sucedida
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: true
+              message:
+                type: string
+    Unauthorized:
+      description: Autenticação necessária
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Permissão insuficiente
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
