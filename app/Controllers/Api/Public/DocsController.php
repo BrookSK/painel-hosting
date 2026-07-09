@@ -53,6 +53,38 @@ final class DocsController
     }
 
     /**
+     * GET /developers/api/swagger-ui.css — Serve Swagger UI CSS localmente
+     */
+    public function swaggerCss(Requisicao $req): Resposta
+    {
+        $path = dirname(__DIR__, 4) . '/public/assets/vendor/swagger-ui/swagger-ui.css';
+        if (!is_file($path)) {
+            return Resposta::texto('Not found', 404);
+        }
+        $content = file_get_contents($path);
+        return Resposta::texto($content)->comHeaders([
+            'Content-Type' => 'text/css; charset=utf-8',
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
+    /**
+     * GET /developers/api/swagger-ui.js — Serve Swagger UI JS localmente
+     */
+    public function swaggerJs(Requisicao $req): Resposta
+    {
+        $path = dirname(__DIR__, 4) . '/public/assets/vendor/swagger-ui/swagger-ui-bundle.js';
+        if (!is_file($path)) {
+            return Resposta::texto('Not found', 404);
+        }
+        $content = file_get_contents($path);
+        return Resposta::texto($content)->comHeaders([
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
+    /**
      * GET /developers/api/changelog
      */
     public function changelog(Requisicao $req): Resposta

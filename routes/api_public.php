@@ -158,6 +158,8 @@ use LRV\App\Controllers\Api\Public\ExportController;
 $roteador->get('/developers', [DocsController::class, 'landing']);
 $roteador->get('/developers/api', [DocsController::class, 'index']);
 $roteador->get('/developers/api/swagger', [DocsController::class, 'swagger']);
+$roteador->get('/developers/api/swagger-ui.css', [DocsController::class, 'swaggerCss']);
+$roteador->get('/developers/api/swagger-ui.js', [DocsController::class, 'swaggerJs']);
 $roteador->get('/developers/api/changelog', [DocsController::class, 'changelog']);
 $roteador->get('/developers/api/status', [DocsController::class, 'statusPage']);
 $roteador->get('/api/v1/openapi.json', [DocsController::class, 'openapiJson'], $apiPublic);
