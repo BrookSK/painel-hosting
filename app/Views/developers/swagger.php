@@ -23,7 +23,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 .sw-hero-links{display:flex;gap:16px;justify-content:center;margin-top:16px;position:relative}
 .sw-hero-links a{color:rgba(255,255,255,.7);font-size:13px;font-weight:600;text-decoration:none;transition:color .15s}
 .sw-hero-links a:hover{color:#fff}
-.sw-container{max-width:1200px;margin:0 auto;padding:40px 24px 60px}
+.sw-container{max-width:1200px;margin:0 auto;padding:40px 24px 60px;min-height:500px}
 #swagger-ui .topbar{display:none}
 #swagger-ui .swagger-ui .info{margin:0 0 20px}
 </style>
@@ -44,18 +44,22 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 
 <div class="sw-container">
     <div id="swagger-ui"></div>
+    <noscript><p style="text-align:center;padding:40px;color:#64748b">JavaScript é necessário para exibir o API Explorer.</p></noscript>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 <script>
-SwaggerUIBundle({
-    url: '/api/v1/openapi.yaml',
-    dom_id: '#swagger-ui',
-    deepLinking: true,
-    presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
-    layout: 'BaseLayout',
-    persistAuthorization: true,
-    tryItOutEnabled: true
+document.addEventListener('DOMContentLoaded', function() {
+    SwaggerUIBundle({
+        url: '/api/v1/openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+        layout: 'BaseLayout',
+        persistAuthorization: true,
+        tryItOutEnabled: true,
+        defaultModelsExpandDepth: -1
+    });
 });
 </script>
 

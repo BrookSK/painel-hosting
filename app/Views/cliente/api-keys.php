@@ -70,19 +70,22 @@ function _apiKeyEnvBadge(string $env): string {
     border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; transition: background .2s;
 }
 .api-key-copy-btn:hover { background: #2563eb; }
-.scopes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
-.scope-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #cbd5e1; }
-.scope-item input[type="checkbox"] { accent-color: #3b82f6; }
+.scopes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.scope-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; padding: 6px 10px; background: #1e293b; border-radius: 8px; border: 1px solid #334155; cursor: pointer; transition: border-color .15s; }
+.scope-item:hover { border-color: #3b82f6; }
+.scope-item input[type="checkbox"] { accent-color: #3b82f6; width: 16px; height: 16px; }
 .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1000;
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 9999;
     align-items: center; justify-content: center; padding: 20px;
+    backdrop-filter: blur(4px);
 }
 .modal-overlay.active { display: flex; }
 .modal-box {
-    background: #16213e; border-radius: 12px; padding: 24px; width: 100%; max-width: 600px;
-    max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    background: #16213e; border-radius: 16px; padding: 28px; width: 100%; max-width: 560px;
+    max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,.6);
+    border: 1px solid #1e293b;
 }
-.modal-box h3 { margin: 0 0 16px; font-size: 18px; color: #e2e8f0; }
+.modal-box h3 { margin: 0 0 20px; font-size: 18px; color: #e2e8f0; font-weight: 700; }
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; }
 .form-group input, .form-group select, .form-group textarea {
