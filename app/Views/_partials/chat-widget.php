@@ -134,8 +134,9 @@ try {
 #cw-close:hover{color:#fff;}
 .cw-screen{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
 .cw-screen.cw-active{display:flex;}
-#cw-s-menu{padding:14px;}
-.cw-msglist{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:12px;min-height:100px;}
+#cw-s-menu{padding:14px;overflow-y:auto;}
+.cw-msglist{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:12px;min-height:60px;}
+.cw-opts{overflow-y:auto;max-height:320px;flex-shrink:0;}
 .cw-bmsg{background:#f1f5f9;border-radius:12px 12px 12px 3px;padding:10px 13px;font-size:13px;color:#0f172a;line-height:1.5;max-width:88%;}
 .cw-umsg{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;border-radius:12px 12px 3px 12px;padding:10px 13px;font-size:13px;line-height:1.5;max-width:88%;align-self:flex-end;word-break:break-word;}
 .cw-sysmsg{background:#f1f5f9;border-radius:10px;padding:8px 12px;font-size:12px;line-height:1.5;color:#64748b;text-align:center;align-self:center;max-width:90%;font-style:italic;}
