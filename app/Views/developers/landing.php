@@ -2,159 +2,195 @@
 declare(strict_types=1);
 use LRV\Core\I18n;
 use LRV\Core\View;
+use LRV\Core\SistemaConfig;
+
+$_nome = SistemaConfig::nome();
 $t = fn(string $k) => I18n::t($k);
 ?>
-<!DOCTYPE html>
-<html lang="<?= I18n::idioma() ?>">
+<!doctype html>
+<html lang="<?php echo View::e(I18n::idioma()); ?>">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $t('dev_landing.titulo') ?> — LRV Cloud Manager</title>
-    <?php require __DIR__ . '/../_partials/estilo.php'; ?>
-    <style>
-        .dev-hero {
-            min-height: 70vh; display: flex; align-items: center; justify-content: center;
-            text-align: center; padding: 80px 24px 60px;
-            background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,.12) 0%, transparent 60%);
-        }
-        .dev-hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); color: #e2e8f0; margin-bottom: 16px; line-height: 1.2; }
-        .dev-hero p { font-size: 1.15rem; color: #94a3b8; max-width: 700px; margin: 0 auto 32px; line-height: 1.7; }
-        .dev-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-        .dev-hero-actions a {
-            padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 1rem;
-            text-decoration: none; transition: all .2s;
-        }
-        .btn-primary-dev { background: #3b82f6; color: #fff; }
-        .btn-primary-dev:hover { background: #2563eb; transform: translateY(-1px); }
-        .btn-ghost-dev { background: transparent; border: 1px solid #334155; color: #e2e8f0; }
-        .btn-ghost-dev:hover { border-color: #3b82f6; color: #3b82f6; }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<?php require __DIR__ . '/../_partials/seo.php'; ?>
+<?php require __DIR__ . '/../_partials/estilo.php'; ?>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a}
 
-        .dev-code-preview {
-            max-width: 620px; margin: 40px auto 0; background: #0f172a; border: 1px solid #1e293b;
-            border-radius: 12px; padding: 20px 24px; text-align: left; overflow-x: auto;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem;
-            color: #94a3b8; line-height: 1.7;
-        }
-        .dev-code-preview .keyword { color: #c084fc; }
-        .dev-code-preview .string { color: #86efac; }
-        .dev-code-preview .comment { color: #475569; }
-        .dev-code-preview .func { color: #60a5fa; }
-        .dev-code-preview .var { color: #e2e8f0; }
+/* Hero */
+.dev-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#060d1f 0%,#0B1C3D 30%,#1e3a8a 60%,#4F46E5 85%,#7C3AED 100%);color:#fff;padding:110px 24px 100px;text-align:center}
+.dev-hero-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)}
+.dev-hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(124,58,237,.35) 0%,transparent 70%)}
+.dev-hero-inner{max-width:760px;margin:0 auto;position:relative}
+.dev-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#c4b5fd;font-size:12px;font-weight:600;padding:5px 14px;border-radius:999px;margin-bottom:24px;backdrop-filter:blur(8px);letter-spacing:.04em;text-transform:uppercase}
+.dev-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:dpulse 2s infinite}
+@keyframes dpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.dev-hero-title{font-size:clamp(32px,6vw,54px);font-weight:900;line-height:1.1;letter-spacing:-.03em;margin-bottom:20px}
+.dev-hero-title .grad{background:linear-gradient(135deg,#a5b4fc,#c4b5fd,#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dev-hero-sub{font-size:17px;opacity:.75;line-height:1.7;margin-bottom:36px;max-width:600px;margin-left:auto;margin-right:auto}
+.dev-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.dev-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:14px;font-size:15px;font-weight:700;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.dev-btn:hover{transform:translateY(-2px)}
+.dev-btn.primary{background:#fff;color:#4F46E5;box-shadow:0 4px 20px rgba(255,255,255,.2)}
+.dev-btn.primary:hover{box-shadow:0 8px 32px rgba(255,255,255,.3)}
+.dev-btn.outline{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.25);backdrop-filter:blur(8px)}
+.dev-btn.outline:hover{background:rgba(255,255,255,.18)}
 
-        .dev-features {
-            max-width: 1100px; margin: 0 auto; padding: 80px 24px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
-        }
-        .dev-feature-card {
-            background: #16213e; border: 1px solid #1e293b; border-radius: 14px;
-            padding: 28px; transition: border-color .2s, transform .2s;
-        }
-        .dev-feature-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        .dev-feature-icon { font-size: 2rem; margin-bottom: 12px; }
-        .dev-feature-card h3 { color: #e2e8f0; margin-bottom: 8px; font-size: 1.1rem; }
-        .dev-feature-card p { color: #94a3b8; font-size: 0.95rem; line-height: 1.6; }
+/* Code block */
+.dev-code{max-width:600px;margin:0 auto;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:22px 26px;text-align:left;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.82rem;line-height:1.8;color:rgba(255,255,255,.7);backdrop-filter:blur(8px)}
+.dev-code .cm{color:rgba(255,255,255,.35)}
+.dev-code .str{color:#86efac}
+.dev-code .kw{color:#c4b5fd}
 
-        .dev-sandbox {
-            max-width: 900px; margin: 0 auto; padding: 60px 24px;
-        }
-        .dev-sandbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
-        @media (max-width: 700px) { .dev-sandbox-grid { grid-template-columns: 1fr; } }
-        .sandbox-card {
-            background: #16213e; border-radius: 12px; padding: 24px; border: 1px solid #1e293b;
-        }
-        .sandbox-card h4 { color: #e2e8f0; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .sandbox-card p { color: #94a3b8; font-size: 0.9rem; line-height: 1.6; }
-        .sandbox-card ul { padding-left: 20px; color: #94a3b8; font-size: 0.9rem; line-height: 2; }
-        .badge-live { background: #22c55e20; color: #22c55e; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
-        .badge-test { background: #f59e0b20; color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+/* Stats bar */
+.dev-stats{background:#0f172a;padding:28px 24px}
+.dev-stats-inner{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.dev-stat{text-align:center;padding:8px 16px;border-right:1px solid rgba(255,255,255,.08)}
+.dev-stat:last-child{border-right:none}
+.dev-stat h3{font-size:28px;font-weight:800;color:#a5b4fc;line-height:1;margin-bottom:4px}
+.dev-stat p{font-size:12px;color:rgba(255,255,255,.5);font-weight:500;margin:0}
+@media(max-width:640px){.dev-stats-inner{grid-template-columns:1fr 1fr}.dev-stat:nth-child(2){border-right:none}}
 
-        .dev-cta-section {
-            text-align: center; padding: 80px 24px;
-            background: radial-gradient(ellipse at 50% 100%, rgba(59,130,246,.08) 0%, transparent 50%);
-        }
-        .dev-cta-section h2 { color: #e2e8f0; font-size: 1.8rem; margin-bottom: 12px; }
-        .dev-cta-section p { color: #94a3b8; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+/* Section */
+.dev-section{padding:88px 24px}
+.dev-section.alt{background:#f8fafc}
+.dev-section-inner{max-width:1100px;margin:0 auto}
+.dev-section-header{text-align:center;margin-bottom:52px}
+.dev-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#7C3AED;margin-bottom:10px}
+.dev-section-title{font-size:clamp(22px,3.5vw,34px);font-weight:800;color:#0f172a;margin-bottom:10px;letter-spacing:-.02em;line-height:1.15}
+.dev-section-sub{font-size:15px;color:#64748b;line-height:1.75;max-width:560px;margin:0 auto}
 
-        .dev-quick-links {
-            max-width: 900px; margin: 0 auto; padding: 0 24px 60px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;
-        }
-        .dev-quick-link {
-            display: flex; align-items: center; gap: 10px; padding: 14px 18px;
-            background: #1e293b; border-radius: 10px; text-decoration: none;
-            color: #e2e8f0; font-weight: 500; font-size: 0.9rem;
-            border: 1px solid #334155; transition: border-color .2s;
-        }
-        .dev-quick-link:hover { border-color: #3b82f6; }
-    </style>
+/* Features grid */
+.dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#e2e8f0;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden}
+@media(max-width:860px){.dev-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.dev-grid{grid-template-columns:1fr}}
+.dev-feat{background:#fff;padding:32px 28px;transition:background .2s}
+.dev-feat:hover{background:#eef2ff}
+.dev-feat-icon{width:46px;height:46px;background:#eef2ff;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:1.4rem}
+.dev-feat h4{font-size:.95rem;font-weight:700;color:#0f172a;margin-bottom:8px}
+.dev-feat p{font-size:.85rem;color:#64748b;line-height:1.65}
+
+/* Sandbox cards */
+.dev-env-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;margin:0 auto}
+@media(max-width:700px){.dev-env-grid{grid-template-columns:1fr}}
+.dev-env-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px;transition:border-color .2s}
+.dev-env-card:hover{border-color:#4F46E5}
+.dev-env-card h4{font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.dev-env-card p{font-size:.9rem;color:#64748b;margin-bottom:16px;line-height:1.6}
+.dev-env-card ul{list-style:none;padding:0}
+.dev-env-card li{padding:6px 0;font-size:.875rem;color:#475569;display:flex;align-items:center;gap:8px}
+.dev-env-card li::before{content:'✓';color:#4F46E5;font-weight:700;font-size:.75rem}
+.badge-live{background:#DCFCE7;color:#166534;padding:3px 10px;border-radius:99px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.badge-sandbox{background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:99px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+
+/* Quick links */
+.dev-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;max-width:900px;margin:0 auto}
+.dev-link{display:flex;align-items:center;gap:10px;padding:14px 18px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;font-weight:600;font-size:.9rem;border:1px solid #e2e8f0;transition:border-color .2s,transform .15s}
+.dev-link:hover{border-color:#4F46E5;transform:translateY(-2px)}
+
+/* CTA */
+.dev-cta{background:linear-gradient(135deg,#060d1f 0%,#1e3a8a 60%,#4F46E5 100%);padding:88px 24px;text-align:center;color:#fff}
+.dev-cta h2{font-size:clamp(24px,4vw,36px);font-weight:800;margin-bottom:12px}
+.dev-cta p{font-size:16px;opacity:.7;margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto}
+</style>
 </head>
 <body>
-    <?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
 
-    <!-- HERO -->
-    <section class="dev-hero">
-        <div>
-            <h1><?= $t('dev_landing.hero_titulo') ?></h1>
-            <p><?= $t('dev_landing.hero_subtitulo') ?></p>
+<?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
 
-            <div class="dev-hero-actions">
-                <a href="/developers/api" class="btn-primary-dev"><?= $t('dev_landing.cta_docs') ?></a>
-                <a href="/developers/api/swagger" class="btn-ghost-dev"><?= $t('dev_landing.cta_explorer') ?></a>
-                <a href="/cliente/entrar" class="btn-ghost-dev"><?= $t('dev_landing.cta_painel') ?></a>
+<!-- ══ HERO ══ -->
+<section class="dev-hero">
+    <div class="dev-hero-grid"></div>
+    <div class="dev-hero-glow"></div>
+    <div class="dev-hero-inner">
+        <div class="dev-eyebrow"><span class="dev-eyebrow-dot"></span> <span>Public API v1</span></div>
+        <h1 class="dev-hero-title"><?= $t('dev_landing.hero_titulo') ?></h1>
+        <p class="dev-hero-sub"><?= $t('dev_landing.hero_subtitulo') ?></p>
+
+        <div class="dev-hero-ctas">
+            <a href="/developers/api" class="dev-btn primary"><?= $t('dev_landing.cta_docs') ?></a>
+            <a href="/developers/api/swagger" class="dev-btn outline"><?= $t('dev_landing.cta_explorer') ?></a>
+            <a href="/cliente/api-keys" class="dev-btn outline"><?= $t('dev_landing.cta_painel') ?></a>
+        </div>
+
+        <div class="dev-code">
+            <span class="cm">// <?= $t('dev_landing.code_comment') ?></span><br>
+            curl -H <span class="str">"X-API-Key: lrv_live_sua_chave"</span> \<br>
+            &nbsp;&nbsp;&nbsp;&nbsp; <span class="str">https://seudominio.com/api/v1/hosting</span><br><br>
+            <span class="cm">// <?= $t('dev_landing.code_response') ?></span><br>
+            { <span class="str">"success"</span>: <span class="kw">true</span>, <span class="str">"data"</span>: [...] }
+        </div>
+    </div>
+</section>
+
+<!-- ══ STATS ══ -->
+<div class="dev-stats">
+    <div class="dev-stats-inner">
+        <div class="dev-stat"><h3>50+</h3><p>Endpoints REST</p></div>
+        <div class="dev-stat"><h3>21</h3><p>Scopes</p></div>
+        <div class="dev-stat"><h3>< 50ms</h3><p>Latency</p></div>
+        <div class="dev-stat"><h3>99.9%</h3><p>Uptime</p></div>
+    </div>
+</div>
+
+<!-- ══ FEATURES ══ -->
+<section class="dev-section">
+    <div class="dev-section-inner">
+        <div class="dev-section-header">
+            <div class="dev-label">Features</div>
+            <h2 class="dev-section-title"><?= $t('dev_landing.feat_rest_titulo') ?></h2>
+            <p class="dev-section-sub"><?= $t('dev_landing.hero_subtitulo') ?></p>
+        </div>
+
+        <div class="dev-grid">
+            <div class="dev-feat">
+                <div class="dev-feat-icon">🔑</div>
+                <h4><?= $t('dev_landing.feat_auth_titulo') ?></h4>
+                <p><?= $t('dev_landing.feat_auth_desc') ?></p>
             </div>
-
-            <div class="dev-code-preview">
-                <span class="comment">// <?= $t('dev_landing.code_comment') ?></span><br>
-                <span class="var">curl</span> -H <span class="string">"X-API-Key: lrv_live_sua_chave"</span> \<br>
-                &nbsp;&nbsp;&nbsp;&nbsp; <span class="string">https://seudominio.com/api/v1/hosting</span><br><br>
-                <span class="comment">// <?= $t('dev_landing.code_response') ?></span><br>
-                { <span class="string">"success"</span>: <span class="keyword">true</span>, <span class="string">"data"</span>: [...] }
+            <div class="dev-feat">
+                <div class="dev-feat-icon">⚡</div>
+                <h4><?= $t('dev_landing.feat_rest_titulo') ?></h4>
+                <p><?= $t('dev_landing.feat_rest_desc') ?></p>
+            </div>
+            <div class="dev-feat">
+                <div class="dev-feat-icon">🔔</div>
+                <h4><?= $t('dev_landing.feat_webhooks_titulo') ?></h4>
+                <p><?= $t('dev_landing.feat_webhooks_desc') ?></p>
+            </div>
+            <div class="dev-feat">
+                <div class="dev-feat-icon">🧪</div>
+                <h4><?= $t('dev_landing.feat_sandbox_titulo') ?></h4>
+                <p><?= $t('dev_landing.feat_sandbox_desc') ?></p>
+            </div>
+            <div class="dev-feat">
+                <div class="dev-feat-icon">📊</div>
+                <h4><?= $t('dev_landing.feat_rate_titulo') ?></h4>
+                <p><?= $t('dev_landing.feat_rate_desc') ?></p>
+            </div>
+            <div class="dev-feat">
+                <div class="dev-feat-icon">📖</div>
+                <h4><?= $t('dev_landing.feat_docs_titulo') ?></h4>
+                <p><?= $t('dev_landing.feat_docs_desc') ?></p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- FEATURES -->
-    <section class="dev-features">
-        <div class="dev-feature-card">
-            <div class="dev-feature-icon">🔑</div>
-            <h3><?= $t('dev_landing.feat_auth_titulo') ?></h3>
-            <p><?= $t('dev_landing.feat_auth_desc') ?></p>
+<!-- ══ SANDBOX vs PRODUCTION ══ -->
+<section class="dev-section alt">
+    <div class="dev-section-inner">
+        <div class="dev-section-header">
+            <div class="dev-label">Environments</div>
+            <h2 class="dev-section-title"><?= $t('dev_landing.sandbox_titulo') ?></h2>
+            <p class="dev-section-sub"><?= $t('dev_landing.sandbox_subtitulo') ?></p>
         </div>
-        <div class="dev-feature-card">
-            <div class="dev-feature-icon">⚡</div>
-            <h3><?= $t('dev_landing.feat_rest_titulo') ?></h3>
-            <p><?= $t('dev_landing.feat_rest_desc') ?></p>
-        </div>
-        <div class="dev-feature-card">
-            <div class="dev-feature-icon">🔔</div>
-            <h3><?= $t('dev_landing.feat_webhooks_titulo') ?></h3>
-            <p><?= $t('dev_landing.feat_webhooks_desc') ?></p>
-        </div>
-        <div class="dev-feature-card">
-            <div class="dev-feature-icon">🧪</div>
-            <h3><?= $t('dev_landing.feat_sandbox_titulo') ?></h3>
-            <p><?= $t('dev_landing.feat_sandbox_desc') ?></p>
-        </div>
-        <div class="dev-feature-card">
-            <div class="dev-feature-icon">📊</div>
-            <h3><?= $t('dev_landing.feat_rate_titulo') ?></h3>
-            <p><?= $t('dev_landing.feat_rate_desc') ?></p>
-        </div>
-        <div class="dev-feature-card">
-            <div class="dev-feature-icon">📖</div>
-            <h3><?= $t('dev_landing.feat_docs_titulo') ?></h3>
-            <p><?= $t('dev_landing.feat_docs_desc') ?></p>
-        </div>
-    </section>
 
-    <!-- SANDBOX vs PRODUCTION -->
-    <section class="dev-sandbox">
-        <h2 style="color:#e2e8f0;text-align:center;margin-bottom:8px;"><?= $t('dev_landing.sandbox_titulo') ?></h2>
-        <p style="color:#94a3b8;text-align:center;"><?= $t('dev_landing.sandbox_subtitulo') ?></p>
-
-        <div class="dev-sandbox-grid">
-            <div class="sandbox-card">
-                <h4><span class="badge-test">SANDBOX</span> <?= $t('dev_landing.sandbox_card_titulo') ?></h4>
+        <div class="dev-env-grid">
+            <div class="dev-env-card">
+                <h4><span class="badge-sandbox">SANDBOX</span> <?= $t('dev_landing.sandbox_card_titulo') ?></h4>
                 <p><?= $t('dev_landing.sandbox_card_desc') ?></p>
                 <ul>
                     <li><?= $t('dev_landing.sandbox_item1') ?></li>
@@ -163,7 +199,7 @@ $t = fn(string $k) => I18n::t($k);
                     <li><?= $t('dev_landing.sandbox_item4') ?></li>
                 </ul>
             </div>
-            <div class="sandbox-card">
+            <div class="dev-env-card">
                 <h4><span class="badge-live">PRODUCTION</span> <?= $t('dev_landing.prod_card_titulo') ?></h4>
                 <p><?= $t('dev_landing.prod_card_desc') ?></p>
                 <ul>
@@ -174,30 +210,41 @@ $t = fn(string $k) => I18n::t($k);
                 </ul>
             </div>
         </div>
-    </section>
-
-    <!-- QUICK LINKS -->
-    <div class="dev-quick-links">
-        <a href="/developers/api" class="dev-quick-link">📄 <?= $t('dev_landing.link_docs') ?></a>
-        <a href="/developers/api/swagger" class="dev-quick-link">🧪 <?= $t('dev_landing.link_explorer') ?></a>
-        <a href="/developers/api/postman.json" class="dev-quick-link" download>📮 Postman</a>
-        <a href="/developers/api/bruno.json" class="dev-quick-link" download>🐻 Bruno</a>
-        <a href="/developers/api/insomnia.json" class="dev-quick-link" download>🌙 Insomnia</a>
-        <a href="/api/v1/openapi.yaml" class="dev-quick-link" download>📋 OpenAPI</a>
-        <a href="/developers/api/changelog" class="dev-quick-link">📝 Changelog</a>
-        <a href="/developers/api/status" class="dev-quick-link">🟢 Status</a>
     </div>
+</section>
 
-    <!-- CTA FINAL -->
-    <section class="dev-cta-section">
-        <h2><?= $t('dev_landing.cta_titulo') ?></h2>
-        <p><?= $t('dev_landing.cta_desc') ?></p>
-        <div class="dev-hero-actions">
-            <a href="/cliente/entrar" class="btn-primary-dev"><?= $t('dev_landing.cta_login') ?></a>
-            <a href="/developers/api" class="btn-ghost-dev"><?= $t('dev_landing.cta_ver_docs') ?></a>
+<!-- ══ QUICK LINKS ══ -->
+<section class="dev-section">
+    <div class="dev-section-inner">
+        <div class="dev-section-header">
+            <div class="dev-label">Resources</div>
+            <h2 class="dev-section-title"><?= $t('api_docs.sdks_titulo') ?></h2>
+            <p class="dev-section-sub"><?= $t('api_docs.sdks_desc') ?></p>
         </div>
-    </section>
 
-    <?php require __DIR__ . '/../_partials/cookie-banner.php'; ?>
+        <div class="dev-links">
+            <a href="/developers/api" class="dev-link">📄 <?= $t('dev_landing.link_docs') ?></a>
+            <a href="/developers/api/swagger" class="dev-link">🧪 <?= $t('dev_landing.link_explorer') ?></a>
+            <a href="/developers/api/postman.json" class="dev-link" download>📮 Postman</a>
+            <a href="/developers/api/bruno.json" class="dev-link" download>🐻 Bruno</a>
+            <a href="/developers/api/insomnia.json" class="dev-link" download>🌙 Insomnia</a>
+            <a href="/api/v1/openapi.yaml" class="dev-link" download>📋 OpenAPI Spec</a>
+            <a href="/developers/api/changelog" class="dev-link">📝 Changelog</a>
+            <a href="/developers/api/status" class="dev-link">🟢 API Status</a>
+        </div>
+    </div>
+</section>
+
+<!-- ══ CTA FINAL ══ -->
+<section class="dev-cta">
+    <h2><?= $t('dev_landing.cta_titulo') ?></h2>
+    <p><?= $t('dev_landing.cta_desc') ?></p>
+    <div class="dev-hero-ctas">
+        <a href="/cliente/entrar" class="dev-btn primary"><?= $t('dev_landing.cta_login') ?></a>
+        <a href="/developers/api" class="dev-btn outline"><?= $t('dev_landing.cta_ver_docs') ?></a>
+    </div>
+</section>
+
+<?php require __DIR__ . '/../_partials/cookie-banner.php'; ?>
 </body>
 </html>
