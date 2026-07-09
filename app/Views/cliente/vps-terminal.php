@@ -7,11 +7,30 @@ $vps    = (array)($vps ?? []);
 $vpsId  = (int)($vps['id'] ?? 0);
 $status = (string)($vps['status'] ?? '');
 
-$pageTitle    = I18n::tf('terminal.titulo', $vpsId);
+$pageTitle    = $vpsId > 0 ? I18n::tf('terminal.titulo', $vpsId) : 'Terminal';
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
+
+<?php if ($vpsId <= 0): ?>
+<!-- Estado vazio: sem VPS -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+  <div>
+    <div class="page-title">Terminal</div>
+    <div class="page-subtitle" style="margin-bottom:0;">Acesse o terminal da sua VPS</div>
+  </div>
+</div>
+
+<div class="card-new" style="max-width:600px;text-align:center;padding:48px 32px;">
+  <div style="font-size:48px;margin-bottom:16px;">🖥️</div>
+  <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px;">Nenhuma VPS ativa</div>
+  <p style="font-size:14px;color:#64748b;margin:0 0 24px;">Você ainda não possui uma VPS ativa. Contrate um plano para ter acesso ao terminal SSH do seu servidor.</p>
+  <a href="/cliente/assinaturas" class="botao">Ver planos disponíveis</a>
+</div>
+
+<?php else: ?>
+<!-- Terminal normal -->
 <meta name="csrf-token" content="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
@@ -205,5 +224,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   });
 })();
 </script>
+
+<?php endif; ?>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

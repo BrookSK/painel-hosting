@@ -34,7 +34,17 @@ final class TerminalController
             if (is_array($first) && !empty($first['id'])) {
                 return Resposta::redirecionar('/cliente/vps/terminal?id=' . (int)$first['id']);
             }
-            return Resposta::texto('Nenhuma VPS ativa encontrada. Crie uma VPS primeiro.', 400);
+
+            $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = ?');
+            $cStmt->execute([$clienteId]);
+            $cliente = $cStmt->fetch() ?: [];
+
+            $html = View::renderizar(__DIR__ . '/../../Views/cliente/vps-terminal.php', [
+                'vps'     => [],
+                'cliente' => $cliente,
+                'erro'    => '',
+            ]);
+            return Resposta::html($html);
         }
 
         $stmt = $pdo->prepare('SELECT id, server_id, container_id, status, cpu, ram, storage, created_at FROM vps WHERE id = :id AND client_id = :c LIMIT 1');
@@ -45,9 +55,14 @@ final class TerminalController
             return Resposta::texto('Acesso negado.', 403);
         }
 
+        $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = ?');
+        $cStmt->execute([$clienteId]);
+        $cliente = $cStmt->fetch() ?: [];
+
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/vps-terminal.php', [
-            'vps' => $vps,
-            'erro' => '',
+            'vps'     => $vps,
+            'cliente' => $cliente,
+            'erro'    => '',
         ]);
 
         return Resposta::html($html);
