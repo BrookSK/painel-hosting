@@ -12,7 +12,10 @@ $t = fn(string $k) => I18n::t($k);
 <title>API Explorer — LRV Cloud Manager</title>
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
-<link rel="stylesheet" href="/developers/api/swagger-ui.css">
+<style><?php
+$swCss = dirname(__DIR__, 2) . '/public/assets/vendor/swagger-ui/swagger-ui.css';
+if (is_file($swCss)) { echo file_get_contents($swCss); }
+?></style>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a}
@@ -47,7 +50,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
     <noscript><p style="text-align:center;padding:40px;color:#64748b">JavaScript é necessário para exibir o API Explorer.</p></noscript>
 </div>
 
-<script src="/developers/api/swagger-ui.js"></script>
+<script><?php
+$swJs = dirname(__DIR__, 2) . '/public/assets/vendor/swagger-ui/swagger-ui-bundle.js';
+if (is_file($swJs)) { readfile($swJs); }
+?></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     SwaggerUIBundle({
