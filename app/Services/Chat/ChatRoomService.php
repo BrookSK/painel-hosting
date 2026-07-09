@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Services\Chat;
 
 use LRV\Core\BancoDeDados;
+use LRV\Core\Jobs\RepositorioJobs;
 
 final class ChatRoomService
 {
@@ -26,6 +27,20 @@ final class ChatRoomService
             ->execute([':c' => $clientId, ':s' => 'open', ':cr' => $agora, ':up' => $agora]);
 
         $id = (int) $pdo->lastInsertId();
+
+        // Notificar admin que um novo chat foi iniciado
+        try {
+            $clienteStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = :id LIMIT 1');
+            $clienteStmt->execute([':id' => $clientId]);
+            $cli = $clienteStmt->fetch();
+            $nome = is_array($cli) ? trim((string)($cli['name'] ?? '')) : '';
+            $email = is_array($cli) ? trim((string)($cli['email'] ?? '')) : '';
+
+            (new RepositorioJobs())->criar('alerta_ticket', [
+                'titulo' => 'Novo chat iniciado',
+                'mensagem' => "Um cliente iniciou um novo chat ao vivo.\n\nCliente: {$nome} ({$email})\nChat: #{$id}\n\nAcesse o painel para responder.",
+            ]);
+        } catch (\Throwable) {}
 
         return ['id' => $id, 'client_id' => $clientId, 'user_id' => null, 'status' => 'open', 'created_at' => $agora];
     }
