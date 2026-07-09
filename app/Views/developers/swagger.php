@@ -28,7 +28,24 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 .sw-hero-links a:hover{color:#fff}
 .sw-container{max-width:1200px;margin:0 auto;padding:40px 24px 60px;min-height:500px}
 #swagger-ui .topbar{display:none}
-#swagger-ui .swagger-ui .info{margin:0 0 20px}
+#swagger-ui .swagger-ui .info{display:none}
+#swagger-ui .swagger-ui .scheme-container{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:24px}
+#swagger-ui .swagger-ui .opblock-tag{font-size:18px;font-weight:700;border-bottom:1px solid #e2e8f0;padding:14px 0}
+#swagger-ui .swagger-ui .opblock{border-radius:10px;margin-bottom:8px;border:1px solid #e2e8f0;box-shadow:none}
+#swagger-ui .swagger-ui .opblock .opblock-summary{border-radius:10px;padding:10px 16px}
+#swagger-ui .swagger-ui .opblock.opblock-get{border-color:#d1fae5;background:#f0fdf4}
+#swagger-ui .swagger-ui .opblock.opblock-get .opblock-summary{background:#f0fdf4}
+#swagger-ui .swagger-ui .opblock.opblock-post{border-color:#dbeafe;background:#eff6ff}
+#swagger-ui .swagger-ui .opblock.opblock-post .opblock-summary{background:#eff6ff}
+#swagger-ui .swagger-ui .opblock.opblock-delete{border-color:#fee2e2;background:#fef2f2}
+#swagger-ui .swagger-ui .opblock.opblock-delete .opblock-summary{background:#fef2f2}
+#swagger-ui .swagger-ui .opblock.opblock-put{border-color:#fef3c7;background:#fffbeb}
+#swagger-ui .swagger-ui .opblock.opblock-put .opblock-summary{background:#fffbeb}
+#swagger-ui .swagger-ui .btn.authorize{border-color:#4F46E5;color:#4F46E5;border-radius:10px;font-weight:700}
+#swagger-ui .swagger-ui .btn.authorize:hover{background:#4F46E5;color:#fff}
+#swagger-ui .swagger-ui .btn.execute{background:#4F46E5;border-color:#4F46E5;border-radius:8px}
+#swagger-ui .swagger-ui select{border-radius:8px;border:1px solid #e2e8f0}
+#swagger-ui .swagger-ui .model-box{border-radius:8px}
 </style>
 </head>
 <body>
