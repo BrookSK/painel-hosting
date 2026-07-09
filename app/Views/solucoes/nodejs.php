@@ -109,7 +109,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="nj-hero-inner">
     <div>
-      <div class="nj-hero-badge"><span>⬢ Node.js App</span></div>
+      <div class="nj-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l9.5 5.5v11L12 23.5 2.5 18V7z"/></svg> Node.js App</span></div>
       <h1>Deploy simples para suas aplicações <em>Node.js</em></h1>
       <p>Hospede aplicações Node.js com banco de dados incluso, domínio customizado, Git Deploy e SSL grátis. Do push ao ar em segundos.</p>
       <div class="nj-hero-actions">
