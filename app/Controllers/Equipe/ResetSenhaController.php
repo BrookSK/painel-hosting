@@ -60,7 +60,7 @@ final class ResetSenhaController
     // ── Passo 2: formulário nova senha ──────────────────────
     public function formularioNovaSenha(Requisicao $req): Resposta
     {
-        $token = trim((string)($req->get['token'] ?? ''));
+        $token = trim((string)($req->query['token'] ?? ''));
         if (!$this->tokenValido($token)) {
             return $this->render('solicitar', '', 'Link inválido ou expirado. Solicite um novo.');
         }
