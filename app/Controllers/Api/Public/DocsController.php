@@ -49,7 +49,14 @@ final class DocsController
     public function swagger(Requisicao $req): Resposta
     {
         $html = View::renderizar($this->viewPath('swagger.php'), []);
-        return Resposta::html($html);
+        // Setar CSP permissivo nos headers da resposta — o enviar() vê que já existe e não duplica
+        // O header_remove no início limpa qualquer CSP do index.php
+        if (PHP_SAPI !== 'cli') {
+            header_remove('Content-Security-Policy');
+        }
+        return Resposta::html($html)->comHeaders([
+            'Content-Security-Policy' => "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net blob:; connect-src 'self' ws: wss:;",
+        ]);
     }
 
     /**
