@@ -1257,7 +1257,7 @@ return [
     // ── Team — Emails ──
     'eq_emails.titulo' => 'Emails',
     'eq_emails.subtitulo' => 'Email accounts and domains registered by clients',
-    'eq_emails.abrir_webmail' => '🌐 Open Webmail',
+    'eq_emails.abrir_webmail' => 'Open Webmail',
     'eq_emails.buscar' => 'Search email or client...',
     'eq_emails.contas' => 'Email accounts',
     'eq_emails.nenhuma_conta' => 'No accounts found.',

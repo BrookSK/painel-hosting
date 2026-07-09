@@ -1381,7 +1381,7 @@ return [
     // ── Equipe — E-mails ──
     'eq_emails.titulo' => 'E-mails',
     'eq_emails.subtitulo' => 'Contas de e-mail e domínios cadastrados pelos clientes',
-    'eq_emails.abrir_webmail' => '🌐 Abrir Webmail',
+    'eq_emails.abrir_webmail' => 'Abrir Webmail',
     'eq_emails.buscar' => 'Buscar e-mail ou cliente...',
     'eq_emails.contas' => 'Contas de e-mail',
     'eq_emails.nenhuma_conta' => 'Nenhuma conta encontrada.',

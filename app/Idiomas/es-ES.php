@@ -1257,7 +1257,7 @@ return [
     // ── Equipo — Correos ──
     'eq_emails.titulo' => 'Correos',
     'eq_emails.subtitulo' => 'Cuentas de correo y dominios registrados por clientes',
-    'eq_emails.abrir_webmail' => '🌐 Abrir Webmail',
+    'eq_emails.abrir_webmail' => 'Abrir Webmail',
     'eq_emails.buscar' => 'Buscar correo o cliente...',
     'eq_emails.contas' => 'Cuentas de correo',
     'eq_emails.nenhuma_conta' => 'Ninguna cuenta encontrada.',
