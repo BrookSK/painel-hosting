@@ -19,14 +19,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
     <?php
       $planTypes = [
-        'vps'       => ['🖥️ VPS (Completo)', 'Acesso total: terminal, monitoramento, apps, banco de dados, etc.'],
-        'wordpress' => ['📝 WordPress Gerenciado', 'Apenas WordPress, banco de dados, arquivos, domínios e backups.'],
-        'webhosting'=> ['🌐 Web Hosting', 'Apps do catálogo, banco de dados, arquivos, domínios, git deploy e backups.'],
+        'vps'       => ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> VPS (Completo)', 'Acesso total: terminal, monitoramento, apps, banco de dados, etc.'],
+        'wordpress' => ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> WordPress Gerenciado', 'Apenas WordPress, banco de dados, arquivos, domínios e backups.'],
+        'webhosting'=> ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Web Hosting', 'Apps do catálogo, banco de dados, arquivos, domínios, git deploy e backups.'],
         'nodejs'    => ['⬢ Node.js App', 'Apenas Node.js, banco de dados, domínios e git deploy.'],
-        'cpp'       => ['⚙️ C/C++ App', 'Aplicações compiladas em C/C++, banco de dados, domínios e git deploy.'],
-        'php'       => ['🐘 PHP / Laravel', 'Aplicações PHP/Laravel, banco de dados, arquivos, domínios e git deploy.'],
-        'python'    => ['🐍 Python App', 'Aplicações Python, banco de dados, domínios e git deploy.'],
-        'app'       => ['📦 App Genérico', 'Configuração personalizada de features permitidas.'],
+        'cpp'       => ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> C/C++ App', 'Aplicações compiladas em C/C++, banco de dados, domínios e git deploy.'],
+        'php'       => ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> PHP / Laravel', 'Aplicações PHP/Laravel, banco de dados, arquivos, domínios e git deploy.'],
+        'python'    => ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg> Python App', 'Aplicações Python, banco de dados, domínios e git deploy.'],
+        'app'       => ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> App Genérico', 'Configuração personalizada de features permitidas.'],
       ];
       $currentType = (string)($plano['plan_type'] ?? 'vps');
     ?>
@@ -36,7 +36,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <input class="input" type="text" name="name" value="<?php echo View::e((string)($plano['name']??'')); ?>" />
       </div>
       <div>
-        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🏷️ Tipo de produto</label>
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Tipo de produto</label>
         <select class="input" name="plan_type" id="planTypeSelect" onchange="togglePlanTypeFields()">
           <?php foreach ($planTypes as $ptKey => $ptInfo): ?>
             <option value="<?php echo $ptKey; ?>" <?php echo $currentType === $ptKey ? 'selected' : ''; ?>><?php echo View::e($ptInfo[0]); ?></option>
@@ -57,7 +57,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:6px;">Destaque</label>
         <select class="input" name="is_featured">
           <option value="0" <?php echo ((int)($plano['is_featured']??0))===0?'selected':''; ?>>Normal</option>
-          <option value="1" <?php echo ((int)($plano['is_featured']??0))===1?'selected':''; ?>>⭐ Popular / Destaque</option>
+          <option value="1" <?php echo ((int)($plano['is_featured']??0))===1?'selected':''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;color:#f59e0b;" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Popular / Destaque</option>
         </select>
         <p class="texto" style="font-size:12px;margin-top:4px;">Planos em destaque aparecem com badge "Popular" e borda destacada na página de planos.</p>
       </div>
@@ -107,7 +107,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
     <div class="grid" style="margin-top:12px;">
       <div>
-        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">💰 Moeda principal</label>
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Moeda principal</label>
         <select class="input" name="currency" id="planCurrency" onchange="toggleCurrencyFields()">
           <option value="BRL" <?php echo ((string)($plano['currency']??'BRL'))==='BRL'?'selected':''; ?>>🇧🇷 BRL (Real)</option>
           <option value="USD" <?php echo ((string)($plano['currency']??''))==='USD'?'selected':''; ?>>🇺🇸 USD (Dólar)</option>
@@ -126,7 +126,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
     <!-- Pricing por período -->
     <div style="margin-top:16px;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
-      <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:12px;">💲 Preços por período</div>
+      <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Preços por período</div>
 
       <div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;">Mensal</div>
       <div class="grid" style="margin-bottom:14px;">
@@ -265,7 +265,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
     <!-- Limites por tipo de produto -->
     <div id="planLimitsSection" style="margin-top:16px;border:1px solid #e2e8f0;border-radius:12px;padding:16px;<?php echo $currentType === 'vps' ? 'display:none;' : ''; ?>">
-      <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:4px;">📊 Limites do produto</div>
+      <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:4px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Limites do produto</div>
       <p class="texto" style="font-size:12px;margin:0 0 12px;">Defina os limites específicos para este tipo de plano. Deixe vazio para ilimitado.</p>
 
       <div class="grid">
@@ -300,18 +300,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
             if (is_array($af)) $allowedFeatures = $af;
         }
         $allFeatures = [
-            'vps'           => '🖥️ VPS',
-            'monitoramento' => '📊 Monitoramento',
-            'aplicacoes'    => '🚀 Aplicações',
-            'catalogo'      => '📦 Catálogo',
-            'git_deploy'    => '🔀 Git Deploy',
-            'banco_dados'   => '🗄️ Banco de Dados',
-            'arquivos'      => '📁 Arquivos',
-            'terminal'      => '💻 Terminal',
-            'cron_jobs'     => '⏰ Cron Jobs',
-            'backups'       => '💾 Backups',
-            'emails'        => '📧 E-mails',
-            'dominios'      => '🌐 Domínios',
+            'vps'           => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> VPS',
+            'monitoramento' => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Monitoramento',
+            'aplicacoes'    => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> Aplicações',
+            'catalogo'      => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Catálogo',
+            'git_deploy'    => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v6c0 2 2 3 6 3h3"/></svg> Git Deploy',
+            'banco_dados'   => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> Banco de Dados',
+            'arquivos'      => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Arquivos',
+            'terminal'      => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Terminal',
+            'cron_jobs'     => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Cron Jobs',
+            'backups'       => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Backups',
+            'emails'        => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> E-mails',
+            'dominios'      => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Domínios',
         ];
       ?>
       <div id="allowedFeaturesSection" style="margin-top:14px;<?php echo $currentType !== 'app' ? 'display:none;' : ''; ?>">

@@ -113,7 +113,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="vp-hero-inner">
     <div>
-      <div class="vp-hero-badge"><span>🖥️ VPS Gerenciada</span></div>
+      <div class="vp-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> VPS Gerenciada</span></div>
       <h1>Servidores virtuais com <em>poder dedicado</em></h1>
       <p>VPS com recursos dedicados, SSD NVMe, proteção DDoS, terminal web e painel completo. Performance de servidor dedicado com a praticidade da nuvem.</p>
       <div class="vp-hero-actions">
@@ -166,25 +166,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="vp-compare">
       <div class="vp-compare-card bad">
-        <h3>❌ VPS genérica</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> VPS genérica</h3>
         <ul>
-          <li>❌ Configuração manual de tudo via terminal</li>
-          <li>❌ Sem painel de controle intuitivo</li>
-          <li>❌ Backups manuais e propensos a falha</li>
-          <li>❌ Sem monitoramento integrado</li>
-          <li>❌ SSL precisa ser configurado manualmente</li>
-          <li>❌ Suporte genérico sem conhecimento do ambiente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Configuração manual de tudo via terminal</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem painel de controle intuitivo</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Backups manuais e propensos a falha</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem monitoramento integrado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> SSL precisa ser configurado manualmente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Suporte genérico sem conhecimento do ambiente</li>
         </ul>
       </div>
       <div class="vp-compare-card good">
-        <h3>✅ VPS <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> VPS <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Painel completo com terminal web integrado</li>
-          <li>✅ Monitoramento de CPU, RAM e disco em tempo real</li>
-          <li>✅ Backups automáticos diários com restauração</li>
-          <li>✅ Deploy automático via Git</li>
-          <li>✅ SSL grátis e automático para todos os domínios</li>
-          <li>✅ Suporte especializado que conhece seu servidor</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Painel completo com terminal web integrado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Monitoramento de CPU, RAM e disco em tempo real</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups automáticos diários com restauração</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Deploy automático via Git</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL grátis e automático para todos os domínios</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte especializado que conhece seu servidor</li>
         </ul>
       </div>
     </div>
@@ -199,15 +199,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="vp-title">Tudo que sua VPS precisa</h2>
     </div>
     <div class="vp-features">
-      <div class="vp-feat"><div class="vp-feat-icon">⚡</div><h3>Recursos dedicados</h3><p>CPU, RAM e disco exclusivos para sua VPS. Sem compartilhamento, sem vizinhos barulhentos.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">💾</div><h3>SSD NVMe</h3><p>Armazenamento NVMe de alta velocidade. Leitura e escrita até 10x mais rápidas que SSD convencional.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">🖥️</div><h3>Terminal web</h3><p>Acesse seu servidor direto pelo navegador. SSH integrado sem precisar de cliente externo.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">📊</div><h3>Monitoramento</h3><p>Acompanhe CPU, RAM, disco e rede em tempo real com gráficos e alertas automáticos.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">🚀</div><h3>Deploy automático</h3><p>Conecte seu repositório Git e faça deploy com um push. CI/CD simplificado.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">🔄</div><h3>Backups</h3><p>Backups automáticos diários com retenção configurável. Restaure com um clique.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">🔒</div><h3>SSL grátis</h3><p>Certificado SSL Let's Encrypt automático para todos os seus domínios. HTTPS sem custo.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">🛡️</div><h3>Proteção DDoS</h3><p>Mitigação de ataques DDoS nativa na infraestrutura. Seu servidor sempre disponível.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon">💬</div><h3>Suporte 24/7</h3><p>Equipe técnica disponível via chat, ticket e e-mail. Resolvemos desde configuração até otimização.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><h3>Recursos dedicados</h3><p>CPU, RAM e disco exclusivos para sua VPS. Sem compartilhamento, sem vizinhos barulhentos.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>SSD NVMe</h3><p>Armazenamento NVMe de alta velocidade. Leitura e escrita até 10x mais rápidas que SSD convencional.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3>Terminal web</h3><p>Acesse seu servidor direto pelo navegador. SSH integrado sem precisar de cliente externo.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Monitoramento</h3><p>Acompanhe CPU, RAM, disco e rede em tempo real com gráficos e alertas automáticos.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3>Deploy automático</h3><p>Conecte seu repositório Git e faça deploy com um push. CI/CD simplificado.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><h3>Backups</h3><p>Backups automáticos diários com retenção configurável. Restaure com um clique.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>SSL grátis</h3><p>Certificado SSL Let's Encrypt automático para todos os seus domínios. HTTPS sem custo.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Mitigação de ataques DDoS nativa na infraestrutura. Seu servidor sempre disponível.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte 24/7</h3><p>Equipe técnica disponível via chat, ticket e e-mail. Resolvemos desde configuração até otimização.</p></div>
     </div>
   </div>
 </section>

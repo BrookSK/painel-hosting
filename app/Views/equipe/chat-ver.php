@@ -133,7 +133,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                   <div style="font-size:11px;font-weight:600;opacity:.7;margin-bottom:2px;"><?php echo View::e($sn); ?></div>
                 <?php endif; ?>
                 <?php if ($st==='system'): ?>
-                  <span style="font-size:11px;">⚙️ <?php echo View::e(I18n::t('chat_flows.sistema')); ?></span><br/>
+                  <span style="font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> <?php echo View::e(I18n::t('chat_flows.sistema')); ?></span><br/>
                 <?php endif; ?>
                 <?php if (($m['message']??'') !== ''): ?>
                   <?php echo View::e((string)$m['message']); ?>
@@ -146,7 +146,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                 ?>
                   <img src="<?php echo View::e($fu); ?>" class="msg-img" alt="<?php echo View::e($fn); ?>" />
                 <?php else: ?>
-                  <a href="<?php echo View::e($fu); ?>" target="_blank" class="msg-file">📄 <?php echo View::e($fn ?: 'arquivo'); ?></a>
+                  <a href="<?php echo View::e($fu); ?>" target="_blank" class="msg-file"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> <?php echo View::e($fn ?: 'arquivo'); ?></a>
                 <?php endif; endif; ?>
                 <div class="msg-meta">
                   <?php
@@ -169,7 +169,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
   <div class="sidebar-info">
     <div class="info-card">
-      <h3>👤 <?php echo View::e(I18n::t('eq_chat_ver.cliente_label')); ?></h3>
+      <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <?php echo View::e(I18n::t('eq_chat_ver.cliente_label')); ?></h3>
       <?php if (!empty($cliente)): ?>
         <div class="info-row"><span class="info-label"><?php echo View::e(I18n::t('eq_chat_ver.nome')); ?></span><span class="info-value"><?php echo View::e((string)($cliente['name']??'')); ?></span></div>
         <div class="info-row"><span class="info-label"><?php echo View::e(I18n::t('eq_chat_ver.email')); ?></span><span class="info-value"><?php echo View::e((string)($cliente['email']??'')); ?></span></div>
@@ -180,7 +180,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <?php endif; ?>
     </div>
     <div class="info-card">
-      <h3>💳 <?php echo View::e(I18n::t('eq_chat_ver.assinaturas')); ?></h3>
+      <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> <?php echo View::e(I18n::t('eq_chat_ver.assinaturas')); ?></h3>
       <?php if (!empty($assinaturas)): ?>
         <table class="mini-table"><thead><tr><th><?php echo View::e(I18n::t('eq_chat_ver.plano')); ?></th><th><?php echo View::e(I18n::t('geral.status')); ?></th></tr></thead><tbody>
           <?php foreach ($assinaturas as $a): ?>
@@ -190,7 +190,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <?php else: ?><p class="empty-info"><?php echo View::e(I18n::t('eq_chat_ver.nenhuma_assinatura')); ?></p><?php endif; ?>
     </div>
     <div class="info-card">
-      <h3>🖥️ <?php echo View::e(I18n::t('eq_chat_ver.vps')); ?></h3>
+      <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> <?php echo View::e(I18n::t('eq_chat_ver.vps')); ?></h3>
       <?php if (!empty($vps)): ?>
         <table class="mini-table"><thead><tr><th>ID</th><th>CPU/RAM</th><th>Status</th></tr></thead><tbody>
           <?php foreach ($vps as $v): ?>
@@ -200,7 +200,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <?php else: ?><p class="empty-info"><?php echo View::e(I18n::t('eq_chat_ver.nenhuma_vps')); ?></p><?php endif; ?>
     </div>
     <div class="info-card">
-      <h3>🎫 <?php echo View::e(I18n::t('eq_chat_ver.tickets_recentes')); ?></h3>
+      <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> <?php echo View::e(I18n::t('eq_chat_ver.tickets_recentes')); ?></h3>
       <?php if (!empty($tickets)): ?>
         <table class="mini-table"><thead><tr><th><?php echo View::e(I18n::t('tickets.assunto')); ?></th><th><?php echo View::e(I18n::t('geral.status')); ?></th></tr></thead><tbody>
           <?php foreach ($tickets as $t): ?>
@@ -219,7 +219,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   var box=document.getElementById('chatMsgs'),inp=document.getElementById('chatInput');
   var ws=null,pendingFile=null,mode='ws',wsFails=0,pollTimer=null,lastMsgId=0;
 
-  var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
+  var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔐','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
   var picker=document.getElementById('emojiPicker');
   EMOJIS.forEach(function(e){var s=document.createElement('span');s.textContent=e;s.addEventListener('click',function(){inp.value+=e;inp.focus();picker.classList.remove('open');});picker.appendChild(s);});
   document.getElementById('btnEmoji').addEventListener('click',function(ev){ev.stopPropagation();picker.classList.toggle('open');});
@@ -227,7 +227,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
   var fileInput=document.getElementById('fileInput'),preview=document.getElementById('uploadPreview'),previewName=document.getElementById('uploadFileName');
   document.getElementById('btnFile').addEventListener('click',function(){fileInput.click();});
-  fileInput.addEventListener('change',function(){if(!this.files||!this.files[0])return;pendingFile=this.files[0];previewName.textContent='📎 '+pendingFile.name;preview.style.display='flex';});
+  fileInput.addEventListener('change',function(){if(!this.files||!this.files[0])return;pendingFile=this.files[0];previewName.textContent=pendingFile.name;preview.style.display='flex';});
   document.getElementById('uploadCancel').addEventListener('click',function(){pendingFile=null;fileInput.value='';preview.style.display='none';});
 
   function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -261,7 +261,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     if(text)div.innerHTML=escHtml(text);
     if(fu){
       if(isImage(fu)){var img=document.createElement('img');img.src=fu;img.className='msg-img';img.alt=fn||'';img.onclick=function(){window.open(fu,'_blank');};div.appendChild(img);}
-      else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fn||'arquivo');div.appendChild(a);}
+      else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> '+(fn||'arquivo');div.appendChild(a);}
     }
     div.appendChild(meta);box.appendChild(div);box.scrollTop=box.scrollHeight;
   }

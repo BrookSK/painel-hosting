@@ -15,14 +15,14 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div class="page-subtitle" style="margin-bottom:0;">Crie e gerencie bancos MySQL nas suas VPS</div>
   </div>
   <div style="display:flex;gap:8px;">
-    <button class="botao ghost sm" onclick="var p=document.getElementById('pmaConfigPanel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display!=='none')carregarConfigPma();">⚙️ Config phpMyAdmin</button>
+    <button class="botao ghost sm" onclick="var p=document.getElementById('pmaConfigPanel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display!=='none')carregarConfigPma();"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> Config phpMyAdmin</button>
     <a href="/cliente/banco-dados/criar" class="botao">+ Novo banco</a>
   </div>
 </div>
 
 <!-- Painel de configuração phpMyAdmin -->
 <div id="pmaConfigPanel" class="card-new" style="display:none;margin-bottom:20px;">
-  <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">⚙️ Configurações do phpMyAdmin</div>
+  <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> Configurações do phpMyAdmin</div>
   <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Ajuste os limites para importar arquivos SQL grandes. As alterações são aplicadas no servidor imediatamente.</p>
 
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:14px;">
@@ -98,7 +98,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <?php if (empty($bancos)): ?>
 <div class="card-new" style="text-align:center;padding:48px 24px;">
-  <div style="font-size:40px;margin-bottom:12px;">🗄️</div>
+  <div style="font-size:40px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
   <div style="font-size:16px;font-weight:600;margin-bottom:8px;">Nenhum banco de dados</div>
   <div style="font-size:13px;color:#64748b;margin-bottom:20px;">Crie um banco MySQL para usar nas suas aplicações.</div>
   <a href="/cliente/banco-dados/criar" class="botao">Criar banco de dados</a>
@@ -133,7 +133,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <!-- Associação com domínio -->
     <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-      <span style="font-size:11px;color:#94a3b8;">🌐</span>
+      <span style="font-size:11px;color:#94a3b8;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
       <select id="db-note-<?php echo $bid; ?>" onchange="salvarNota(<?php echo $bid; ?>)" style="border:none;border-bottom:1px dashed #e2e8f0;background:transparent;font-size:12px;color:#475569;padding:2px 0;outline:none;cursor:pointer;">
         <option value="">Nenhum domínio associado</option>
         <?php foreach (($dominiosCliente ?? []) as $dc): ?>
@@ -166,7 +166,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
         <span style="font-size:11px;color:#64748b;width:55px;flex-shrink:0;">Senha</span>
         <code id="db-pass-<?php echo $bid; ?>" style="flex:1;font-size:12px;color:#1e293b;" data-enc="<?php echo View::e($dbPassEnc); ?>" data-revealed="0">••••••••••••</code>
-        <button type="button" onclick="toggleSenha(<?php echo $bid; ?>)" id="btn-eye-<?php echo $bid; ?>" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;" title="Mostrar/esconder">👁</button>
+        <button type="button" onclick="toggleSenha(<?php echo $bid; ?>)" id="btn-eye-<?php echo $bid; ?>" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;" title="Mostrar/esconder"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button type="button" onclick="copiarSenha(<?php echo $bid; ?>)" style="background:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;">Copiar</button>
       </div>
     </div>
@@ -181,7 +181,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         $hasPma = !empty($pmaRow['phpmyadmin_url']) || trim((string)\LRV\Core\Settings::obter('infra.phpmyadmin_url', '')) !== '';
       ?>
       <?php if ($hasPma): ?>
-        <a href="/cliente/banco-dados/phpmyadmin?id=<?php echo $bid; ?>" target="_blank" class="botao ghost sm" title="Abrir phpMyAdmin">🐬 phpMyAdmin</a>
+        <a href="/cliente/banco-dados/phpmyadmin?id=<?php echo $bid; ?>" target="_blank" class="botao ghost sm" title="Abrir phpMyAdmin"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> phpMyAdmin</a>
       <?php endif; ?>
       <form method="post" action="/cliente/banco-dados/excluir" style="display:inline;" onsubmit="return confirm('Remover banco <?php echo View::e((string)($b['name'] ?? '')); ?>? Os dados serão perdidos.')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />

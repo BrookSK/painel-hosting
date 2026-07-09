@@ -23,7 +23,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 
 <div class="card-new" style="max-width:600px;text-align:center;padding:48px 32px;">
-  <div style="font-size:48px;margin-bottom:16px;">🖥️</div>
+  <div style="font-size:48px;margin-bottom:16px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
   <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px;">Nenhuma VPS ativa</div>
   <p style="font-size:14px;color:#64748b;margin:0 0 24px;">Você ainda não possui uma VPS ativa. Contrate um plano para ter acesso ao terminal SSH do seu servidor.</p>
   <a href="/cliente/assinaturas" class="botao">Ver planos disponíveis</a>

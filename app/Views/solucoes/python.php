@@ -107,7 +107,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="py-hero-inner">
     <div>
-      <div class="py-hero-badge"><span>🐍 Python App</span></div>
+      <div class="py-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg> Python App</span></div>
       <h1>Deploy simples para suas aplicações <em>Python</em></h1>
       <p>Hospede Django, Flask, FastAPI e mais com banco de dados, pip, domínio customizado e git deploy.</p>
       <div class="py-hero-actions">
@@ -149,25 +149,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="py-compare">
       <div class="py-compare-card bad">
-        <h3>❌ Deploy Python manual</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Deploy Python manual</h3>
         <ul>
-          <li>❌ Configurar servidor, Nginx e Gunicorn na mão</li>
-          <li>❌ Gerenciar SSL, firewall e atualizações</li>
-          <li>❌ Sem backups automáticos confiáveis</li>
-          <li>❌ Debug difícil sem logs centralizados</li>
-          <li>❌ Downtime durante deploys manuais</li>
-          <li>❌ Horas perdidas com infraestrutura</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Configurar servidor, Nginx e Gunicorn na mão</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Gerenciar SSL, firewall e atualizações</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem backups automáticos confiáveis</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Debug difícil sem logs centralizados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Downtime durante deploys manuais</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Horas perdidas com infraestrutura</li>
         </ul>
       </div>
       <div class="py-compare-card good">
-        <h3>✅ Python App <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Python App <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Container isolado com Gunicorn/Uvicorn pré-configurado</li>
-          <li>✅ SSL automático e proteção DDoS inclusa</li>
-          <li>✅ Backups diários automáticos</li>
-          <li>✅ Logs em tempo real no painel</li>
-          <li>✅ Deploy zero-downtime via Git push</li>
-          <li>✅ Foque no código, não na infra</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Container isolado com Gunicorn/Uvicorn pré-configurado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL automático e proteção DDoS inclusa</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups diários automáticos</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Logs em tempo real no painel</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Deploy zero-downtime via Git push</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Foque no código, não na infra</li>
         </ul>
       </div>
     </div>
@@ -182,15 +182,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="py-title">Tudo que sua aplicação Python precisa</h2>
     </div>
     <div class="py-features">
-      <div class="py-feat"><div class="py-feat-icon">🔀</div><h3>Git Deploy</h3><p>Conecte seu repositório GitHub ou GitLab. Push na branch e o deploy acontece automaticamente.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">📦</div><h3>pip/venv integrado</h3><p>Ambientes virtuais e pip pré-configurados. Dependências instaladas automaticamente no deploy.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">🗄️</div><h3>MySQL/PostgreSQL</h3><p>Banco de dados dedicado com backups automáticos. Escolha MySQL ou PostgreSQL conforme seu projeto.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">🌐</div><h3>Domínio com SSL</h3><p>Conecte seu domínio próprio com SSL Let's Encrypt automático. HTTPS sem custo extra.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">🐳</div><h3>Container isolado</h3><p>Sua aplicação roda em container dedicado com recursos garantidos. Sem interferência de outros projetos.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">🔑</div><h3>Variáveis de ambiente</h3><p>Configure variáveis de ambiente pelo painel. Secrets seguros sem expor no código-fonte.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">📊</div><h3>Logs em tempo real</h3><p>Acompanhe stdout, stderr e logs da aplicação direto no painel. Debug sem SSH.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">🛡️</div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Sua aplicação sempre no ar.</p></div>
-      <div class="py-feat"><div class="py-feat-icon">💬</div><h3>Suporte técnico</h3><p>Equipe que entende Python e deploy de verdade. Chat, ticket e e-mail disponíveis.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v6c0 2 2 3 6 3h3"/></svg></div><h3>Git Deploy</h3><p>Conecte seu repositório GitHub ou GitLab. Push na branch e o deploy acontece automaticamente.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>pip/venv integrado</h3><p>Ambientes virtuais e pip pré-configurados. Dependências instaladas automaticamente no deploy.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>MySQL/PostgreSQL</h3><p>Banco de dados dedicado com backups automáticos. Escolha MySQL ou PostgreSQL conforme seu projeto.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Domínio com SSL</h3><p>Conecte seu domínio próprio com SSL Let's Encrypt automático. HTTPS sem custo extra.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><rect x="5" y="10" width="4" height="4"/><rect x="11" y="10" width="4" height="4"/><line x1="2" y1="4" x2="7" y2="4"/></svg></div><h3>Container isolado</h3><p>Sua aplicação roda em container dedicado com recursos garantidos. Sem interferência de outros projetos.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div><h3>Variáveis de ambiente</h3><p>Configure variáveis de ambiente pelo painel. Secrets seguros sem expor no código-fonte.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Logs em tempo real</h3><p>Acompanhe stdout, stderr e logs da aplicação direto no painel. Debug sem SSH.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Sua aplicação sempre no ar.</p></div>
+      <div class="py-feat"><div class="py-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte técnico</h3><p>Equipe que entende Python e deploy de verdade. Chat, ticket e e-mail disponíveis.</p></div>
     </div>
   </div>
 </section>

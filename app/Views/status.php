@@ -203,7 +203,7 @@ $_geral_label = match($geral) {
       </div>
       <?php if (empty($incidents)): ?>
         <div style="text-align:center;padding:24px;color:#94a3b8;font-size:14px;">
-          <div style="font-size:28px;margin-bottom:8px;">✅</div>
+          <div style="font-size:28px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <?php echo View::e(I18n::t('status_page.nenhum_incidente')); ?>
         </div>
       <?php else: ?>

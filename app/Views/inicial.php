@@ -472,7 +472,7 @@ $_trial_dias  = (int)($trial_dias ?? 7);
                 WhatsApp Vendas
               </a>
               <a href="mailto:<?php echo View::e(\LRV\Core\ConfiguracoesSistema::emailAdmin()); ?>?subject=Plano%20Personalizado" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;color:#4F46E5;border:2px solid #e2e8f0;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#e2e8f0'">
-                📧 Enviar e-mail
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> Enviar e-mail
               </a>
             </div>
           </div>
@@ -544,14 +544,14 @@ $_trial_dias  = (int)($trial_dias ?? 7);
       <p class="cta-sub"><?php echo $_trial_desc !== '' ? View::e($_trial_desc) : View::e(I18n::tf('home.cta_trial_sub', $_trial_dias)); ?></p>
       <div class="cta-btns">
         <a href="/cliente/criar-conta" class="cta-btn-p"><?php echo View::e($_trial_label); ?></a>
-        <a href="/contato" class="cta-btn-s">💬 <?php echo View::e(I18n::t('home.cta_falar_equipe')); ?></a>
+        <a href="/contato" class="cta-btn-s"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('home.cta_falar_equipe')); ?></a>
       </div>
     <?php else: ?>
       <h2 class="cta-title"><?php echo View::e(I18n::t('home.cta_ative_titulo')); ?><br><em><?php echo View::e(I18n::t('home.cta_ative_titulo_em')); ?></em></h2>
       <p class="cta-sub"><?php echo View::e(I18n::t('home.cta_ative_sub')); ?></p>
       <div class="cta-btns">
         <a href="/contato" class="cta-btn-p">✉️ <?php echo View::e(I18n::t('home.cta_proposta')); ?></a>
-        <a href="/contato" class="cta-btn-s">💬 <?php echo View::e(I18n::t('home.cta_consultor')); ?></a>
+        <a href="/contato" class="cta-btn-s"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('home.cta_consultor')); ?></a>
       </div>
     <?php endif; ?>
   </div>

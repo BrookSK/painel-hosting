@@ -66,10 +66,10 @@ if (count($nomePartes) >= 2) {
             <?php echo count(array_filter($assinaturas, fn($s) => ($s['status']??'') === 'active')); ?> <?php echo View::e(I18n::t('eq_cliente.assinaturas_ativas')); ?>
           </span>
           <?php if (!empty($cliente['is_tester'])): ?>
-            <span class="badge-new" style="background:#fef3c7;color:#92400e;">🧪 Tester</span>
+            <span class="badge-new" style="background:#fef3c7;color:#92400e;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Tester</span>
           <?php endif; ?>
           <?php if (!empty($cliente['is_managed'])): ?>
-            <span class="badge-new" style="background:#dbeafe;color:#1e40af;">🔧 Gerenciado</span>
+            <span class="badge-new" style="background:#dbeafe;color:#1e40af;"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Gerenciado</span>
           <?php endif; ?>
           <?php if (!empty($cliente['managed_show_all_tabs'])): ?>
             <span class="badge-new" style="background:#ede9fe;color:#6b21a8;">📑 Todas as abas</span>
@@ -82,14 +82,14 @@ if (count($nomePartes) >= 2) {
       <form method="post" action="/equipe/clientes/impersonar" style="display:inline;" onsubmit="return confirm('Logar como este cliente?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
-        <button class="botao sm" type="submit" style="background:#6366f1;">👤 Logar como cliente</button>
+        <button class="botao sm" type="submit" style="background:#6366f1;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Logar como cliente</button>
       </form>
       <form method="post" action="/equipe/clientes/salvar" style="display:inline;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
         <input type="hidden" name="toggle_managed" value="1" />
         <button class="botao sm <?php echo !empty($cliente['is_managed']) ? 'ghost' : ''; ?>" type="submit" style="<?php echo !empty($cliente['is_managed']) ? '' : 'background:#0ea5e9;'; ?>">
-          <?php echo !empty($cliente['is_managed']) ? '✕ Remover gerenciado' : '🔧 Marcar como gerenciado'; ?>
+          <?php echo !empty($cliente['is_managed']) ? '✕ Remover gerenciado' : '<svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Marcar como gerenciado'; ?>
         </button>
       </form>
       <?php if (!empty($cliente['is_managed'])): ?>
@@ -107,20 +107,20 @@ if (count($nomePartes) >= 2) {
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
         <input type="hidden" name="toggle_tester" value="1" />
         <button class="botao sm <?php echo !empty($cliente['is_tester']) ? 'ghost' : ''; ?>" type="submit" style="<?php echo !empty($cliente['is_tester']) ? '' : 'background:#f59e0b;'; ?>">
-          <?php echo !empty($cliente['is_tester']) ? '✕ Remover tester' : '🧪 Marcar como tester'; ?>
+          <?php echo !empty($cliente['is_tester']) ? '✕ Remover tester' : '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Marcar como tester'; ?>
         </button>
       </form>
       <form method="post" action="/equipe/clientes/ocultar" style="display:inline;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
         <button class="botao ghost sm" type="submit">
-          <?php echo ($cliente['hidden_at'] ?? null) !== null ? '👁 Mostrar cliente' : '🙈 Ocultar cliente'; ?>
+          <?php echo ($cliente['hidden_at'] ?? null) !== null ? '<svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Mostrar cliente' : '<svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Ocultar cliente'; ?>
         </button>
       </form>
       <form method="post" action="/equipe/clientes/deletar" style="display:inline;" onsubmit="return confirm('ATENÇÃO: Isso vai deletar o cliente e TODOS os dados relacionados (VPS, assinaturas, tickets, emails, etc). Essa ação é irreversível. Continuar?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
-        <button class="botao danger sm" type="submit">🗑 Deletar cliente</button>
+        <button class="botao danger sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Deletar cliente</button>
       </form>
     </div>
   </div>
@@ -172,7 +172,7 @@ if (count($nomePartes) >= 2) {
   <!-- Assinar plano -->
   <?php if (!empty($planos)): ?>
   <div class="card-new">
-    <div class="card-new-title">🎁 Dar plano grátis</div>
+    <div class="card-new-title"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Dar plano grátis</div>
     <p style="font-size:12px;color:#64748b;margin-bottom:10px;">Atribui um plano ao cliente sem cobrança. Cria a VPS e a assinatura como ativa.</p>
     <form method="POST" action="/equipe/clientes/assinar-plano" style="margin-top:8px;" onsubmit="return confirm('Dar este plano gratuitamente para o cliente?')">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
@@ -182,11 +182,11 @@ if (count($nomePartes) >= 2) {
         <option value="">Selecione o plano...</option>
         <?php foreach ($planos as $pl): ?>
           <option value="<?php echo (int)$pl['id']; ?>">
-            <?php if (!empty($pl['client_id'])): ?>🔒 <?php endif; ?><?php echo View::e((string)$pl['name']); ?> — <?php echo (int)($pl['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($pl['ram'] ?? 0) / 1024); ?>GB RAM / <?php echo round((int)($pl['storage'] ?? 0) / 1024); ?>GB SSD — <?php echo View::e(I18n::precoPlano($pl)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?><?php if (!empty($pl['client_id'])): ?> (exclusivo)<?php endif; ?>
+            <?php if (!empty($pl['client_id'])): ?><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <?php endif; ?><?php echo View::e((string)$pl['name']); ?> — <?php echo (int)($pl['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($pl['ram'] ?? 0) / 1024); ?>GB RAM / <?php echo round((int)($pl['storage'] ?? 0) / 1024); ?>GB SSD — <?php echo View::e(I18n::precoPlano($pl)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?><?php if (!empty($pl['client_id'])): ?> (exclusivo)<?php endif; ?>
           </option>
         <?php endforeach; ?>
       </select>
-      <button type="submit" class="botao" style="width:100%;background:#16a34a;">🎁 Dar plano grátis</button>
+      <button type="submit" class="botao" style="width:100%;background:#16a34a;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Dar plano grátis</button>
     </form>
   </div>
   <?php endif; ?>

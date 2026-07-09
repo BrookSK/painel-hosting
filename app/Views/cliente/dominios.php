@@ -40,9 +40,9 @@ function _badgeDom(string $st): string {
 }
 function _tipoBadge(string $tipo): string {
     return match($tipo) {
-        'raiz_email' => '<span class="badge-new" style="background:#e0e7ff;color:#3730a3;font-size:10px;">📧 E-mail</span>',
-        'raiz_vps'   => '<span class="badge-new" style="background:#dcfce7;color:#166534;font-size:10px;">🖥️ VPS</span>',
-        'subdominio'  => '<span class="badge-new" style="background:#f1f5f9;color:#475569;font-size:10px;">🔗 Sub</span>',
+        'raiz_email' => '<span class="badge-new" style="background:#e0e7ff;color:#3730a3;font-size:10px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> E-mail</span>',
+        'raiz_vps'   => '<span class="badge-new" style="background:#dcfce7;color:#166534;font-size:10px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> VPS</span>',
+        'subdominio'  => '<span class="badge-new" style="background:#f1f5f9;color:#475569;font-size:10px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Sub</span>',
         default       => '',
     };
 }
@@ -69,12 +69,12 @@ function _tipoBadge(string $tipo): string {
 
 <!-- Todos os domínios -->
 <div class="card-new">
-  <div class="card-new-title" style="margin-bottom:6px;">🌐 Meus domínios</div>
+  <div class="card-new-title" style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Meus domínios</div>
   <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Domínios raiz e subdomínios configurados para sua VPS, aplicações e e-mails.</p>
 
   <?php if (empty($todosDominios)): ?>
     <div style="text-align:center;padding:32px 0;color:#94a3b8;">
-      <div style="font-size:32px;margin-bottom:8px;">🔗</div>
+      <div style="font-size:32px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Nenhum domínio cadastrado</div>
       <div style="font-size:13px;">Adicione seu domínio ao lado para começar.</div>
     </div>
@@ -131,7 +131,7 @@ function _tipoBadge(string $tipo): string {
           <!-- Ações -->
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
             <?php if ($dTipo === 'raiz_email'): ?>
-              <a href="/cliente/emails/dominios/instrucoes?id=<?php echo $dId; ?>" class="botao ghost sm" style="font-size:11px;">📋 DNS E-mail</a>
+              <a href="/cliente/emails/dominios/instrucoes?id=<?php echo $dId; ?>" class="botao ghost sm" style="font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> DNS E-mail</a>
               <form method="post" action="/cliente/dominios/remover-raiz" style="display:inline;" onsubmit="return confirm('Remover este domínio?')">
                 <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>"/>
                 <input type="hidden" name="dominio_id" value="<?php echo $dId; ?>"/>

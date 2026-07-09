@@ -96,14 +96,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                           }
                           foreach ($_allActiveServers as $_ms):
                         ?>
-                          <option value="<?php echo (int)$_ms['id']; ?>"><?php echo View::e((string)$_ms['hostname']); ?><?php echo !empty($_ms['is_managed_server']) ? ' 🔧' : ''; ?></option>
+                          <option value="<?php echo (int)$_ms['id']; ?>"><?php echo View::e((string)$_ms['hostname']); ?><?php echo !empty($_ms['is_managed_server']) ? ' ⚙' : ''; ?></option>
                         <?php endforeach; ?>
                       </select>
                     <?php endif; ?>
                     <button class="btn-sm <?php echo $cls; ?>" type="submit"<?php echo $habilitado ? '' : ' disabled style="opacity:.4;cursor:not-allowed;"'; ?>><?php echo $label; ?></button>
                   </form>
                 <?php endforeach; ?>
-                <a href="/equipe/vps/logs?id=<?php echo $vid; ?>" class="btn-sm btn-outline" style="text-decoration:none;">📋 Logs</a>
+                <a href="/equipe/vps/logs?id=<?php echo $vid; ?>" class="btn-sm btn-outline" style="text-decoration:none;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs</a>
               </div>
             </td>
           </tr>

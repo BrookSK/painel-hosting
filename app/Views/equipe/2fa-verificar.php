@@ -66,7 +66,7 @@ $erro  = (string)($erro ?? '');
 
   <div class="auth-right">
     <!-- Ícone de escudo -->
-    <div style="width:52px;height:52px;border-radius:14px;background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:24px;">🔐</div>
+    <div style="width:52px;height:52px;border-radius:14px;background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:24px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
 
     <div class="auth-form-title"><?php echo View::e(I18n::t('eq_2fa_verificar.codigo_verificacao')); ?></div>
     <div class="auth-form-sub"><?php echo View::e(I18n::t('eq_2fa_verificar.desc_codigo')); ?></div>

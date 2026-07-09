@@ -122,7 +122,7 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
               WhatsApp Vendas
             </a>
             <?php if ($_emailAdmin !== ''): ?>
-            <a href="mailto:<?php echo View::e($_emailAdmin); ?>?subject=<?php echo urlencode('Plano Personalizado — ' . ucfirst($_plan_type)); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;font-size:13px;font-weight:600;color:<?php echo $_accent; ?>;border:2px solid #e2e8f0;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='<?php echo $_accent; ?>'" onmouseout="this.style.borderColor='#e2e8f0'">📧 Enviar e-mail</a>
+            <a href="mailto:<?php echo View::e($_emailAdmin); ?>?subject=<?php echo urlencode('Plano Personalizado — ' . ucfirst($_plan_type)); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;font-size:13px;font-weight:600;color:<?php echo $_accent; ?>;border:2px solid #e2e8f0;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='<?php echo $_accent; ?>'" onmouseout="this.style.borderColor='#e2e8f0'"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> Enviar e-mail</a>
             <?php endif; ?>
           </div>
         </div>

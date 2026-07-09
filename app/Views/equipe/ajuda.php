@@ -176,7 +176,7 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
   <pre>Webhook endpoint: POST /webhooks/stripe</pre>
 
   <div class="section-title">8. Nodes / Servidores</div>
-  <p style="font-size:14px;color:#475569;">Cadastre nodes em <a href="/equipe/servidores">/equipe/servidores</a>. O provisionamento seleciona automaticamente o node com mais capacidade disponível. Servidores podem ser marcados como "🧪 Teste" (só para clientes tester) ou "🔧 Gerenciado" (só para clientes gerenciados, com overselling).</p>
+  <p style="font-size:14px;color:#475569;">Cadastre nodes em <a href="/equipe/servidores">/equipe/servidores</a>. O provisionamento seleciona automaticamente o node com mais capacidade disponível. Servidores podem ser marcados como "<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Teste" (só para clientes tester) ou "Gerenciado" (só para clientes gerenciados, com overselling).</p>
   <p style="font-size:14px;color:#475569;">A autenticação SSH suporta dois modos: <strong>chave privada</strong> (upload de arquivo .pem/id_rsa) ou <strong>usuário e senha</strong> (via ext-ssh2 ou pseudo-terminal, sem necessidade de sshpass). Ao fazer upload, o arquivo é salvo no diretório configurado em <code>infra.ssh_key_dir</code> com permissão 600.</p>
 
   <div class="section-title">9. Usuários e Permissões</div>
@@ -323,9 +323,9 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
 <p style="font-size:14px;color:#475569;">
   Em <a href="/equipe/clientes">/equipe/clientes</a>, a listagem agora mostra celular, última atividade e uso de recursos.<br>
   <strong>Ordenação:</strong> clique nos links acima da tabela para ordenar por nome, cadastro, última atividade, VPS, assinaturas ou uso de recursos.<br>
-  <strong>Ocultar cliente:</strong> na página de detalhes, botão "🙈 Ocultar" esconde o cliente da listagem sem deletar dados. Checkbox "Mostrar ocultos" para ver todos.<br>
-  <strong>Deletar cliente:</strong> botão "🗑 Deletar" remove o cliente e todos os dados relacionados (VPS, assinaturas, tickets, chat, emails, domínios, git deploys, databases, notificações, TOTP, trials, terminal, audit logs). Irreversível.<br>
-  <strong>Dar plano grátis:</strong> botão "🎁 Dar plano grátis" cria VPS + assinatura ativa sem cobrança. Útil para contas de teste ou cortesia.
+  <strong>Ocultar cliente:</strong> na página de detalhes, botão "Ocultar" esconde o cliente da listagem sem deletar dados. Checkbox "Mostrar ocultos" para ver todos.<br>
+  <strong>Deletar cliente:</strong> botão "Deletar" remove o cliente e todos os dados relacionados (VPS, assinaturas, tickets, chat, emails, domínios, git deploys, databases, notificações, TOTP, trials, terminal, audit logs). Irreversível.<br>
+  <strong>Dar plano grátis:</strong> botão "Dar plano grátis" cria VPS + assinatura ativa sem cobrança. Útil para contas de teste ou cortesia.
 </p>
 
 <div class="section-title">26. Wizard de contratação (v2.2)</div>
@@ -362,13 +362,13 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
 <p style="font-size:14px;color:#475569;">
   <strong>Conceito:</strong> clientes com hospedagem gerenciada onde a equipe cuida de toda a infraestrutura. O cliente só paga e acompanha.<br><br>
   <strong>Fluxo:</strong><br>
-  1. Cadastre um servidor e marque "🔧 Servidor para clientes gerenciados"<br>
+  1. Cadastre um servidor e marque "Servidor para clientes gerenciados"<br>
   2. Crie um plano personalizado e selecione o cliente no dropdown "Cliente exclusivo"<br>
-  3. Crie o cliente e marque "🔧 Gerenciado"<br>
+  3. Crie o cliente e marque "Gerenciado"<br>
   4. Passe login/senha — o cliente loga, vê o plano exclusivo e paga<br>
   5. VPS provisionada no servidor gerenciado sem limites de CPU/RAM (overselling)<br><br>
   <strong>Painel do cliente:</strong> acesso restrito a VPS, Monitoramento, Tickets, Assinaturas, Minha Conta e Segurança. Sem terminal, chat, emails, domínios, aplicações, etc.<br>
-  <strong>Impersonação:</strong> botão "👤 Logar como cliente" na tela de detalhes — acesso completo. "Voltar para equipe" na sidebar.<br>
+  <strong>Impersonação:</strong> botão "Logar como cliente" na tela de detalhes — acesso completo. "Voltar para equipe" na sidebar.<br>
   <strong>Overselling:</strong> servidores gerenciados mostram "vendido vs real" na listagem. Alertas automáticos quando uso real do host está alto.<br>
   <strong>Monitoramento:</strong> percentuais relativos ao plano (não ao host).<br>
   <strong>Segurança:</strong> servidores normais e gerenciados nunca se misturam. Planos exclusivos não aparecem para outros clientes.<br>

@@ -10,7 +10,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <div class="page-subtitle"><?php echo View::e(I18n::t('chat_equipe.subtitulo')); ?></div>
 
 <div class="card-new" style="margin-bottom:24px;">
-  <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e293b;">💬 <?php echo View::e(I18n::t('chat_equipe.abertos')); ?></h3>
+  <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e293b;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('chat_equipe.abertos')); ?></h3>
   <?php if (empty($rooms)): ?>
     <p class="texto"><?php echo View::e(I18n::t('chat_equipe.nenhum_aberto')); ?></p>
   <?php else: ?>
@@ -44,7 +44,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 </div>
 
 <div class="card-new">
-  <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e293b;">📁 <?php echo View::e(I18n::t('chat_equipe.encerrados')); ?></h3>
+  <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e293b;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('chat_equipe.encerrados')); ?></h3>
   <?php if (empty($encerradas)): ?>
     <p class="texto"><?php echo View::e(I18n::t('chat_equipe.nenhum_encerrado')); ?></p>
   <?php else: ?>

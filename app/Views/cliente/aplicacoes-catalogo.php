@@ -53,7 +53,7 @@ $csrf = Csrf::token();
     <div class="cat-grid">
       <?php foreach ($items as $t): ?>
         <div class="cat-card">
-          <div class="cat-icon"><?php echo (string)($t['icon'] ?? '📦'); ?></div>
+          <div class="cat-icon"><?php echo (string)($t['icon'] ?? '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'); ?></div>
           <div class="cat-name"><?php echo View::e((string)($t['name']??'')); ?></div>
           <div class="cat-desc"><?php echo View::e((string)($t['description']??'')); ?></div>
           <span class="cat-tag"><?php echo View::e((string)($t['docker_image']??'')); ?></span>
@@ -97,7 +97,7 @@ $csrf = Csrf::token();
         <div style="margin-top:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;color:#166534;">
             <input type="checkbox" name="gerar_temp_domain" value="1" id="fTempDomain" style="accent-color:#4F46E5;" onchange="toggleTempDomain()" />
-            🌐 Gerar domínio temporário (ex: <code>wp-abc123.<?php echo View::e($tempBase); ?></code>)
+            <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Gerar domínio temporário (ex: <code>wp-abc123.<?php echo View::e($tempBase); ?></code>)
           </label>
         </div>
         <?php endif; ?>
@@ -145,7 +145,7 @@ function openInstall(id,tpl){
   document.getElementById('fRepoWrap').style.display=parseInt(tpl.requires_repo)?'':'none';
   var warn=document.getElementById('installWarning');
   if(tpl.slug==='roundcube'){
-    warn.innerHTML='⚠️ <?php echo View::e(I18n::t('apps.roundcube_aviso')); ?>';
+    warn.innerHTML='<svg xmlns=\"http://www.w3.org/2000/svg\" style=\"width:16px;height:16px;vertical-align:middle;color:#f59e0b;\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg> <?php echo View::e(I18n::t('apps.roundcube_aviso')); ?>';
     warn.style.display='';
   }else{warn.style.display='none';}
   var envVars=tpl.environment_variables;

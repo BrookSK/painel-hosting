@@ -107,7 +107,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="pl-hero-inner">
     <div>
-      <div class="pl-hero-badge"><span>🐘 PHP / Laravel</span></div>
+      <div class="pl-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> PHP / Laravel</span></div>
       <h1>Hospedagem PHP otimizada para <em>Laravel, Symfony e mais</em></h1>
       <p>Deploy de aplicações PHP com Composer, banco de dados MySQL, gerenciador de arquivos e SSL grátis.</p>
       <div class="pl-hero-actions">
@@ -148,25 +148,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="pl-compare">
       <div class="pl-compare-card bad">
-        <h3>❌ Hospedagem PHP genérica</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Hospedagem PHP genérica</h3>
         <ul>
-          <li>❌ Sem suporte a Composer ou frameworks modernos</li>
-          <li>❌ Versão PHP desatualizada e sem controle</li>
-          <li>❌ Recursos compartilhados com centenas de sites</li>
-          <li>❌ Sem deploy automatizado via Git</li>
-          <li>❌ Configuração limitada de php.ini</li>
-          <li>❌ Sem isolamento — um site afeta todos</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem suporte a Composer ou frameworks modernos</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Versão PHP desatualizada e sem controle</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Recursos compartilhados com centenas de sites</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem deploy automatizado via Git</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Configuração limitada de php.ini</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem isolamento — um site afeta todos</li>
         </ul>
       </div>
       <div class="pl-compare-card good">
-        <h3>✅ PHP App <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> PHP App <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Composer integrado com autoload otimizado</li>
-          <li>✅ PHP 8.3 configurável (extensões, php.ini)</li>
-          <li>✅ Container isolado com recursos dedicados</li>
-          <li>✅ Git deploy com build automático</li>
-          <li>✅ SSL grátis e automático</li>
-          <li>✅ Banco de dados MySQL dedicado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Composer integrado com autoload otimizado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> PHP 8.3 configurável (extensões, php.ini)</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Container isolado com recursos dedicados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Git deploy com build automático</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL grátis e automático</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Banco de dados MySQL dedicado</li>
         </ul>
       </div>
     </div>
@@ -181,15 +181,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="pl-title">Tudo que sua aplicação PHP precisa</h2>
     </div>
     <div class="pl-features">
-      <div class="pl-feat"><div class="pl-feat-icon">📦</div><h3>Composer integrado</h3><p>Gerencie dependências com Composer nativo. Autoload otimizado e instalação automática no deploy.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">🐘</div><h3>PHP 8.3 (configurável)</h3><p>Escolha a versão do PHP e configure extensões, limites de memória e php.ini conforme sua necessidade.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">🗄️</div><h3>MySQL dedicado</h3><p>Banco de dados exclusivo com backups automáticos. Acesse pelo painel ou phpMyAdmin.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">📁</div><h3>Gerenciador de arquivos</h3><p>Edite código, uploads e configurações direto pelo navegador. Sem FTP, sem complicação.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">🔀</div><h3>Git Deploy</h3><p>Conecte seu repositório GitHub ou GitLab. Push na branch e o deploy acontece automaticamente.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">🌐</div><h3>Domínio com SSL</h3><p>Conecte seu domínio próprio com SSL Let's Encrypt automático. HTTPS sem custo extra.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">💾</div><h3>Backups automáticos</h3><p>Seus dados protegidos com backups diários automáticos. Restaure com um clique a qualquer momento.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">📊</div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: apps, bancos, domínios, backups e suporte.</p></div>
-      <div class="pl-feat"><div class="pl-feat-icon">💬</div><h3>Suporte técnico</h3><p>Equipe que entende PHP e Laravel de verdade. Chat, ticket e e-mail disponíveis.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>Composer integrado</h3><p>Gerencie dependências com Composer nativo. Autoload otimizado e instalação automática no deploy.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><h3>PHP 8.3 (configurável)</h3><p>Escolha a versão do PHP e configure extensões, limites de memória e php.ini conforme sua necessidade.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>MySQL dedicado</h3><p>Banco de dados exclusivo com backups automáticos. Acesse pelo painel ou phpMyAdmin.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3>Gerenciador de arquivos</h3><p>Edite código, uploads e configurações direto pelo navegador. Sem FTP, sem complicação.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v6c0 2 2 3 6 3h3"/></svg></div><h3>Git Deploy</h3><p>Conecte seu repositório GitHub ou GitLab. Push na branch e o deploy acontece automaticamente.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Domínio com SSL</h3><p>Conecte seu domínio próprio com SSL Let's Encrypt automático. HTTPS sem custo extra.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>Backups automáticos</h3><p>Seus dados protegidos com backups diários automáticos. Restaure com um clique a qualquer momento.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: apps, bancos, domínios, backups e suporte.</p></div>
+      <div class="pl-feat"><div class="pl-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte técnico</h3><p>Equipe que entende PHP e Laravel de verdade. Chat, ticket e e-mail disponíveis.</p></div>
     </div>
   </div>
 </section>

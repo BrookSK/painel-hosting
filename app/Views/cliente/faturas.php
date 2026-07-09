@@ -70,10 +70,10 @@ function _badgeFatura(string $st): string {
           <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
             <div style="display:flex;gap:6px;">
               <?php if (!empty($f['pdf_url'])): ?>
-                <a href="<?php echo View::e((string)$f['pdf_url']); ?>" target="_blank" rel="noopener" class="botao ghost sm" style="font-size:11px;padding:3px 8px;">📄 PDF</a>
+                <a href="<?php echo View::e((string)$f['pdf_url']); ?>" target="_blank" rel="noopener" class="botao ghost sm" style="font-size:11px;padding:3px 8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</a>
               <?php endif; ?>
               <?php if (!empty($f['hosted_url'])): ?>
-                <a href="<?php echo View::e((string)$f['hosted_url']); ?>" target="_blank" rel="noopener" class="botao ghost sm" style="font-size:11px;padding:3px 8px;">🔗 Ver</a>
+                <a href="<?php echo View::e((string)$f['hosted_url']); ?>" target="_blank" rel="noopener" class="botao ghost sm" style="font-size:11px;padding:3px 8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Ver</a>
               <?php endif; ?>
             </div>
           </td>

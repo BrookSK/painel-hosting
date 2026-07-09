@@ -21,7 +21,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <div style="max-width:640px;margin:0 auto;">
   <div style="text-align:center;margin-bottom:24px;">
-    <div style="font-size:48px;margin-bottom:8px;">✅</div>
+    <div style="font-size:48px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
     <div class="page-title"><?php echo View::e(I18n::t('stripe.sucesso_titulo')); ?></div>
     <div class="page-subtitle"><?php echo View::e(I18n::t('stripe.sucesso_sub')); ?></div>
   </div>

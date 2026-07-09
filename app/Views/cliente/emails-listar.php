@@ -181,7 +181,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <p style="font-size:13px;color:#64748b;margin-bottom:16px;"><?php echo View::e(I18n::t('emails.tutoriais_desc')); ?></p>
 
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">⚙️ <?php echo View::e(I18n::t('emails.dados_config')); ?></div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> <?php echo View::e(I18n::t('emails.dados_config')); ?></div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <tr>
           <td style="padding:5px 10px;color:#64748b;width:160px;">IMAP</td>
@@ -207,7 +207,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <!-- Outlook -->
       <details style="border:1px solid #e2e8f0;border-radius:10px;padding:0;">
         <summary style="padding:12px 14px;cursor:pointer;font-weight:600;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:18px;">📧</span> Outlook (<?php echo View::e(I18n::t('emails.pc_celular')); ?>)
+          <span style="font-size:18px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg></span> Outlook (<?php echo View::e(I18n::t('emails.pc_celular')); ?>)
         </summary>
         <div style="padding:0 14px 14px;font-size:13px;color:#475569;line-height:1.8;">
           <ol style="padding-left:18px;margin:0;">

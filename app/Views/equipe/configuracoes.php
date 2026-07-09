@@ -23,12 +23,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div style="margin-bottom:12px;">
       <label style="display:block;font-size:13px;margin-bottom:6px;">Ambiente ativo</label>
       <select class="input" name="asaas_mode" style="max-width:200px;">
-        <option value="sandbox" <?php echo ((string)($asaas_mode??'sandbox'))==='sandbox'?'selected':''; ?>>🧪 Sandbox</option>
-        <option value="production" <?php echo ((string)($asaas_mode??'sandbox'))==='production'?'selected':''; ?>>🟢 Produção</option>
+        <option value="sandbox" <?php echo ((string)($asaas_mode??'sandbox'))==='sandbox'?'selected':''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Sandbox</option>
+        <option value="production" <?php echo ((string)($asaas_mode??'sandbox'))==='production'?'selected':''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Produção</option>
       </select>
     </div>
     <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:10px;padding:14px;margin-bottom:12px;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🧪 Sandbox</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Sandbox</div>
       <div class="grid">
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Token (Sandbox)</label>
@@ -45,7 +45,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
     <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:12px;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🟢 Produção</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Produção</div>
       <div class="grid">
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Token (Produção)</label>
@@ -93,12 +93,12 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div style="margin-bottom:12px;">
       <label style="display:block;font-size:13px;margin-bottom:6px;">Ambiente ativo</label>
       <select class="input" name="stripe_mode" style="max-width:200px;">
-        <option value="sandbox" <?php echo ((string)($stripe_mode??'sandbox'))==='sandbox'?'selected':''; ?>>🧪 Sandbox (Test)</option>
-        <option value="production" <?php echo ((string)($stripe_mode??'sandbox'))==='production'?'selected':''; ?>>🟢 Produção (Live)</option>
+        <option value="sandbox" <?php echo ((string)($stripe_mode??'sandbox'))==='sandbox'?'selected':''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Sandbox (Test)</option>
+        <option value="production" <?php echo ((string)($stripe_mode??'sandbox'))==='production'?'selected':''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Produção (Live)</option>
       </select>
     </div>
     <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:10px;padding:14px;margin-bottom:12px;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🧪 Sandbox (Test)</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Sandbox (Test)</div>
       <div class="grid">
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Secret Key (Test)</label>
@@ -115,7 +115,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
     <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:12px;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🟢 Produção (Live)</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Produção (Live)</div>
       <div class="grid">
         <div>
           <label style="display:block;font-size:13px;margin-bottom:6px;">Secret Key (Live)</label>
@@ -381,7 +381,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
     <div style="margin-top:14px;">
-      <button type="button" class="botao sm" id="btnInstalarAgente" onclick="instalarAgenteEmail()">📡 Instalar agente de monitoramento</button>
+      <button type="button" class="botao sm" id="btnInstalarAgente" onclick="instalarAgenteEmail()"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12L12 2l10 10"/><path d="M12 2v14"/><circle cx="12" cy="20" r="2"/></svg> Instalar agente de monitoramento</button>
       <span id="agenteStatus" style="font-size:13px;color:#64748b;margin-left:10px;"></span>
       <p class="texto" style="font-size:12px;margin-top:6px;">Conecta via SSH no servidor de e-mail e instala o script de coleta de métricas (CPU, RAM, disco) com cron a cada 5 min. Salve as configurações acima antes de clicar.</p>
     </div>

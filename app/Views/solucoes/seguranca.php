@@ -115,7 +115,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="sg-hero-inner">
     <div>
-      <div class="sg-hero-badge"><span>🔐 Segurança</span></div>
+      <div class="sg-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Segurança</span></div>
       <h1>Proteção completa para sua <em>infraestrutura</em></h1>
       <p>Isolamento de containers, proteção DDoS, SSL automático, autenticação em dois fatores e auditoria completa. Segurança em todas as camadas.</p>
       <div class="sg-hero-actions">
@@ -126,14 +126,14 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="sg-hero-visual">
       <div class="sg-mock-bar"><div class="sg-mock-dot"></div><div class="sg-mock-dot"></div><div class="sg-mock-dot"></div></div>
       <div class="sg-shield">
-        <span class="sg-shield-icon">🛡️</span>
+        <span class="sg-shield-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
         <div class="sg-shield-status">● Proteção ativa</div>
       </div>
       <div class="sg-checks">
-        <div class="sg-check-item"><span class="icon">🛡️</span><span class="txt">DDoS</span><span class="status">✓</span></div>
-        <div class="sg-check-item"><span class="icon">🔒</span><span class="txt">SSL</span><span class="status">✓</span></div>
-        <div class="sg-check-item"><span class="icon">🔑</span><span class="txt">2FA</span><span class="status">✓</span></div>
-        <div class="sg-check-item"><span class="icon">🧱</span><span class="txt">Firewall</span><span class="status">✓</span></div>
+        <div class="sg-check-item"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="txt">DDoS</span><span class="status">✓</span></div>
+        <div class="sg-check-item"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span class="txt">SSL</span><span class="status">✓</span></div>
+        <div class="sg-check-item"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span><span class="txt">2FA</span><span class="status">✓</span></div>
+        <div class="sg-check-item"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="2" y1="16" x2="22" y2="16"/><line x1="8" y1="4" x2="8" y2="10"/><line x1="16" y1="4" x2="16" y2="10"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="6" y1="16" x2="6" y2="20"/><line x1="18" y1="16" x2="18" y2="20"/></svg></span><span class="txt">Firewall</span><span class="status">✓</span></div>
       </div>
       <div class="sg-threat-bar">
         <div class="dot"></div>
@@ -164,25 +164,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="sg-compare">
       <div class="sg-compare-card bad">
-        <h3>❌ Segurança básica</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Segurança básica</h3>
         <ul>
-          <li>❌ Sem proteção DDoS — site cai sob ataque</li>
-          <li>❌ SSL manual e frequentemente expirado</li>
-          <li>❌ Login apenas com senha simples</li>
-          <li>❌ Servidores compartilhados sem isolamento</li>
-          <li>❌ Sem logs de auditoria</li>
-          <li>❌ Backups sem criptografia</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem proteção DDoS — site cai sob ataque</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> SSL manual e frequentemente expirado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Login apenas com senha simples</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Servidores compartilhados sem isolamento</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem logs de auditoria</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Backups sem criptografia</li>
         </ul>
       </div>
       <div class="sg-compare-card good">
-        <h3>✅ Segurança <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Segurança <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Mitigação DDoS automática na infraestrutura</li>
-          <li>✅ SSL Let's Encrypt renovado automaticamente</li>
-          <li>✅ 2FA com TOTP (Google Authenticator)</li>
-          <li>✅ Containers isolados por cliente</li>
-          <li>✅ Auditoria completa de todas as ações</li>
-          <li>✅ Backups criptografados em repouso</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Mitigação DDoS automática na infraestrutura</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL Let's Encrypt renovado automaticamente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 2FA com TOTP (Google Authenticator)</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Containers isolados por cliente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Auditoria completa de todas as ações</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups criptografados em repouso</li>
         </ul>
       </div>
     </div>
@@ -197,15 +197,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="sg-title">Segurança em profundidade</h2>
     </div>
     <div class="sg-features">
-      <div class="sg-feat"><div class="sg-feat-icon">🛡️</div><h3>Proteção DDoS</h3><p>Mitigação automática de ataques volumétricos e de aplicação. Sua infraestrutura sempre disponível.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">🔒</div><h3>SSL Let's Encrypt</h3><p>Certificados SSL gratuitos emitidos e renovados automaticamente. HTTPS em todos os domínios.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">🔑</div><h3>2FA (TOTP)</h3><p>Autenticação em dois fatores com Google Authenticator ou qualquer app TOTP. Camada extra de proteção.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">📦</div><h3>Containers isolados</h3><p>Cada cliente em container separado com namespaces e cgroups. Isolamento total de processos e rede.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">🧱</div><h3>Firewall</h3><p>Regras de firewall configuráveis por servidor. Bloqueie portas, IPs e protocolos indesejados.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">📋</div><h3>Auditoria de logs</h3><p>Registro completo de logins, alterações e ações administrativas. Rastreabilidade total.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">💾</div><h3>Backups criptografados</h3><p>Backups automáticos criptografados em repouso. Seus dados protegidos mesmo em caso de acesso físico.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">👥</div><h3>Permissões granulares</h3><p>Controle quem acessa o quê. Papéis e permissões configuráveis por usuário e recurso.</p></div>
-      <div class="sg-feat"><div class="sg-feat-icon">🔍</div><h3>Monitoramento de ameaças</h3><p>Detecção de atividades suspeitas em tempo real. Alertas automáticos para tentativas de invasão.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Mitigação automática de ataques volumétricos e de aplicação. Sua infraestrutura sempre disponível.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>SSL Let's Encrypt</h3><p>Certificados SSL gratuitos emitidos e renovados automaticamente. HTTPS em todos os domínios.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div><h3>2FA (TOTP)</h3><p>Autenticação em dois fatores com Google Authenticator ou qualquer app TOTP. Camada extra de proteção.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>Containers isolados</h3><p>Cada cliente em container separado com namespaces e cgroups. Isolamento total de processos e rede.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="2" y1="16" x2="22" y2="16"/><line x1="8" y1="4" x2="8" y2="10"/><line x1="16" y1="4" x2="16" y2="10"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="6" y1="16" x2="6" y2="20"/><line x1="18" y1="16" x2="18" y2="20"/></svg></div><h3>Firewall</h3><p>Regras de firewall configuráveis por servidor. Bloqueie portas, IPs e protocolos indesejados.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><h3>Auditoria de logs</h3><p>Registro completo de logins, alterações e ações administrativas. Rastreabilidade total.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>Backups criptografados</h3><p>Backups automáticos criptografados em repouso. Seus dados protegidos mesmo em caso de acesso físico.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Permissões granulares</h3><p>Controle quem acessa o quê. Papéis e permissões configuráveis por usuário e recurso.</p></div>
+      <div class="sg-feat"><div class="sg-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><h3>Monitoramento de ameaças</h3><p>Detecção de atividades suspeitas em tempo real. Alertas automáticos para tentativas de invasão.</p></div>
     </div>
   </div>
 </section>

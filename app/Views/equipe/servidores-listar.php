@@ -42,10 +42,10 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                 <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#e0e7ff;color:#3730a3;"><?php echo View::e($role); ?></span>
               <?php endif; ?>
               <?php if (!empty($s['is_test'])): ?>
-                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#fef3c7;color:#92400e;">🧪 teste</span>
+                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#fef3c7;color:#92400e;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> teste</span>
               <?php endif; ?>
               <?php if (!empty($s['is_managed_server'])): ?>
-                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#dbeafe;color:#1e40af;">🔧 gerenciado</span>
+                <span class="badge-new" style="font-size:10px;padding:1px 6px;margin-left:4px;background:#dbeafe;color:#1e40af;"><svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> gerenciado</span>
               <?php endif; ?>
             </td>
             <td><?php echo View::e((string)($s['ip_address'] ?? '')); ?></td>

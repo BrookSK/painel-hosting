@@ -112,7 +112,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="dv-hero-inner">
     <div>
-      <div class="dv-hero-badge"><span>⚡ DevOps &amp; Ferramentas</span></div>
+      <div class="dv-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> DevOps &amp; Ferramentas</span></div>
       <h1>Terminal, monitoramento e <em>controle total</em></h1>
       <p>Terminal web, monitoramento em tempo real, backups automáticos, logs e métricas. Todas as ferramentas que você precisa para gerenciar sua infraestrutura.</p>
       <div class="dv-hero-actions">
@@ -169,25 +169,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="dv-compare">
       <div class="dv-compare-card bad">
-        <h3>❌ Gerenciamento manual</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Gerenciamento manual</h3>
         <ul>
-          <li>❌ SSH via terminal local sem histórico</li>
-          <li>❌ Sem visibilidade de métricas do servidor</li>
-          <li>❌ Backups manuais esquecidos com frequência</li>
-          <li>❌ Logs espalhados em arquivos diferentes</li>
-          <li>❌ Cron jobs configurados sem interface</li>
-          <li>❌ Sem alertas — descobre problemas pelo cliente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> SSH via terminal local sem histórico</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem visibilidade de métricas do servidor</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Backups manuais esquecidos com frequência</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Logs espalhados em arquivos diferentes</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cron jobs configurados sem interface</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem alertas — descobre problemas pelo cliente</li>
         </ul>
       </div>
       <div class="dv-compare-card good">
-        <h3>✅ DevOps <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> DevOps <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Terminal web com histórico e sessões salvas</li>
-          <li>✅ Dashboard com CPU, RAM, disco e rede</li>
-          <li>✅ Backups automáticos com retenção configurável</li>
-          <li>✅ Logs centralizados com busca e filtros</li>
-          <li>✅ Cron jobs com interface visual e logs</li>
-          <li>✅ Alertas automáticos por e-mail e painel</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Terminal web com histórico e sessões salvas</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Dashboard com CPU, RAM, disco e rede</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups automáticos com retenção configurável</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Logs centralizados com busca e filtros</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cron jobs com interface visual e logs</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Alertas automáticos por e-mail e painel</li>
         </ul>
       </div>
     </div>
@@ -202,15 +202,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="dv-title">Tudo para gerenciar sua infraestrutura</h2>
     </div>
     <div class="dv-features">
-      <div class="dv-feat"><div class="dv-feat-icon">🖥️</div><h3>Terminal Web SSH</h3><p>Acesse qualquer servidor direto pelo navegador. Sem cliente SSH, sem configuração. Copie, cole e execute.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">📊</div><h3>Monitoramento CPU/RAM/Disco</h3><p>Gráficos em tempo real e históricos de uso. Identifique gargalos antes que virem problemas.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">💾</div><h3>Backups automáticos</h3><p>Backups diários com retenção configurável. Restaure arquivos, bancos ou o servidor inteiro.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">📋</div><h3>Logs centralizados</h3><p>Todos os logs em um só lugar com busca, filtros por data e nível. Nginx, app, sistema e deploy.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">📈</div><h3>Métricas em tempo real</h3><p>Latência, throughput, conexões ativas e uso de banda. Dashboards atualizados a cada segundo.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">⏰</div><h3>Cron Jobs</h3><p>Agende tarefas com interface visual. Veja histórico de execução, saída e erros de cada job.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">📁</div><h3>Gerenciador de arquivos</h3><p>Navegue, edite, faça upload e download de arquivos pelo navegador. Sem FTP, sem complicação.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">🔔</div><h3>Alertas automáticos</h3><p>Receba notificações quando CPU, RAM ou disco atingem limites. Configure thresholds personalizados.</p></div>
-      <div class="dv-feat"><div class="dv-feat-icon">🔌</div><h3>API REST</h3><p>Automatize tudo via API. Crie scripts, integre com CI/CD ou construa suas próprias ferramentas.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3>Terminal Web SSH</h3><p>Acesse qualquer servidor direto pelo navegador. Sem cliente SSH, sem configuração. Copie, cole e execute.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Monitoramento CPU/RAM/Disco</h3><p>Gráficos em tempo real e históricos de uso. Identifique gargalos antes que virem problemas.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>Backups automáticos</h3><p>Backups diários com retenção configurável. Restaure arquivos, bancos ou o servidor inteiro.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><h3>Logs centralizados</h3><p>Todos os logs em um só lugar com busca, filtros por data e nível. Nginx, app, sistema e deploy.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3>Métricas em tempo real</h3><p>Latência, throughput, conexões ativas e uso de banda. Dashboards atualizados a cada segundo.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>Cron Jobs</h3><p>Agende tarefas com interface visual. Veja histórico de execução, saída e erros de cada job.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3>Gerenciador de arquivos</h3><p>Navegue, edite, faça upload e download de arquivos pelo navegador. Sem FTP, sem complicação.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>Alertas automáticos</h3><p>Receba notificações quando CPU, RAM ou disco atingem limites. Configure thresholds personalizados.</p></div>
+      <div class="dv-feat"><div class="dv-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M18.4 6.6L15.5 9.5"/><path d="M20 12h-6"/><path d="M18.4 17.4l-2.9-2.9"/><path d="M12 22v-6"/><path d="M5.6 17.4L8.5 14.5"/><path d="M4 12h6"/><path d="M5.6 6.6l2.9 2.9"/></svg></div><h3>API REST</h3><p>Automatize tudo via API. Crie scripts, integre com CI/CD ou construa suas próprias ferramentas.</p></div>
     </div>
   </div>
 </section>

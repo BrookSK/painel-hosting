@@ -26,7 +26,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <?php if ($isEdit && !empty($_GET['criado'])): ?>
 <div style="margin-bottom:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px 20px;display:flex;align-items:flex-start;gap:12px;">
-  <span style="font-size:22px;line-height:1;">✅</span>
+  <span style="font-size:22px;line-height:1;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
   <div>
     <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:4px;">Repositório conectado com sucesso!</div>
     <div style="font-size:13px;color:#475569;">Se o repositório for privado, copie a <strong>Deploy Key</strong> abaixo e adicione nas configurações do seu repositório (GitHub/GitLab). Sem isso, o deploy não terá acesso ao código.</div>
@@ -65,7 +65,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <?php if ($isEdit && !empty($dep['deploy_key_public'])): ?>
     <div style="margin-bottom:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;">
-      <div style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;">🔑 Deploy Key (para repositórios privados)</div>
+      <div style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Deploy Key (para repositórios privados)</div>
       <p style="font-size:12px;color:#475569;margin-bottom:10px;">Para repositórios privados, copie a chave abaixo e adicione no seu repositório:</p>
 
       <div style="position:relative;margin-bottom:12px;">
@@ -98,7 +98,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </div>
     <?php elseif (!$isEdit): ?>
     <div style="margin-bottom:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;">
-      <div style="font-size:13px;font-weight:600;color:#0369a1;">🔑 Deploy Key</div>
+      <div style="font-size:13px;font-weight:600;color:#0369a1;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Deploy Key</div>
       <p style="font-size:12px;color:#475569;">Uma deploy key SSH será gerada automaticamente ao criar. Você poderá copiá-la e adicionar no repositório depois.</p>
     </div>
     <?php endif; ?>
@@ -141,7 +141,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     ?>
     <?php if ($tempBase !== '' || $existingTemp !== ''): ?>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div style="font-size:13px;font-weight:600;color:#166534;margin-bottom:6px;">🌐 Domínio temporário</div>
+      <div style="font-size:13px;font-weight:600;color:#166534;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Domínio temporário</div>
       <?php if ($existingTemp !== ''): ?>
         <div style="font-size:13px;color:#475569;">Seu domínio temporário: <a href="http://<?php echo View::e($existingTemp); ?>" target="_blank" rel="noopener" style="color:#4F46E5;font-weight:600;"><?php echo View::e($existingTemp); ?></a></div>
       <?php else: ?>
@@ -190,11 +190,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:5px;">Tipo de aplicação</label>
         <?php $appType = (string)($dep['app_type'] ?? 'php'); ?>
         <select class="input" name="app_type" id="appTypeSelect" onchange="toggleAppTypeFields()">
-          <option value="php" <?php echo $appType === 'php' ? 'selected' : ''; ?>>🐘 PHP / Laravel / WordPress</option>
-          <option value="static" <?php echo $appType === 'static' ? 'selected' : ''; ?>>📄 Site estático (HTML/CSS/JS)</option>
+          <option value="php" <?php echo $appType === 'php' ? 'selected' : ''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> PHP / Laravel / WordPress</option>
+          <option value="static" <?php echo $appType === 'static' ? 'selected' : ''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Site estático (HTML/CSS/JS)</option>
           <option value="nodejs" <?php echo $appType === 'nodejs' ? 'selected' : ''; ?>>🟢 Node.js</option>
-          <option value="python" <?php echo $appType === 'python' ? 'selected' : ''; ?>>🐍 Python</option>
-          <option value="cpp" <?php echo $appType === 'cpp' ? 'selected' : ''; ?>>⚙️ C/C++</option>
+          <option value="python" <?php echo $appType === 'python' ? 'selected' : ''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg> Python</option>
+          <option value="cpp" <?php echo $appType === 'cpp' ? 'selected' : ''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> C/C++</option>
         </select>
       </div>
       <div id="appPortField" style="<?php echo in_array($appType, ['nodejs', 'python']) ? '' : 'display:none;'; ?>">
@@ -212,7 +212,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <!-- Configurações PHP (só para tipo PHP) -->
     <div id="phpConfigSection" style="<?php echo in_array($appType, ['nodejs', 'python', 'static']) ? 'display:none;' : ''; ?>margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
-      <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px;">🐘 Configurações PHP</div>
+      <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Configurações PHP</div>
       <?php
         $phpSettings = [];
         if (!empty($dep['php_settings'])) {
@@ -262,7 +262,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <p style="font-size:12px;color:#475569;margin:0;">O sistema vai usar PM2 para gerenciar o processo. Configure o comando pós-deploy com <code>npm install && npm run build</code> e o sistema vai iniciar automaticamente com <code>pm2 start</code>. O Nginx será configurado como reverse proxy para a porta informada.</p>
     </div>
     <div id="pythonHint" style="<?php echo $appType === 'python' ? '' : 'display:none;'; ?>margin-bottom:20px;background:#fefce8;border:1px solid #fef08a;border-radius:10px;padding:14px;">
-      <div style="font-size:13px;font-weight:600;color:#854d0e;margin-bottom:6px;">🐍 Deploy Python</div>
+      <div style="font-size:13px;font-weight:600;color:#854d0e;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg> Deploy Python</div>
       <p style="font-size:12px;color:#475569;margin:0;">O Nginx será configurado como reverse proxy para a porta informada. Configure o comando pós-deploy com <code>pip install -r requirements.txt</code> e inicie o servidor (ex: <code>gunicorn</code>, <code>uvicorn</code>) via PM2 ou systemd.</p>
     </div>
 

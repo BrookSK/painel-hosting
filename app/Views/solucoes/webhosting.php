@@ -112,7 +112,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="wh-hero-inner">
     <div>
-      <div class="wh-hero-badge"><span>🌐 Web Hosting</span></div>
+      <div class="wh-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Web Hosting</span></div>
       <h1>Hospedagem completa para seus <em>projetos web</em></h1>
       <p>Hospede sites e aplicações com catálogo de apps, deploy via Git, bancos de dados e SSL grátis. Tudo gerenciado em um painel intuitivo.</p>
       <div class="wh-hero-actions">
@@ -122,7 +122,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="wh-hero-visual">
       <div class="wh-mock-bar"><div class="wh-mock-dot"></div><div class="wh-mock-dot"></div><div class="wh-mock-dot"></div></div>
-      <div class="wh-mock-breadcrumb">📁 /home &gt; public_html</div>
+      <div class="wh-mock-breadcrumb"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> /home &gt; public_html</div>
       <div class="wh-mock-sidebar">
         <div class="wh-mock-nav">
           <div class="wh-mock-nav-item active"></div>
@@ -132,11 +132,11 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
           <div class="wh-mock-nav-item"></div>
         </div>
         <div class="wh-mock-main">
-          <div class="wh-mock-file"><span class="wh-mock-file-icon">📄</span><span class="wh-mock-file-name">index.php</span><span class="wh-mock-file-size">4.2 KB</span></div>
-          <div class="wh-mock-file"><span class="wh-mock-file-icon">📁</span><span class="wh-mock-file-name">wp-content/</span><span class="wh-mock-file-size">—</span></div>
-          <div class="wh-mock-file"><span class="wh-mock-file-icon">⚙️</span><span class="wh-mock-file-name">.htaccess</span><span class="wh-mock-file-size">1.1 KB</span></div>
-          <div class="wh-mock-file"><span class="wh-mock-file-icon">🗄️</span><span class="wh-mock-file-name">database.sql</span><span class="wh-mock-file-size">12 MB</span></div>
-          <div class="wh-mock-file"><span class="wh-mock-file-icon">🔒</span><span class="wh-mock-file-name">.env</span><span class="wh-mock-file-size">0.3 KB</span></div>
+          <div class="wh-mock-file"><span class="wh-mock-file-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="wh-mock-file-name">index.php</span><span class="wh-mock-file-size">4.2 KB</span></div>
+          <div class="wh-mock-file"><span class="wh-mock-file-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span><span class="wh-mock-file-name">wp-content/</span><span class="wh-mock-file-size">—</span></div>
+          <div class="wh-mock-file"><span class="wh-mock-file-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg></span><span class="wh-mock-file-name">.htaccess</span><span class="wh-mock-file-size">1.1 KB</span></div>
+          <div class="wh-mock-file"><span class="wh-mock-file-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span><span class="wh-mock-file-name">database.sql</span><span class="wh-mock-file-size">12 MB</span></div>
+          <div class="wh-mock-file"><span class="wh-mock-file-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span class="wh-mock-file-name">.env</span><span class="wh-mock-file-size">0.3 KB</span></div>
         </div>
       </div>
     </div>
@@ -163,25 +163,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="wh-compare">
       <div class="wh-compare-card bad">
-        <h3>❌ Hospedagem limitada</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Hospedagem limitada</h3>
         <ul>
-          <li>❌ Apenas PHP e HTML estáticos</li>
-          <li>❌ Sem suporte a Node.js ou Python</li>
-          <li>❌ Deploy manual via FTP</li>
-          <li>❌ Sem catálogo de aplicações</li>
-          <li>❌ Backups manuais e pouco confiáveis</li>
-          <li>❌ Painel antigo e confuso</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Apenas PHP e HTML estáticos</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem suporte a Node.js ou Python</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Deploy manual via FTP</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem catálogo de aplicações</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Backups manuais e pouco confiáveis</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Painel antigo e confuso</li>
         </ul>
       </div>
       <div class="wh-compare-card good">
-        <h3>✅ Web Hosting <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Web Hosting <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Suporte a PHP, Node.js, Python e mais</li>
-          <li>✅ Catálogo com WordPress, Laravel, Next.js</li>
-          <li>✅ Deploy via Git com um push</li>
-          <li>✅ Bancos de dados MySQL dedicados</li>
-          <li>✅ Backups automáticos diários</li>
-          <li>✅ Painel moderno e intuitivo</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte a PHP, Node.js, Python e mais</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Catálogo com WordPress, Laravel, Next.js</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Deploy via Git com um push</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Bancos de dados MySQL dedicados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups automáticos diários</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Painel moderno e intuitivo</li>
         </ul>
       </div>
     </div>
@@ -196,15 +196,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="wh-title">Tudo que sua hospedagem precisa</h2>
     </div>
     <div class="wh-features">
-      <div class="wh-feat"><div class="wh-feat-icon">📦</div><h3>Catálogo de apps</h3><p>Instale WordPress, Laravel, Node.js e dezenas de outras aplicações com um clique. Sem configuração manual.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">🚀</div><h3>Git Deploy</h3><p>Conecte seu repositório Git e faça deploy automático a cada push. Fluxo profissional sem complicação.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">🗄️</div><h3>Bancos de dados MySQL</h3><p>Crie e gerencie bancos de dados MySQL dedicados. Acesse pelo painel ou phpMyAdmin integrado.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">📁</div><h3>Gerenciador de arquivos</h3><p>Navegue, edite e gerencie seus arquivos direto pelo navegador. Upload, download e edição inline.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">🌐</div><h3>Domínios com SSL</h3><p>Conecte domínios próprios com SSL Let's Encrypt automático. HTTPS sem custo extra em todos os planos.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">💾</div><h3>Backups automáticos</h3><p>Seus dados protegidos com backups diários automáticos. Restaure arquivos e bancos com um clique.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">📊</div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: sites, bancos, domínios, backups, Git e suporte em um só lugar.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">🛡️</div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Seus projetos sempre disponíveis.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon">💬</div><h3>Suporte técnico</h3><p>Equipe especializada pronta para ajudar. Chat, ticket e e-mail disponíveis para qualquer dúvida.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>Catálogo de apps</h3><p>Instale WordPress, Laravel, Node.js e dezenas de outras aplicações com um clique. Sem configuração manual.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3>Git Deploy</h3><p>Conecte seu repositório Git e faça deploy automático a cada push. Fluxo profissional sem complicação.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>Bancos de dados MySQL</h3><p>Crie e gerencie bancos de dados MySQL dedicados. Acesse pelo painel ou phpMyAdmin integrado.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3>Gerenciador de arquivos</h3><p>Navegue, edite e gerencie seus arquivos direto pelo navegador. Upload, download e edição inline.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Domínios com SSL</h3><p>Conecte domínios próprios com SSL Let's Encrypt automático. HTTPS sem custo extra em todos os planos.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>Backups automáticos</h3><p>Seus dados protegidos com backups diários automáticos. Restaure arquivos e bancos com um clique.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: sites, bancos, domínios, backups, Git e suporte em um só lugar.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Seus projetos sempre disponíveis.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte técnico</h3><p>Equipe especializada pronta para ajudar. Chat, ticket e e-mail disponíveis para qualquer dúvida.</p></div>
     </div>
   </div>
 </section>

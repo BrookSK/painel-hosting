@@ -60,7 +60,7 @@ function _badgeVps(string $st): string {
 
 <!-- Info box -->
 <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
-  <span style="font-size:18px;">💡</span>
+  <span style="font-size:18px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
   <div style="font-size:13px;color:#1e40af;line-height:1.6;">
     <?php echo View::e(I18n::t('assinaturas.info_uma_vps')); ?>
   </div>
@@ -68,7 +68,7 @@ function _badgeVps(string $st): string {
 
 <?php if (empty($assinaturas)): ?>
   <div class="card-new" style="text-align:center;padding:40px 24px;">
-    <div style="font-size:36px;margin-bottom:12px;">💳</div>
+    <div style="font-size:36px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
     <div style="font-size:15px;font-weight:600;margin-bottom:8px;"><?php echo View::e(I18n::t('assinaturas.nenhuma_ainda')); ?></div>
     <div style="font-size:13px;color:#64748b;margin-bottom:16px;"><?php echo View::e(I18n::t('assinaturas.escolha_plano')); ?></div>
     <a class="botao" href="/cliente/planos"><?php echo View::e(I18n::t('assinaturas.ver_planos')); ?></a>
@@ -130,7 +130,7 @@ function _badgeVps(string $st): string {
             <?php endif; ?>
             <?php if ($status === 'ACTIVE' || $status === 'active'): ?>
               <a class="botao ghost sm" href="/cliente/assinaturas/upgrade?sub=<?php echo $subId; ?>" style="border-color:#4F46E5;color:#4F46E5;">⬆ Alterar plano</a>
-              <a class="botao ghost sm" href="/cliente/assinaturas/addons?sub=<?php echo $subId; ?>" style="border-color:#16a34a;color:#16a34a;">📦 Serviços adicionais</a>
+              <a class="botao ghost sm" href="/cliente/assinaturas/addons?sub=<?php echo $subId; ?>" style="border-color:#16a34a;color:#16a34a;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Serviços adicionais</a>
             <?php endif; ?>
             <?php
               // Mostrar botão "Renovar" se assinatura anual perto do vencimento (30 dias) ou vencida
@@ -145,7 +145,7 @@ function _badgeVps(string $st): string {
               $mostrarRenovar = ($diasParaVencer !== null && $diasParaVencer <= 30) || in_array($status, ['OVERDUE', 'EXPIRED'], true);
             ?>
             <?php if ($mostrarRenovar): ?>
-              <a class="botao sm" href="/contratar?plan_id=<?php echo (int)($a['plan_id'] ?? 0); ?>&renew=<?php echo $subId; ?>" style="background:#f59e0b;">🔄 Renovar</a>
+              <a class="botao sm" href="/contratar?plan_id=<?php echo (int)($a['plan_id'] ?? 0); ?>&renew=<?php echo $subId; ?>" style="background:#f59e0b;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Renovar</a>
             <?php endif; ?>
           </div>
         </div>
@@ -193,13 +193,13 @@ function _badgeVps(string $st): string {
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
       <?php
         $produtos = [
-          ['vps',       '🖥️', 'VPS',                'Servidor virtual completo com acesso total',       '/cliente/planos?tipo=vps'],
-          ['wordpress', '📝', 'WordPress',           'WordPress gerenciado com banco e backups',         '/cliente/planos?tipo=wordpress'],
-          ['webhosting','🌐', 'Web Hosting',         'Hospedagem com catálogo de apps e git deploy',     '/cliente/planos?tipo=webhosting'],
+          ['vps',       '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'VPS',                'Servidor virtual completo com acesso total',       '/cliente/planos?tipo=vps'],
+          ['wordpress', '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>', 'WordPress',           'WordPress gerenciado com banco e backups',         '/cliente/planos?tipo=wordpress'],
+          ['webhosting','<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', 'Web Hosting',         'Hospedagem com catálogo de apps e git deploy',     '/cliente/planos?tipo=webhosting'],
           ['nodejs',    '⬢',  'Node.js',             'Deploy de aplicações Node.js com banco de dados',  '/cliente/planos?tipo=nodejs'],
-          ['cpp',       '⚙️', 'C/C++',               'Deploy de aplicações compiladas em C/C++',         '/cliente/planos?tipo=cpp'],
-          ['php',       '🐘', 'PHP / Laravel',        'Hospedagem PHP com banco, arquivos e git deploy',  '/cliente/planos?tipo=php'],
-          ['python',    '🐍', 'Python',               'Deploy de aplicações Python com banco de dados',   '/cliente/planos?tipo=python'],
+          ['cpp',       '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg>', 'C/C++',               'Deploy de aplicações compiladas em C/C++',         '/cliente/planos?tipo=cpp'],
+          ['php',       '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>', 'PHP / Laravel',        'Hospedagem PHP com banco, arquivos e git deploy',  '/cliente/planos?tipo=php'],
+          ['python',    '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg>', 'Python',               'Deploy de aplicações Python com banco de dados',   '/cliente/planos?tipo=python'],
         ];
         foreach ($produtos as [$pType, $pIcon, $pName, $pDesc, $pHref]):
       ?>

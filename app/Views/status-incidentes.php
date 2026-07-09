@@ -72,7 +72,7 @@ body{background:#060d1f}
 <div class="inc-wrap">
   <?php if (empty($incidentes)): ?>
     <div class="inc-empty">
-      <div class="inc-empty-icon">✅</div>
+      <div class="inc-empty-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
       <?php echo View::e(I18n::t('status_inc.nenhum')); ?>
     </div>
   <?php else: ?>

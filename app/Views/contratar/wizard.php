@@ -153,7 +153,7 @@ $moedaJs = I18n::moedaCodigo();
   </div>
 
   <div class="card">
-    <div class="subtitulo">💱 Moeda de pagamento</div>
+    <div class="subtitulo"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Moeda de pagamento</div>
     <div class="linha" style="gap:8px;margin-top:8px;">
       <div class="currency-opt gw-opt sel" data-cur="BRL" onclick="selCurrency('BRL')">🇧🇷 Real (BRL)</div>
       <div class="currency-opt gw-opt" data-cur="USD" onclick="selCurrency('USD')">🇺🇸 Dólar (USD)</div>
@@ -323,12 +323,12 @@ $moedaJs = I18n::moedaCodigo();
     <p class="texto"><?php echo View::e(I18n::t('wz.forma_pagamento_desc')); ?></p>
     <div id="erroPayment" class="erro-msg"></div>
     <div class="linha" style="gap:8px;" id="gwBrl">
-      <div class="gw-opt sel" data-gw="PIX" onclick="selGateway('PIX')">💠 PIX</div>
-      <div class="gw-opt" data-gw="BOLETO" onclick="selGateway('BOLETO')">📄 Boleto</div>
-      <div class="gw-opt" data-gw="CREDIT_CARD" onclick="selGateway('CREDIT_CARD')">💳 Cartão</div>
+      <div class="gw-opt sel" data-gw="PIX" onclick="selGateway('PIX')"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="1" transform="rotate(45 12 12)"/></svg> PIX</div>
+      <div class="gw-opt" data-gw="BOLETO" onclick="selGateway('BOLETO')"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Boleto</div>
+      <div class="gw-opt" data-gw="CREDIT_CARD" onclick="selGateway('CREDIT_CARD')"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Cartão</div>
     </div>
     <div class="linha" style="gap:8px;display:none;" id="gwUsd">
-      <div class="gw-opt sel" data-gw="stripe" onclick="selGateway('stripe')">💳 Card (Stripe)</div>
+      <div class="gw-opt sel" data-gw="stripe" onclick="selGateway('stripe')"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Card (Stripe)</div>
     </div>
     <?php if (!$isBrl): ?>
     <script>document.addEventListener('DOMContentLoaded',function(){selCurrency('USD');});</script>
@@ -379,7 +379,7 @@ $moedaJs = I18n::moedaCodigo();
 <div class="overlay" id="modalUpsell">
   <div class="modal">
     <div style="text-align:center;">
-      <div style="font-size:32px;margin-bottom:8px;">🚀</div>
+      <div style="font-size:32px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
       <div class="titulo" style="font-size:18px;" id="upsellTitulo"></div>
       <p class="texto" id="upsellDesc"></p>
       <div class="linha" style="gap:8px;justify-content:center;margin-top:16px;">
@@ -678,7 +678,7 @@ $moedaJs = I18n::moedaCodigo();
         if(data.ok&&data.payment_type==='pix'){
           // Mostrar PIX inline
           var html='<div class="card" style="text-align:center;padding:28px;">';
-          html+='<div style="font-size:32px;margin-bottom:8px;">✅</div>';
+          html+='<div style="font-size:32px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
           html+='<div class="titulo" style="font-size:18px;">'+T.pix_titulo+'</div>';
           html+='<p class="texto">'+T.pix_desc+'</p>';
           if(data.pix_image) html+='<img src="data:image/png;base64,'+data.pix_image+'" style="max-width:220px;margin:16px auto;display:block;border-radius:12px;"/>';
@@ -708,7 +708,7 @@ $moedaJs = I18n::moedaCodigo();
         } else if(data.ok&&data.payment_type==='boleto'){
           // Mostrar Boleto inline
           var html='<div class="card" style="text-align:center;padding:28px;">';
-          html+='<div style="font-size:32px;margin-bottom:8px;">✅</div>';
+          html+='<div style="font-size:32px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
           html+='<div class="titulo" style="font-size:18px;">'+T.boleto_titulo+'</div>';
           html+='<p class="texto">'+T.boleto_desc+'</p>';
           if(data.boleto_linha){

@@ -18,7 +18,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div>
     <div class="page-title"><?php
       if ($isAppMode) {
-          echo View::e(($appInfo['template_icon'] ?? '📦') . ' ' . ($appInfo['template_name'] ?? 'Aplicação'));
+          echo View::e(($appInfo['template_icon'] ?? '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>') . ' ' . ($appInfo['template_name'] ?? 'Aplicação'));
           if (!empty($appInfo['domain'])) echo ' <span style="font-size:13px;color:#64748b;font-weight:400;">(' . View::e((string)$appInfo['domain']) . ')</span>';
       } else {
           echo 'Gerenciador de Arquivos';
@@ -48,10 +48,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
     <span id="breadcrumb" style="font-size:13px;color:#475569;flex:1;font-family:monospace;">/</span>
     <button class="botao ghost sm" onclick="goUp()">⬆ Subir</button>
-    <button class="botao ghost sm" onclick="triggerUpload()">📤 Upload</button>
-    <button class="botao ghost sm" onclick="promptNewFolder()">📁 Nova pasta</button>
-    <button class="botao ghost sm" onclick="promptNewFile()">📄 Novo arquivo</button>
-    <button class="botao ghost sm" onclick="refreshFiles()">🔄</button>
+    <button class="botao ghost sm" onclick="triggerUpload()"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Upload</button>
+    <button class="botao ghost sm" onclick="promptNewFolder()"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Nova pasta</button>
+    <button class="botao ghost sm" onclick="promptNewFile()"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Novo arquivo</button>
+    <button class="botao ghost sm" onclick="refreshFiles()"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
     <input type="file" id="uploadInput" style="display:none;" multiple onchange="uploadFiles(this.files)" />
   </div>
 
@@ -124,7 +124,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     fetch('/cliente/arquivos/listar?'+qsRead()+'&path='+encodeURIComponent(currentPath))
       .then(function(r){return r.json();})
       .then(function(d){
-        if(!d.ok){document.getElementById('fileList').innerHTML='<div style="text-align:center;padding:24px;"><p style="color:#ef4444;font-size:13px;margin-bottom:8px;">'+(d.erro||'Erro')+'</p><p style="color:#94a3b8;font-size:12px;">Para ver arquivos de aplicações (WordPress, Node.js, etc.), use o botão 📁 na <a href="/cliente/aplicacoes">listagem de aplicações</a>.</p></div>';return;}
+        if(!d.ok){document.getElementById('fileList').innerHTML='<div style="text-align:center;padding:24px;"><p style="color:#ef4444;font-size:13px;margin-bottom:8px;">'+(d.erro||'Erro')+'</p><p style="color:#94a3b8;font-size:12px;">Para ver arquivos de aplicações (WordPress, Node.js, etc.), use o botão <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> na <a href="/cliente/aplicacoes">listagem de aplicações</a>.</p></div>';return;}
         renderFiles(d.files);
       })
       .catch(function(){document.getElementById('fileList').innerHTML='<p class="erro">Erro de conexão.</p>';});
@@ -137,7 +137,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     }
     var html='<table style="width:100%;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;">Nome</th><th style="text-align:right;padding:6px 8px;">Tamanho</th><th style="padding:6px 8px;">Data</th><th style="padding:6px 8px;">Ações</th></tr></thead><tbody>';
     files.forEach(function(f){
-      var icon=f.type==='dir'?'📁':'📄';
+      var icon=f.type==='dir'?'<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>':'<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
       var size=f.type==='dir'?'—':formatSize(f.size);
       html+='<tr style="border-bottom:1px solid #f1f5f9;">';
       html+='<td style="padding:8px;"><span style="cursor:pointer;color:#4F46E5;" onclick="'+(f.type==='dir'?'navigateTo(\''+escHtml(f.name)+'\')':'openFile(\''+escHtml(f.name)+'\')')+'">'+icon+' '+escHtml(f.name)+'</span></td>';

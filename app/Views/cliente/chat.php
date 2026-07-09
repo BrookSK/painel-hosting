@@ -98,7 +98,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   var ws=null,pendingFile=null,mode='ws',wsFails=0,pollTimer=null,lastMsgId=0;
 
   // Emoji
-  var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔒','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
+  var EMOJIS=['😊','😂','😍','🥰','😎','🤔','👍','👎','❤️','🔥','✅','❌','⭐','🎉','💬','📎','🖥️','🚀','💡','⚡','🛡️','🔐','📧','🎫','👋','🙏','💪','👀','🤝','✨'];
   var picker=document.getElementById('emojiPickerC');
   EMOJIS.forEach(function(e){var s=document.createElement('span');s.textContent=e;s.addEventListener('click',function(){input.value+=e;input.focus();picker.classList.remove('open');});picker.appendChild(s);});
   document.getElementById('btnEmojiC').addEventListener('click',function(ev){ev.stopPropagation();picker.classList.toggle('open');});
@@ -134,7 +134,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     if(text)div.innerHTML=escHtml(text);
     if(fu){
       if(isImg(fu)){var img=document.createElement('img');img.src=fu;img.className='msg-img';img.alt=fn||'';img.onclick=function(){window.open(fu,'_blank');};div.appendChild(img);}
-      else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='📄 '+(fn||'arquivo');div.appendChild(a);}
+      else{var a=document.createElement('a');a.href=fu;a.target='_blank';a.className='msg-file';a.textContent='<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> '+(fn||'arquivo');div.appendChild(a);}
     }
     if(time){var tm=document.createElement('div');tm.className='msg-time';
       var parts=[];

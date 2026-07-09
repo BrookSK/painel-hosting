@@ -54,13 +54,13 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 <div class="pn-mega" id="megaProdutos">
   <div class="pn-mega-inner">
     <div class="pn-mega-col">
-      <h4>🏗️ <?php echo View::e(I18n::t('mega.prod_infra')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3l-4 4-4-4"/></svg> <?php echo View::e(I18n::t('mega.prod_infra')); ?></h4>
       <a href="/solucoes/vps"><strong><?php echo View::e(I18n::t('mega.prod_vps')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_vps_desc')); ?></span></a>
       <a href="/infraestrutura#planos"><strong><?php echo View::e(I18n::t('mega.prod_enterprise')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_enterprise_desc')); ?></span></a>
       <a href="/infraestrutura"><strong><?php echo View::e(I18n::t('mega.prod_dedicado')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_dedicado_desc')); ?></span></a>
     </div>
     <div class="pn-mega-col">
-      <h4>📦 <?php echo View::e(I18n::t('mega.prod_apps')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> <?php echo View::e(I18n::t('mega.prod_apps')); ?></h4>
       <a href="/solucoes/wordpress"><strong><?php echo View::e(I18n::t('mega.prod_wordpress')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_wordpress_desc')); ?></span></a>
       <a href="/solucoes/nodejs"><strong><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_nodejs_desc')); ?></span></a>
       <a href="/solucoes/webhosting"><strong>Web Hosting</strong><span>Hospedagem com catálogo de apps e git deploy</span></a>
@@ -70,14 +70,14 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
       <a href="/solucoes/aplicacoes"><strong><?php echo View::e(I18n::t('mega.prod_deploy')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_deploy_desc')); ?></span></a>
     </div>
     <div class="pn-mega-col">
-      <h4>⚙️ <?php echo View::e(I18n::t('mega.prod_devops')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> <?php echo View::e(I18n::t('mega.prod_devops')); ?></h4>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.prod_terminal')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_terminal_desc')); ?></span></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.prod_monitor')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_monitor_desc')); ?></span></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.prod_backups')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_backups_desc')); ?></span></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.prod_logs')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_logs_desc')); ?></span></a>
     </div>
     <div class="pn-mega-col">
-      <h4>💬 <?php echo View::e(I18n::t('mega.prod_comm')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('mega.prod_comm')); ?></h4>
       <a href="/solucoes/email"><strong><?php echo View::e(I18n::t('mega.prod_email')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_email_desc')); ?></span></a>
       <a href="/solucoes/email"><strong><?php echo View::e(I18n::t('mega.prod_chat')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_chat_desc')); ?></span></a>
       <a href="/contato"><strong><?php echo View::e(I18n::t('mega.prod_tickets')); ?></strong><span><?php echo View::e(I18n::t('mega.prod_tickets_desc')); ?></span></a>
@@ -92,24 +92,24 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
 <div class="pn-mega pn-mega--recursos" id="megaRecursos">
   <div class="pn-mega-inner">
     <div class="pn-mega-col">
-      <h4>🚀 <?php echo View::e(I18n::t('mega.rec_perf')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> <?php echo View::e(I18n::t('mega.rec_perf')); ?></h4>
       <a href="/solucoes/vps"><strong><?php echo View::e(I18n::t('mega.rec_alta_disp')); ?></strong></a>
       <a href="/solucoes/vps"><strong><?php echo View::e(I18n::t('mega.rec_balanceamento')); ?></strong></a>
     </div>
     <div class="pn-mega-col">
-      <h4>🔐 <?php echo View::e(I18n::t('mega.rec_seg')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <?php echo View::e(I18n::t('mega.rec_seg')); ?></h4>
       <a href="/solucoes/seguranca"><strong><?php echo View::e(I18n::t('mega.rec_isolamento')); ?></strong></a>
       <a href="/solucoes/seguranca"><strong><?php echo View::e(I18n::t('mega.rec_ddos')); ?></strong></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.rec_backups')); ?></strong></a>
     </div>
     <div class="pn-mega-col">
-      <h4>📊 <?php echo View::e(I18n::t('mega.rec_monit')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> <?php echo View::e(I18n::t('mega.rec_monit')); ?></h4>
       <a href="/status"><strong><?php echo View::e(I18n::t('mega.rec_status')); ?></strong></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.rec_metricas')); ?></strong></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.rec_alertas')); ?></strong></a>
     </div>
     <div class="pn-mega-col">
-      <h4>🧑‍💻 <?php echo View::e(I18n::t('mega.rec_exp')); ?></h4>
+      <h4><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> <?php echo View::e(I18n::t('mega.rec_exp')); ?></h4>
       <a href="/solucoes/vps"><strong><?php echo View::e(I18n::t('mega.rec_painel')); ?></strong></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.rec_deploy')); ?></strong></a>
       <a href="/solucoes/devops"><strong><?php echo View::e(I18n::t('mega.rec_cli')); ?></strong></a>
@@ -124,22 +124,22 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
   <!-- Accordion: Produtos -->
   <button class="pn-acc-toggle" type="button"><?php echo View::e(I18n::t('nav.produtos')); ?> <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <div class="pn-acc-panel">
-    <span class="pn-acc-heading">🏗️ <?php echo View::e(I18n::t('mega.prod_infra')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3l-4 4-4-4"/></svg> <?php echo View::e(I18n::t('mega.prod_infra')); ?></span>
     <a href="/solucoes/vps"><?php echo View::e(I18n::t('mega.prod_vps')); ?></a>
     <a href="/infraestrutura#planos"><?php echo View::e(I18n::t('mega.prod_enterprise')); ?></a>
     <a href="/infraestrutura"><?php echo View::e(I18n::t('mega.prod_dedicado')); ?></a>
-    <span class="pn-acc-heading">📦 <?php echo View::e(I18n::t('mega.prod_apps')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> <?php echo View::e(I18n::t('mega.prod_apps')); ?></span>
     <a href="/solucoes/wordpress"><?php echo View::e(I18n::t('mega.prod_wordpress')); ?></a>
     <a href="/solucoes/nodejs"><?php echo View::e(I18n::t('mega.prod_nodejs')); ?></a>
     <a href="/solucoes/webhosting">Web Hosting</a>
     <a href="/solucoes/php"><?php echo View::e(I18n::t('mega.prod_php')); ?></a>
     <a href="/solucoes/python"><?php echo View::e(I18n::t('mega.prod_python')); ?></a>
     <a href="/solucoes/cpp">C/C++ App</a>
-    <span class="pn-acc-heading">⚙️ <?php echo View::e(I18n::t('mega.prod_devops')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg> <?php echo View::e(I18n::t('mega.prod_devops')); ?></span>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.prod_terminal')); ?></a>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.prod_monitor')); ?></a>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.prod_backups')); ?></a>
-    <span class="pn-acc-heading">💬 <?php echo View::e(I18n::t('mega.prod_comm')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('mega.prod_comm')); ?></span>
     <a href="/solucoes/email"><?php echo View::e(I18n::t('mega.prod_email')); ?></a>
     <a href="/solucoes/email"><?php echo View::e(I18n::t('mega.prod_chat')); ?></a>
     <a href="/contato"><?php echo View::e(I18n::t('mega.prod_tickets')); ?></a>
@@ -150,16 +150,16 @@ $_pn_trial_label = (string)($trial_label ?? I18n::t('nav.contratar'));
   <!-- Accordion: Recursos -->
   <button class="pn-acc-toggle" type="button"><?php echo View::e(I18n::t('nav.recursos')); ?> <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <div class="pn-acc-panel">
-    <span class="pn-acc-heading">🚀 <?php echo View::e(I18n::t('mega.rec_perf')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> <?php echo View::e(I18n::t('mega.rec_perf')); ?></span>
     <a href="/solucoes/vps"><?php echo View::e(I18n::t('mega.rec_alta_disp')); ?></a>
     <a href="/solucoes/vps"><?php echo View::e(I18n::t('mega.rec_balanceamento')); ?></a>
-    <span class="pn-acc-heading">🔐 <?php echo View::e(I18n::t('mega.rec_seg')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <?php echo View::e(I18n::t('mega.rec_seg')); ?></span>
     <a href="/solucoes/seguranca"><?php echo View::e(I18n::t('mega.rec_isolamento')); ?></a>
     <a href="/solucoes/seguranca"><?php echo View::e(I18n::t('mega.rec_ddos')); ?></a>
-    <span class="pn-acc-heading">📊 <?php echo View::e(I18n::t('mega.rec_monit')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> <?php echo View::e(I18n::t('mega.rec_monit')); ?></span>
     <a href="/status"><?php echo View::e(I18n::t('mega.rec_status')); ?></a>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.rec_metricas')); ?></a>
-    <span class="pn-acc-heading">🧑‍💻 <?php echo View::e(I18n::t('mega.rec_exp')); ?></span>
+    <span class="pn-acc-heading"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> <?php echo View::e(I18n::t('mega.rec_exp')); ?></span>
     <a href="/solucoes/vps"><?php echo View::e(I18n::t('mega.rec_painel')); ?></a>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.rec_deploy')); ?></a>
     <a href="/solucoes/devops"><?php echo View::e(I18n::t('mega.rec_cli')); ?></a>

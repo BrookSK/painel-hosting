@@ -48,7 +48,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <?php if ($planoExclusivo !== null && $assinatura === null): ?>
 <div style="background:linear-gradient(135deg,#0B1C3D,#4F46E5);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-  <div style="font-size:28px;flex-shrink:0;">📋</div>
+  <div style="font-size:28px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>
   <div style="flex:1;min-width:180px;">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Seu plano personalizado está pronto</div>
     <div style="font-size:13px;opacity:.8;">
@@ -68,7 +68,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   $progressPct   = min(100, (int)round($diasRestantes / 7 * 100));
 ?>
 <div style="background:linear-gradient(135deg,#0B1C3D,#4F46E5);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-  <div style="font-size:28px;flex-shrink:0;">🚀</div>
+  <div style="font-size:28px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
   <div style="flex:1;min-width:180px;">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Período de teste — <?php echo $diasRestantes; ?> dia<?php echo $diasRestantes !== 1 ? 's' : ''; ?> restante<?php echo $diasRestantes !== 1 ? 's' : ''; ?></div>
     <div style="font-size:13px;opacity:.8;margin-bottom:10px;"><?php echo (int)$trialInfo['vcpu']; ?> vCPU · <?php echo (int)$trialInfo['ram_mb']; ?> MB RAM · <?php echo (int)$trialInfo['disco_gb']; ?> GB disco · Expira em <?php echo View::e(date('d/m/Y', strtotime((string)$trialInfo['expires_at']))); ?></div>
@@ -147,9 +147,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
     <?php
       $usageItems = [
-        ['🚀', 'Sites / Apps', $planLimits['sites']['atual'], $planLimits['sites']['max']],
-        ['🗄️', 'Bancos de dados', $planLimits['databases']['atual'], $planLimits['databases']['max']],
-        ['⏰', 'Cron Jobs', $planLimits['cron_jobs']['atual'], $planLimits['cron_jobs']['max']],
+        ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>', 'Sites / Apps', $planLimits['sites']['atual'], $planLimits['sites']['max']],
+        ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>', 'Bancos de dados', $planLimits['databases']['atual'], $planLimits['databases']['max']],
+        ['<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', 'Cron Jobs', $planLimits['cron_jobs']['atual'], $planLimits['cron_jobs']['max']],
       ];
       foreach ($usageItems as [$uIcon, $uLabel, $uAtual, $uMax]):
         if ($uMax === null) continue; // Sem limite = não mostrar
@@ -174,22 +174,22 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
   <?php
   $navCards = [
-    ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais',    'vps'],
-    ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real',        'monitoramento'],
-    ['/cliente/tickets',      '🎫',  'Tickets',       'Suporte técnico e solicitações',        null],
-    ['/cliente/emails',       '📧',  'E-mails',       'Gerenciar caixas de entrada',           'emails'],
-    ['/cliente/aplicacoes',   '🚀',  'Aplicações',    'Deploy e gerenciamento de apps',        'aplicacoes'],
-    ['/cliente/assinaturas',  '💳',  'Assinaturas',   'Planos e histórico de pagamentos',      null],
-    ['/cliente/ajuda',        '📚',  'Ajuda',         'Documentação e tutoriais',               null],
+    ['/cliente/vps',          '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',  'Minhas VPS',    'Gerencie seus servidores virtuais',    'vps'],
+    ['/cliente/monitoramento','<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',  'Monitoramento', 'CPU, RAM e disco em tempo real',        'monitoramento'],
+    ['/cliente/tickets',      '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>',  'Tickets',       'Suporte técnico e solicitações',        null],
+    ['/cliente/emails',       '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>',  'E-mails',       'Gerenciar caixas de entrada',           'emails'],
+    ['/cliente/aplicacoes',   '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',  'Aplicações',    'Deploy e gerenciamento de apps',        'aplicacoes'],
+    ['/cliente/assinaturas',  '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',  'Assinaturas',   'Planos e histórico de pagamentos',      null],
+    ['/cliente/ajuda',        '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',  'Ajuda',         'Documentação e tutoriais',               null],
   ];
   // Cliente gerenciado vê apenas tickets e assinaturas
   $_isManagedPainel = \LRV\Core\Auth::clienteGerenciado() && !\LRV\Core\Auth::estaImpersonando();
   if ($_isManagedPainel) {
     $navCards = [
-      ['/cliente/vps',          '🖥️',  'Minhas VPS',    'Gerencie seus servidores virtuais',  'vps'],
-      ['/cliente/monitoramento','📊',  'Monitoramento', 'CPU, RAM e disco em tempo real',      'monitoramento'],
-      ['/cliente/tickets',     '🎫',  'Tickets',      'Suporte técnico e solicitações',        null],
-      ['/cliente/assinaturas', '💳',  'Assinaturas',  'Planos e histórico de pagamentos',      null],
+      ['/cliente/vps',          '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',  'Minhas VPS',    'Gerencie seus servidores virtuais',  'vps'],
+      ['/cliente/monitoramento','<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',  'Monitoramento', 'CPU, RAM e disco em tempo real',      'monitoramento'],
+      ['/cliente/tickets',     '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>',  'Tickets',      'Suporte técnico e solicitações',        null],
+      ['/cliente/assinaturas', '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',  'Assinaturas',  'Planos e histórico de pagamentos',      null],
     ];
   }
   // Filtrar por features do plano

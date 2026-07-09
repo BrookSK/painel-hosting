@@ -27,7 +27,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <?php if (empty($addons)): ?>
   <div class="card-new" style="text-align:center;padding:40px;">
-    <div style="font-size:36px;margin-bottom:12px;">📦</div>
+    <div style="font-size:36px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
     <div style="font-size:15px;font-weight:600;margin-bottom:8px;">Nenhum serviço adicional disponível</div>
     <div style="font-size:13px;color:#64748b;">Este plano não possui serviços adicionais configurados.</div>
   </div>
@@ -67,7 +67,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 
 <div style="margin-top:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:10px;">
-  <span style="font-size:18px;">💡</span>
+  <span style="font-size:18px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
   <div style="font-size:13px;color:#1e40af;line-height:1.6;">
     Ao contratar um serviço adicional, uma cobrança é gerada imediatamente e o valor é adicionado à sua assinatura mensal. Ao cancelar, o serviço é removido e o valor é descontado da próxima cobrança.
   </div>

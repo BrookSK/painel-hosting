@@ -101,7 +101,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <!-- Lista de cron jobs -->
 <?php if (empty($crons)): ?>
 <div class="card-new" style="text-align:center;padding:48px 24px;">
-  <div style="font-size:40px;margin-bottom:12px;">⏰</div>
+  <div style="font-size:40px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;vertical-align:middle;color:#4F46E5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
   <div style="font-size:16px;font-weight:600;margin-bottom:8px;">Nenhuma tarefa agendada</div>
   <div style="font-size:13px;color:#64748b;margin-bottom:20px;">Crie tarefas cron para executar comandos, acessar URLs ou rodar scripts automaticamente.</div>
   <button class="botao" onclick="document.getElementById('cronForm').style.display='block'">Criar tarefa</button>
@@ -114,7 +114,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     $lastStatus = (string)($c['last_status'] ?? '');
     $statusColor = match($lastStatus) { 'success' => '#10b981', 'error' => '#ef4444', 'running' => '#f59e0b', default => '#94a3b8' };
     $statusLabel = match($lastStatus) { 'success' => '✓ OK', 'error' => '✘ Erro', 'running' => '⏳ Rodando', default => '—' };
-    $typeIcon = match((string)($c['task_type'] ?? '')) { 'url' => '🌐', 'php_script' => '🐘', default => '💻' };
+    $typeIcon = match((string)($c['task_type'] ?? '')) { 'url' => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', 'php_script' => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>', default => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>' };
     $typeLabel = match((string)($c['task_type'] ?? '')) { 'url' => 'URL', 'php_script' => 'PHP', default => 'Comando' };
   ?>
   <div class="card-new" style="<?php echo !$enabled ? 'opacity:0.6;' : ''; ?>">
@@ -147,11 +147,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <button class="botao sm" onclick="executarCron(<?php echo $cid; ?>)" id="btn-run-<?php echo $cid; ?>">▶ Executar agora</button>
       <button class="botao sm ghost" onclick="toggleCron(<?php echo $cid; ?>)" id="btn-toggle-<?php echo $cid; ?>"><?php echo $enabled ? '⏸ Pausar' : '▶ Ativar'; ?></button>
-      <button class="botao sm ghost" onclick="verOutput(<?php echo $cid; ?>)">📋 Último log</button>
+      <button class="botao sm ghost" onclick="verOutput(<?php echo $cid; ?>)"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Último log</button>
       <form method="post" action="/cliente/cron-jobs/excluir" style="display:inline;" onsubmit="return confirm('Remover esta tarefa?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $cid; ?>" />
-        <button class="botao danger sm" type="submit">🗑</button>
+        <button class="botao danger sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </form>
       <span id="cron-status-<?php echo $cid; ?>" style="font-size:12px;color:#64748b;"></span>
     </div>

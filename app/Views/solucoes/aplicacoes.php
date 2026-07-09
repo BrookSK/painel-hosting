@@ -112,7 +112,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="da-hero-inner">
     <div>
-      <div class="da-hero-badge"><span>🚀 Deploy Automático</span></div>
+      <div class="da-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> Deploy Automático</span></div>
       <h1>Do código ao ar em <em>segundos</em></h1>
       <p>Deploy automático via Git, catálogo com mais de 50 apps, containers isolados e rollback instantâneo. Foque no código, a infraestrutura é por nossa conta.</p>
       <div class="da-hero-actions">
@@ -123,15 +123,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="da-hero-visual">
       <div class="da-mock-bar"><div class="da-mock-dot"></div><div class="da-mock-dot"></div><div class="da-mock-dot"></div></div>
       <div class="da-pipeline">
-        <div class="da-pipe-step"><div class="icon">📝</div><div class="txt">Commit</div></div>
+        <div class="da-pipe-step"><div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="txt">Commit</div></div>
         <div class="da-pipe-arrow">→</div>
-        <div class="da-pipe-step"><div class="icon">🔨</div><div class="txt">Build</div></div>
+        <div class="da-pipe-step"><div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div class="txt">Build</div></div>
         <div class="da-pipe-arrow">→</div>
-        <div class="da-pipe-step"><div class="icon">🧪</div><div class="txt">Test</div></div>
+        <div class="da-pipe-step"><div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg></div><div class="txt">Test</div></div>
         <div class="da-pipe-arrow">→</div>
-        <div class="da-pipe-step active"><div class="icon">🚀</div><div class="txt">Deploy</div></div>
+        <div class="da-pipe-step active"><div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><div class="txt">Deploy</div></div>
         <div class="da-pipe-arrow">→</div>
-        <div class="da-pipe-step"><div class="icon">✅</div><div class="txt">Live</div></div>
+        <div class="da-pipe-step"><div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div class="txt">Live</div></div>
       </div>
       <div class="da-pipe-log">
         <div><span class="violet">$</span> git push origin main</div>
@@ -163,25 +163,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="da-compare">
       <div class="da-compare-card bad">
-        <h3>❌ Deploy manual</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Deploy manual</h3>
         <ul>
-          <li>❌ Upload via FTP arquivo por arquivo</li>
-          <li>❌ Downtime a cada atualização</li>
-          <li>❌ Sem rollback — erro é dor de cabeça</li>
-          <li>❌ Configuração de ambiente manual</li>
-          <li>❌ Sem logs centralizados do deploy</li>
-          <li>❌ Processo diferente para cada desenvolvedor</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Upload via FTP arquivo por arquivo</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Downtime a cada atualização</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem rollback — erro é dor de cabeça</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Configuração de ambiente manual</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem logs centralizados do deploy</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Processo diferente para cada desenvolvedor</li>
         </ul>
       </div>
       <div class="da-compare-card good">
-        <h3>✅ Deploy Automático <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Deploy Automático <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ Push no Git e o deploy acontece sozinho</li>
-          <li>✅ Zero downtime com troca atômica</li>
-          <li>✅ Rollback instantâneo para qualquer versão</li>
-          <li>✅ Variáveis de ambiente seguras no painel</li>
-          <li>✅ Logs em tempo real de cada deploy</li>
-          <li>✅ Pipeline padronizado para todo o time</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Push no Git e o deploy acontece sozinho</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Zero downtime com troca atômica</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Rollback instantâneo para qualquer versão</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Variáveis de ambiente seguras no painel</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Logs em tempo real de cada deploy</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Pipeline padronizado para todo o time</li>
         </ul>
       </div>
     </div>
@@ -196,15 +196,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="da-title">Tudo para seu deploy perfeito</h2>
     </div>
     <div class="da-features">
-      <div class="da-feat"><div class="da-feat-icon">🔗</div><h3>Git Deploy</h3><p>Conecte GitHub, GitLab ou Bitbucket. Cada push na branch configurada dispara o deploy automaticamente.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">📦</div><h3>Catálogo 50+ apps</h3><p>WordPress, Node.js, Python, Laravel, Next.js e dezenas de outros. Instale com um clique.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">🐳</div><h3>Containers Docker</h3><p>Cada aplicação roda em container isolado com recursos dedicados. Segurança e performance.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">🔄</div><h3>Zero downtime</h3><p>Deploy com troca atômica. A versão antiga só é removida quando a nova está 100% pronta.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">⏪</div><h3>Rollback</h3><p>Algo deu errado? Volte para qualquer versão anterior com um clique. Sem perda de dados.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">🔐</div><h3>Variáveis de ambiente</h3><p>Gerencie secrets e configurações pelo painel. Criptografadas e injetadas no build automaticamente.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">📋</div><h3>Logs em tempo real</h3><p>Acompanhe cada etapa do deploy em tempo real. Build, testes e publicação com timestamps.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">🌐</div><h3>Multi-linguagem</h3><p>Node.js, Python, PHP, Ruby, Go, Rust, Java e mais. Detecção automática de runtime.</p></div>
-      <div class="da-feat"><div class="da-feat-icon">💬</div><h3>Suporte</h3><p>Equipe técnica que entende de deploy. Chat, ticket e e-mail para resolver qualquer dúvida.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3>Git Deploy</h3><p>Conecte GitHub, GitLab ou Bitbucket. Cada push na branch configurada dispara o deploy automaticamente.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>Catálogo 50+ apps</h3><p>WordPress, Node.js, Python, Laravel, Next.js e dezenas de outros. Instale com um clique.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><rect x="5" y="10" width="4" height="4"/><rect x="11" y="10" width="4" height="4"/><line x1="2" y1="4" x2="7" y2="4"/></svg></div><h3>Containers Docker</h3><p>Cada aplicação roda em container isolado com recursos dedicados. Segurança e performance.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><h3>Zero downtime</h3><p>Deploy com troca atômica. A versão antiga só é removida quando a nova está 100% pronta.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg></div><h3>Rollback</h3><p>Algo deu errado? Volte para qualquer versão anterior com um clique. Sem perda de dados.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>Variáveis de ambiente</h3><p>Gerencie secrets e configurações pelo painel. Criptografadas e injetadas no build automaticamente.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><h3>Logs em tempo real</h3><p>Acompanhe cada etapa do deploy em tempo real. Build, testes e publicação com timestamps.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Multi-linguagem</h3><p>Node.js, Python, PHP, Ruby, Go, Rust, Java e mais. Detecção automática de runtime.</p></div>
+      <div class="da-feat"><div class="da-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte</h3><p>Equipe técnica que entende de deploy. Chat, ticket e e-mail para resolver qualquer dúvida.</p></div>
     </div>
   </div>
 </section>

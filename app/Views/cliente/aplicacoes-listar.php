@@ -61,20 +61,20 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;">
               <div style="display:flex;gap:4px;flex-wrap:wrap;">
                 <?php if ($appSt === 'running' || $appSt === 'active'): ?>
-                  <a href="/cliente/arquivos?app_id=<?php echo $appId; ?>&path=<?php echo urlencode($appRootPath); ?>" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Arquivos">📁</a>
+                  <a href="/cliente/arquivos?app_id=<?php echo $appId; ?>&path=<?php echo urlencode($appRootPath); ?>" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Arquivos"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></a>
                   <?php if (!empty($a['db_id'])): ?>
-                    <a href="/cliente/banco-dados/ver?id=<?php echo (int)$a['db_id']; ?>" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Banco de dados">🗄️</a>
+                    <a href="/cliente/banco-dados/ver?id=<?php echo (int)$a['db_id']; ?>" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Banco de dados"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></a>
                   <?php endif; ?>
                   <?php if (!empty($a['domain'])): ?>
-                    <a href="https://<?php echo View::e((string)$a['domain']); ?>" target="_blank" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Abrir site">🌐</a>
+                    <a href="https://<?php echo View::e((string)$a['domain']); ?>" target="_blank" class="botao ghost sm" style="font-size:11px;padding:3px 8px;" title="Abrir site"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>
                   <?php endif; ?>
-                  <button class="botao ghost sm" style="font-size:11px;padding:3px 8px;" onclick="toggleAppLogs(<?php echo $appId; ?>)" title="Ver logs do servidor">📋</button>
+                  <button class="botao ghost sm" style="font-size:11px;padding:3px 8px;" onclick="toggleAppLogs(<?php echo $appId; ?>)" title="Ver logs do servidor"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></button>
                 <?php endif; ?>
                 <?php if ($appSt === 'error'): ?>
                   <form method="post" action="/cliente/aplicacoes/reinstalar" style="display:inline;">
                     <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
                     <input type="hidden" name="app_id" value="<?php echo $appId; ?>"/>
-                    <button class="botao sm" type="submit" style="font-size:11px;">🔄 Reinstalar</button>
+                    <button class="botao sm" type="submit" style="font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reinstalar</button>
                   </form>
                 <?php endif; ?>
                 <form method="post" action="/cliente/aplicacoes/deletar" style="display:inline;" onsubmit="return confirm('Deletar aplicação #<?php echo $appId; ?>?')">
@@ -96,7 +96,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
                     <button onclick="carregarAppLogs(<?php echo $appId; ?>,'php')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">PHP</button>
                     <button onclick="carregarAppLogs(<?php echo $appId; ?>,'app')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">App</button>
                   </div>
-                  <button onclick="carregarAppLogs(<?php echo $appId; ?>,'all')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:11px;">🔄 Atualizar</button>
+                  <button onclick="carregarAppLogs(<?php echo $appId; ?>,'all')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Atualizar</button>
                 </div>
                 <pre id="app-logs-output-<?php echo $appId; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:400px;overflow-y:auto;margin:0;">Carregando...</pre>
               </div>

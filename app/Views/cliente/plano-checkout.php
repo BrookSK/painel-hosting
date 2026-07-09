@@ -163,7 +163,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           </div>
           <div style="display:none;gap:8px;flex-wrap:wrap;" id="gwUsd">
             <label style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #4F46E5;border-radius:10px;font-size:13px;flex:1;justify-content:center;background:#f5f3ff;">
-              💳 Cartão de crédito (Stripe)
+              <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Cartão de crédito (Stripe)
             </label>
             <p style="font-size:12px;color:#64748b;margin-top:4px;width:100%;">Você será redirecionado para a página segura do Stripe.</p>
           </div>

@@ -108,7 +108,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="wp-hero-inner">
     <div>
-      <div class="wp-hero-badge"><span>📝 WordPress Gerenciado</span></div>
+      <div class="wp-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> WordPress Gerenciado</span></div>
       <h1>Seu WordPress <em>rápido, seguro</em> e sem complicação</h1>
       <p>Hospedagem otimizada com instalação em 1 clique, backups automáticos, SSL grátis e painel simplificado. Foque no conteúdo, a gente cuida da infraestrutura.</p>
       <div class="wp-hero-actions">
@@ -153,25 +153,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="wp-compare">
       <div class="wp-compare-card bad">
-        <h3>❌ Hospedagem compartilhada</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Hospedagem compartilhada</h3>
         <ul>
-          <li>❌ Recursos divididos com centenas de sites</li>
-          <li>❌ Lentidão em horários de pico</li>
-          <li>❌ Sem backups automáticos confiáveis</li>
-          <li>❌ Suporte genérico que não entende WordPress</li>
-          <li>❌ SSL pago ou complicado de configurar</li>
-          <li>❌ Sem isolamento — um site afeta todos</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Recursos divididos com centenas de sites</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Lentidão em horários de pico</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem backups automáticos confiáveis</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Suporte genérico que não entende WordPress</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> SSL pago ou complicado de configurar</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem isolamento — um site afeta todos</li>
         </ul>
       </div>
       <div class="wp-compare-card good">
-        <h3>✅ <?php echo View::e($_nome); ?> WordPress</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo View::e($_nome); ?> WordPress</h3>
         <ul>
-          <li>✅ Container isolado com recursos dedicados</li>
-          <li>✅ Performance consistente 24/7</li>
-          <li>✅ Backups diários automáticos</li>
-          <li>✅ Suporte especializado em WordPress</li>
-          <li>✅ SSL grátis e automático</li>
-          <li>✅ Banco de dados MySQL dedicado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Container isolado com recursos dedicados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Performance consistente 24/7</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups diários automáticos</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte especializado em WordPress</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL grátis e automático</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Banco de dados MySQL dedicado</li>
         </ul>
       </div>
     </div>
@@ -186,15 +186,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="wp-title">Tudo que seu WordPress precisa</h2>
     </div>
     <div class="wp-features">
-      <div class="wp-feat"><div class="wp-feat-icon">🚀</div><h3>Instalação em 1 clique</h3><p>WordPress pré-configurado e otimizado, pronto para usar em segundos. Sem configuração manual.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">🗄️</div><h3>MySQL dedicado</h3><p>Banco de dados exclusivo com backups automáticos. Acesse pelo painel ou phpMyAdmin.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">🔒</div><h3>SSL grátis</h3><p>Certificado SSL Let's Encrypt automático para todos os seus domínios. HTTPS sem custo extra.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">💾</div><h3>Backups diários</h3><p>Seus dados protegidos com backups automáticos. Restaure com um clique a qualquer momento.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">📁</div><h3>Gerenciador de arquivos</h3><p>Edite temas, plugins e uploads direto pelo navegador. Sem FTP, sem complicação.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">🌐</div><h3>Domínio customizado</h3><p>Conecte seu domínio próprio com configuração DNS simplificada e verificação automática.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">📊</div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: sites, bancos, domínios, backups e suporte.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">🛡️</div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Seu site sempre no ar.</p></div>
-      <div class="wp-feat"><div class="wp-feat-icon">💬</div><h3>Suporte WordPress</h3><p>Equipe que entende WordPress de verdade. Chat, ticket e e-mail disponíveis.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3>Instalação em 1 clique</h3><p>WordPress pré-configurado e otimizado, pronto para usar em segundos. Sem configuração manual.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>MySQL dedicado</h3><p>Banco de dados exclusivo com backups automáticos. Acesse pelo painel ou phpMyAdmin.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>SSL grátis</h3><p>Certificado SSL Let's Encrypt automático para todos os seus domínios. HTTPS sem custo extra.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>Backups diários</h3><p>Seus dados protegidos com backups automáticos. Restaure com um clique a qualquer momento.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3>Gerenciador de arquivos</h3><p>Edite temas, plugins e uploads direto pelo navegador. Sem FTP, sem complicação.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Domínio customizado</h3><p>Conecte seu domínio próprio com configuração DNS simplificada e verificação automática.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: sites, bancos, domínios, backups e suporte.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Seu site sempre no ar.</p></div>
+      <div class="wp-feat"><div class="wp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte WordPress</h3><p>Equipe que entende WordPress de verdade. Chat, ticket e e-mail disponíveis.</p></div>
     </div>
   </div>
 </section>

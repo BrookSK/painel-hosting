@@ -99,14 +99,14 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <div class="tpl-grid">
         <?php foreach ($items as $t): ?>
           <div class="tpl-card">
-            <div class="tpl-icon"><?php echo (string)($t['icon'] ?? '📦'); ?></div>
+            <div class="tpl-icon"><?php echo (string)($t['icon'] ?? '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'); ?></div>
             <div class="tpl-name"><?php echo View::e((string)($t['name']??'')); ?></div>
             <div class="tpl-desc"><?php echo View::e((string)($t['description']??'')); ?></div>
             <div class="tpl-meta">
               <span class="tpl-tag"><?php echo View::e((string)($t['docker_image']??'')); ?></span>
               <span class="tpl-tag"><?php echo View::e(I18n::t('eq_apps.porta')); ?>: <?php echo View::e((string)($t['default_port']??'')); ?></span>
-              <?php if (!empty($t['requires_domain'])): ?><span class="tpl-tag">🌐 <?php echo View::e(I18n::t('eq_apps.requer_dominio')); ?></span><?php endif; ?>
-              <?php if (!empty($t['requires_repo'])): ?><span class="tpl-tag">📂 <?php echo View::e(I18n::t('eq_apps.requer_repo')); ?></span><?php endif; ?>
+              <?php if (!empty($t['requires_domain'])): ?><span class="tpl-tag"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <?php echo View::e(I18n::t('eq_apps.requer_dominio')); ?></span><?php endif; ?>
+              <?php if (!empty($t['requires_repo'])): ?><span class="tpl-tag"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <?php echo View::e(I18n::t('eq_apps.requer_repo')); ?></span><?php endif; ?>
             </div>
           </div>
         <?php endforeach; ?>

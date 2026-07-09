@@ -27,7 +27,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <form method="post" action="/equipe/vps/provisionar" style="display:inline;">
       <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
       <input type="hidden" name="vps_id" value="<?php echo $vid; ?>"/>
-      <button class="botao sm" type="submit">🔄 Reprovisionar</button>
+      <button class="botao sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reprovisionar</button>
     </form>
     <a href="/equipe/vps" class="botao ghost sm">← Voltar</a>
   </div>
@@ -42,7 +42,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
 <!-- Job logs -->
 <div class="card-new" style="margin-bottom:16px;">
-  <div class="card-new-title" style="margin-bottom:12px;">📋 Jobs de provisionamento</div>
+  <div class="card-new-title" style="margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Jobs de provisionamento</div>
   <?php if (empty($logs)): ?>
     <p style="color:#94a3b8;font-size:13px;">Nenhum job encontrado para esta VPS. O worker pode não estar rodando (<code>php worker.php</code>).</p>
   <?php else: ?>
@@ -77,7 +77,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <!-- Audit logs -->
 <?php if (!empty($auditLogs)): ?>
 <div class="card-new">
-  <div class="card-new-title" style="margin-bottom:12px;">🔍 Audit log</div>
+  <div class="card-new-title" style="margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Audit log</div>
   <div style="overflow:auto;">
     <table style="font-size:13px;">
       <thead>

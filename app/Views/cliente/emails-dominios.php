@@ -50,7 +50,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <?php if (empty($dominios)): ?>
       <div style="text-align:center;padding:32px 0;color:#94a3b8;">
-        <div style="font-size:32px;margin-bottom:8px;">🌐</div>
+        <div style="font-size:32px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
         <div style="font-size:14px;">Nenhum domínio cadastrado ainda.</div>
         <div style="font-size:13px;margin-top:4px;">Adicione seu domínio ao lado para começar.</div>
       </div>
@@ -81,7 +81,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
               <?php if (($d['status'] ?? '') === 'active'): ?>
                 <?php $wmEnabled = (int)($d['webmail_enabled'] ?? 0); $wmVerified = (int)($d['webmail_verified'] ?? 0); ?>
                 <?php if ($wmEnabled && $wmVerified): ?>
-                  <a href="https://webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?>/SOGo" target="_blank" rel="noopener" class="botao sm" style="background:#10b981;">🌐 webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?></a>
+                  <a href="https://webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?>/SOGo" target="_blank" rel="noopener" class="botao sm" style="background:#10b981;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> webmail.<?php echo View::e((string)($d['domain'] ?? '')); ?></a>
                 <?php elseif ($wmEnabled && !$wmVerified): ?>
                   <form method="post" action="/cliente/emails/dominios/webmail-verificar" style="display:inline;">
                     <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
@@ -93,7 +93,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
                   <form method="post" action="/cliente/emails/dominios/webmail-ativar" style="display:inline;">
                     <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                     <input type="hidden" name="dominio_id" value="<?php echo $did; ?>" />
-                    <button class="botao sm ghost" type="submit" title="<?php echo View::e(I18n::t('emails.webmail_personalizado_hint')); ?>">🌐 <?php echo View::e(I18n::t('emails.ativar_webmail')); ?></button>
+                    <button class="botao sm ghost" type="submit" title="<?php echo View::e(I18n::t('emails.webmail_personalizado_hint')); ?>"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <?php echo View::e(I18n::t('emails.ativar_webmail')); ?></button>
                   </form>
                 <?php endif; ?>
               <?php endif; ?>

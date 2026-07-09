@@ -46,7 +46,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <?php if (empty($planos)): ?>
   <div class="card-new" style="text-align:center;padding:40px;">
-    <div style="font-size:36px;margin-bottom:12px;">📋</div>
+    <div style="font-size:36px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>
     <div style="font-size:15px;font-weight:600;margin-bottom:8px;">Nenhum outro plano disponível</div>
     <div style="font-size:13px;color:#64748b;">Não há outros planos do tipo <?php echo View::e($badge[0]); ?> disponíveis no momento.</div>
   </div>
@@ -103,7 +103,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <!-- Info -->
 <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:10px;">
-  <span style="font-size:18px;">💡</span>
+  <span style="font-size:18px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
   <div style="font-size:13px;color:#1e40af;line-height:1.6;">
     <strong>Como funciona:</strong> A alteração de plano é imediata. Os novos recursos (CPU, RAM, disco) são aplicados automaticamente no seu servidor. O valor da assinatura é atualizado a partir da próxima cobrança.
   </div>

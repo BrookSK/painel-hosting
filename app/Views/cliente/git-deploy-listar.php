@@ -20,7 +20,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <?php if (empty($deployments)): ?>
 <div class="card-new" style="text-align:center;padding:48px 24px;">
-  <div style="font-size:40px;margin-bottom:12px;">🚀</div>
+  <div style="font-size:40px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
   <div style="font-size:16px;font-weight:600;margin-bottom:8px;">Nenhum repositório conectado</div>
   <div style="font-size:13px;color:#64748b;margin-bottom:20px;">Conecte um repositório Git para fazer deploy automático na sua VPS.</div>
   <a href="/cliente/git-deploy/novo" class="botao">Conectar repositório</a>
@@ -37,7 +37,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     $lastAt = (string)($d['last_deployed_at'] ?? '');
     $lastAuthor = (string)($d['last_commit_author'] ?? '');
     $appType = (string)($d['app_type'] ?? 'php');
-    $appTypeIcon = match($appType) { 'nodejs' => '🟢', 'python' => '🐍', 'static' => '📄', default => '🐘' };
+    $appTypeIcon = match($appType) { 'nodejs' => '🟢', 'python' => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg>', 'static' => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', default => '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>' };
     $appTypeLabel = match($appType) { 'nodejs' => 'Node.js', 'python' => 'Python', 'static' => 'Estático', default => 'PHP' };
   ?>
   <div class="card-new" id="dep-<?php echo $did; ?>">
@@ -49,7 +49,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
             · <span style="color:#f59e0b;">:<?php echo (int)$d['app_port']; ?></span>
           <?php endif; ?>
           <?php if (!empty($d['subdomain'])): ?>
-            · <a href="https://<?php echo View::e((string)$d['subdomain']); ?>" target="_blank" rel="noopener" style="color:#10b981;font-family:system-ui;">🌐 <?php echo View::e((string)$d['subdomain']); ?></a>
+            · <a href="https://<?php echo View::e((string)$d['subdomain']); ?>" target="_blank" rel="noopener" style="color:#10b981;font-family:system-ui;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <?php echo View::e((string)$d['subdomain']); ?></a>
           <?php endif; ?>
         </div>
       </div>
@@ -73,19 +73,19 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <button class="botao sm" id="btn-deploy-<?php echo $did; ?>" onclick="executarDeploy(<?php echo $did; ?>)">▶ Deploy agora</button>
-      <button class="botao sm ghost" onclick="verLogs(<?php echo $did; ?>)">📋 Histórico</button>
-      <a href="/cliente/arquivos?vps_id=<?php echo (int)($d['vps_id'] ?? 0); ?>&path=<?php echo urlencode((string)($d['deploy_path'] ?? '/var/www/html')); ?>&direct=1" class="botao sm ghost" title="Ver arquivos">📁 Arquivos</a>
-      <button class="botao sm ghost" onclick="toggleConsole(<?php echo $did; ?>)" title="Executar comandos na pasta do projeto">💻 Console</button>
+      <button class="botao sm ghost" onclick="verLogs(<?php echo $did; ?>)"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Histórico</button>
+      <a href="/cliente/arquivos?vps_id=<?php echo (int)($d['vps_id'] ?? 0); ?>&path=<?php echo urlencode((string)($d['deploy_path'] ?? '/var/www/html')); ?>&direct=1" class="botao sm ghost" title="Ver arquivos"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Arquivos</a>
+      <button class="botao sm ghost" onclick="toggleConsole(<?php echo $did; ?>)" title="Executar comandos na pasta do projeto"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Console</button>
       <?php if ($appType === 'nodejs'): ?>
-      <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 restart deploy-<?php echo $did; ?> 2>&1 && pm2 status deploy-<?php echo $did; ?> 2>&1')" title="Reiniciar processo Node.js">🔄 Reiniciar</button>
+      <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 restart deploy-<?php echo $did; ?> 2>&1 && pm2 status deploy-<?php echo $did; ?> 2>&1')" title="Reiniciar processo Node.js"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reiniciar</button>
       <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 logs deploy-<?php echo $did; ?> --lines 30 --nostream 2>&1')" title="Ver logs PM2">📜 Logs PM2</button>
       <?php endif; ?>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
-      <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor">📋 Logs servidor</button>
+      <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs servidor</button>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirm('Remover esta integração?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $did; ?>" />
-        <button class="botao danger sm" type="submit">🗑 Remover</button>
+        <button class="botao danger sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remover</button>
       </form>
       <span id="deploy-status-<?php echo $did; ?>" style="font-size:12px;color:#64748b;"></span>
     </div>
@@ -95,9 +95,9 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="color:#64748b;">📂 <?php echo View::e((string)($d['deploy_path'] ?? '/var/www/html')); ?></span>
         <div style="display:flex;gap:4px;">
-          <button onclick="runQuickCmd(<?php echo $did; ?>,'curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs 2>&1 && node -v && npm -v && (test -f package.json && npm install 2>&1 || true)')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Node.js + npm install">📦 Node.js</button>
-          <button onclick="runQuickCmd(<?php echo $did; ?>,'(which composer >/dev/null 2>&1 || (curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 2>&1)) && composer install --no-interaction --no-dev 2>&1')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Composer + dependências">📦 Composer</button>
-          <button onclick="runQuickCmd(<?php echo $did; ?>,'apt-get update -qq && apt-get install -y -qq python3 python3-pip 2>&1 && python3 --version && (test -f requirements.txt && pip3 install -r requirements.txt 2>&1 || true)')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Python + dependências">📦 Python</button>
+          <button onclick="runQuickCmd(<?php echo $did; ?>,'curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs 2>&1 && node -v && npm -v && (test -f package.json && npm install 2>&1 || true)')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Node.js + npm install"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Node.js</button>
+          <button onclick="runQuickCmd(<?php echo $did; ?>,'(which composer >/dev/null 2>&1 || (curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 2>&1)) && composer install --no-interaction --no-dev 2>&1')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Composer + dependências"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Composer</button>
+          <button onclick="runQuickCmd(<?php echo $did; ?>,'apt-get update -qq && apt-get install -y -qq python3 python3-pip 2>&1 && python3 --version && (test -f requirements.txt && pip3 install -r requirements.txt 2>&1 || true)')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Instalar Python + dependências"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Python</button>
         </div>
       </div>
       <div id="console-output-<?php echo $did; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-bottom:8px;"></div>
@@ -115,13 +115,13 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     <div id="server-logs-<?php echo $did; ?>" style="display:none;margin-top:12px;background:#0b1020;border-radius:8px;padding:12px;font-family:monospace;font-size:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div style="display:flex;gap:6px;">
-          <span style="color:#64748b;font-size:11px;">📋 Logs do servidor</span>
+          <span style="color:#64748b;font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs do servidor</span>
           <button onclick="carregarServerLogs(<?php echo $did; ?>,'all')" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">Todos</button>
           <button onclick="carregarServerLogs(<?php echo $did; ?>,'nginx')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">Nginx</button>
           <button onclick="carregarServerLogs(<?php echo $did; ?>,'php')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">PHP</button>
           <button onclick="carregarServerLogs(<?php echo $did; ?>,'app')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">App</button>
         </div>
-        <button onclick="carregarServerLogs(<?php echo $did; ?>,'all')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:11px;">🔄</button>
+        <button onclick="carregarServerLogs(<?php echo $did; ?>,'all')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
       </div>
       <pre id="server-logs-output-<?php echo $did; ?>" style="color:#e2e8f0;white-space:pre-wrap;max-height:400px;overflow-y:auto;margin:0;">Carregando...</pre>
     </div>

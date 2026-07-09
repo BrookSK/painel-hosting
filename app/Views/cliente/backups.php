@@ -68,7 +68,7 @@ function _bkSize(int $bytes): string {
     <form method="post" action="/cliente/backups/criar" onsubmit="return confirm('Criar um novo backup? Se o limite for atingido, o mais antigo será removido.')">
       <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
       <input type="hidden" name="vps_id" value="<?php echo $vId; ?>" />
-      <button class="botao sm" type="submit">💾 Criar backup</button>
+      <button class="botao sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Criar backup</button>
     </form>
     <?php else: ?>
     <span style="font-size:12px;color:#94a3b8;">Plano sem backup</span>
@@ -104,7 +104,7 @@ function _bkSize(int $bytes): string {
                 <form method="post" action="/cliente/backups/restaurar" style="display:inline;" onsubmit="return confirm('Restaurar este backup? Os dados atuais da VPS serão substituídos.')">
                   <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                   <input type="hidden" name="id" value="<?php echo $bId; ?>" />
-                  <button class="botao sm" type="submit" style="font-size:11px;background:#f59e0b;">🔄 Restaurar</button>
+                  <button class="botao sm" type="submit" style="font-size:11px;background:#f59e0b;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Restaurar</button>
                 </form>
               <?php elseif (($b['status'] ?? '') === 'failed'): ?>
                 <span style="font-size:11px;color:#ef4444;" title="<?php echo View::e((string)($b['error'] ?? '')); ?>">Erro</span>
@@ -123,7 +123,7 @@ function _bkSize(int $bytes): string {
 
 <?php if (empty($vpsList)): ?>
 <div class="card-new" style="text-align:center;padding:32px;">
-  <div style="font-size:28px;margin-bottom:8px;">💾</div>
+  <div style="font-size:28px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div>
   <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Nenhuma VPS ativa</div>
   <div style="font-size:13px;color:#64748b;">Assine um plano para ter acesso a backups.</div>
 </div>

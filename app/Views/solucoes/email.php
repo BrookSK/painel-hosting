@@ -116,7 +116,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="em-hero-inner">
     <div>
-      <div class="em-hero-badge"><span>💬 Comunicação</span></div>
+      <div class="em-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Comunicação</span></div>
       <h1>E-mail profissional, chat e <em>suporte integrado</em></h1>
       <p>E-mail com domínio próprio, chat em tempo real, sistema de tickets e suporte técnico. Toda a comunicação da sua empresa em um só lugar.</p>
       <div class="em-hero-actions">
@@ -127,7 +127,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="em-hero-visual">
       <div class="em-mock-bar"><div class="em-mock-dot"></div><div class="em-mock-dot"></div><div class="em-mock-dot"></div></div>
       <div class="em-inbox-header">
-        <div class="title">📬 Caixa de Entrada</div>
+        <div class="title"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> Caixa de Entrada</div>
         <div class="badge">3 novas</div>
       </div>
       <div class="em-mail-item unread">
@@ -155,7 +155,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
         <div class="em-mail-time">Ontem</div>
       </div>
       <div class="em-chat-bubble">
-        <div class="icon">💬</div>
+        <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <div>Nova mensagem no chat: "Oi, preciso de ajuda com o DNS..."</div>
       </div>
     </div>
@@ -182,25 +182,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     </div>
     <div class="em-compare">
       <div class="em-compare-card bad">
-        <h3>❌ Comunicação fragmentada</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Comunicação fragmentada</h3>
         <ul>
-          <li>❌ E-mail genérico (@gmail, @hotmail)</li>
-          <li>❌ Chat em uma ferramenta, e-mail em outra</li>
-          <li>❌ Sem sistema de tickets organizado</li>
-          <li>❌ Spam sem controle eficiente</li>
-          <li>❌ Sem criptografia garantida</li>
-          <li>❌ Suporte por canais desconectados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> E-mail genérico (@gmail, @hotmail)</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Chat em uma ferramenta, e-mail em outra</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem sistema de tickets organizado</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Spam sem controle eficiente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem criptografia garantida</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Suporte por canais desconectados</li>
         </ul>
       </div>
       <div class="em-compare-card good">
-        <h3>✅ Comunicação <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Comunicação <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li>✅ E-mail com seu domínio (voce@suaempresa.com)</li>
-          <li>✅ Chat e e-mail integrados no mesmo painel</li>
-          <li>✅ Tickets com prioridade, status e histórico</li>
-          <li>✅ Anti-spam inteligente com filtros avançados</li>
-          <li>✅ SSL/TLS em todas as conexões</li>
-          <li>✅ Suporte técnico unificado via chat e ticket</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> E-mail com seu domínio (voce@suaempresa.com)</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Chat e e-mail integrados no mesmo painel</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tickets com prioridade, status e histórico</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Anti-spam inteligente com filtros avançados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL/TLS em todas as conexões</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte técnico unificado via chat e ticket</li>
         </ul>
       </div>
     </div>
@@ -215,15 +215,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
       <h2 class="em-title">Tudo para sua comunicação profissional</h2>
     </div>
     <div class="em-features">
-      <div class="em-feat"><div class="em-feat-icon">📧</div><h3>E-mail com domínio próprio</h3><p>Crie contas como contato@suaempresa.com. Credibilidade profissional para sua marca.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">🌐</div><h3>Webmail integrado</h3><p>Acesse seus e-mails pelo navegador de qualquer lugar. Interface moderna e responsiva.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">💬</div><h3>Chat em tempo real</h3><p>Converse com sua equipe e clientes em tempo real. Histórico salvo e notificações.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">🎫</div><h3>Sistema de tickets</h3><p>Organize solicitações com prioridade, status, atribuição e histórico completo.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">🛠️</div><h3>Suporte técnico</h3><p>Equipe disponível via chat, ticket e e-mail. Respostas rápidas e especializadas.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">🛡️</div><h3>Anti-spam</h3><p>Filtros inteligentes que bloqueiam spam antes de chegar na sua caixa. Listas personalizáveis.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">🔒</div><h3>SSL/TLS</h3><p>Todas as conexões criptografadas. IMAP, SMTP e POP3 com TLS obrigatório.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">👥</div><h3>Múltiplas contas</h3><p>Crie quantas contas de e-mail precisar. Cada colaborador com sua caixa própria.</p></div>
-      <div class="em-feat"><div class="em-feat-icon">↗️</div><h3>Encaminhamento</h3><p>Redirecione e-mails entre contas ou para endereços externos. Aliases e catch-all disponíveis.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg></div><h3>E-mail com domínio próprio</h3><p>Crie contas como contato@suaempresa.com. Credibilidade profissional para sua marca.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Webmail integrado</h3><p>Acesse seus e-mails pelo navegador de qualquer lugar. Interface moderna e responsiva.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Chat em tempo real</h3><p>Converse com sua equipe e clientes em tempo real. Histórico salvo e notificações.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></div><h3>Sistema de tickets</h3><p>Organize solicitações com prioridade, status, atribuição e histórico completo.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><h3>Suporte técnico</h3><p>Equipe disponível via chat, ticket e e-mail. Respostas rápidas e especializadas.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Anti-spam</h3><p>Filtros inteligentes que bloqueiam spam antes de chegar na sua caixa. Listas personalizáveis.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>SSL/TLS</h3><p>Todas as conexões criptografadas. IMAP, SMTP e POP3 com TLS obrigatório.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Múltiplas contas</h3><p>Crie quantas contas de e-mail precisar. Cada colaborador com sua caixa própria.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></div><h3>Encaminhamento</h3><p>Redirecione e-mails entre contas ou para endereços externos. Aliases e catch-all disponíveis.</p></div>
     </div>
   </div>
 </section>

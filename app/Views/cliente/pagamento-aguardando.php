@@ -44,7 +44,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php if ($pago): ?>
   <!-- PAGAMENTO CONFIRMADO -->
   <div class="card-new" style="text-align:center;padding:32px 20px;">
-    <div style="font-size:48px;margin-bottom:12px;">✅</div>
+    <div style="font-size:48px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
     <div style="font-size:20px;font-weight:700;margin-bottom:8px;"><?php echo View::e(I18n::t('pagamento.confirmado_titulo')); ?></div>
     <p style="font-size:14px;color:#64748b;margin-bottom:20px;"><?php echo View::e(I18n::t('pagamento.confirmado_sub')); ?></p>
     <a class="botao" href="/cliente/assinaturas"><?php echo View::e(I18n::t('pagamento.ver_assinaturas')); ?></a>
@@ -89,10 +89,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <!-- BOLETO -->
   <div class="card-new" style="padding:24px 20px;">
     <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:48px;margin-bottom:8px;">📄</div>
+      <div style="font-size:48px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       <div style="font-size:18px;font-weight:700;margin-bottom:4px;"><?php echo View::e(I18n::t('pagamento.boleto_titulo')); ?></div>
       <div style="background:#fef3c7;color:#92400e;padding:8px 16px;border-radius:10px;font-size:13px;display:inline-block;margin-top:8px;">
-        ⚠️ <?php echo View::e(I18n::t('pagamento.boleto_aviso')); ?>
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;color:#92400e;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <?php echo View::e(I18n::t('pagamento.boleto_aviso')); ?>
       </div>
     </div>
 
@@ -123,13 +123,13 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <!-- CARTÃO DE CRÉDITO (Asaas) -->
   <div class="card-new" style="padding:24px 20px;" id="card-area">
     <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:36px;margin-bottom:8px;">💳</div>
+      <div style="font-size:36px;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
       <div style="font-size:18px;font-weight:700;"><?php echo View::e(I18n::t('pagamento.cartao_titulo')); ?></div>
     </div>
 
     <div id="card-erro" style="display:none;background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;text-align:center;"></div>
     <div id="card-sucesso" style="display:none;background:#f0fdf4;color:#16a34a;padding:16px;border-radius:10px;font-size:14px;text-align:center;">
-      ✅ <?php echo View::e(I18n::t('pagamento.cartao_sucesso')); ?>
+      <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo View::e(I18n::t('pagamento.cartao_sucesso')); ?>
     </div>
 
     <form id="form-cartao" onsubmit="return enviarCartao(event)">

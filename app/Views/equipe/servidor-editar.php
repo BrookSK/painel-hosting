@@ -80,8 +80,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;margin-bottom:6px;">Função</label>
         <?php $srvRole = (string)($servidor['role'] ?? 'vps'); ?>
         <select class="input" name="role" id="srv-role" onchange="toggleEmailTutorial()">
-          <option value="vps" <?php echo $srvRole === 'vps' ? 'selected' : ''; ?>>🖥️ VPS (clientes)</option>
-          <option value="email" <?php echo $srvRole === 'email' ? 'selected' : ''; ?>>📧 E-mail (Mailcow)</option>
+          <option value="vps" <?php echo $srvRole === 'vps' ? 'selected' : ''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> VPS (clientes)</option>
+          <option value="email" <?php echo $srvRole === 'email' ? 'selected' : ''; ?>><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> E-mail (Mailcow)</option>
         </select>
         <p class="texto" style="font-size:12px;margin-top:4px;">Servidores de e-mail não recebem VPS de clientes.</p>
       </div>
@@ -90,7 +90,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div style="margin-top:12px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
         <input type="checkbox" name="is_test" value="1" <?php echo !empty($servidor['is_test']) ? 'checked' : ''; ?> style="accent-color:#f59e0b;width:16px;height:16px;" />
-        <span>🧪 Servidor de teste</span>
+        <span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Servidor de teste</span>
       </label>
       <p class="texto" style="font-size:12px;margin-top:4px;">Servidores de teste só são usados por clientes marcados como "tester". Clientes normais nunca recebem VPS neste servidor.</p>
     </div>
@@ -98,7 +98,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     <div style="margin-top:8px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
         <input type="checkbox" name="is_managed_server" value="1" <?php echo !empty($servidor['is_managed_server']) ? 'checked' : ''; ?> style="accent-color:#0ea5e9;width:16px;height:16px;" />
-        <span>🔧 Servidor para clientes gerenciados</span>
+        <span><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Servidor para clientes gerenciados</span>
       </label>
       <p class="texto" style="font-size:12px;margin-top:4px;">VPS de clientes gerenciados são provisionadas neste servidor sem limites de recursos (overselling). Os recursos do plano aparecem para o cliente, mas o container não tem caps.</p>
     </div>
@@ -110,25 +110,25 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
 
     <div style="margin-top:14px;">
-      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🌐 Caminho dos vhosts Nginx</label>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Caminho dos vhosts Nginx</label>
       <input class="input" type="text" name="nginx_vhost_path" value="<?php echo View::e((string)($servidor['nginx_vhost_path'] ?? '')); ?>" placeholder="/etc/nginx/sites-available/lrv" />
       <p class="texto" style="font-size:12px;margin-top:4px;">Diretório onde os vhosts Nginx são criados. Deixe vazio para o padrão (<code>/etc/nginx/sites-available/lrv</code>). Para servidores com aaPanel, use <code>/www/server/panel/vhost/nginx</code>.</p>
     </div>
 
     <div style="margin-top:14px;">
-      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🔄 Comando de reload do Nginx</label>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Comando de reload do Nginx</label>
       <input class="input" type="text" name="nginx_reload_cmd" value="<?php echo View::e((string)($servidor['nginx_reload_cmd'] ?? '')); ?>" placeholder="systemctl reload nginx" />
       <p class="texto" style="font-size:12px;margin-top:4px;">Comando para recarregar o Nginx após criar/remover vhosts. Padrão: <code>systemctl reload nginx</code>. Para aaPanel: <code>/etc/init.d/nginx reload</code>.</p>
     </div>
 
     <div style="margin-top:14px;">
-      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🐬 URL do phpMyAdmin</label>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> URL do phpMyAdmin</label>
       <input class="input" type="text" name="phpmyadmin_url" value="<?php echo View::e((string)($servidor['phpmyadmin_url'] ?? '')); ?>" placeholder="http://ip:888/phpmyadmin_xxx/index.php" />
       <p class="texto" style="font-size:12px;margin-top:4px;">URL do phpMyAdmin deste servidor. Para aaPanel, copie a URL do phpMyAdmin do painel (ex: <code>http://ip:888/phpmyadmin_xxx/</code>). Quando preenchida, o botão "phpMyAdmin" aparece para os clientes na tela de bancos de dados.</p>
     </div>
 
     <div style="margin-top:14px;">
-      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">🔑 Senha root do MySQL</label>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Senha root do MySQL</label>
       <input class="input" type="password" name="mysql_root_password" value="" autocomplete="new-password" placeholder="<?php echo !empty($servidor['mysql_root_password']) ? '(configurada — deixe vazio para manter)' : ''; ?>" />
       <p class="texto" style="font-size:12px;margin-top:4px;">Senha do usuário root do MySQL/MariaDB neste servidor. Necessária para servidores gerenciados com aaPanel — o sistema usa para criar e excluir bancos de dados dos clientes. Para aaPanel: <code>sudo sqlite3 /www/server/panel/data/default.db "SELECT mysql_root FROM config LIMIT 1;"</code></p>
       <?php if (!empty($servidor['mysql_root_password'])): ?>
@@ -274,7 +274,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
 <!-- Tutorial Mailcow (visível quando role=email) -->
 <div id="email-tutorial" class="card-new" style="margin-top:16px;max-width:920px;display:<?php echo $srvRole === 'email' ? 'block' : 'none'; ?>;">
-  <div class="card-new-title" style="margin-bottom:8px;">📧 Configuração do servidor de e-mail (Mailcow)</div>
+  <div class="card-new-title" style="margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> Configuração do servidor de e-mail (Mailcow)</div>
   <p class="texto" style="margin:0 0 12px;font-size:13px;">Siga estes passos para instalar o Mailcow neste servidor:</p>
   <ol style="padding-left:18px;font-size:13px;color:#475569;line-height:2.2;">
     <li>Acesse o servidor via SSH como root</li>
