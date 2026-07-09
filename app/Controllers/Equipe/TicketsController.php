@@ -232,6 +232,24 @@ final class TicketsController
                             ':b'  => 'A equipe respondeu ao seu ticket "' . $subject . '".',
                             ':cr' => $agora,
                         ]);
+
+                        // Enviar e-mail pro cliente (assíncrono via job)
+                        try {
+                            $stmtEmail = $pdo->prepare('SELECT name, email FROM clients WHERE id = :id LIMIT 1');
+                            $stmtEmail->execute([':id' => $clientId]);
+                            $clientRow = $stmtEmail->fetch();
+                            if (is_array($clientRow)) {
+                                $clientEmail = trim((string) ($clientRow['email'] ?? ''));
+                                if ($clientEmail !== '') {
+                                    $repoJobs->criar('notificar_cliente_ticket', [
+                                        'client_email' => $clientEmail,
+                                        'client_name'  => trim((string) ($clientRow['name'] ?? '')),
+                                        'ticket_id'    => $ticketId,
+                                        'subject'      => $subject,
+                                    ]);
+                                }
+                            }
+                        } catch (\Throwable) {}
                     }
 
                     (new AuditLogService())->registrar(

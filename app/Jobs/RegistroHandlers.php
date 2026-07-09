@@ -630,6 +630,98 @@ final class RegistroHandlers
             }
         });
 
+        // Notificar cliente por e-mail quando equipe responde um ticket
+        $p->registrar('notificar_cliente_ticket', static function (array $payload, ContextoJob $ctx): void {
+            $clientEmail = trim((string) ($payload['client_email'] ?? ''));
+            $clientName  = trim((string) ($payload['client_name'] ?? ''));
+            $ticketId    = (int) ($payload['ticket_id'] ?? 0);
+            $subject     = trim((string) ($payload['subject'] ?? ''));
+
+            if ($clientEmail === '' || $ticketId <= 0) {
+                throw new \InvalidArgumentException('Payload inválido para notificar_cliente_ticket.');
+            }
+
+            $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();
+            $link   = rtrim($appUrl, '/') . '/cliente/tickets/ver?id=' . $ticketId;
+
+            $saudacao = $clientName !== '' ? 'Olá ' . htmlspecialchars($clientName, ENT_QUOTES, 'UTF-8') . ',' : 'Olá,';
+            $corpo = '<p style="margin:0 0 12px;">' . $saudacao . '</p>'
+                   . '<p style="margin:0 0 12px;">Você tem uma nova resposta no ticket <strong>#' . $ticketId . '</strong>'
+                   . ($subject !== '' ? ' — ' . htmlspecialchars($subject, ENT_QUOTES, 'UTF-8') : '') . '.</p>'
+                   . '<p style="margin:0 0 12px;">Acesse o painel para visualizar a resposta completa.</p>';
+
+            $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                'Nova Resposta no Ticket #' . $ticketId,
+                $corpo,
+                'Ver Ticket',
+                $link,
+            );
+
+            try {
+                (new \LRV\App\Services\Email\SmtpMailer())->enviar(
+                    $clientEmail,
+                    'Nova resposta no ticket #' . $ticketId,
+                    $html,
+                    true
+                );
+                $ctx->log('E-mail enviado para ' . $clientEmail . ' (ticket #' . $ticketId . ').');
+            } catch (\Throwable $e) {
+                $ctx->log('Falha ao enviar e-mail: ' . $e->getMessage());
+            }
+        });
+
+        // Notificar cliente por e-mail quando equipe envia mensagem no chat (se cliente offline)
+        $p->registrar('notificar_cliente_chat', static function (array $payload, ContextoJob $ctx): void {
+            $clientEmail = trim((string) ($payload['client_email'] ?? ''));
+            $clientName  = trim((string) ($payload['client_name'] ?? ''));
+            $clientId    = (int) ($payload['client_id'] ?? 0);
+            $roomId      = (int) ($payload['room_id'] ?? 0);
+
+            if ($clientEmail === '' || $roomId <= 0) {
+                throw new \InvalidArgumentException('Payload inválido para notificar_cliente_chat.');
+            }
+
+            // Verificar se o cliente está online no WebSocket (via tabela chat_presence)
+            try {
+                $pdo = BancoDeDados::pdo();
+                $stmt = $pdo->prepare('SELECT id FROM chat_presence WHERE room_id = :r AND client_id = :c LIMIT 1');
+                $stmt->execute([':r' => $roomId, ':c' => $clientId]);
+                if ($stmt->fetch()) {
+                    $ctx->log('Cliente online no WebSocket — e-mail não enviado.');
+                    return;
+                }
+            } catch (\Throwable) {
+                // Se falhar a verificação, envia o e-mail por precaução
+            }
+
+            $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();
+            $link   = rtrim($appUrl, '/') . '/cliente/chat';
+
+            $saudacao = $clientName !== '' ? 'Olá ' . htmlspecialchars($clientName, ENT_QUOTES, 'UTF-8') . ',' : 'Olá,';
+            $corpo = '<p style="margin:0 0 12px;">' . $saudacao . '</p>'
+                   . '<p style="margin:0 0 12px;">Você tem uma nova mensagem no chat de suporte.</p>'
+                   . '<p style="margin:0 0 12px;">Acesse o painel para continuar a conversa.</p>';
+
+            $html = \LRV\App\Services\Email\EmailTemplate::renderizar(
+                'Nova Mensagem no Chat',
+                $corpo,
+                'Abrir Chat',
+                $link,
+            );
+
+            try {
+                (new \LRV\App\Services\Email\SmtpMailer())->enviar(
+                    $clientEmail,
+                    'Nova mensagem no chat de suporte',
+                    $html,
+                    true
+                );
+                $ctx->log('E-mail enviado para ' . $clientEmail . ' (chat room #' . $roomId . ').');
+            } catch (\Throwable $e) {
+                $ctx->log('Falha ao enviar e-mail: ' . $e->getMessage());
+            }
+        });
+
         $p->registrar('limpar_pendentes_expirados', static function (array $payload, ContextoJob $ctx): void {
             $pdo = BancoDeDados::pdo();
             $horasExpiracao = (int) ($payload['horas'] ?? 48);

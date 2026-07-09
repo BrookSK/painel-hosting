@@ -108,6 +108,15 @@ final class ChatWsApp implements MessageComponentInterface
 
             $this->rooms[$roomId][] = $conn;
 
+            // Registrar presença do cliente no banco (para verificação HTTP)
+            if ($senderType === 'client') {
+                try {
+                    $pdoP = BancoDeDados::pdo();
+                    $pdoP->prepare('INSERT INTO chat_presence (room_id, client_id, connected_at) VALUES (:r, :c, NOW())')
+                        ->execute([':r' => $roomId, ':c' => $senderId]);
+                } catch (\Throwable) {}
+            }
+
             // Enviar histórico
             $historico = $this->messages->historico($roomId);
             $conn->send(json_encode(['type' => 'history', 'messages' => $historico]));
@@ -204,6 +213,47 @@ final class ChatWsApp implements MessageComponentInterface
 
         // Enviar para todos na room (incluindo remetente)
         $this->broadcastAll($roomId, $payload);
+
+        // Se admin enviou mensagem e cliente NÃO está conectado no WS, notificar por e-mail
+        if ($senderType === 'admin') {
+            $clienteOnline = false;
+            foreach ($this->rooms[$roomId] ?? [] as $c) {
+                if (isset($this->conns[$c])) {
+                    $cMeta = $this->conns[$c];
+                    if (($cMeta['sender_type'] ?? '') === 'client') {
+                        $clienteOnline = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$clienteOnline) {
+                try {
+                    $pdoN = BancoDeDados::pdo();
+                    $stmtR = $pdoN->prepare(
+                        'SELECT r.client_id, c.name AS client_name, c.email AS client_email
+                         FROM chat_rooms r
+                         INNER JOIN clients c ON c.id = r.client_id
+                         WHERE r.id = :r LIMIT 1'
+                    );
+                    $stmtR->execute([':r' => $roomId]);
+                    $roomData = $stmtR->fetch();
+
+                    if (is_array($roomData)) {
+                        $clientEmail = trim((string) ($roomData['client_email'] ?? ''));
+                        $clientId    = (int) ($roomData['client_id'] ?? 0);
+                        if ($clientEmail !== '' && $clientId > 0) {
+                            (new \LRV\Core\Jobs\RepositorioJobs())->criar('notificar_cliente_chat', [
+                                'client_email' => $clientEmail,
+                                'client_name'  => trim((string) ($roomData['client_name'] ?? '')),
+                                'client_id'    => $clientId,
+                                'room_id'      => $roomId,
+                            ]);
+                        }
+                    }
+                } catch (\Throwable) {}
+            }
+        }
     }
 
     public function onClose($conn): void
@@ -214,6 +264,8 @@ final class ChatWsApp implements MessageComponentInterface
 
         $meta   = $this->conns[$conn];
         $roomId = (int) ($meta['room_id'] ?? 0);
+        $senderType = (string) ($meta['sender_type'] ?? '');
+        $senderId   = (int) ($meta['sender_id'] ?? 0);
 
         $this->conns->detach($conn);
 
@@ -225,6 +277,15 @@ final class ChatWsApp implements MessageComponentInterface
             if (empty($this->rooms[$roomId])) {
                 unset($this->rooms[$roomId]);
             }
+        }
+
+        // Remover presença do cliente no banco
+        if ($senderType === 'client' && $senderId > 0 && $roomId > 0) {
+            try {
+                $pdoP = BancoDeDados::pdo();
+                $pdoP->prepare('DELETE FROM chat_presence WHERE room_id = :r AND client_id = :c')
+                    ->execute([':r' => $roomId, ':c' => $senderId]);
+            } catch (\Throwable) {}
         }
     }
 
