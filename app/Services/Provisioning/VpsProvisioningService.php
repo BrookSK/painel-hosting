@@ -292,6 +292,45 @@ final class VpsProvisioningService
             } catch (\Throwable $e) {
                 $log('Aviso ao limpar aplicações: ' . $e->getMessage());
             }
+
+            // Remover bancos de dados associados à VPS
+            try {
+                $pdo->prepare('DELETE FROM client_databases WHERE vps_id = :vid')->execute([':vid' => $vpsId]);
+                $log('Bancos de dados do cliente removidos.');
+            } catch (\Throwable $e) {
+                $log('Aviso ao limpar bancos de dados: ' . $e->getMessage());
+            }
+
+            // Remover git deployments associados à VPS
+            try {
+                // Liberar subdomínios usados por git_deploys desta VPS
+                $gdIds = $pdo->prepare('SELECT id FROM git_deployments WHERE vps_id = :vid');
+                $gdIds->execute([':vid' => $vpsId]);
+                $gdRows = $gdIds->fetchAll() ?: [];
+                foreach ($gdRows as $gd) {
+                    $pdo->prepare("UPDATE client_subdomains SET used_by_type = NULL, used_by_id = NULL WHERE used_by_type = 'git_deploy' AND used_by_id = :eid")
+                        ->execute([':eid' => (int)$gd['id']]);
+                }
+
+                $pdo->prepare('DELETE FROM git_deploy_logs WHERE deployment_id IN (SELECT id FROM git_deployments WHERE vps_id = :vid)')->execute([':vid' => $vpsId]);
+                $pdo->prepare('DELETE FROM git_deployments WHERE vps_id = :vid')->execute([':vid' => $vpsId]);
+                $log('Git deployments removidos.');
+            } catch (\Throwable $e) {
+                $log('Aviso ao limpar git deployments: ' . $e->getMessage());
+            }
+
+            // Limpar referências de subdomínios usados por aplicações desta VPS
+            try {
+                $appIds = $pdo->prepare('SELECT id FROM applications WHERE vps_id = :vid');
+                $appIds->execute([':vid' => $vpsId]);
+                $appRows = $appIds->fetchAll() ?: [];
+                foreach ($appRows as $appRow) {
+                    $pdo->prepare("UPDATE client_subdomains SET used_by_type = NULL, used_by_id = NULL WHERE used_by_type = 'application' AND used_by_id = :eid")
+                        ->execute([':eid' => (int)$appRow['id']]);
+                }
+            } catch (\Throwable $e) {
+                $log('Aviso ao liberar subdomínios de aplicações: ' . $e->getMessage());
+            }
         }
 
         if ($serverId > 0 && $containerId !== '') {
