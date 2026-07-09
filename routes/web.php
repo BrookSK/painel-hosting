@@ -322,6 +322,8 @@ $roteador->post('/cliente/reset-senha/salvar', [ClienteResetSenhaController::cla
 // Minha conta — cliente
 $roteador->get('/cliente/minha-conta', [ClienteMinhaContaController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/minha-conta/salvar', [ClienteMinhaContaController::class, 'salvar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/minha-conta/avatar', [ClienteMinhaContaController::class, 'uploadAvatar'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/minha-conta/avatar/remover', [ClienteMinhaContaController::class, 'removerAvatar'], [Middlewares::exigirLoginCliente()]);
 
 // 2FA cliente
 $roteador->get('/cliente/2fa/configurar', [ClienteDoisFatoresController::class, 'configurar'], [Middlewares::exigirLoginCliente()]);

@@ -130,4 +130,87 @@ final class MinhaContaController
             'erro'    => $erro,
         ]), 422);
     }
+
+    public function uploadAvatar(Requisicao $req): Resposta
+    {
+        $id = Auth::clienteId();
+        if ($id === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $file = $_FILES['avatar'] ?? null;
+        if (!is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return Resposta::json(['ok' => false, 'erro' => 'Nenhum arquivo enviado.'], 400);
+        }
+
+        $size = (int)($file['size'] ?? 0);
+        if ($size > 2 * 1024 * 1024) {
+            return Resposta::json(['ok' => false, 'erro' => 'Arquivo muito grande (máx. 2 MB).'], 400);
+        }
+
+        $tmpPath = (string)($file['tmp_name'] ?? '');
+        $origName = (string)($file['name'] ?? '');
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Formato não suportado. Use JPG, PNG, WebP ou GIF.'], 400);
+        }
+
+        // Validar que é realmente uma imagem
+        $imageInfo = @getimagesize($tmpPath);
+        if ($imageInfo === false) {
+            return Resposta::json(['ok' => false, 'erro' => 'Arquivo não é uma imagem válida.'], 400);
+        }
+
+        $storageDir = dirname(__DIR__, 3) . '/public/uploads/avatars';
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0775, true);
+        }
+
+        $safeName = 'client_' . $id . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+        $destPath = $storageDir . '/' . $safeName;
+
+        if (!move_uploaded_file($tmpPath, $destPath)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Falha ao salvar arquivo.'], 500);
+        }
+
+        // Remover avatar antigo
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT avatar FROM clients WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (is_array($row) && !empty($row['avatar'])) {
+            $oldPath = dirname(__DIR__, 3) . '/public' . (string)$row['avatar'];
+            if (is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
+        $avatarPath = '/uploads/avatars/' . $safeName;
+        $pdo->prepare('UPDATE clients SET avatar = :a WHERE id = :id')
+            ->execute([':a' => $avatarPath, ':id' => $id]);
+
+        return Resposta::json(['ok' => true, 'avatar_url' => $avatarPath]);
+    }
+
+    public function removerAvatar(Requisicao $req): Resposta
+    {
+        $id = Auth::clienteId();
+        if ($id === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT avatar FROM clients WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        if (is_array($row) && !empty($row['avatar'])) {
+            $oldPath = dirname(__DIR__, 3) . '/public' . (string)$row['avatar'];
+            if (is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
+        $pdo->prepare('UPDATE clients SET avatar = NULL WHERE id = :id')
+            ->execute([':id' => $id]);
+
+        return Resposta::json(['ok' => true]);
+    }
 }

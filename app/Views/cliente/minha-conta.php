@@ -36,16 +36,72 @@ if (count($partes) >= 2) {
 <!-- Avatar + info -->
 <div class="card-new" style="margin-bottom:16px;">
   <div style="display:flex;align-items:center;gap:16px;">
-    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0;">
-      <?php echo View::e($iniciais); ?>
+    <?php
+      $avatarPath = trim((string)($cliente['avatar'] ?? ''));
+      $gravatarUrl = 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($clienteEmail))) . '?s=120&d=blank';
+      $avatarUrl = $avatarPath !== '' ? View::e($avatarPath) : $gravatarUrl;
+      $hasAvatar = $avatarPath !== '';
+      // Testar se Gravatar existe (usa d=404 pra check, mas mostramos d=blank como fallback visual)
+    ?>
+    <div style="position:relative;flex-shrink:0;">
+      <div id="avatarContainer" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4F46E5,#7C3AED);font-size:22px;font-weight:700;color:#fff;">
+        <?php if ($hasAvatar): ?>
+          <img id="avatarImg" src="<?php echo $avatarUrl; ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';document.getElementById('avatarInitials').style.display='flex';" />
+          <span id="avatarInitials" style="display:none;"><?php echo View::e($iniciais); ?></span>
+        <?php else: ?>
+          <img id="avatarImg" src="<?php echo $gravatarUrl; ?>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;display:none;" onload="if(this.naturalWidth>1)this.style.display='block'" onerror="this.style.display='none'" />
+          <span id="avatarInitials" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><?php echo View::e($iniciais); ?></span>
+        <?php endif; ?>
+      </div>
+      <label for="avatarInput" style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#4F46E5;border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Alterar foto">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 11.5V14h2.5L12.06 6.44l-2.5-2.5L2 11.5z" fill="#fff"/><path d="M14.35 3.15a.5.5 0 000-.7l-1.8-1.8a.5.5 0 00-.7 0L10.58 1.92l2.5 2.5 1.27-1.27z" fill="#fff"/></svg>
+      </label>
+      <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="uploadAvatar(this)" />
     </div>
     <div>
       <div style="font-size:17px;font-weight:700;color:#0f172a;"><?php echo View::e($clienteNome ?: '—'); ?></div>
       <div style="font-size:13px;color:#64748b;margin-top:2px;"><?php echo View::e($clienteEmail); ?></div>
       <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Cliente #<?php echo (int)($cliente['id'] ?? 0); ?> · desde <?php echo View::e(date('d/m/Y', strtotime((string)($cliente['created_at'] ?? 'now')))); ?></div>
+      <?php if ($hasAvatar): ?>
+        <button type="button" onclick="removerAvatar()" style="margin-top:6px;background:none;border:none;color:#ef4444;font-size:12px;cursor:pointer;padding:0;text-decoration:underline;">Remover foto</button>
+      <?php endif; ?>
     </div>
   </div>
 </div>
+
+<script>
+function uploadAvatar(input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('Arquivo muito grande (máx. 2 MB).'); return; }
+
+  var fd = new FormData();
+  fd.append('avatar', file);
+
+  var csrf = document.querySelector('input[name="_csrf"]');
+  if (csrf) fd.append('_csrf', csrf.value);
+
+  fetch('/cliente/minha-conta/avatar', { method: 'POST', headers: { 'x-csrf-token': csrf ? csrf.value : '' }, body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(json) {
+      if (json.ok) {
+        location.reload();
+      } else {
+        alert(json.erro || 'Erro ao enviar avatar.');
+      }
+    })
+    .catch(function() { alert('Erro de rede.'); });
+}
+
+function removerAvatar() {
+  if (!confirm('Remover foto de perfil?')) return;
+  var csrf = document.querySelector('input[name="_csrf"]');
+  fetch('/cliente/minha-conta/avatar/remover', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf ? csrf.value : '' } })
+    .then(function(r) { return r.json(); })
+    .then(function(json) { if (json.ok) location.reload(); else alert(json.erro || 'Erro.'); })
+    .catch(function() { alert('Erro de rede.'); });
+}
+</script>
 
 <div class="grid">
   <!-- Dados pessoais -->
