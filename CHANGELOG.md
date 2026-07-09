@@ -5,6 +5,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.2.0] — 2026-07-09
+
+### Adicionado
+- Notificações por e-mail para respostas em tickets e mensagens no chat
+
+### Melhorado
+- Git Deploy: deploy key exibida imediatamente após criar a integração
+- Terminal: tela amigável quando não há VPS ativa
+- Remoção de VPS limpa recursos associados (bancos, deploys, referências de domínios)
+
+### Corrigido
+- Sidebar da equipe não expandia ao clicar no botão após ser recolhida
+
+---
+
 ## [3.1.0] — 2026-07-08
 
 ### Adicionado

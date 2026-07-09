@@ -1,6 +1,6 @@
 # LRV Cloud Manager
 
-> Versão atual: **3.1.0**
+> Versão atual: **3.2.0**
 
 Plataforma de gerenciamento de hospedagem cloud em PHP MVC próprio, sem frameworks externos. Suporta múltiplos tipos de produto: VPS, WordPress Gerenciado, Web Hosting, Node.js, PHP/Laravel, Python, C/C++ e App Genérico.
 
