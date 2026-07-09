@@ -2690,4 +2690,17 @@ return [
     'infra.prod_sec_name' => 'Security',
     'infra.prod_sec_desc' => 'DDoS protection, automatic SSL, 2FA and container isolation.',
     'infra.prod_more' => 'Learn more →',
+
+    // ── Home — custom plan ──
+    'home.infra_label' => 'Infra',
+    'home.plans_custom_badge' => 'CUSTOM',
+    'home.plans_custom_name' => 'Custom Plan',
+    'home.plans_custom_desc' => 'Need more resources or want us to manage everything for you? We build an exclusive plan for your project.',
+    'home.plans_custom_price' => 'On request',
+    'home.plans_custom_f1' => 'Custom CPU, RAM and storage',
+    'home.plans_custom_f2' => 'Full infrastructure management',
+    'home.plans_custom_f3' => 'Deploy, monitoring and dedicated support',
+    'home.plans_custom_f4' => 'Ideal for businesses and critical projects',
+    'home.plans_custom_wa' => 'WhatsApp Sales',
+    'home.plans_custom_email' => 'Send email',
 ];

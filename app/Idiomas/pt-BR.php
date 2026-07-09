@@ -2690,4 +2690,17 @@ return [
     'infra.prod_sec_name' => 'Segurança',
     'infra.prod_sec_desc' => 'Proteção DDoS, SSL automático, 2FA e isolamento de containers.',
     'infra.prod_more' => 'Saiba mais →',
+
+    // ── Home — plano personalizado ──
+    'home.infra_label' => 'Infra',
+    'home.plans_custom_badge' => 'PERSONALIZADO',
+    'home.plans_custom_name' => 'Plano Sob Medida',
+    'home.plans_custom_desc' => 'Precisa de mais recursos ou quer que a gente gerencie tudo por você? Montamos um plano exclusivo para o seu projeto.',
+    'home.plans_custom_price' => 'Sob consulta',
+    'home.plans_custom_f1' => 'CPU, RAM e disco sob medida',
+    'home.plans_custom_f2' => 'Gerenciamento completo da infraestrutura',
+    'home.plans_custom_f3' => 'Deploy, monitoramento e suporte dedicado',
+    'home.plans_custom_f4' => 'Ideal para empresas e projetos críticos',
+    'home.plans_custom_wa' => 'WhatsApp Vendas',
+    'home.plans_custom_email' => 'Enviar e-mail',
 ];
