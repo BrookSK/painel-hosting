@@ -48,7 +48,7 @@ $t = fn(string $k) => \LRV\Core\I18n::t($k);
         <p style="color: #94a3b8; margin-bottom: 32px;"><?= $t('api_docs.subtitulo') ?></p>
 
         <div class="status-overall operational" id="statusOverall">
-            <div class="status-indicator">✓</div>
+            <div class="status-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
             <div class="status-text" id="statusText">All Systems Operational</div>
             <div class="status-sub" id="statusSub">Last checked: <span id="lastCheck">—</span></div>
         </div>
@@ -87,7 +87,7 @@ $t = fn(string $k) => \LRV\Core\I18n::t($k);
         </ul>
 
         <div style="text-align:center;margin-top:32px;">
-            <a href="/developers/api" style="color:#3b82f6;">← <?= $t('api_docs.documentacao') ?></a>
+            <a href="/developers/api" style="color:#3b82f6;">&larr; <?= $t('api_docs.documentacao') ?></a>
         </div>
     </div>
 
@@ -105,6 +105,6 @@ $t = fn(string $k) => \LRV\Core\I18n::t($k);
         .catch(() => {});
     </script>
 
-    <?php require __DIR__ . '/../_partials/cookie-banner.php'; ?>
+    <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

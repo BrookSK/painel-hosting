@@ -51,7 +51,7 @@ $t = fn(string $k) => \LRV\Core\I18n::t($k);
             </div>
 
             <div class="changes-section">
-                <h4>🆕 Novidades</h4>
+                <h4>Novidades</h4>
                 <ul>
                     <li class="tag-new">API Pública v1 lançada</li>
                     <li class="tag-new">Autenticação via API Keys e Bearer Tokens</li>
@@ -71,12 +71,12 @@ $t = fn(string $k) => \LRV\Core\I18n::t($k);
         </div>
 
         <div style="text-align:center;margin-top:32px;">
-            <a href="/developers/api" style="color:#3b82f6;">← <?= $t('api_docs.documentacao') ?></a>
+            <a href="/developers/api" style="color:#3b82f6;">&larr; <?= $t('api_docs.documentacao') ?></a>
             &nbsp;&nbsp;|&nbsp;&nbsp;
-            <a href="/developers/api/swagger" style="color:#3b82f6;">API Explorer →</a>
+            <a href="/developers/api/swagger" style="color:#3b82f6;">API Explorer &rarr;</a>
         </div>
     </div>
 
-    <?php require __DIR__ . '/../_partials/cookie-banner.php'; ?>
+    <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>

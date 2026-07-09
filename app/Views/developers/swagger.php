@@ -26,7 +26,7 @@
 </head>
 <body>
     <div class="header-bar">
-        <h1>🔗 LRV Cloud Manager API</h1>
+        <h1><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="vertical-align:middle;margin-right:6px"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>LRV Cloud Manager API</h1>
         <div class="nav-links">
             <a href="/developers/api"><?= \LRV\Core\I18n::t('api_docs.documentacao') ?></a>
             <a href="/api/v1/openapi.yaml" download>OpenAPI YAML</a>

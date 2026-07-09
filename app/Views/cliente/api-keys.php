@@ -140,10 +140,10 @@ function _apiKeyEnvBadge(string $env): string {
 
 <?php if ($novaChave !== ''): ?>
 <div class="api-key-revealed">
-  <div style="font-weight:700;color:#e2e8f0;font-size:14px;">🔑 Your new API Key</div>
+  <div style="font-weight:700;color:#e2e8f0;font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Your new API Key</div>
   <code id="novaChaveTexto"><?php echo View::e($novaChave); ?></code>
   <button class="api-key-copy-btn" onclick="copiarChave()">Copy</button>
-  <div class="warning-text">⚠ Store this key securely. It won't be shown again.</div>
+  <div class="warning-text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Store this key securely. It won't be shown again.</div>
 </div>
 <?php endif; ?>
 
@@ -151,7 +151,7 @@ function _apiKeyEnvBadge(string $env): string {
 <div class="card-new">
 <?php if (empty($keys)): ?>
   <div style="text-align:center;padding:40px 20px;">
-    <div style="font-size:36px;margin-bottom:10px;">🔐</div>
+    <div style="margin-bottom:10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
     <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:4px;">No API Keys yet</div>
     <div style="font-size:13px;color:#94a3b8;">Create your first key to start using the Public API.</div>
   </div>
@@ -201,12 +201,12 @@ function _apiKeyEnvBadge(string $env): string {
               <form method="post" action="/cliente/api-keys/rotacionar" onsubmit="return confirm('Rotate this key? The current key will be revoked and a new one generated.')">
                 <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                 <input type="hidden" name="key_id" value="<?php echo $kId; ?>" />
-                <button class="botao ghost sm" type="submit" style="font-size:11px;" title="Rotate">⟳ Rotate</button>
+                <button class="botao ghost sm" type="submit" style="font-size:11px;" title="Rotate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:middle;margin-right:2px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Rotate</button>
               </form>
               <form method="post" action="/cliente/api-keys/revogar" onsubmit="return confirm('Revoke this API Key? This action cannot be undone.')">
                 <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
                 <input type="hidden" name="key_id" value="<?php echo $kId; ?>" />
-                <button class="botao ghost sm" type="submit" style="font-size:11px;color:#ef4444;" title="Revoke">✕ Revoke</button>
+                <button class="botao ghost sm" type="submit" style="font-size:11px;color:#ef4444;" title="Revoke"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:middle;margin-right:2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Revoke</button>
               </form>
             </div>
             <?php else: ?>

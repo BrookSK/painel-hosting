@@ -174,12 +174,12 @@ $valid = hash_equals($expected, $signature);
 
             <h3><?= $t('api_docs.downloads_titulo') ?></h3>
             <div class="downloads">
-                <a href="/api/v1/openapi.yaml" download>📄 OpenAPI YAML</a>
-                <a href="/api/v1/openapi.json">📄 OpenAPI JSON</a>
-                <a href="/developers/api/postman.json" download>📮 Postman Collection</a>
-                <a href="/developers/api/bruno.json" download>🐻 Bruno Collection</a>
-                <a href="/developers/api/insomnia.json" download>🌙 Insomnia Export</a>
-                <a href="/developers/api/swagger">🧪 API Explorer</a>
+                <a href="/api/v1/openapi.yaml" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg> OpenAPI YAML</a>
+                <a href="/api/v1/openapi.json"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> OpenAPI JSON</a>
+                <a href="/developers/api/postman.json" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Postman Collection</a>
+                <a href="/developers/api/bruno.json" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Bruno Collection</a>
+                <a href="/developers/api/insomnia.json" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Insomnia Export</a>
+                <a href="/developers/api/swagger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> API Explorer</a>
             </div>
 
             <h3 style="margin-top: 24px;">SDKs</h3>
@@ -200,6 +200,6 @@ $valid = hash_equals($expected, $signature);
         </section>
     </div>
 
-    <?php require __DIR__ . '/../_partials/cookie-banner.php'; ?>
+    <?php require __DIR__ . '/../_partials/footer.php'; ?>
 </body>
 </html>
