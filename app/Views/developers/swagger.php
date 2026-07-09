@@ -34,7 +34,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 
 <section class="sw-hero">
     <h1><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> API Explorer</h1>
-    <p>Teste endpoints, autentique e veja respostas em tempo real</p>
+    <p><?= $t('api_swagger.subtitulo') ?></p>
     <div class="sw-hero-links">
         <a href="/developers/api"><?= $t('api_docs.documentacao') ?></a>
         <a href="/api/v1/openapi.yaml" download>OpenAPI YAML</a>

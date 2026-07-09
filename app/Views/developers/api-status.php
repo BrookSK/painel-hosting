@@ -53,29 +53,29 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 <div class="st-content">
     <div class="st-overall" id="statusOverall">
         <svg viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <h2>All Systems Operational</h2>
-        <p>Last checked: <span id="lastCheck">&mdash;</span></p>
+        <h2><?= $t('api_status.todos_operacionais') ?></h2>
+        <p><?= $t('api_status.ultima_verificacao') ?>: <span id="lastCheck">&mdash;</span></p>
     </div>
 
     <div class="st-metrics">
-        <div class="st-metric"><h3>99.9%</h3><p>Uptime (30d)</p></div>
-        <div class="st-metric"><h3>&lt; 50ms</h3><p>Avg Latency</p></div>
-        <div class="st-metric"><h3>v1.0.0</h3><p>Current Version</p></div>
+        <div class="st-metric"><h3>99.9%</h3><p><?= $t('api_status.uptime') ?></p></div>
+        <div class="st-metric"><h3>&lt; 50ms</h3><p><?= $t('api_status.latencia') ?></p></div>
+        <div class="st-metric"><h3>v1.0.0</h3><p><?= $t('api_status.versao_atual') ?></p></div>
         <div class="st-metric"><h3>50+</h3><p>Endpoints</p></div>
     </div>
 
     <div class="st-endpoints">
         <h3>Endpoints</h3>
-        <div class="st-endpoint"><span>Authentication</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Hosting (VPS)</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Tickets</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Subscriptions</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Domains</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Databases</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Backups</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Applications</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Emails</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
-        <div class="st-endpoint"><span>Webhooks</span><span class="st-endpoint-status"><span class="st-dot"></span> Operational</span></div>
+        <div class="st-endpoint"><span><?= $t('api_status.ep_auth') ?></span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span><?= $t('api_status.ep_hosting') ?></span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span>Tickets</span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span><?= $t('api_status.ep_subs') ?></span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span><?= $t('api_status.ep_domains') ?></span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span><?= $t('api_status.ep_databases') ?></span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span>Backups</span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span><?= $t('api_status.ep_apps') ?></span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span>E-mails</span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
+        <div class="st-endpoint"><span>Webhooks</span><span class="st-endpoint-status"><span class="st-dot"></span> <?= $t('api_status.operacional') ?></span></div>
     </div>
 
     <div class="st-back"><a href="/developers/api">&larr; <?= $t('api_docs.documentacao') ?></a></div>

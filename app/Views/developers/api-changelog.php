@@ -39,8 +39,8 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 <?php require __DIR__ . '/../_partials/navbar-publica.php'; ?>
 
 <section class="cl-hero">
-    <h1>API Changelog</h1>
-    <p>Histórico de versões e mudanças da API pública</p>
+    <h1><?= $t('api_changelog.titulo') ?></h1>
+    <p><?= $t('api_changelog.subtitulo') ?></p>
 </section>
 
 <div class="cl-content">
@@ -48,25 +48,25 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
         <div class="cl-version-header">
             <span class="cl-version-tag">v1.0.0</span>
             <span class="cl-version-date">2026-07-09</span>
-            <span class="cl-version-badge">Major Release</span>
+            <span class="cl-version-badge"><?= $t('api_changelog.major_release') ?></span>
         </div>
 
         <div class="cl-changes">
-            <h4>Novidades</h4>
+            <h4><?= $t('api_changelog.novidades') ?></h4>
             <ul>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> API Pública v1 lançada</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Autenticação via API Keys e Bearer Tokens</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Endpoints: Hosting, Tickets, Subscriptions, Domains</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Endpoints: Databases, Backups, Applications, Emails</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Sistema de Webhooks com assinatura HMAC SHA-256</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Rate limiting configurável por API Key</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Logging completo de requisições</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Ambientes Sandbox e Production separados</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Especificação OpenAPI 3.1</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Swagger UI / API Explorer interativo</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Coleções Postman, Bruno e Insomnia</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Documentação pública multilíngue (PT/EN/ES)</li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> SDKs: PHP, JavaScript/TypeScript, Python (estrutura base)</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_lancamento') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_auth') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_endpoints1') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_endpoints2') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_webhooks') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_ratelimit') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_logs') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_sandbox') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_openapi') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_swagger') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_colecoes') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_docs_i18n') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_sdks') ?></li>
             </ul>
         </div>
     </div>

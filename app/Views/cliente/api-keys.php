@@ -9,46 +9,46 @@ $novaChave = (string)($novaChave ?? '');
 $sucesso = (string)($sucesso ?? '');
 $erro = (string)($erro ?? '');
 
-$pageTitle = 'API Keys';
+$pageTitle = I18n::t('api_keys.titulo');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 $escoposDisponiveis = [
-    'clients.read' => 'Clients (Read)',
-    'clients.write' => 'Clients (Write)',
-    'hosting.read' => 'Hosting (Read)',
-    'hosting.write' => 'Hosting (Write)',
-    'tickets.read' => 'Tickets (Read)',
-    'tickets.write' => 'Tickets (Write)',
-    'domains.read' => 'Domains (Read)',
-    'domains.write' => 'Domains (Write)',
-    'billing.read' => 'Billing (Read)',
-    'billing.write' => 'Billing (Write)',
-    'backups.read' => 'Backups (Read)',
-    'backups.write' => 'Backups (Write)',
-    'monitoring.read' => 'Monitoring (Read)',
-    'webhooks.read' => 'Webhooks (Read)',
-    'webhooks.write' => 'Webhooks (Write)',
-    'applications.read' => 'Applications (Read)',
-    'applications.write' => 'Applications (Write)',
-    'databases.read' => 'Databases (Read)',
-    'databases.write' => 'Databases (Write)',
-    'emails.read' => 'Emails (Read)',
-    'emails.write' => 'Emails (Write)',
+    'clients.read' => I18n::t('api_keys.scope_clients_read'),
+    'clients.write' => I18n::t('api_keys.scope_clients_write'),
+    'hosting.read' => I18n::t('api_keys.scope_hosting_read'),
+    'hosting.write' => I18n::t('api_keys.scope_hosting_write'),
+    'tickets.read' => I18n::t('api_keys.scope_tickets_read'),
+    'tickets.write' => I18n::t('api_keys.scope_tickets_write'),
+    'domains.read' => I18n::t('api_keys.scope_domains_read'),
+    'domains.write' => I18n::t('api_keys.scope_domains_write'),
+    'billing.read' => I18n::t('api_keys.scope_billing_read'),
+    'billing.write' => I18n::t('api_keys.scope_billing_write'),
+    'backups.read' => I18n::t('api_keys.scope_backups_read'),
+    'backups.write' => I18n::t('api_keys.scope_backups_write'),
+    'monitoring.read' => I18n::t('api_keys.scope_monitoring_read'),
+    'webhooks.read' => I18n::t('api_keys.scope_webhooks_read'),
+    'webhooks.write' => I18n::t('api_keys.scope_webhooks_write'),
+    'applications.read' => I18n::t('api_keys.scope_apps_read'),
+    'applications.write' => I18n::t('api_keys.scope_apps_write'),
+    'databases.read' => I18n::t('api_keys.scope_databases_read'),
+    'databases.write' => I18n::t('api_keys.scope_databases_write'),
+    'emails.read' => I18n::t('api_keys.scope_emails_read'),
+    'emails.write' => I18n::t('api_keys.scope_emails_write'),
 ];
 
 function _apiKeyStatus(string $s): string {
     return match($s) {
-        'active' => '<span class="badge-new badge-green">Active</span>',
-        'revoked' => '<span class="badge-new badge-red">Revoked</span>',
-        'expired' => '<span class="badge-new badge-yellow">Expired</span>',
+        'active' => '<span class="badge-new badge-green">' . I18n::t('api_keys.status_active') . '</span>',
+        'revoked' => '<span class="badge-new badge-red">' . I18n::t('api_keys.status_revoked') . '</span>',
+        'expired' => '<span class="badge-new badge-yellow">' . I18n::t('api_keys.status_expired') . '</span>',
         default => '<span class="badge-new badge-gray">' . View::e($s) . '</span>',
     };
 }
 
 function _apiKeyEnvBadge(string $env): string {
     return match($env) {
-        'production' => '<span class="badge-new badge-blue">Production</span>',
-        'sandbox' => '<span class="badge-new badge-yellow">Sandbox</span>',
+        'production' => '<span class="badge-new badge-blue">' . I18n::t('api_keys.env_production') . '</span>',
+        'sandbox' => '<span class="badge-new badge-yellow">' . I18n::t('api_keys.env_sandbox') . '</span>',
         default => '<span class="badge-new badge-gray">' . View::e($env) . '</span>',
     };
 }
@@ -109,41 +109,41 @@ function _apiKeyEnvBadge(string $env): string {
 
 <div class="api-keys-header">
   <div>
-    <div class="page-title">API Keys</div>
-    <div class="page-subtitle" style="margin-bottom:0;">Manage your Public API authentication keys</div>
+    <div class="page-title"><?= I18n::t('api_keys.titulo') ?></div>
+    <div class="page-subtitle" style="margin-bottom:0;"><?= I18n::t('api_keys.subtitulo') ?></div>
   </div>
   <button class="botao" onclick="document.getElementById('modalCriar').classList.add('active')">
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;margin-right:4px;"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    Create API Key
+    <?= I18n::t('api_keys.criar_btn') ?>
   </button>
 </div>
 
 <?php if ($sucesso === 'criada'): ?>
-  <div class="sucesso">API Key created successfully. Copy it now — it won't be shown again.</div>
+  <div class="sucesso"><?= I18n::t('api_keys.msg_criada') ?></div>
 <?php elseif ($sucesso === 'revogada'): ?>
-  <div class="sucesso">API Key revoked.</div>
+  <div class="sucesso"><?= I18n::t('api_keys.msg_revogada') ?></div>
 <?php elseif ($sucesso === 'rotacionada'): ?>
-  <div class="sucesso">API Key rotated. Copy the new key — it won't be shown again.</div>
+  <div class="sucesso"><?= I18n::t('api_keys.msg_rotacionada') ?></div>
 <?php endif; ?>
 
 <?php if ($erro === 'csrf'): ?>
-  <div class="erro">Session expired. Please try again.</div>
+  <div class="erro"><?= I18n::t('api_keys.erro_csrf') ?></div>
 <?php elseif ($erro === 'nome_obrigatorio'): ?>
-  <div class="erro">The key name is required.</div>
+  <div class="erro"><?= I18n::t('api_keys.erro_nome') ?></div>
 <?php elseif ($erro === 'escopos_obrigatorio'): ?>
-  <div class="erro">Select at least one scope.</div>
+  <div class="erro"><?= I18n::t('api_keys.erro_escopos') ?></div>
 <?php elseif ($erro === 'nao_encontrada'): ?>
-  <div class="erro">Key not found or already revoked.</div>
+  <div class="erro"><?= I18n::t('api_keys.erro_nao_encontrada') ?></div>
 <?php elseif ($erro === 'invalida'): ?>
-  <div class="erro">Invalid key.</div>
+  <div class="erro"><?= I18n::t('api_keys.erro_invalida') ?></div>
 <?php endif; ?>
 
 <?php if ($novaChave !== ''): ?>
 <div class="api-key-revealed">
-  <div style="font-weight:700;color:#e2e8f0;font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Your new API Key</div>
+  <div style="font-weight:700;color:#e2e8f0;font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> <?= I18n::t('api_keys.sua_nova_chave') ?></div>
   <code id="novaChaveTexto"><?php echo View::e($novaChave); ?></code>
-  <button class="api-key-copy-btn" onclick="copiarChave()">Copy</button>
-  <div class="warning-text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Store this key securely. It won't be shown again.</div>
+  <button class="api-key-copy-btn" onclick="copiarChave()"><?= I18n::t('api_keys.copiar') ?></button>
+  <div class="warning-text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <?= I18n::t('api_keys.aviso_guardar') ?></div>
 </div>
 <?php endif; ?>
 
@@ -152,23 +152,23 @@ function _apiKeyEnvBadge(string $env): string {
 <?php if (empty($keys)): ?>
   <div style="text-align:center;padding:40px 20px;">
     <div style="margin-bottom:10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
-    <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:4px;">No API Keys yet</div>
-    <div style="font-size:13px;color:#94a3b8;">Create your first key to start using the Public API.</div>
+    <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:4px;"><?= I18n::t('api_keys.nenhuma_chave') ?></div>
+    <div style="font-size:13px;color:#94a3b8;"><?= I18n::t('api_keys.nenhuma_chave_desc') ?></div>
   </div>
 <?php else: ?>
   <div class="keys-table-wrap">
     <table class="keys-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Environment</th>
-          <th>Key</th>
-          <th>Status</th>
+          <th><?= I18n::t('api_keys.col_nome') ?></th>
+          <th><?= I18n::t('api_keys.col_ambiente') ?></th>
+          <th><?= I18n::t('api_keys.col_chave') ?></th>
+          <th><?= I18n::t('geral.status') ?></th>
           <th>Scopes</th>
-          <th>Last Used</th>
-          <th>Requests</th>
-          <th>Created</th>
-          <th>Actions</th>
+          <th><?= I18n::t('api_keys.col_ultimo_uso') ?></th>
+          <th><?= I18n::t('api_keys.col_requisicoes') ?></th>
+          <th><?= I18n::t('api_keys.col_criado') ?></th>
+          <th><?= I18n::t('geral.acoes') ?></th>
         </tr>
       </thead>
       <tbody>
@@ -224,44 +224,44 @@ function _apiKeyEnvBadge(string $env): string {
 <!-- Create Modal -->
 <div class="modal-overlay" id="modalCriar">
   <div class="modal-box">
-    <h3>Create API Key</h3>
+    <h3><?= I18n::t('api_keys.criar_titulo') ?></h3>
     <form method="post" action="/cliente/api-keys/criar">
       <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
 
       <div class="form-group">
-        <label for="ak_nome">Name *</label>
-        <input type="text" id="ak_nome" name="nome" required maxlength="100" placeholder="e.g. My Integration" />
+        <label for="ak_nome"><?= I18n::t('api_keys.campo_nome') ?> *</label>
+        <input type="text" id="ak_nome" name="nome" required maxlength="100" placeholder="<?= I18n::t('api_keys.campo_nome_placeholder') ?>" />
       </div>
 
       <div class="form-group">
-        <label for="ak_descricao">Description</label>
-        <textarea id="ak_descricao" name="descricao" maxlength="255" placeholder="Optional description for this key"></textarea>
+        <label for="ak_descricao"><?= I18n::t('api_keys.campo_descricao') ?></label>
+        <textarea id="ak_descricao" name="descricao" maxlength="255" placeholder="<?= I18n::t('api_keys.campo_descricao_placeholder') ?>"></textarea>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="form-group">
-          <label for="ak_ambiente">Environment</label>
+          <label for="ak_ambiente"><?= I18n::t('api_keys.campo_ambiente') ?></label>
           <select id="ak_ambiente" name="ambiente">
-            <option value="production">Production</option>
-            <option value="sandbox">Sandbox</option>
+            <option value="production"><?= I18n::t('api_keys.env_production') ?></option>
+            <option value="sandbox"><?= I18n::t('api_keys.env_sandbox') ?></option>
           </select>
         </div>
         <div class="form-group">
-          <label for="ak_rate_limit">Rate Limit (req/min)</label>
+          <label for="ak_rate_limit"><?= I18n::t('api_keys.campo_rate_limit') ?></label>
           <input type="number" id="ak_rate_limit" name="rate_limit" value="60" min="1" max="1000" />
         </div>
       </div>
 
       <div class="form-group">
-        <label for="ak_expira">Expiration (optional)</label>
+        <label for="ak_expira"><?= I18n::t('api_keys.campo_expiracao') ?></label>
         <input type="date" id="ak_expira" name="expira_em" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" />
       </div>
 
       <div class="form-group">
         <label>Scopes *</label>
         <div style="margin-bottom:8px;">
-          <button type="button" onclick="toggleAllScopes(true)" class="botao ghost sm" style="font-size:11px;margin-right:4px;">Select All</button>
-          <button type="button" onclick="toggleAllScopes(false)" class="botao ghost sm" style="font-size:11px;">Deselect All</button>
+          <button type="button" onclick="toggleAllScopes(true)" class="botao ghost sm" style="font-size:11px;margin-right:4px;"><?= I18n::t('api_keys.selecionar_todos') ?></button>
+          <button type="button" onclick="toggleAllScopes(false)" class="botao ghost sm" style="font-size:11px;"><?= I18n::t('api_keys.desmarcar_todos') ?></button>
         </div>
         <div class="scopes-grid">
           <?php foreach ($escoposDisponiveis as $escopo => $label): ?>
@@ -274,8 +274,8 @@ function _apiKeyEnvBadge(string $env): string {
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="document.getElementById('modalCriar').classList.remove('active')">Cancel</button>
-        <button type="submit" class="botao">Create Key</button>
+        <button type="button" class="btn-cancel" onclick="document.getElementById('modalCriar').classList.remove('active')"><?= I18n::t('geral.cancelar') ?></button>
+        <button type="submit" class="botao"><?= I18n::t('api_keys.criar_btn') ?></button>
       </div>
     </form>
   </div>
@@ -287,7 +287,7 @@ function copiarChave() {
     if (!texto) return;
     navigator.clipboard.writeText(texto.textContent.trim()).then(() => {
         const btn = document.querySelector('.api-key-copy-btn');
-        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }
+        if (btn) { btn.textContent = '<?= I18n::t('api_keys.copiado') ?>'; setTimeout(() => btn.textContent = '<?= I18n::t('api_keys.copiar') ?>', 2000); }
     });
 }
 
