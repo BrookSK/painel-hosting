@@ -13,7 +13,7 @@ $csrf = Csrf::token();
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px;}
 .cat-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
 .cat-card:hover{border-color:#7C3AED;box-shadow:0 4px 20px rgba(124,58,237,.08);}
-.cat-icon{font-size:32px;margin-bottom:8px;}
+.cat-icon{font-size:32px;margin-bottom:8px;line-height:1;width:32px;height:32px;display:flex;align-items:center;justify-content:flex-start;}
 .cat-name{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px;}
 .cat-desc{font-size:13px;color:#64748b;line-height:1.5;flex:1;margin-bottom:12px;}
 .cat-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#475569;font-weight:600;margin-bottom:10px;}
