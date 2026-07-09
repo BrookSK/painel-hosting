@@ -49,10 +49,7 @@ final class DocsController
     public function swagger(Requisicao $req): Resposta
     {
         $html = View::renderizar($this->viewPath('swagger.php'), []);
-        // CSP mais permissivo para permitir Swagger UI do CDN
-        return Resposta::html($html)->comHeaders([
-            'Content-Security-Policy' => "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self';",
-        ]);
+        return Resposta::html($html);
     }
 
     /**
