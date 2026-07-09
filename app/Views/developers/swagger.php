@@ -13,8 +13,8 @@ $t = fn(string $k) => I18n::t($k);
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 <style><?php
-$swCss = dirname(__DIR__, 2) . '/public/assets/vendor/swagger-ui/swagger-ui.css';
-if (is_file($swCss)) { echo file_get_contents($swCss); }
+$swCss = __DIR__ . '/../../../public/assets/vendor/swagger-ui/swagger-ui.css';
+if (is_file($swCss)) { readfile($swCss); }
 ?></style>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -51,7 +51,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 </div>
 
 <script><?php
-$swJs = dirname(__DIR__, 2) . '/public/assets/vendor/swagger-ui/swagger-ui-bundle.js';
+$swJs = __DIR__ . '/../../../public/assets/vendor/swagger-ui/swagger-ui-bundle.js';
 if (is_file($swJs)) { readfile($swJs); }
 ?></script>
 <script>
