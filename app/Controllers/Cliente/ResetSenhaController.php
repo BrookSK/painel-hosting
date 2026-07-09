@@ -78,8 +78,9 @@ final class ResetSenhaController
         }
 
         $pdo = BancoDeDados::pdo();
-        $s   = $pdo->prepare('SELECT user_id FROM password_resets WHERE token = :t AND tipo = :tp AND used_at IS NULL AND expires_at > NOW() LIMIT 1');
-        $s->execute([':t' => $token, ':tp' => self::TIPO]);
+        $agora = date('Y-m-d H:i:s');
+        $s   = $pdo->prepare('SELECT user_id FROM password_resets WHERE token = :t AND tipo = :tp AND used_at IS NULL AND expires_at > :now LIMIT 1');
+        $s->execute([':t' => $token, ':tp' => self::TIPO, ':now' => $agora]);
         $row = $s->fetch();
 
         if (!is_array($row)) {
@@ -100,8 +101,9 @@ final class ResetSenhaController
     {
         if (strlen($token) !== 64) return false;
         $pdo = BancoDeDados::pdo();
-        $s   = $pdo->prepare('SELECT id FROM password_resets WHERE token = :t AND tipo = :tp AND used_at IS NULL AND expires_at > NOW() LIMIT 1');
-        $s->execute([':t' => $token, ':tp' => self::TIPO]);
+        $agora = date('Y-m-d H:i:s');
+        $s   = $pdo->prepare('SELECT id FROM password_resets WHERE token = :t AND tipo = :tp AND used_at IS NULL AND expires_at > :now LIMIT 1');
+        $s->execute([':t' => $token, ':tp' => self::TIPO, ':now' => $agora]);
         return (bool)$s->fetch();
     }
 
