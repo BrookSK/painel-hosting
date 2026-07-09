@@ -71,7 +71,12 @@ final class Middlewares
             }
             if (Auth::clienteGerenciado()) {
                 if (Auth::clienteGerenciadoMostrarTodasAbas()) {
-                    return null; // cliente gerenciado com acesso total às abas
+                    // Mesmo com todas as abas, Terminal e Arquivos ficam bloqueados pra gerenciados
+                    $uri = strtok((string)($req->uri ?? $_SERVER['REQUEST_URI'] ?? ''), '?');
+                    if (str_starts_with($uri, '/cliente/vps/terminal') || str_starts_with($uri, '/cliente/arquivos')) {
+                        return Resposta::redirecionar('/cliente/painel');
+                    }
+                    return null; // demais rotas liberadas
                 }
                 return Resposta::redirecionar('/cliente/painel');
             }

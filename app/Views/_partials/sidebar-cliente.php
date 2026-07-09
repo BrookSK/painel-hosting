@@ -13,6 +13,9 @@ $_seg = strtok($_uri, '?');
 // (exceto se managed_show_all_tabs estiver ativo)
 $_isManaged = Auth::clienteGerenciado() && !Auth::estaImpersonando() && !Auth::clienteGerenciadoMostrarTodasAbas();
 
+// Clientes gerenciados NUNCA veem Terminal e Arquivos (mesmo com show_all_tabs)
+$_isManagedSempre = Auth::clienteGerenciado() && !Auth::estaImpersonando();
+
 // Features permitidas pelo plano
 $_clienteIdSidebar = Auth::clienteId();
 $_featuresPermitidas = [];
@@ -114,13 +117,13 @@ function _temFeature(array $features, string $feature): bool {
       <span>Bancos de Dados</span>
     </a>
     <?php endif; ?>
-    <?php if (_temFeature($_featuresPermitidas, 'arquivos')): ?>
+    <?php if (_temFeature($_featuresPermitidas, 'arquivos') && !$_isManagedSempre): ?>
     <a href="/cliente/arquivos" class="nav-item<?php echo _nav_ativo_cli('/cliente/arquivos', $_seg); ?>" data-tooltip="Arquivos">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2 6V4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.5"/></svg>
       <span>Arquivos</span>
     </a>
     <?php endif; ?>
-    <?php if (_temFeature($_featuresPermitidas, 'terminal')): ?>
+    <?php if (_temFeature($_featuresPermitidas, 'terminal') && !$_isManagedSempre): ?>
     <a href="/cliente/vps/terminal" class="nav-item<?php echo _nav_ativo_cli('/cliente/vps/terminal', $_seg); ?>" data-tooltip="Terminal">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l3 2-3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span>Terminal</span>
