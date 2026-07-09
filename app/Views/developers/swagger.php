@@ -12,7 +12,7 @@ $t = fn(string $k) => I18n::t($k);
 <title>API Explorer — LRV Cloud Manager</title>
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+<link rel="stylesheet" href="/assets/vendor/swagger-ui/swagger-ui.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:#0f172a}
@@ -47,7 +47,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
     <noscript><p style="text-align:center;padding:40px;color:#64748b">JavaScript é necessário para exibir o API Explorer.</p></noscript>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script src="/assets/vendor/swagger-ui/swagger-ui-bundle.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     SwaggerUIBundle({
