@@ -10,7 +10,7 @@ $_nome = SistemaConfig::nome();
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Comunicação — <?php echo View::e($_nome); ?></title>
+<title><?php echo I18n::t('sol_email.page_title'); ?> — <?php echo View::e($_nome); ?></title>
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 <style>
@@ -116,47 +116,47 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="em-hero-inner">
     <div>
-      <div class="em-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Comunicação</span></div>
-      <h1>E-mail profissional, chat e <em>suporte integrado</em></h1>
-      <p>E-mail com domínio próprio, chat em tempo real, sistema de tickets e suporte técnico. Toda a comunicação da sua empresa em um só lugar.</p>
+      <div class="em-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <?php echo I18n::t('sol_email.hero_badge'); ?></span></div>
+      <h1><?php echo I18n::t('sol_email.hero_title_pre'); ?> <em><?php echo I18n::t('sol_email.hero_title_em'); ?></em></h1>
+      <p><?php echo I18n::t('sol_email.hero_desc'); ?></p>
       <div class="em-hero-actions">
-        <a href="/cliente/criar-conta" class="em-btn-p">Começar agora</a>
-        <a href="/contato" class="em-btn-s">Falar com a equipe</a>
+        <a href="/cliente/criar-conta" class="em-btn-p"><?php echo I18n::t('sol_email.hero_btn_plans'); ?></a>
+        <a href="/contato" class="em-btn-s"><?php echo I18n::t('sol_email.hero_btn_contact'); ?></a>
       </div>
     </div>
     <div class="em-hero-visual">
       <div class="em-mock-bar"><div class="em-mock-dot"></div><div class="em-mock-dot"></div><div class="em-mock-dot"></div></div>
       <div class="em-inbox-header">
-        <div class="title"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> Caixa de Entrada</div>
-        <div class="badge">3 novas</div>
+        <div class="title"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> <?php echo I18n::t('sol_email.mock_inbox_title'); ?></div>
+        <div class="badge"><?php echo I18n::t('sol_email.mock_inbox_new'); ?></div>
       </div>
       <div class="em-mail-item unread">
         <div class="em-mail-avatar">CL</div>
         <div class="em-mail-body">
-          <div class="from">Cliente Premium</div>
-          <div class="subject">Proposta comercial — Projeto Q4 2025</div>
+          <div class="from"><?php echo I18n::t('sol_email.mock_from1'); ?></div>
+          <div class="subject"><?php echo I18n::t('sol_email.mock_subject1'); ?></div>
         </div>
-        <div class="em-mail-time">10:32</div>
+        <div class="em-mail-time"><?php echo I18n::t('sol_email.mock_time1'); ?></div>
       </div>
       <div class="em-mail-item unread">
         <div class="em-mail-avatar">EQ</div>
         <div class="em-mail-body">
-          <div class="from">Equipe Dev</div>
-          <div class="subject">Deploy v2.4 concluído com sucesso</div>
+          <div class="from"><?php echo I18n::t('sol_email.mock_from2'); ?></div>
+          <div class="subject"><?php echo I18n::t('sol_email.mock_subject2'); ?></div>
         </div>
-        <div class="em-mail-time">09:15</div>
+        <div class="em-mail-time"><?php echo I18n::t('sol_email.mock_time2'); ?></div>
       </div>
       <div class="em-mail-item">
         <div class="em-mail-avatar">MK</div>
         <div class="em-mail-body">
-          <div class="from">Marketing</div>
-          <div class="subject">Relatório mensal de campanhas</div>
+          <div class="from"><?php echo I18n::t('sol_email.mock_from3'); ?></div>
+          <div class="subject"><?php echo I18n::t('sol_email.mock_subject3'); ?></div>
         </div>
-        <div class="em-mail-time">Ontem</div>
+        <div class="em-mail-time"><?php echo I18n::t('sol_email.mock_time3'); ?></div>
       </div>
       <div class="em-chat-bubble">
         <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-        <div>Nova mensagem no chat: "Oi, preciso de ajuda com o DNS..."</div>
+        <div><?php echo I18n::t('sol_email.mock_chat_msg'); ?></div>
       </div>
     </div>
   </div>
@@ -165,10 +165,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <!-- STATS -->
 <div class="em-stats">
   <div class="em-stats-inner">
-    <div class="em-stat"><h3>E-mail</h3><p>Domínio profissional</p></div>
-    <div class="em-stat"><h3>Chat</h3><p>Tempo real integrado</p></div>
-    <div class="em-stat"><h3>Tickets</h3><p>Sistema completo</p></div>
-    <div class="em-stat"><h3>24/7</h3><p>Suporte disponível</p></div>
+    <div class="em-stat"><h3>E-mail</h3><p><?php echo I18n::t('sol_email.stats_email_label'); ?></p></div>
+    <div class="em-stat"><h3>Chat</h3><p><?php echo I18n::t('sol_email.stats_chat_label'); ?></p></div>
+    <div class="em-stat"><h3>Tickets</h3><p><?php echo I18n::t('sol_email.stats_tickets_label'); ?></p></div>
+    <div class="em-stat"><h3>24/7</h3><p><?php echo I18n::t('sol_email.stats_support_label'); ?></p></div>
   </div>
 </div>
 
@@ -176,31 +176,31 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="em-section">
   <div class="em-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="em-label">Por que centralizar?</div>
-      <h2 class="em-title">Comunicação fragmentada vs Comunicação <?php echo View::e($_nome); ?></h2>
-      <p class="em-sub" style="margin:0 auto;">Unifique e-mail, chat e suporte em uma plataforma integrada.</p>
+      <div class="em-label"><?php echo I18n::t('sol_email.why_badge'); ?></div>
+      <h2 class="em-title"><?php echo I18n::t('sol_email.why_title'); ?> <?php echo View::e($_nome); ?></h2>
+      <p class="em-sub" style="margin:0 auto;"><?php echo I18n::t('sol_email.why_desc'); ?></p>
     </div>
     <div class="em-compare">
       <div class="em-compare-card bad">
-        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Comunicação fragmentada</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad_title'); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> E-mail genérico (@gmail, @hotmail)</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Chat em uma ferramenta, e-mail em outra</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem sistema de tickets organizado</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Spam sem controle eficiente</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem criptografia garantida</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Suporte por canais desconectados</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_email.compare_bad6'); ?></li>
         </ul>
       </div>
       <div class="em-compare-card good">
-        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Comunicação <?php echo View::e($_nome); ?></h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good_title'); ?> <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> E-mail com seu domínio (voce@suaempresa.com)</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Chat e e-mail integrados no mesmo painel</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tickets com prioridade, status e histórico</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Anti-spam inteligente com filtros avançados</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL/TLS em todas as conexões</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte técnico unificado via chat e ticket</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_email.compare_good6'); ?></li>
         </ul>
       </div>
     </div>
@@ -211,19 +211,19 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="em-section alt">
   <div class="em-inner">
     <div style="text-align:center;">
-      <div class="em-label">Recursos</div>
-      <h2 class="em-title">Tudo para sua comunicação profissional</h2>
+      <div class="em-label"><?php echo I18n::t('sol_email.feat_badge'); ?></div>
+      <h2 class="em-title"><?php echo I18n::t('sol_email.feat_title'); ?></h2>
     </div>
     <div class="em-features">
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg></div><h3>E-mail com domínio próprio</h3><p>Crie contas como contato@suaempresa.com. Credibilidade profissional para sua marca.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Webmail integrado</h3><p>Acesse seus e-mails pelo navegador de qualquer lugar. Interface moderna e responsiva.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Chat em tempo real</h3><p>Converse com sua equipe e clientes em tempo real. Histórico salvo e notificações.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></div><h3>Sistema de tickets</h3><p>Organize solicitações com prioridade, status, atribuição e histórico completo.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><h3>Suporte técnico</h3><p>Equipe disponível via chat, ticket e e-mail. Respostas rápidas e especializadas.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Anti-spam</h3><p>Filtros inteligentes que bloqueiam spam antes de chegar na sua caixa. Listas personalizáveis.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>SSL/TLS</h3><p>Todas as conexões criptografadas. IMAP, SMTP e POP3 com TLS obrigatório.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Múltiplas contas</h3><p>Crie quantas contas de e-mail precisar. Cada colaborador com sua caixa própria.</p></div>
-      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></div><h3>Encaminhamento</h3><p>Redirecione e-mails entre contas ou para endereços externos. Aliases e catch-all disponíveis.</p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg></div><h3><?php echo I18n::t('sol_email.feat1_title'); ?></h3><p><?php echo I18n::t('sol_email.feat1_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3><?php echo I18n::t('sol_email.feat2_title'); ?></h3><p><?php echo I18n::t('sol_email.feat2_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3><?php echo I18n::t('sol_email.feat3_title'); ?></h3><p><?php echo I18n::t('sol_email.feat3_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></div><h3><?php echo I18n::t('sol_email.feat4_title'); ?></h3><p><?php echo I18n::t('sol_email.feat4_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><h3><?php echo I18n::t('sol_email.feat5_title'); ?></h3><p><?php echo I18n::t('sol_email.feat5_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3><?php echo I18n::t('sol_email.feat6_title'); ?></h3><p><?php echo I18n::t('sol_email.feat6_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3><?php echo I18n::t('sol_email.feat7_title'); ?></h3><p><?php echo I18n::t('sol_email.feat7_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3><?php echo I18n::t('sol_email.feat8_title'); ?></h3><p><?php echo I18n::t('sol_email.feat8_desc'); ?></p></div>
+      <div class="em-feat"><div class="em-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></div><h3><?php echo I18n::t('sol_email.feat9_title'); ?></h3><p><?php echo I18n::t('sol_email.feat9_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -232,15 +232,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="em-section dark">
   <div class="em-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="em-label" style="color:#fecdd3;">Como funciona</div>
-      <h2 class="em-title" style="color:#fff;">Comunicação em 3 passos</h2>
+      <div class="em-label" style="color:#fecdd3;"><?php echo I18n::t('sol_email.steps_label'); ?></div>
+      <h2 class="em-title" style="color:#fff;"><?php echo I18n::t('sol_email.steps_title'); ?></h2>
     </div>
     <div class="em-steps">
-      <div class="em-step"><div class="em-step-num">1</div><h3 style="color:#fff;">Configure o domínio</h3><p>Aponte os registros DNS do seu domínio. Verificação automática em minutos.</p></div>
+      <div class="em-step"><div class="em-step-num">1</div><h3 style="color:#fff;"><?php echo I18n::t('sol_email.step1_title'); ?></h3><p><?php echo I18n::t('sol_email.step1_desc'); ?></p></div>
       <div class="em-step-arrow">→</div>
-      <div class="em-step"><div class="em-step-num">2</div><h3 style="color:#fff;">Crie as contas</h3><p>Adicione contas de e-mail para cada colaborador pelo painel.</p></div>
+      <div class="em-step"><div class="em-step-num">2</div><h3 style="color:#fff;"><?php echo I18n::t('sol_email.step2_title'); ?></h3><p><?php echo I18n::t('sol_email.step2_desc'); ?></p></div>
       <div class="em-step-arrow">→</div>
-      <div class="em-step"><div class="em-step-num">3</div><h3 style="color:#fff;">Comunique-se</h3><p>Use webmail, chat e tickets. Tudo integrado e pronto para usar.</p></div>
+      <div class="em-step"><div class="em-step-num">3</div><h3 style="color:#fff;"><?php echo I18n::t('sol_email.step3_title'); ?></h3><p><?php echo I18n::t('sol_email.step3_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -249,27 +249,27 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="em-section">
   <div class="em-inner">
     <div style="text-align:center;">
-      <div class="em-label">Perguntas frequentes</div>
-      <h2 class="em-title">Dúvidas sobre Comunicação</h2>
+      <div class="em-label"><?php echo I18n::t('sol_email.faq_label'); ?></div>
+      <h2 class="em-title"><?php echo I18n::t('sol_email.faq_title'); ?></h2>
     </div>
     <div class="em-faq">
-      <details><summary>Como configuro o e-mail com meu domínio?</summary><p>Basta adicionar os registros MX, SPF e DKIM no DNS do seu domínio. O painel mostra exatamente quais registros criar e verifica automaticamente quando estiverem propagados.</p></details>
-      <details><summary>Posso acessar o e-mail pelo navegador?</summary><p>Sim. O webmail integrado funciona em qualquer navegador e dispositivo. Você também pode configurar clientes como Outlook, Thunderbird ou Apple Mail via IMAP/SMTP.</p></details>
-      <details><summary>O chat funciona em tempo real?</summary><p>Sim. Chat via WebSocket com entrega instantânea de mensagens. Histórico completo salvo e pesquisável. Notificações no navegador e por e-mail.</p></details>
-      <details><summary>Como funciona o sistema de tickets?</summary><p>Crie tickets com título, descrição e prioridade. Acompanhe o status (aberto, em andamento, resolvido), adicione comentários e receba notificações de atualizações.</p></details>
-      <details><summary>Tem proteção contra spam?</summary><p>Sim. Filtros anti-spam com SPF, DKIM e DMARC configurados automaticamente. Listas de bloqueio e permissão personalizáveis. Quarentena para mensagens suspeitas.</p></details>
-      <details><summary>Qual o limite de contas de e-mail?</summary><p>O número de contas depende do seu plano. Todos os planos incluem aliases ilimitados e encaminhamento. Entre em contato para planos com necessidades específicas.</p></details>
+      <details><summary><?php echo I18n::t('sol_email.faq1_q'); ?></summary><p><?php echo I18n::t('sol_email.faq1_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_email.faq2_q'); ?></summary><p><?php echo I18n::t('sol_email.faq2_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_email.faq3_q'); ?></summary><p><?php echo I18n::t('sol_email.faq3_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_email.faq4_q'); ?></summary><p><?php echo I18n::t('sol_email.faq4_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_email.faq5_q'); ?></summary><p><?php echo I18n::t('sol_email.faq5_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_email.faq6_q'); ?></summary><p><?php echo I18n::t('sol_email.faq6_a'); ?></p></details>
     </div>
   </div>
 </section>
 
 <!-- CTA FINAL -->
 <section class="em-cta-section">
-  <h2>Comunicação profissional para sua empresa</h2>
-  <p>E-mail, chat e suporte integrados. Comece agora e profissionalize sua comunicação.</p>
+  <h2><?php echo I18n::t('sol_email.cta_title'); ?></h2>
+  <p><?php echo I18n::t('sol_email.cta_desc'); ?></p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="/cliente/criar-conta" class="em-btn-p">Criar conta grátis</a>
-    <a href="/contato" class="em-btn-s">Falar com a equipe</a>
+    <a href="/cliente/criar-conta" class="em-btn-p"><?php echo I18n::t('sol_email.cta_btn_plans'); ?></a>
+    <a href="/contato" class="em-btn-s"><?php echo I18n::t('sol_email.cta_btn_contact'); ?></a>
   </div>
 </section>
 

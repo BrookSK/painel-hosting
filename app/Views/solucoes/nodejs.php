@@ -11,7 +11,7 @@ $_planos = is_array($planos ?? null) ? $planos : [];
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Node.js App — <?php echo View::e($_nome); ?></title>
+<title><?php echo I18n::t('sol_node.page_title'); ?> — <?php echo View::e($_nome); ?></title>
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 <style>
@@ -109,12 +109,12 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="nj-hero-inner">
     <div>
-      <div class="nj-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l9.5 5.5v11L12 23.5 2.5 18V7z"/></svg> Node.js App</span></div>
-      <h1>Deploy simples para suas aplicações <em>Node.js</em></h1>
-      <p>Hospede aplicações Node.js com banco de dados incluso, domínio customizado, Git Deploy e SSL grátis. Do push ao ar em segundos.</p>
+      <div class="nj-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l9.5 5.5v11L12 23.5 2.5 18V7z"/></svg> <?php echo I18n::t('sol_node.badge'); ?></span></div>
+      <h1><?php echo I18n::t('sol_node.hero_title_pre'); ?> <em><?php echo I18n::t('sol_node.hero_title_em'); ?></em></h1>
+      <p><?php echo I18n::t('sol_node.hero_desc'); ?></p>
       <div class="nj-hero-actions">
-        <a href="#planos" class="nj-btn-p">Ver planos Node.js</a>
-        <a href="/contato" class="nj-btn-s">Falar com a equipe</a>
+        <a href="#planos" class="nj-btn-p"><?php echo I18n::t('sol_node.btn_plans'); ?></a>
+        <a href="/contato" class="nj-btn-s"><?php echo I18n::t('sol_node.btn_contact'); ?></a>
       </div>
     </div>
     <div class="nj-hero-visual">
@@ -137,10 +137,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <!-- STATS -->
 <div class="nj-stats">
   <div class="nj-stats-inner">
-    <div class="nj-stat"><h3>Git</h3><p>Deploy integrado</p></div>
-    <div class="nj-stat"><h3>99.9%</h3><p>Uptime garantido</p></div>
-    <div class="nj-stat"><h3>WS</h3><p>WebSocket nativo</p></div>
-    <div class="nj-stat"><h3>SSL</h3><p>Grátis em todos os planos</p></div>
+    <div class="nj-stat"><h3>Git</h3><p><?php echo I18n::t('sol_node.stat1_desc'); ?></p></div>
+    <div class="nj-stat"><h3>99.9%</h3><p><?php echo I18n::t('sol_node.stat2_desc'); ?></p></div>
+    <div class="nj-stat"><h3>WS</h3><p><?php echo I18n::t('sol_node.stat3_desc'); ?></p></div>
+    <div class="nj-stat"><h3>SSL</h3><p><?php echo I18n::t('sol_node.stat4_desc'); ?></p></div>
   </div>
 </div>
 
@@ -148,31 +148,31 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="nj-section">
   <div class="nj-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="nj-label">Por que escolher?</div>
-      <h2 class="nj-title">Deploy manual vs Node.js App <?php echo View::e($_nome); ?></h2>
-      <p class="nj-sub" style="margin:0 auto;">Compare configurar um servidor manualmente com nossa plataforma otimizada para Node.js.</p>
+      <div class="nj-label"><?php echo I18n::t('sol_node.compare_label'); ?></div>
+      <h2 class="nj-title"><?php echo I18n::t('sol_node.compare_title'); ?></h2>
+      <p class="nj-sub" style="margin:0 auto;"><?php echo I18n::t('sol_node.compare_desc'); ?></p>
     </div>
     <div class="nj-compare">
       <div class="nj-compare-card bad">
-        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Deploy manual</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad_title'); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Configurar servidor, Nginx e PM2 na mão</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Gerenciar SSL e renovações manualmente</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem rollback fácil em caso de erro</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Monitoramento e logs por conta própria</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Banco de dados separado e pago</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Horas perdidas com DevOps</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_node.compare_bad6'); ?></li>
         </ul>
       </div>
       <div class="nj-compare-card good">
         <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Node.js App <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Git push e pronto — deploy automático</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL grátis e automático em todos os domínios</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Logs em tempo real no painel</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Variáveis de ambiente seguras</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Banco de dados incluso no plano</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Foque no código, não na infra</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_node.compare_good1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_node.compare_good2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_node.compare_good3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_node.compare_good4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_node.compare_good5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_node.compare_good6'); ?></li>
         </ul>
       </div>
     </div>
@@ -183,19 +183,19 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="nj-section alt">
   <div class="nj-inner">
     <div style="text-align:center;">
-      <div class="nj-label">Tudo incluso</div>
-      <h2 class="nj-title">Tudo que sua aplicação Node.js precisa</h2>
+      <div class="nj-label"><?php echo I18n::t('sol_node.feat_label'); ?></div>
+      <h2 class="nj-title"><?php echo I18n::t('sol_node.feat_title'); ?></h2>
     </div>
     <div class="nj-features">
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3>Git Deploy</h3><p>Conecte seu repositório e faça deploy a cada push. Suporte a GitHub, GitLab e Bitbucket.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>Banco de dados incluso</h3><p>MySQL dedicado incluso no plano. Crie, gerencie e acesse pelo painel ou ferramentas externas.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Domínio com SSL</h3><p>Conecte seu domínio próprio com SSL Let's Encrypt automático. HTTPS sem custo extra.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>Container isolado</h3><p>Sua aplicação roda em container dedicado com recursos garantidos. Sem interferência de outros apps.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div><h3>Variáveis de ambiente</h3><p>Gerencie variáveis de ambiente de forma segura pelo painel. Sem expor secrets no código.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><h3>Logs em tempo real</h3><p>Acompanhe stdout e stderr da sua aplicação em tempo real direto no painel de controle.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Painel intuitivo</h3><p>Gerencie deploy, domínios, banco de dados, variáveis e logs em um painel moderno e unificado.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Sua aplicação sempre disponível.</p></div>
-      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte técnico</h3><p>Equipe que entende Node.js de verdade. Chat, ticket e e-mail disponíveis para qualquer dúvida.</p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3><?php echo I18n::t('sol_node.feat1_title'); ?></h3><p><?php echo I18n::t('sol_node.feat1_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3><?php echo I18n::t('sol_node.feat2_title'); ?></h3><p><?php echo I18n::t('sol_node.feat2_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3><?php echo I18n::t('sol_node.feat3_title'); ?></h3><p><?php echo I18n::t('sol_node.feat3_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3><?php echo I18n::t('sol_node.feat4_title'); ?></h3><p><?php echo I18n::t('sol_node.feat4_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div><h3><?php echo I18n::t('sol_node.feat5_title'); ?></h3><p><?php echo I18n::t('sol_node.feat5_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><h3><?php echo I18n::t('sol_node.feat6_title'); ?></h3><p><?php echo I18n::t('sol_node.feat6_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3><?php echo I18n::t('sol_node.feat7_title'); ?></h3><p><?php echo I18n::t('sol_node.feat7_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3><?php echo I18n::t('sol_node.feat8_title'); ?></h3><p><?php echo I18n::t('sol_node.feat8_desc'); ?></p></div>
+      <div class="nj-feat"><div class="nj-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3><?php echo I18n::t('sol_node.feat9_title'); ?></h3><p><?php echo I18n::t('sol_node.feat9_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -204,15 +204,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="nj-section dark">
   <div class="nj-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="nj-label" style="color:#fde68a;">Como funciona</div>
-      <h2 class="nj-title" style="color:#fff;">Online em 3 passos</h2>
+      <div class="nj-label" style="color:#fde68a;"><?php echo I18n::t('sol_node.steps_label'); ?></div>
+      <h2 class="nj-title" style="color:#fff;"><?php echo I18n::t('sol_node.steps_title'); ?></h2>
     </div>
     <div class="nj-steps">
-      <div class="nj-step"><div class="nj-step-num">1</div><h3 style="color:#fff;">Conecte o repositório</h3><p>Vincule seu repositório Git ao painel com um clique.</p></div>
+      <div class="nj-step"><div class="nj-step-num">1</div><h3 style="color:#fff;"><?php echo I18n::t('sol_node.step1_title'); ?></h3><p><?php echo I18n::t('sol_node.step1_desc'); ?></p></div>
       <div class="nj-step-arrow">→</div>
-      <div class="nj-step"><div class="nj-step-num">2</div><h3 style="color:#fff;">Push seu código</h3><p>Faça git push e o build + deploy acontecem automaticamente.</p></div>
+      <div class="nj-step"><div class="nj-step-num">2</div><h3 style="color:#fff;"><?php echo I18n::t('sol_node.step2_title'); ?></h3><p><?php echo I18n::t('sol_node.step2_desc'); ?></p></div>
       <div class="nj-step-arrow">→</div>
-      <div class="nj-step"><div class="nj-step-num">3</div><h3 style="color:#fff;">App online</h3><p>Sua aplicação Node.js está no ar com SSL e domínio configurados.</p></div>
+      <div class="nj-step"><div class="nj-step-num">3</div><h3 style="color:#fff;"><?php echo I18n::t('sol_node.step3_title'); ?></h3><p><?php echo I18n::t('sol_node.step3_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -224,27 +224,27 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="nj-section">
   <div class="nj-inner">
     <div style="text-align:center;">
-      <div class="nj-label">Perguntas frequentes</div>
-      <h2 class="nj-title">Dúvidas sobre Node.js App</h2>
+      <div class="nj-label"><?php echo I18n::t('sol_node.faq_label'); ?></div>
+      <h2 class="nj-title"><?php echo I18n::t('sol_node.faq_title'); ?></h2>
     </div>
     <div class="nj-faq">
-      <details><summary>Quais versões do Node.js são suportadas?</summary><p>Suportamos as versões LTS mais recentes do Node.js (18, 20, 22). Você pode especificar a versão desejada no package.json ou nas configurações do painel.</p></details>
-      <details><summary>Posso usar Next.js, Express ou NestJS?</summary><p>Sim. Qualquer framework Node.js é suportado: Next.js, Express, Fastify, NestJS, Koa, Hapi e outros. Basta configurar o script start no package.json.</p></details>
-      <details><summary>WebSocket é suportado?</summary><p>Sim. Nossa infraestrutura suporta WebSocket nativamente. Ideal para aplicações em tempo real como chats, dashboards e jogos.</p></details>
-      <details><summary>Posso escalar minha aplicação?</summary><p>Sim. Faça upgrade de plano a qualquer momento para mais CPU, RAM e armazenamento. Seus dados e configurações são preservados.</p></details>
-      <details><summary>Como configuro variáveis de ambiente?</summary><p>Pelo painel de controle, na seção de variáveis de ambiente. Adicione, edite e remova variáveis de forma segura sem expor no código.</p></details>
-      <details><summary>Qual banco de dados está incluso?</summary><p>Cada plano inclui banco de dados MySQL dedicado. Você pode acessar pelo painel, phpMyAdmin ou conectar via string de conexão na sua aplicação.</p></details>
+      <details><summary><?php echo I18n::t('sol_node.faq1_q'); ?></summary><p><?php echo I18n::t('sol_node.faq1_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_node.faq2_q'); ?></summary><p><?php echo I18n::t('sol_node.faq2_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_node.faq3_q'); ?></summary><p><?php echo I18n::t('sol_node.faq3_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_node.faq4_q'); ?></summary><p><?php echo I18n::t('sol_node.faq4_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_node.faq5_q'); ?></summary><p><?php echo I18n::t('sol_node.faq5_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_node.faq6_q'); ?></summary><p><?php echo I18n::t('sol_node.faq6_a'); ?></p></details>
     </div>
   </div>
 </section>
 
 <!-- CTA FINAL -->
 <section class="nj-cta-section">
-  <h2>Pronto para deployar sua aplicação?</h2>
-  <p>Do git push ao ar em segundos. Banco de dados, SSL e domínio inclusos.</p>
+  <h2><?php echo I18n::t('sol_node.cta_title'); ?></h2>
+  <p><?php echo I18n::t('sol_node.cta_desc'); ?></p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="#planos" class="nj-btn-p">Ver planos</a>
-    <a href="/contato" class="nj-btn-s">Falar com a equipe</a>
+    <a href="#planos" class="nj-btn-p"><?php echo I18n::t('sol_node.btn_plans'); ?></a>
+    <a href="/contato" class="nj-btn-s"><?php echo I18n::t('sol_node.btn_contact'); ?></a>
   </div>
 </section>
 

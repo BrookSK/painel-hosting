@@ -21,9 +21,9 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
 <section class="lps-section" id="planos">
   <div class="lps-inner">
     <div style="text-align:center;margin-bottom:40px;">
-      <div class="lps-label" style="color:<?php echo $_accent; ?>;">Planos</div>
-      <h2 class="lps-title">Escolha o plano ideal para o seu projeto</h2>
-      <p class="lps-sub">Todos os planos incluem SSL grátis, suporte técnico e painel de controle.</p>
+      <div class="lps-label" style="color:<?php echo $_accent; ?>;"><?php echo I18n::t('sol_plans.badge'); ?></div>
+      <h2 class="lps-title"><?php echo I18n::t('sol_plans.title'); ?></h2>
+      <p class="lps-sub"><?php echo I18n::t('sol_plans.desc'); ?></p>
     </div>
 
     <div class="lps-carousel" id="<?php echo $_uniqId; ?>-carousel">
@@ -52,27 +52,27 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
           if ($_displayPrice <= 0) continue; // Pular plano sob consulta
         ?>
         <div class="lps-card<?php echo $_pFeatured ? ' featured' : ''; ?>" data-plan-id="<?php echo $_pid; ?>" data-base-price="<?php echo $_displayPrice; ?>">
-          <?php if ($_pFeatured): ?><div class="lps-badge" style="background:<?php echo $_accent; ?>;">Popular</div><?php endif; ?>
+          <?php if ($_pFeatured): ?><div class="lps-badge" style="background:<?php echo $_accent; ?>;"><?php echo I18n::t('sol_plans.popular'); ?></div><?php endif; ?>
           <div class="lps-name"><?php echo View::e($_pName); ?></div>
           <?php if ($_pDesc !== ''): ?><div class="lps-desc"><?php echo View::e($_pDesc); ?></div><?php endif; ?>
           <div class="lps-price">
             <span class="lps-cur"><?php echo $_curSymbol; ?></span>
             <span class="lps-amount" id="<?php echo $_uniqId; ?>-price-<?php echo $_pid; ?>"><?php echo $_visitorUsd ? number_format($_displayPrice, 2, '.', ',') : number_format($_displayPrice, 2, ',', '.'); ?></span>
-            <span class="lps-period">/mês</span>
+            <span class="lps-period"><?php echo I18n::t('sol_plans.period'); ?></span>
           </div>
           <ul class="lps-features">
-            <li>✓ <?php echo $_pCpu; ?> vCPU dedicada</li>
-            <li>✓ <?php echo $_pRam; ?> GB RAM</li>
-            <li>✓ <?php echo $_pDisco; ?> GB SSD NVMe</li>
-            <?php if ($_pMaxSites !== null): ?><li>✓ Até <?php echo (int)$_pMaxSites; ?> sites</li><?php endif; ?>
-            <?php if ($_pMaxDbs !== null): ?><li>✓ Até <?php echo (int)$_pMaxDbs; ?> bancos</li><?php endif; ?>
-            <?php if (!empty($_specs['bandwidth'])): ?><li>✓ <?php echo View::e((string)$_specs['bandwidth']); ?> banda</li><?php endif; ?>
-            <li>✓ SSL grátis</li>
-            <li>✓ Suporte técnico</li>
+            <li>✓ <?php echo $_pCpu; ?> <?php echo I18n::t('sol_plans.feat_vcpu'); ?></li>
+            <li>✓ <?php echo $_pRam; ?> <?php echo I18n::t('sol_plans.feat_ram'); ?></li>
+            <li>✓ <?php echo $_pDisco; ?> <?php echo I18n::t('sol_plans.feat_ssd'); ?></li>
+            <?php if ($_pMaxSites !== null): ?><li>✓ <?php echo I18n::t('sol_plans.feat_up_to'); ?> <?php echo (int)$_pMaxSites; ?> <?php echo I18n::t('sol_plans.feat_sites'); ?></li><?php endif; ?>
+            <?php if ($_pMaxDbs !== null): ?><li>✓ <?php echo I18n::t('sol_plans.feat_up_to'); ?> <?php echo (int)$_pMaxDbs; ?> <?php echo I18n::t('sol_plans.feat_dbs'); ?></li><?php endif; ?>
+            <?php if (!empty($_specs['bandwidth'])): ?><li>✓ <?php echo View::e((string)$_specs['bandwidth']); ?> <?php echo I18n::t('sol_plans.feat_bandwidth'); ?></li><?php endif; ?>
+            <li>✓ <?php echo I18n::t('sol_plans.feat_ssl'); ?></li>
+            <li>✓ <?php echo I18n::t('sol_plans.feat_support'); ?></li>
           </ul>
           <?php if (!empty($_pAddons)): ?>
           <div class="lps-addons">
-            <div class="lps-addons-title">Serviços adicionais</div>
+            <div class="lps-addons-title"><?php echo I18n::t('sol_plans.addons_title'); ?></div>
             <?php foreach ($_pAddons as $_a):
               $_aid = (int)($_a['id'] ?? 0);
               $_apriceBrl = (float)($_a['price'] ?? 0);
@@ -94,35 +94,35 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
             <?php endforeach; ?>
           </div>
           <div class="lps-total" style="background:<?php echo $_accent; ?>;">
-            <div class="lps-total-label">Total mensal</div>
+            <div class="lps-total-label"><?php echo I18n::t('sol_plans.total_label'); ?></div>
             <div class="lps-total-value"><?php echo $_curSymbol; ?> <span id="<?php echo $_uniqId; ?>-total-<?php echo $_pid; ?>"><?php echo $_visitorUsd ? number_format($_displayPrice, 2, '.', ',') : number_format($_displayPrice, 2, ',', '.'); ?></span></div>
           </div>
           <?php endif; ?>
-          <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="lps-cta" style="background:<?php echo $_accent; ?>;" data-plan-id="<?php echo $_pid; ?>" onclick="return lpsGoCheckout(this,<?php echo $_pid; ?>)">Contratar agora</a>
+          <a href="/contratar?plan_id=<?php echo $_pid; ?>" class="lps-cta" style="background:<?php echo $_accent; ?>;" data-plan-id="<?php echo $_pid; ?>" onclick="return lpsGoCheckout(this,<?php echo $_pid; ?>)"><?php echo I18n::t('sol_plans.cta_buy'); ?></a>
         </div>
         <?php endforeach; ?>
 
         <!-- Card Sob Medida -->
         <div class="lps-card custom-card" style="border-color:<?php echo $_accent; ?>;background:linear-gradient(180deg,#fff 0%,<?php echo $_accent; ?>08 100%);">
-          <div class="lps-badge" style="background:linear-gradient(135deg,#0B1C3D,<?php echo $_accent; ?>);">PERSONALIZADO</div>
-          <div class="lps-name">Plano Sob Medida</div>
-          <div class="lps-desc">Precisa de mais recursos ou configuração especial? Montamos um plano exclusivo para o seu projeto.</div>
+          <div class="lps-badge" style="background:linear-gradient(135deg,#0B1C3D,<?php echo $_accent; ?>);"><?php echo I18n::t('sol_plans.custom_badge'); ?></div>
+          <div class="lps-name"><?php echo I18n::t('sol_plans.custom_name'); ?></div>
+          <div class="lps-desc"><?php echo I18n::t('sol_plans.custom_desc'); ?></div>
           <div class="lps-price" style="margin:16px 0;">
-            <span style="font-size:16px;color:<?php echo $_accent; ?>;font-weight:700;">Sob consulta</span>
+            <span style="font-size:16px;color:<?php echo $_accent; ?>;font-weight:700;"><?php echo I18n::t('sol_plans.custom_price'); ?></span>
           </div>
           <ul class="lps-features">
-            <li>✓ CPU, RAM e disco sob medida</li>
-            <li>✓ Gerenciamento completo</li>
-            <li>✓ Deploy e suporte dedicado</li>
-            <li>✓ Ideal para empresas</li>
+            <li>✓ <?php echo I18n::t('sol_plans.custom_feat1'); ?></li>
+            <li>✓ <?php echo I18n::t('sol_plans.custom_feat2'); ?></li>
+            <li>✓ <?php echo I18n::t('sol_plans.custom_feat3'); ?></li>
+            <li>✓ <?php echo I18n::t('sol_plans.custom_feat4'); ?></li>
           </ul>
           <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;">
             <a href="https://wa.me/5517988093160?text=<?php echo urlencode('Olá, gostaria de um plano personalizado de ' . ucfirst($_plan_type)); ?>" target="_blank" class="lps-cta" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.612.616l4.532-1.474A11.943 11.943 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.24 0-4.326-.724-6.022-1.95l-.422-.314-2.688.874.893-2.634-.346-.45A9.963 9.963 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
-              WhatsApp Vendas
+              <?php echo I18n::t('sol_plans.custom_whatsapp'); ?>
             </a>
             <?php if ($_emailAdmin !== ''): ?>
-            <a href="mailto:<?php echo View::e($_emailAdmin); ?>?subject=<?php echo urlencode('Plano Personalizado — ' . ucfirst($_plan_type)); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;font-size:13px;font-weight:600;color:<?php echo $_accent; ?>;border:2px solid #e2e8f0;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='<?php echo $_accent; ?>'" onmouseout="this.style.borderColor='#e2e8f0'"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> Enviar e-mail</a>
+            <a href="mailto:<?php echo View::e($_emailAdmin); ?>?subject=<?php echo urlencode('Plano Personalizado — ' . ucfirst($_plan_type)); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;font-size:13px;font-weight:600;color:<?php echo $_accent; ?>;border:2px solid #e2e8f0;text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='<?php echo $_accent; ?>'" onmouseout="this.style.borderColor='#e2e8f0'"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg> <?php echo I18n::t('sol_plans.custom_email'); ?></a>
             <?php endif; ?>
           </div>
         </div>
@@ -244,9 +244,9 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
 <?php if (empty($_planos)): ?>
 <section style="padding:60px 20px;background:#f8fafc;text-align:center;" id="planos">
   <div style="max-width:600px;margin:0 auto;">
-    <h2 style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:12px;">Planos em breve</h2>
-    <p style="font-size:15px;color:#64748b;margin-bottom:24px;">Estamos preparando planos especiais para este produto. Entre em contato para um plano personalizado.</p>
-    <a href="/contato" style="display:inline-block;padding:14px 32px;background:<?php echo $_accent; ?>;color:#fff;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;">Falar com a equipe</a>
+    <h2 style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:12px;"><?php echo I18n::t('sol_plans.empty_title'); ?></h2>
+    <p style="font-size:15px;color:#64748b;margin-bottom:24px;"><?php echo I18n::t('sol_plans.empty_desc'); ?></p>
+    <a href="/contato" style="display:inline-block;padding:14px 32px;background:<?php echo $_accent; ?>;color:#fff;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;"><?php echo I18n::t('sol_plans.empty_cta'); ?></a>
   </div>
 </section>
 <?php endif; ?>

@@ -11,7 +11,7 @@ $_planos = is_array($planos ?? null) ? $planos : [];
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>VPS Gerenciada — <?php echo View::e($_nome); ?></title>
+<title><?php echo I18n::t('sol_vps.page_title'); ?> — <?php echo View::e($_nome); ?></title>
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 <style>
@@ -113,12 +113,12 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="vp-hero-inner">
     <div>
-      <div class="vp-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> VPS Gerenciada</span></div>
-      <h1>Servidores virtuais com <em>poder dedicado</em></h1>
-      <p>VPS com recursos dedicados, SSD NVMe, proteção DDoS, terminal web e painel completo. Performance de servidor dedicado com a praticidade da nuvem.</p>
+      <div class="vp-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> <?php echo I18n::t('sol_vps.badge'); ?></span></div>
+      <h1><?php echo I18n::t('sol_vps.hero_title_pre'); ?> <em><?php echo I18n::t('sol_vps.hero_title_em'); ?></em></h1>
+      <p><?php echo I18n::t('sol_vps.hero_desc'); ?></p>
       <div class="vp-hero-actions">
-        <a href="#planos" class="vp-btn-p">Ver planos VPS</a>
-        <a href="/contato" class="vp-btn-s">Falar com a equipe</a>
+        <a href="#planos" class="vp-btn-p"><?php echo I18n::t('sol_vps.btn_plans'); ?></a>
+        <a href="/contato" class="vp-btn-s"><?php echo I18n::t('sol_vps.btn_contact'); ?></a>
       </div>
     </div>
     <div class="vp-hero-visual">
@@ -136,12 +136,12 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
           <div class="vp-gauge-bar"><div class="vp-gauge-fill" style="width:45%"></div></div>
         </div>
         <div class="vp-gauge">
-          <div class="lbl">Disco</div>
+          <div class="lbl"><?php echo I18n::t('sol_vps.gauge_disk'); ?></div>
           <div class="val">18 GB</div>
           <div class="vp-gauge-bar"><div class="vp-gauge-fill" style="width:36%"></div></div>
         </div>
       </div>
-      <div class="vp-dash-status"><div class="dot"></div> Online — Uptime 99.98% — São Paulo, BR</div>
+      <div class="vp-dash-status"><div class="dot"></div> <?php echo I18n::t('sol_vps.dash_status'); ?></div>
     </div>
   </div>
 </section>
@@ -149,10 +149,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <!-- STATS -->
 <div class="vp-stats">
   <div class="vp-stats-inner">
-    <div class="vp-stat"><h3>99.9%</h3><p>Uptime garantido</p></div>
-    <div class="vp-stat"><h3>NVMe</h3><p>SSD de alta performance</p></div>
-    <div class="vp-stat"><h3>DDoS</h3><p>Proteção inclusa</p></div>
-    <div class="vp-stat"><h3>24/7</h3><p>Suporte especializado</p></div>
+    <div class="vp-stat"><h3>99.9%</h3><p><?php echo I18n::t('sol_vps.stat_uptime'); ?></p></div>
+    <div class="vp-stat"><h3>NVMe</h3><p><?php echo I18n::t('sol_vps.stat_nvme'); ?></p></div>
+    <div class="vp-stat"><h3>DDoS</h3><p><?php echo I18n::t('sol_vps.stat_ddos'); ?></p></div>
+    <div class="vp-stat"><h3>24/7</h3><p><?php echo I18n::t('sol_vps.stat_support'); ?></p></div>
   </div>
 </div>
 
@@ -160,31 +160,31 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="vp-section">
   <div class="vp-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="vp-label">Por que escolher?</div>
-      <h2 class="vp-title">VPS genérica vs VPS <?php echo View::e($_nome); ?></h2>
-      <p class="vp-sub" style="margin:0 auto;">Veja a diferença entre uma VPS comum e nossa infraestrutura gerenciada com painel completo.</p>
+      <div class="vp-label"><?php echo I18n::t('sol_vps.compare_label'); ?></div>
+      <h2 class="vp-title"><?php echo I18n::t('sol_vps.compare_title_pre'); ?> <?php echo View::e($_nome); ?></h2>
+      <p class="vp-sub" style="margin:0 auto;"><?php echo I18n::t('sol_vps.compare_desc'); ?></p>
     </div>
     <div class="vp-compare">
       <div class="vp-compare-card bad">
-        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> VPS genérica</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_generic'); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Configuração manual de tudo via terminal</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem painel de controle intuitivo</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Backups manuais e propensos a falha</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem monitoramento integrado</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> SSL precisa ser configurado manualmente</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Suporte genérico sem conhecimento do ambiente</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_bad1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_bad2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_bad3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_bad4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_bad5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_vps.compare_bad6'); ?></li>
         </ul>
       </div>
       <div class="vp-compare-card good">
         <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> VPS <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Painel completo com terminal web integrado</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Monitoramento de CPU, RAM e disco em tempo real</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups automáticos diários com restauração</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Deploy automático via Git</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SSL grátis e automático para todos os domínios</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte especializado que conhece seu servidor</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_vps.compare_good1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_vps.compare_good2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_vps.compare_good3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_vps.compare_good4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_vps.compare_good5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_vps.compare_good6'); ?></li>
         </ul>
       </div>
     </div>
@@ -195,19 +195,19 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="vp-section alt">
   <div class="vp-inner">
     <div style="text-align:center;">
-      <div class="vp-label">Recursos completos</div>
-      <h2 class="vp-title">Tudo que sua VPS precisa</h2>
+      <div class="vp-label"><?php echo I18n::t('sol_vps.feat_label'); ?></div>
+      <h2 class="vp-title"><?php echo I18n::t('sol_vps.feat_title'); ?></h2>
     </div>
     <div class="vp-features">
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><h3>Recursos dedicados</h3><p>CPU, RAM e disco exclusivos para sua VPS. Sem compartilhamento, sem vizinhos barulhentos.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>SSD NVMe</h3><p>Armazenamento NVMe de alta velocidade. Leitura e escrita até 10x mais rápidas que SSD convencional.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3>Terminal web</h3><p>Acesse seu servidor direto pelo navegador. SSH integrado sem precisar de cliente externo.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Monitoramento</h3><p>Acompanhe CPU, RAM, disco e rede em tempo real com gráficos e alertas automáticos.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3>Deploy automático</h3><p>Conecte seu repositório Git e faça deploy com um push. CI/CD simplificado.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><h3>Backups</h3><p>Backups automáticos diários com retenção configurável. Restaure com um clique.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>SSL grátis</h3><p>Certificado SSL Let's Encrypt automático para todos os seus domínios. HTTPS sem custo.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Mitigação de ataques DDoS nativa na infraestrutura. Seu servidor sempre disponível.</p></div>
-      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte 24/7</h3><p>Equipe técnica disponível via chat, ticket e e-mail. Resolvemos desde configuração até otimização.</p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><h3><?php echo I18n::t('sol_vps.feat1_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat1_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3><?php echo I18n::t('sol_vps.feat2_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat2_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3><?php echo I18n::t('sol_vps.feat3_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat3_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3><?php echo I18n::t('sol_vps.feat4_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat4_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3><?php echo I18n::t('sol_vps.feat5_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat5_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><h3><?php echo I18n::t('sol_vps.feat6_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat6_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3><?php echo I18n::t('sol_vps.feat7_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat7_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3><?php echo I18n::t('sol_vps.feat8_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat8_desc'); ?></p></div>
+      <div class="vp-feat"><div class="vp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3><?php echo I18n::t('sol_vps.feat9_title'); ?></h3><p><?php echo I18n::t('sol_vps.feat9_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -216,15 +216,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="vp-section dark">
   <div class="vp-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="vp-label" style="color:#c4b5fd;">Como funciona</div>
-      <h2 class="vp-title" style="color:#fff;">Sua VPS em 3 passos</h2>
+      <div class="vp-label" style="color:#c4b5fd;"><?php echo I18n::t('sol_vps.steps_label'); ?></div>
+      <h2 class="vp-title" style="color:#fff;"><?php echo I18n::t('sol_vps.steps_title'); ?></h2>
     </div>
     <div class="vp-steps">
-      <div class="vp-step"><div class="vp-step-num">1</div><h3 style="color:#fff;">Escolha o plano</h3><p>Selecione a configuração ideal de CPU, RAM e disco para seu projeto.</p></div>
+      <div class="vp-step"><div class="vp-step-num">1</div><h3 style="color:#fff;"><?php echo I18n::t('sol_vps.step1_title'); ?></h3><p><?php echo I18n::t('sol_vps.step1_desc'); ?></p></div>
       <div class="vp-step-arrow">→</div>
-      <div class="vp-step"><div class="vp-step-num">2</div><h3 style="color:#fff;">VPS provisionada</h3><p>Em minutos seu servidor está pronto com sistema operacional e painel configurados.</p></div>
+      <div class="vp-step"><div class="vp-step-num">2</div><h3 style="color:#fff;"><?php echo I18n::t('sol_vps.step2_title'); ?></h3><p><?php echo I18n::t('sol_vps.step2_desc'); ?></p></div>
       <div class="vp-step-arrow">→</div>
-      <div class="vp-step"><div class="vp-step-num">3</div><h3 style="color:#fff;">Acesse o painel</h3><p>Gerencie tudo pelo painel: terminal, deploy, domínios, backups e monitoramento.</p></div>
+      <div class="vp-step"><div class="vp-step-num">3</div><h3 style="color:#fff;"><?php echo I18n::t('sol_vps.step3_title'); ?></h3><p><?php echo I18n::t('sol_vps.step3_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -236,27 +236,27 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="vp-section">
   <div class="vp-inner">
     <div style="text-align:center;">
-      <div class="vp-label">Perguntas frequentes</div>
-      <h2 class="vp-title">Dúvidas sobre VPS Gerenciada</h2>
+      <div class="vp-label"><?php echo I18n::t('sol_vps.faq_label'); ?></div>
+      <h2 class="vp-title"><?php echo I18n::t('sol_vps.faq_title'); ?></h2>
     </div>
     <div class="vp-faq">
-      <details><summary>Os recursos da VPS são realmente dedicados?</summary><p>Sim. CPU, RAM e disco são exclusivos da sua VPS. Não há compartilhamento com outros clientes, garantindo performance consistente 24/7.</p></details>
-      <details><summary>Tenho acesso SSH/root ao servidor?</summary><p>Sim. Você tem acesso root completo via terminal web integrado no painel ou via SSH com seu cliente preferido. Controle total do servidor.</p></details>
-      <details><summary>Posso fazer upgrade de recursos?</summary><p>Sim. Faça upgrade de CPU, RAM ou disco a qualquer momento sem perder dados. A migração é feita automaticamente com mínimo downtime.</p></details>
-      <details><summary>Como funcionam os backups?</summary><p>Backups automáticos diários com retenção configurável. Você pode restaurar qualquer backup com um clique pelo painel ou criar backups manuais a qualquer momento.</p></details>
-      <details><summary>Que tipo de monitoramento está disponível?</summary><p>Monitoramento em tempo real de CPU, RAM, disco e rede com gráficos históricos. Alertas automáticos por e-mail quando recursos atingem limites configurados.</p></details>
-      <details><summary>Qual é o SLA de uptime?</summary><p>Garantimos 99.9% de uptime com infraestrutura redundante. Em caso de falha, a migração automática mantém seu servidor disponível. Créditos são aplicados se o SLA não for cumprido.</p></details>
+      <details><summary><?php echo I18n::t('sol_vps.faq1_q'); ?></summary><p><?php echo I18n::t('sol_vps.faq1_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_vps.faq2_q'); ?></summary><p><?php echo I18n::t('sol_vps.faq2_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_vps.faq3_q'); ?></summary><p><?php echo I18n::t('sol_vps.faq3_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_vps.faq4_q'); ?></summary><p><?php echo I18n::t('sol_vps.faq4_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_vps.faq5_q'); ?></summary><p><?php echo I18n::t('sol_vps.faq5_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_vps.faq6_q'); ?></summary><p><?php echo I18n::t('sol_vps.faq6_a'); ?></p></details>
     </div>
   </div>
 </section>
 
 <!-- CTA FINAL -->
 <section class="vp-cta-section">
-  <h2>Pronto para sua VPS dedicada?</h2>
-  <p>Comece agora com recursos dedicados, SSD NVMe e painel completo. Sem surpresas.</p>
+  <h2><?php echo I18n::t('sol_vps.cta_title'); ?></h2>
+  <p><?php echo I18n::t('sol_vps.cta_desc'); ?></p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="#planos" class="vp-btn-p">Ver planos VPS</a>
-    <a href="/contato" class="vp-btn-s">Falar com a equipe</a>
+    <a href="#planos" class="vp-btn-p"><?php echo I18n::t('sol_vps.btn_plans'); ?></a>
+    <a href="/contato" class="vp-btn-s"><?php echo I18n::t('sol_vps.btn_contact'); ?></a>
   </div>
 </section>
 

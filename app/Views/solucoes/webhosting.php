@@ -11,7 +11,7 @@ $_planos = is_array($planos ?? null) ? $planos : [];
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Web Hosting — <?php echo View::e($_nome); ?></title>
+<title><?php echo I18n::t('sol_wh.page_title'); ?> — <?php echo View::e($_nome); ?></title>
 <?php require __DIR__ . '/../_partials/seo.php'; ?>
 <?php require __DIR__ . '/../_partials/estilo.php'; ?>
 <style>
@@ -112,12 +112,12 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="glow"></div>
   <div class="wh-hero-inner">
     <div>
-      <div class="wh-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Web Hosting</span></div>
-      <h1>Hospedagem completa para seus <em>projetos web</em></h1>
-      <p>Hospede sites e aplicações com catálogo de apps, deploy via Git, bancos de dados e SSL grátis. Tudo gerenciado em um painel intuitivo.</p>
+      <div class="wh-hero-badge"><span><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <?php echo I18n::t('sol_wh.badge'); ?></span></div>
+      <h1><?php echo I18n::t('sol_wh.hero_title_pre'); ?> <em><?php echo I18n::t('sol_wh.hero_title_em'); ?></em></h1>
+      <p><?php echo I18n::t('sol_wh.hero_desc'); ?></p>
       <div class="wh-hero-actions">
-        <a href="#planos" class="wh-btn-p">Ver planos de Hosting</a>
-        <a href="/contato" class="wh-btn-s">Falar com a equipe</a>
+        <a href="#planos" class="wh-btn-p"><?php echo I18n::t('sol_wh.btn_plans'); ?></a>
+        <a href="/contato" class="wh-btn-s"><?php echo I18n::t('sol_wh.btn_contact'); ?></a>
       </div>
     </div>
     <div class="wh-hero-visual">
@@ -146,10 +146,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <!-- STATS -->
 <div class="wh-stats">
   <div class="wh-stats-inner">
-    <div class="wh-stat"><h3>50+</h3><p>Catálogo de apps</p></div>
-    <div class="wh-stat"><h3>99.9%</h3><p>Uptime garantido</p></div>
-    <div class="wh-stat"><h3>Git</h3><p>Deploy integrado</p></div>
-    <div class="wh-stat"><h3>SSL</h3><p>Grátis em todos os planos</p></div>
+    <div class="wh-stat"><h3><?php echo I18n::t('sol_wh.stat1_value'); ?></h3><p><?php echo I18n::t('sol_wh.stat1_desc'); ?></p></div>
+    <div class="wh-stat"><h3>99.9%</h3><p><?php echo I18n::t('sol_wh.stat2_desc'); ?></p></div>
+    <div class="wh-stat"><h3><?php echo I18n::t('sol_wh.stat3_value'); ?></h3><p><?php echo I18n::t('sol_wh.stat3_desc'); ?></p></div>
+    <div class="wh-stat"><h3>SSL</h3><p><?php echo I18n::t('sol_wh.stat4_desc'); ?></p></div>
   </div>
 </div>
 
@@ -157,31 +157,31 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="wh-section">
   <div class="wh-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="wh-label">Por que escolher?</div>
-      <h2 class="wh-title">Hospedagem limitada vs Web Hosting <?php echo View::e($_nome); ?></h2>
-      <p class="wh-sub" style="margin:0 auto;">Compare uma hospedagem básica com nossa plataforma completa para projetos web.</p>
+      <div class="wh-label"><?php echo I18n::t('sol_wh.compare_label'); ?></div>
+      <h2 class="wh-title"><?php echo I18n::t('sol_wh.compare_title'); ?> <?php echo View::e($_nome); ?></h2>
+      <p class="wh-sub" style="margin:0 auto;"><?php echo I18n::t('sol_wh.compare_desc'); ?></p>
     </div>
     <div class="wh-compare">
       <div class="wh-compare-card bad">
-        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Hospedagem limitada</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad_title'); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Apenas PHP e HTML estáticos</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem suporte a Node.js ou Python</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Deploy manual via FTP</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Sem catálogo de aplicações</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Backups manuais e pouco confiáveis</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Painel antigo e confuso</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#dc2626;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <?php echo I18n::t('sol_wh.compare_bad6'); ?></li>
         </ul>
       </div>
       <div class="wh-compare-card good">
         <h3><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Web Hosting <?php echo View::e($_nome); ?></h3>
         <ul>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte a PHP, Node.js, Python e mais</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Catálogo com WordPress, Laravel, Next.js</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Deploy via Git com um push</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Bancos de dados MySQL dedicados</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backups automáticos diários</li>
-          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Painel moderno e intuitivo</li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_wh.compare_good1'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_wh.compare_good2'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_wh.compare_good3'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_wh.compare_good4'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_wh.compare_good5'); ?></li>
+          <li><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <?php echo I18n::t('sol_wh.compare_good6'); ?></li>
         </ul>
       </div>
     </div>
@@ -192,19 +192,19 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="wh-section alt">
   <div class="wh-inner">
     <div style="text-align:center;">
-      <div class="wh-label">Tudo incluso</div>
-      <h2 class="wh-title">Tudo que sua hospedagem precisa</h2>
+      <div class="wh-label"><?php echo I18n::t('sol_wh.feat_label'); ?></div>
+      <h2 class="wh-title"><?php echo I18n::t('sol_wh.feat_title'); ?></h2>
     </div>
     <div class="wh-features">
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3>Catálogo de apps</h3><p>Instale WordPress, Laravel, Node.js e dezenas de outras aplicações com um clique. Sem configuração manual.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3>Git Deploy</h3><p>Conecte seu repositório Git e faça deploy automático a cada push. Fluxo profissional sem complicação.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>Bancos de dados MySQL</h3><p>Crie e gerencie bancos de dados MySQL dedicados. Acesse pelo painel ou phpMyAdmin integrado.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3>Gerenciador de arquivos</h3><p>Navegue, edite e gerencie seus arquivos direto pelo navegador. Upload, download e edição inline.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Domínios com SSL</h3><p>Conecte domínios próprios com SSL Let's Encrypt automático. HTTPS sem custo extra em todos os planos.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3>Backups automáticos</h3><p>Seus dados protegidos com backups diários automáticos. Restaure arquivos e bancos com um clique.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Painel intuitivo</h3><p>Gerencie tudo em um painel moderno: sites, bancos, domínios, backups, Git e suporte em um só lugar.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Proteção DDoS</h3><p>Infraestrutura com proteção contra ataques DDoS nativa. Seus projetos sempre disponíveis.</p></div>
-      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Suporte técnico</h3><p>Equipe especializada pronta para ajudar. Chat, ticket e e-mail disponíveis para qualquer dúvida.</p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3><?php echo I18n::t('sol_wh.feat1_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat1_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div><h3><?php echo I18n::t('sol_wh.feat2_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat2_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3><?php echo I18n::t('sol_wh.feat3_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat3_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3><?php echo I18n::t('sol_wh.feat4_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat4_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3><?php echo I18n::t('sol_wh.feat5_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat5_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><h3><?php echo I18n::t('sol_wh.feat6_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat6_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3><?php echo I18n::t('sol_wh.feat7_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat7_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3><?php echo I18n::t('sol_wh.feat8_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat8_desc'); ?></p></div>
+      <div class="wh-feat"><div class="wh-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3><?php echo I18n::t('sol_wh.feat9_title'); ?></h3><p><?php echo I18n::t('sol_wh.feat9_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -213,15 +213,15 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="wh-section dark">
   <div class="wh-inner">
     <div style="text-align:center;margin-bottom:8px;">
-      <div class="wh-label" style="color:#bbf7d0;">Como funciona</div>
-      <h2 class="wh-title" style="color:#fff;">Online em 3 passos</h2>
+      <div class="wh-label" style="color:#bbf7d0;"><?php echo I18n::t('sol_wh.steps_label'); ?></div>
+      <h2 class="wh-title" style="color:#fff;"><?php echo I18n::t('sol_wh.steps_title'); ?></h2>
     </div>
     <div class="wh-steps">
-      <div class="wh-step"><div class="wh-step-num">1</div><h3 style="color:#fff;">Escolha o plano</h3><p>Selecione o plano ideal para o tamanho do seu projeto.</p></div>
+      <div class="wh-step"><div class="wh-step-num">1</div><h3 style="color:#fff;"><?php echo I18n::t('sol_wh.step1_title'); ?></h3><p><?php echo I18n::t('sol_wh.step1_desc'); ?></p></div>
       <div class="wh-step-arrow">→</div>
-      <div class="wh-step"><div class="wh-step-num">2</div><h3 style="color:#fff;">Instale apps do catálogo</h3><p>Escolha entre WordPress, Laravel, Node.js e mais. Instalação em um clique.</p></div>
+      <div class="wh-step"><div class="wh-step-num">2</div><h3 style="color:#fff;"><?php echo I18n::t('sol_wh.step2_title'); ?></h3><p><?php echo I18n::t('sol_wh.step2_desc'); ?></p></div>
       <div class="wh-step-arrow">→</div>
-      <div class="wh-step"><div class="wh-step-num">3</div><h3 style="color:#fff;">Publique</h3><p>Seu site ou app está no ar. Use Git Deploy para atualizações contínuas.</p></div>
+      <div class="wh-step"><div class="wh-step-num">3</div><h3 style="color:#fff;"><?php echo I18n::t('sol_wh.step3_title'); ?></h3><p><?php echo I18n::t('sol_wh.step3_desc'); ?></p></div>
     </div>
   </div>
 </section>
@@ -233,27 +233,27 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <section class="wh-section">
   <div class="wh-inner">
     <div style="text-align:center;">
-      <div class="wh-label">Perguntas frequentes</div>
-      <h2 class="wh-title">Dúvidas sobre Web Hosting</h2>
+      <div class="wh-label"><?php echo I18n::t('sol_wh.faq_label'); ?></div>
+      <h2 class="wh-title"><?php echo I18n::t('sol_wh.faq_title'); ?></h2>
     </div>
     <div class="wh-faq">
-      <details><summary>Quais linguagens e frameworks são suportados?</summary><p>Suportamos PHP, Node.js, Python e aplicações estáticas. O catálogo inclui WordPress, Laravel, Next.js, Express e muitos outros frameworks prontos para instalar.</p></details>
-      <details><summary>Posso usar meu próprio domínio?</summary><p>Sim. Conecte quantos domínios quiser com configuração DNS simplificada. Todos recebem SSL grátis automaticamente.</p></details>
-      <details><summary>Tenho acesso SSH?</summary><p>O Web Hosting foca em simplicidade com painel e Git Deploy. Para acesso SSH completo, recomendamos o plano VPS.</p></details>
-      <details><summary>Posso migrar para um VPS depois?</summary><p>Sim. Faça upgrade a qualquer momento sem perder dados. Nossa equipe ajuda na migração completa.</p></details>
-      <details><summary>Como funciona o Git Deploy?</summary><p>Conecte seu repositório GitHub, GitLab ou Bitbucket. A cada push na branch configurada, o deploy é feito automaticamente no seu hosting.</p></details>
-      <details><summary>Quantos bancos de dados posso criar?</summary><p>Depende do plano escolhido. Cada plano define o número máximo de bancos MySQL que você pode criar e gerenciar.</p></details>
+      <details><summary><?php echo I18n::t('sol_wh.faq1_q'); ?></summary><p><?php echo I18n::t('sol_wh.faq1_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_wh.faq2_q'); ?></summary><p><?php echo I18n::t('sol_wh.faq2_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_wh.faq3_q'); ?></summary><p><?php echo I18n::t('sol_wh.faq3_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_wh.faq4_q'); ?></summary><p><?php echo I18n::t('sol_wh.faq4_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_wh.faq5_q'); ?></summary><p><?php echo I18n::t('sol_wh.faq5_a'); ?></p></details>
+      <details><summary><?php echo I18n::t('sol_wh.faq6_q'); ?></summary><p><?php echo I18n::t('sol_wh.faq6_a'); ?></p></details>
     </div>
   </div>
 </section>
 
 <!-- CTA FINAL -->
 <section class="wh-cta-section">
-  <h2>Pronto para hospedar seus projetos?</h2>
-  <p>Comece agora e tenha seu site ou app no ar em minutos. Catálogo de apps, Git Deploy e SSL grátis.</p>
+  <h2><?php echo I18n::t('sol_wh.cta_title'); ?></h2>
+  <p><?php echo I18n::t('sol_wh.cta_desc'); ?></p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="#planos" class="wh-btn-p">Ver planos</a>
-    <a href="/contato" class="wh-btn-s">Falar com a equipe</a>
+    <a href="#planos" class="wh-btn-p"><?php echo I18n::t('sol_wh.btn_plans'); ?></a>
+    <a href="/contato" class="wh-btn-s"><?php echo I18n::t('sol_wh.btn_contact'); ?></a>
   </div>
 </section>
 
