@@ -670,28 +670,14 @@ final class RegistroHandlers
             }
         });
 
-        // Notificar cliente por e-mail quando equipe envia mensagem no chat (se cliente offline)
+        // Notificar cliente por e-mail quando equipe envia mensagem no chat
         $p->registrar('notificar_cliente_chat', static function (array $payload, ContextoJob $ctx): void {
             $clientEmail = trim((string) ($payload['client_email'] ?? ''));
             $clientName  = trim((string) ($payload['client_name'] ?? ''));
-            $clientId    = (int) ($payload['client_id'] ?? 0);
             $roomId      = (int) ($payload['room_id'] ?? 0);
 
             if ($clientEmail === '' || $roomId <= 0) {
                 throw new \InvalidArgumentException('Payload inválido para notificar_cliente_chat.');
-            }
-
-            // Verificar se o cliente está online no WebSocket (via tabela chat_presence)
-            try {
-                $pdo = BancoDeDados::pdo();
-                $stmt = $pdo->prepare('SELECT id FROM chat_presence WHERE room_id = :r AND client_id = :c LIMIT 1');
-                $stmt->execute([':r' => $roomId, ':c' => $clientId]);
-                if ($stmt->fetch()) {
-                    $ctx->log('Cliente online no WebSocket — e-mail não enviado.');
-                    return;
-                }
-            } catch (\Throwable) {
-                // Se falhar a verificação, envia o e-mail por precaução
             }
 
             $appUrl = \LRV\Core\ConfiguracoesSistema::appUrlBase();

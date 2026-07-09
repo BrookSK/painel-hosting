@@ -242,15 +242,13 @@ final class ChatController
         $svc = new \LRV\App\Services\Chat\ChatMessageService();
         $saved = $svc->salvar($roomId, 'admin', $equipeId, $message, $fileUrl ?: null, $fileName ?: null);
 
-        // Notificar cliente por e-mail (assíncrono) se não estiver online no WebSocket
+        // Notificar cliente por e-mail (assíncrono via job)
         try {
             $clientEmail = trim((string) ($room['client_email'] ?? ''));
-            $clientId    = (int) ($room['client_id'] ?? 0);
-            if ($clientEmail !== '' && $clientId > 0) {
+            if ($clientEmail !== '') {
                 (new \LRV\Core\Jobs\RepositorioJobs())->criar('notificar_cliente_chat', [
                     'client_email' => $clientEmail,
                     'client_name'  => trim((string) ($room['client_name'] ?? '')),
-                    'client_id'    => $clientId,
                     'room_id'      => $roomId,
                 ]);
             }
