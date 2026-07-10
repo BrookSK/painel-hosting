@@ -174,6 +174,10 @@ final class DomainsController extends BaseApiController
             return $this->erro('MISSING_ID', 'The domain id is required.', 400);
         }
 
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Domain', 'removed');
+        }
+
         $clienteId = $this->clienteId($req);
         $pdo = BancoDeDados::pdo();
 

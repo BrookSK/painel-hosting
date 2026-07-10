@@ -78,6 +78,10 @@ final class ApplicationsController extends BaseApiController
             return $validacao;
         }
 
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Application install', 'queued');
+        }
+
         $templateId = (int) ($dados['template_id'] ?? 0);
         $vpsId = (int) ($dados['vps_id'] ?? 0);
         $domain = trim((string) ($dados['domain'] ?? ''));

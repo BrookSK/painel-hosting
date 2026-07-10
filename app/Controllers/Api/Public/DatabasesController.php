@@ -141,6 +141,10 @@ final class DatabasesController extends BaseApiController
             return $this->erro('MISSING_ID', 'The database id is required.', 400);
         }
 
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Database', 'deleted');
+        }
+
         $clienteId = $this->clienteId($req);
         $pdo = BancoDeDados::pdo();
 

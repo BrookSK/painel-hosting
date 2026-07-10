@@ -50,6 +50,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <option value="financeiro" <?php echo $department === 'financeiro' ? 'selected' : ''; ?>>Financeiro</option>
           <option value="devops"     <?php echo $department === 'devops'     ? 'selected' : ''; ?>>DevOps</option>
           <option value="comercial"  <?php echo $department === 'comercial'  ? 'selected' : ''; ?>>Comercial</option>
+          <option value="api"        <?php echo $department === 'api'        ? 'selected' : ''; ?>>API / Integrações</option>
         </select>
       </div>
     </div>

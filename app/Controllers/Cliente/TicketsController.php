@@ -68,7 +68,7 @@ final class TicketsController
                 $priority = 'high';
             }
         } catch (\Throwable) {}
-        $department = $in->postEnum('department', ['suporte', 'financeiro', 'devops', 'comercial'], 'suporte');
+        $department = $in->postEnum('department', ['suporte', 'financeiro', 'devops', 'comercial', 'api'], 'suporte');
         $message = $in->postString('message', 5000, true);
 
         if ($in->temErros() || $subject === '' || $message === '') {

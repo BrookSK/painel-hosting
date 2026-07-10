@@ -62,6 +62,10 @@ final class EmailsController extends BaseApiController
             return $validacao;
         }
 
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Email account', 'created');
+        }
+
         $email = strtolower(trim((string) ($dados['email_address'] ?? '')));
         $password = (string) ($dados['password'] ?? '');
         $quotaMb = (int) ($dados['quota_mb'] ?? 1024);
@@ -127,6 +131,10 @@ final class EmailsController extends BaseApiController
         $emailId = (int) ($req->query['id'] ?? ($req->json()['id'] ?? 0));
         if ($emailId <= 0) {
             return $this->erro('MISSING_ID', 'The email id is required.', 400);
+        }
+
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Email account', 'deleted');
         }
 
         $clienteId = $this->clienteId($req);

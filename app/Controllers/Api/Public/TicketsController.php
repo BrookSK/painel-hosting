@@ -150,7 +150,7 @@ final class TicketsController extends BaseApiController
         $subject = trim((string) ($dados['subject'] ?? ''));
         $message = trim((string) ($dados['message'] ?? ''));
         $priority = in_array($dados['priority'] ?? '', ['low', 'medium', 'high'], true) ? $dados['priority'] : 'medium';
-        $department = in_array($dados['department'] ?? '', ['suporte', 'financeiro', 'devops', 'comercial'], true) ? $dados['department'] : 'suporte';
+        $department = in_array($dados['department'] ?? '', ['suporte', 'financeiro', 'devops', 'comercial', 'api'], true) ? $dados['department'] : 'suporte';
 
         if (mb_strlen($subject) > 200) {
             return $this->validacaoFalhou([['field' => 'subject', 'message' => 'Subject must be 200 characters or less.']]);
@@ -212,6 +212,10 @@ final class TicketsController extends BaseApiController
             return $validacao;
         }
 
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Ticket reply', 'sent');
+        }
+
         $ticketId = (int) ($dados['ticket_id'] ?? 0);
         $message = trim((string) ($dados['message'] ?? ''));
         $clienteId = $this->clienteId($req);
@@ -266,6 +270,10 @@ final class TicketsController extends BaseApiController
         $ticketId = (int) ($req->query['id'] ?? ($req->json()['id'] ?? 0));
         if ($ticketId <= 0) {
             return $this->erro('MISSING_ID', 'The ticket id is required.', 400);
+        }
+
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Ticket', 'closed');
         }
 
         $clienteId = $this->clienteId($req);

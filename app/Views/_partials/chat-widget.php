@@ -87,6 +87,7 @@ try {
             <option value="Pagamento/Assinatura">Pagamento / Assinatura</option>
             <option value="Domínios/DNS">Domínios / DNS</option>
             <option value="E-mail">E-mail</option>
+            <option value="API/Integrações">API / Integrações</option>
             <option value="Plano personalizado">Plano personalizado</option>
             <option value="Outro">Outro</option>
           </select>

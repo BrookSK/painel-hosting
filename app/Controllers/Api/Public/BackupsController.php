@@ -75,6 +75,10 @@ final class BackupsController extends BaseApiController
             return $this->validacaoFalhou([['field' => 'vps_id', 'message' => 'VPS id is required.']]);
         }
 
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Backup', 'queued');
+        }
+
         $clienteId = $this->clienteId($req);
         $pdo = BancoDeDados::pdo();
 
@@ -104,6 +108,10 @@ final class BackupsController extends BaseApiController
         $backupId = (int) ($dados['backup_id'] ?? 0);
         if ($backupId <= 0) {
             return $this->validacaoFalhou([['field' => 'backup_id', 'message' => 'Backup id is required.']]);
+        }
+
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Backup restore', 'queued');
         }
 
         $clienteId = $this->clienteId($req);

@@ -43,7 +43,7 @@ final class TicketsController
             $params[':priority'] = $filtroPrio;
         }
 
-        $deptValidos = ['suporte', 'financeiro', 'devops', 'comercial'];
+        $deptValidos = ['suporte', 'financeiro', 'devops', 'comercial', 'api'];
         if ($filtroDept !== '' && in_array($filtroDept, $deptValidos, true)) {
             $where[] = 't.department = :department';
             $params[':department'] = $filtroDept;
