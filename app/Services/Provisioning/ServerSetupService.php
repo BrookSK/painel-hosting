@@ -67,7 +67,7 @@ final class ServerSetupService
     public function executarPasso(int $serverId, string $stepName, bool $forcar = false): array
     {
         if (function_exists('set_time_limit')) {
-            @set_time_limit(360);
+            @set_time_limit(600);
         }
 
         $pdo = BancoDeDados::pdo();
@@ -636,12 +636,23 @@ final class ServerSetupService
 
             // ── 10. PHP-FPM ──
             [
+                'name'           => 'Adicionar repositório PHP (ondrej/php)',
+                'cmd'            => 'which add-apt-repository >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq software-properties-common 2>&1); add-apt-repository -y ppa:ondrej/php 2>/dev/null || (echo "deb https://packages.sury.org/php/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/php-sury.list && curl -fsSL https://packages.sury.org/php/apt.gpg | apt-key add - 2>&1); apt-get update -qq 2>&1 && echo lrv-php-repo-ok',
+                'ok_if_contains' => 'lrv-php-repo-ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 120,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Adiciona o repositório de pacotes PHP (sury.org/ondrej). Necessário para PHP 8.x em Debian/Ubuntu.',
+            ],
+            [
                 'name'           => 'Instalar PHP-FPM (múltiplas versões)',
-                'cmd'            => 'export DEBIAN_FRONTEND=noninteractive; (which php8.3 >/dev/null 2>&1 && echo "php8.3 ok" || (apt-get install -y -qq php8.3-fpm php8.3-mysql php8.3-curl php8.3-mbstring php8.3-xml php8.3-zip php8.3-gd php8.3-intl 2>&1)) && (which php8.2 >/dev/null 2>&1 && echo "php8.2 ok" || (add-apt-repository -y ppa:ondrej/php 2>/dev/null; apt-get install -y -qq php8.2-fpm php8.2-mysql php8.2-curl php8.2-mbstring php8.2-xml php8.2-zip php8.2-gd php8.2-intl 2>&1 || echo "php8.2 skip")) && (which php8.1 >/dev/null 2>&1 && echo "php8.1 ok" || (apt-get install -y -qq php8.1-fpm php8.1-mysql php8.1-curl php8.1-mbstring php8.1-xml php8.1-zip php8.1-gd php8.1-intl 2>&1 || echo "php8.1 skip")) && systemctl enable php*-fpm 2>/dev/null && systemctl start php*-fpm 2>/dev/null && echo lrv-phpfpm-ok',
+                'cmd'            => 'export DEBIAN_FRONTEND=noninteractive; (which php8.3 >/dev/null 2>&1 && echo "php8.3 ok" || (apt-get install -y -qq php8.3-fpm php8.3-mysql php8.3-curl php8.3-mbstring php8.3-xml php8.3-zip php8.3-gd php8.3-intl 2>&1)) && (which php8.2 >/dev/null 2>&1 && echo "php8.2 ok" || (apt-get install -y -qq php8.2-fpm php8.2-mysql php8.2-curl php8.2-mbstring php8.2-xml php8.2-zip php8.2-gd php8.2-intl 2>&1 || echo "php8.2 skip")) && (which php8.1 >/dev/null 2>&1 && echo "php8.1 ok" || (apt-get install -y -qq php8.1-fpm php8.1-mysql php8.1-curl php8.1-mbstring php8.1-xml php8.1-zip php8.1-gd php8.1-intl 2>&1 || echo "php8.1 skip")) && systemctl enable php*-fpm 2>/dev/null && systemctl start php*-fpm 2>/dev/null && echo lrv-phpfpm-ok',
                 'ok_if_contains' => 'lrv-phpfpm-ok',
                 'fatal'          => false,
                 'precisa_root'   => true,
-                'timeout'        => 180,
+                'timeout'        => 300,
                 'essencial'      => false,
                 'risco'          => 'nenhum',
                 'descricao'      => 'Instala PHP 8.3, 8.2 e 8.1 com FPM e extensões comuns. Clientes podem escolher a versão por deploy. Se 8.2/8.1 não estiverem disponíveis no repositório, são pulados.',

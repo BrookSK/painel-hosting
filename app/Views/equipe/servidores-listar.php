@@ -290,7 +290,13 @@ function executarSetup(retomar) {
                 fd2.append('_csrf', csrfVal);
 
                 fetch('/equipe/servidores/inicializar-passo', { method: 'POST', body: fd2 })
-                    .then(function(r2) { return r2.json(); })
+                    .then(function(r2) {
+                        var ct = r2.headers.get('content-type') || '';
+                        if (!r2.ok || ct.indexOf('application/json') === -1) {
+                            throw new Error('Servidor retornou HTTP ' + r2.status + ' (timeout ou erro do proxy). Use "Continuar de onde parou".');
+                        }
+                        return r2.json();
+                    })
                     .then(function(r) {
                         var icon = r.status === 'ok' ? '✔' : '✘';
                         appendLog(icon + ' ' + s.name);
@@ -308,8 +314,8 @@ function executarSetup(retomar) {
                         proximoPasso();
                     })
                     .catch(function(e) {
-                        appendLog('✘ ' + s.name + ' — Erro de rede: ' + e.message);
-                        temErroFatal = true;
+                        appendLog('✘ ' + s.name + ' — ' + e.message);
+                        // Não marca como fatal para permitir continuar os próximos passos
                         setProgress(concluidos, total);
                         proximoPasso();
                     });
@@ -333,7 +339,13 @@ function finalizarSetup(concluidos, total) {
     fd.append('_csrf', csrfVal);
 
     fetch('/equipe/servidores/inicializar-finalizar', { method: 'POST', body: fd })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            var ct = r.headers.get('content-type') || '';
+            if (!r.ok || ct.indexOf('application/json') === -1) {
+                throw new Error('Servidor retornou HTTP ' + r.status + ' (timeout ou erro do proxy).');
+            }
+            return r.json();
+        })
         .then(function(data) {
             _setupRunning = false;
             document.getElementById('btn-fechar-x').style.display = '';
@@ -358,6 +370,12 @@ function finalizarSetup(concluidos, total) {
             _setupRunning = false;
             document.getElementById('btn-fechar-x').style.display = '';
             appendLog('✘ Erro ao finalizar: ' + e.message);
+            appendLog('   Use "Continuar de onde parou" para retomar.');
+            document.getElementById('btn-iniciar-setup').style.display = 'none';
+            document.getElementById('btn-continuar-setup').style.display = '';
+            document.getElementById('btn-continuar-setup').disabled = false;
+            var badge3 = document.getElementById('setup-badge-' + _setupId);
+            if (badge3) badge3.innerHTML = '<span class="badge-new badge-red">Erro</span>';
         });
 }
 </script>
