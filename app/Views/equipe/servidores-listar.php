@@ -98,6 +98,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
               <a href="/equipe/servidores/editar?id=<?php echo $sid; ?>"><?php echo View::e(I18n::t('eq_servidores.editar')); ?></a>
               &nbsp;·&nbsp;
               <a href="/equipe/servidores/terminal-seguro?id=<?php echo $sid; ?>">Terminal</a>
+              <?php
+                // Ocultar botões de inicialização para servidores gerenciados que já possuem VPS
+                $isManagedWithVps = !empty($s['is_managed_server']) && ((int)($s['managed_vps_count'] ?? 0)) > 0;
+              ?>
+              <?php if (!$isManagedWithVps): ?>
               &nbsp;·&nbsp;
               <?php if ($setupSt === 'error'): ?>
                 <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,true);return false;"
@@ -109,6 +114,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
                    style="color:#64748b;"><?php echo View::e(I18n::t('eq_servidores.re_inicializar')); ?></a>
               <?php else: ?>
                 <a href="#" onclick="abrirSetup(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>,false);return false;"><?php echo View::e(I18n::t('eq_servidores.inicializar')); ?></a>
+              <?php endif; ?>
               <?php endif; ?>
               &nbsp;·&nbsp;
               <a href="#" onclick="confirmarExcluir(<?php echo $sid; ?>,<?php echo View::e(json_encode($hostname)); ?>);return false;"
