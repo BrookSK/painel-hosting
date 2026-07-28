@@ -242,9 +242,9 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="flex:1;min-width:200px;">
           <strong style="font-size:13px;">Testar domínio temporário</strong>
-          <p class="texto" style="font-size:12px;margin:4px 0 0;">Cria um registro DNS de teste no Cloudflare (tipo <code>test-xxxx.<?php echo View::e((string)($infra_temp_domain_base??'temp.seudominio.com')); ?></code>) e verifica se resolve para o IP do servidor. Após o teste, o registro é removido automaticamente.</p>
+          <p class="texto" style="font-size:12px;margin:4px 0 0;">Cria um registro DNS de teste no Cloudflare e verifica se resolve para o IP do servidor. Após o teste, o registro é removido automaticamente.</p>
         </div>
-        <button type="button" class="btn btn-primary" id="btnTestarTempDomain" onclick="testarTempDomain()" style="white-space:nowrap;">Testar agora</button>
+        <button type="button" class="botao sm" id="btnTestarTempDomain" onclick="testarTempDomain()" style="white-space:nowrap;">Testar agora</button>
       </div>
       <div id="tempDomainTestResult" style="margin-top:10px;font-size:13px;display:none;padding:10px;border-radius:8px;"></div>
     </div>

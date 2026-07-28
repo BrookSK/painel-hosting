@@ -2,7 +2,6 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
-use LRV\Core\Csrf;
 
 $pageTitle = I18n::t('migracao_wp.nova_migracao');
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
@@ -17,7 +16,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <?php endif; ?>
 
 <form method="POST" action="/equipe/migracoes-wp/salvar" class="card-new" style="max-width:800px;">
-  <?php echo Csrf::campo(); ?>
+  <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 
   <!-- Destino -->
   <h3 style="margin:0 0 16px;font-size:16px;color:var(--text);">
@@ -123,8 +122,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
   </div>
 
   <div style="display:flex;gap:12px;">
-    <button type="submit" class="btn btn-primary"><?php echo View::e(I18n::t('migracao_wp.iniciar_migracao')); ?></button>
-    <a href="/equipe/migracoes-wp" class="btn btn-secondary"><?php echo View::e(I18n::t('geral.cancelar')); ?></a>
+    <button type="submit" class="botao"><?php echo View::e(I18n::t('migracao_wp.iniciar_migracao')); ?></button>
+    <a href="/equipe/migracoes-wp" class="botao sec"><?php echo View::e(I18n::t('geral.cancelar')); ?></a>
   </div>
 </form>
 

@@ -93,13 +93,13 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <!-- Ações -->
 <div class="card-new" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;">
   <?php if ($status === 'pending'): ?>
-  <button class="btn btn-primary" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp.testar_conexao')); ?></button>
+  <button class="botao sm" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp.testar_conexao')); ?></button>
   <?php endif; ?>
   <?php if (in_array($status, ['failed','cancelled'], true)): ?>
-  <button class="btn btn-primary" onclick="reexecutar()"><?php echo View::e(I18n::t('migracao_wp.reexecutar')); ?></button>
+  <button class="botao sm" onclick="reexecutar()"><?php echo View::e(I18n::t('migracao_wp.reexecutar')); ?></button>
   <?php endif; ?>
   <?php if (!in_array($status, ['completed','failed','cancelled'], true)): ?>
-  <button class="btn btn-danger" onclick="cancelar()"><?php echo View::e(I18n::t('migracao_wp.cancelar_migracao')); ?></button>
+  <button class="botao danger sm" onclick="cancelar()"><?php echo View::e(I18n::t('migracao_wp.cancelar_migracao')); ?></button>
   <?php endif; ?>
   <span id="actionMsg" style="font-size:13px;color:var(--text-muted);"></span>
 </div>

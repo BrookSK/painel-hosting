@@ -2,7 +2,6 @@
 declare(strict_types=1);
 use LRV\Core\View;
 use LRV\Core\I18n;
-use LRV\Core\Csrf;
 
 $pageTitle = I18n::t('migracao_wp_cli.nova_migracao');
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -17,7 +16,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <?php endif; ?>
 
 <form method="POST" action="/cliente/migracoes-wp/salvar" class="card-new" style="max-width:750px;">
-  <?php echo Csrf::campo(); ?>
+  <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
 
   <!-- VPS de destino -->
   <h3 style="margin:0 0 16px;font-size:16px;color:var(--text);">

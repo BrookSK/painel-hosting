@@ -20,11 +20,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 <div class="page-subtitle"><?php echo View::e(I18n::t('migracao_wp.subtitulo')); ?></div>
 
 <div style="margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-  <a href="/equipe/migracoes-wp/novo" class="btn btn-primary">
+  <a href="/equipe/migracoes-wp/novo" class="botao">
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;margin-right:4px;"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <?php echo View::e(I18n::t('migracao_wp.nova_migracao')); ?>
   </a>
-  <select onchange="location.href='/equipe/migracoes-wp'+(this.value?'?status='+this.value:'')" style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);">
+  <select onchange="location.href='/equipe/migracoes-wp'+(this.value?'?status='+this.value:'')" class="input" style="max-width:200px;">
     <option value="">Todos os status</option>
     <option value="pending" <?php echo ($filtro??'')==='pending'?'selected':''; ?>>Pendente</option>
     <option value="syncing_files" <?php echo ($filtro??'')==='syncing_files'?'selected':''; ?>>Sincronizando</option>
