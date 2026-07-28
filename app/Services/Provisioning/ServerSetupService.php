@@ -637,14 +637,14 @@ final class ServerSetupService
             // ── 10. PHP-FPM ──
             [
                 'name'           => 'Adicionar repositório PHP (ondrej/php)',
-                'cmd'            => 'which add-apt-repository >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq software-properties-common 2>&1); add-apt-repository -y ppa:ondrej/php 2>/dev/null || (echo "deb https://packages.sury.org/php/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/php-sury.list && curl -fsSL https://packages.sury.org/php/apt.gpg | apt-key add - 2>&1); apt-get update -qq 2>&1 && echo lrv-php-repo-ok',
+                'cmd'            => '(which php8.3 >/dev/null 2>&1 || which php8.2 >/dev/null 2>&1) && echo "lrv-php-repo-ok (php already present)" || { which add-apt-repository >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq software-properties-common 2>&1); (add-apt-repository -y ppa:ondrej/php 2>/dev/null || (echo "deb https://packages.sury.org/php/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/php-sury.list && curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/php-sury.gpg 2>&1)) && apt-get update -qq 2>&1 && echo lrv-php-repo-ok; }',
                 'ok_if_contains' => 'lrv-php-repo-ok',
                 'fatal'          => false,
                 'precisa_root'   => true,
-                'timeout'        => 120,
+                'timeout'        => 180,
                 'essencial'      => false,
                 'risco'          => 'nenhum',
-                'descricao'      => 'Adiciona o repositório de pacotes PHP (sury.org/ondrej). Necessário para PHP 8.x em Debian/Ubuntu.',
+                'descricao'      => 'Adiciona o repositório de pacotes PHP (sury.org/ondrej). Pula se PHP já está instalado.',
             ],
             [
                 'name'           => 'Instalar PHP-FPM (múltiplas versões)',

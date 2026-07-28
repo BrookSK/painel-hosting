@@ -405,6 +405,17 @@ final class ServidoresController
      */
     public function inicializarPasso(Requisicao $req): Resposta
     {
+        // Evitar timeout do proxy reverso para operações longas
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(600);
+        }
+        // Desabilitar output buffering para manter conexão viva
+        while (ob_get_level() > 0) { @ob_end_clean(); }
+        // Header para informar proxies (Nginx, Apache) que a resposta pode demorar
+        if (!headers_sent()) {
+            header('X-Accel-Buffering: no'); // Nginx: desativa buffering
+        }
+
         $id   = (int)($req->post['id'] ?? 0);
         $step = trim((string)($req->post['step'] ?? ''));
 

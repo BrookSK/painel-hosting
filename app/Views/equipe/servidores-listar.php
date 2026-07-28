@@ -223,6 +223,39 @@ function setProgress(concluidos, total) {
     document.getElementById('setup-progress-txt').textContent = concluidos + ' / ' + total + ' etapas (' + pct + '%)';
 }
 
+/**
+ * Após um 504/timeout do proxy, espera e tenta re-executar o passo.
+ * Como os passos são idempotentes, se já completou, volta como skipped/ok.
+ */
+function verificarPassoAposTimeout(stepName, csrfVal) {
+    return new Promise(function(resolve) {
+        // Esperar 15s para dar tempo do comando SSH terminar no servidor
+        setTimeout(function() {
+            var fd = new FormData();
+            fd.append('id', _setupId);
+            fd.append('step', stepName);
+            fd.append('_csrf', csrfVal);
+
+            fetch('/equipe/servidores/inicializar-passo', { method: 'POST', body: fd })
+                .then(function(r) {
+                    var ct = r.headers.get('content-type') || '';
+                    if (!r.ok || ct.indexOf('application/json') === -1) {
+                        // Ainda dando timeout — retornar como erro não-fatal
+                        resolve({ ok: false, step: stepName, status: 'error', output: 'Timeout persistente do proxy.' });
+                        return;
+                    }
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (data) resolve(data);
+                })
+                .catch(function() {
+                    resolve({ ok: false, step: stepName, status: 'error', output: 'Falha ao verificar status.' });
+                });
+        }, 15000);
+    });
+}
+
 function executarSetup(retomar) {
     if (_setupRunning || !_setupId) return;
     var modoRetomar = (retomar === true) || _setupRetomar;
@@ -293,11 +326,14 @@ function executarSetup(retomar) {
                     .then(function(r2) {
                         var ct = r2.headers.get('content-type') || '';
                         if (!r2.ok || ct.indexOf('application/json') === -1) {
-                            throw new Error('Servidor retornou HTTP ' + r2.status + ' (timeout ou erro do proxy). Use "Continuar de onde parou".');
+                            // Proxy timeout: verificar se o passo completou no servidor
+                            appendLog('⚠ ' + s.name + ' — proxy timeout (HTTP ' + r2.status + '), verificando status…');
+                            return verificarPassoAposTimeout(s.name, csrfVal);
                         }
                         return r2.json();
                     })
                     .then(function(r) {
+                        if (!r) { proximoPasso(); return; }
                         var icon = r.status === 'ok' ? '✔' : '✘';
                         appendLog(icon + ' ' + s.name);
                         if (r.output && r.output.trim() && r.status !== 'ok') {
