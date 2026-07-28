@@ -237,6 +237,18 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <!-- Teste de domínio temporário -->
+    <div style="margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <strong style="font-size:13px;">Testar domínio temporário</strong>
+          <p class="texto" style="font-size:12px;margin:4px 0 0;">Cria um registro DNS de teste no Cloudflare (tipo <code>test-xxxx.<?php echo View::e((string)($infra_temp_domain_base??'temp.seudominio.com')); ?></code>) e verifica se resolve para o IP do servidor. Após o teste, o registro é removido automaticamente.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="btnTestarTempDomain" onclick="testarTempDomain()" style="white-space:nowrap;">Testar agora</button>
+      </div>
+      <div id="tempDomainTestResult" style="margin-top:10px;font-size:13px;display:none;padding:10px;border-radius:8px;"></div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Terminal (Admin)</h2>
     <div class="grid">
       <div>
@@ -672,6 +684,29 @@ function instalarAgenteEmail(){
     else{st.textContent='✘ '+(d.erro||'Erro');st.style.color='#dc2626';}
     btn.disabled=false;
   }).catch(function(){st.textContent='✘ Erro de rede';st.style.color='#dc2626';btn.disabled=false;});
+}
+
+function testarTempDomain(){
+  var btn=document.getElementById('btnTestarTempDomain');
+  var res=document.getElementById('tempDomainTestResult');
+  btn.disabled=true;btn.textContent='Testando...';
+  res.style.display='block';res.style.background='#f1f5f9';res.style.color='var(--text)';
+  res.textContent='Criando registro DNS de teste no Cloudflare...';
+  fetch('/equipe/configuracoes/testar-temp-domain',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.disabled=false;btn.textContent='Testar agora';
+      if(d.ok){
+        res.style.background='rgba(16,185,129,.1)';res.style.color='#059669';
+        res.innerHTML='<strong>&#10003; Teste OK!</strong><br>'
+          +'Registro criado: <code>'+d.hostname+'</code> → <code>'+d.ip+'</code><br>'
+          +(d.resolveu?'DNS resolve corretamente. Wildcard funcionando!':'Aviso: DNS ainda não propagou (pode levar até 1 min). O registro foi criado no Cloudflare.')
+          +'<br><small>O registro de teste foi removido automaticamente.</small>';
+      } else {
+        res.style.background='rgba(239,68,68,.1)';res.style.color='#dc2626';
+        res.innerHTML='<strong>&#10007; Falhou</strong><br>'+(d.erro||'Erro desconhecido');
+      }
+    }).catch(function(e){btn.disabled=false;btn.textContent='Testar agora';res.style.background='rgba(239,68,68,.1)';res.style.color='#dc2626';res.textContent='Erro de rede: '+e;});
 }
 </script>
 

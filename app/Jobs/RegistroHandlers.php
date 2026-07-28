@@ -756,5 +756,26 @@ final class RegistroHandlers
                 $ctx->log('Falha ao reagendar: ' . $e->getMessage());
             }
         });
+
+        // Migração de WordPress de servidor externo via SSH (rsync + mysqldump)
+        $p->registrar('wp_migration', static function (array $payload, ContextoJob $ctx): void {
+            $migrationId = (int) ($payload['migration_id'] ?? 0);
+            if ($migrationId <= 0) {
+                throw new \InvalidArgumentException('migration_id inválido.');
+            }
+
+            $ctx->log('Iniciando migração WordPress #' . $migrationId);
+
+            $svc = new \LRV\App\Services\Migration\WordPressMigrationService();
+            $svc->setLogger(fn (string $m) => $ctx->log($m));
+
+            try {
+                $svc->executar($migrationId);
+                $ctx->log('Migração #' . $migrationId . ' concluída com sucesso.');
+            } catch (\Throwable $e) {
+                $ctx->log('Migração #' . $migrationId . ' falhou: ' . $e->getMessage());
+                throw $e;
+            }
+        });
     }
 }

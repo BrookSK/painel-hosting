@@ -719,4 +719,86 @@ final class ConfiguracoesController
             'logs' => implode("\n", $logs),
         ]);
     }
+
+    /**
+     * Testa a configuração de domínios temporários:
+     * 1. Cria um registro DNS de teste no Cloudflare
+     * 2. Verifica se resolve (DNS lookup)
+     * 3. Remove o registro de teste
+     */
+    public function testarTempDomain(Requisicao $req): Resposta
+    {
+        $tempBase = trim((string)Settings::obter('infra.temp_domain_base', ''));
+        if ($tempBase === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'infra.temp_domain_base não está configurado. Defina o domínio base para domínios temporários acima e salve antes de testar.']);
+        }
+
+        $cfToken = trim((string)Settings::obter('cloudflare.api_token', ''));
+        if ($cfToken === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Cloudflare API Token não configurado. Preencha acima e salve antes de testar.']);
+        }
+
+        $zoneId = trim((string)Settings::obter('cloudflare.zone_id', ''));
+        if ($zoneId === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Cloudflare Zone ID não configurado. Preencha acima e salve antes de testar.']);
+        }
+
+        // Determinar IP do servidor principal (primeiro servidor ativo)
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $srvStmt = $pdo->query("SELECT ip_address FROM servers WHERE status = 'active' ORDER BY id LIMIT 1");
+        $srv = $srvStmt->fetch();
+        $serverIp = is_array($srv) ? trim((string)($srv['ip_address'] ?? '')) : '';
+
+        if ($serverIp === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Nenhum servidor ativo encontrado para obter o IP de destino.']);
+        }
+
+        // Gerar hostname de teste
+        $testSlug = 'lrv-test-' . substr(bin2hex(random_bytes(4)), 0, 8);
+        $testHostname = $testSlug . '.' . $tempBase;
+
+        try {
+            $cf = new \LRV\App\Services\Cloudflare\CloudflareService();
+
+            // 1. Criar registro A de teste
+            $createResult = $cf->criarRegistroA($zoneId, $testHostname, $serverIp, false);
+
+            $success = (bool)($createResult['success'] ?? false);
+            if (!$success) {
+                $errors = $createResult['errors'] ?? [];
+                $errMsg = !empty($errors) ? json_encode($errors) : 'Resposta inesperada do Cloudflare.';
+                return Resposta::json(['ok' => false, 'erro' => 'Falha ao criar registro DNS no Cloudflare: ' . $errMsg]);
+            }
+
+            // 2. Verificar se resolve (aguardar propagação breve)
+            sleep(2);
+            $resolved = false;
+            $dnsResult = @dns_get_record($testHostname, DNS_A);
+            if (is_array($dnsResult)) {
+                foreach ($dnsResult as $r) {
+                    if (($r['ip'] ?? '') === $serverIp) {
+                        $resolved = true;
+                        break;
+                    }
+                }
+            }
+
+            // 3. Remover registro de teste
+            try {
+                $cf->removerRegistroPorNome($zoneId, $testHostname);
+            } catch (\Throwable) {
+                // Best-effort cleanup
+            }
+
+            return Resposta::json([
+                'ok' => true,
+                'hostname' => $testHostname,
+                'ip' => $serverIp,
+                'resolveu' => $resolved,
+            ]);
+
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
 }

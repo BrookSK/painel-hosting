@@ -105,6 +105,12 @@ function _temFeature(array $features, string $feature): bool {
       <span><?php echo View::e(I18n::t('sidebar.catalogo')); ?></span>
     </a>
     <?php endif; ?>
+    <?php if (_temFeature($_featuresPermitidas, 'aplicacoes')): ?>
+    <a href="/cliente/migracoes-wp" class="nav-item<?php echo _nav_ativo_cli('/cliente/migracoes-wp', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.migracoes_wp')); ?>" style="padding-left:32px;font-size:13px;">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><path d="M3 10h4l2-6 2 12 2-6h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span><?php echo View::e(I18n::t('sidebar.migracoes_wp')); ?></span>
+    </a>
+    <?php endif; ?>
     <?php if (_temFeature($_featuresPermitidas, 'git_deploy')): ?>
     <a href="/cliente/git-deploy" class="nav-item<?php echo _nav_ativo_cli('/cliente/git-deploy', $_seg); ?>" data-tooltip="Git Deploy">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 7v3a3 3 0 003 3h4a3 3 0 003-3V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>

@@ -100,6 +100,7 @@ $roteador->get('/equipe/configuracoes', [ConfiguracoesController::class, 'formul
 $roteador->post('/equipe/configuracoes', [ConfiguracoesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/configuracoes/instalar-agente-email', [ConfiguracoesController::class, 'instalarAgenteEmail'], [Middlewares::exigirPermissao('manage_servers')]);
 $roteador->post('/equipe/configuracoes/setup-daemons', [ConfiguracoesController::class, 'setupDaemons'], [Middlewares::exigirPermissao('manage_servers')]);
+$roteador->post('/equipe/configuracoes/testar-temp-domain', [ConfiguracoesController::class, 'testarTempDomain'], [Middlewares::exigirPermissao('manage_servers'), Middlewares::rateLimitEquipe('test_temp_domain', 5, 60)]);
 $roteador->post('/equipe/configuracoes/upload-imagem', [ImagemUploadController::class, 'upload'], [Middlewares::exigirPermissao('manage_billing'), Middlewares::rateLimitEquipe('img_upload', 20, 60)]);
 $roteador->get('/equipe/assinaturas', [AssinaturasController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->get('/equipe/asaas-eventos', [AsaasEventosController::class, 'listar'], [Middlewares::exigirPermissao('manage_billing')]);
@@ -204,6 +205,17 @@ $roteador->post('/cliente/aplicacoes/reinstalar', [ClienteAplicacoesController::
 $roteador->post('/cliente/aplicacoes/deletar', [ClienteAplicacoesController::class, 'deletar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/aplicacoes/status', [ClienteAplicacoesController::class, 'status'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 $roteador->get('/cliente/aplicacoes/logs', [ClienteAplicacoesController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+
+// Migração WordPress (cliente — self-service)
+$roteador->get('/cliente/migracoes-wp', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/migracoes-wp/novo', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'novo'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/migracoes-wp/salvar', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('wp_migration', 5, 60)]);
+$roteador->get('/cliente/migracoes-wp/ver', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'ver'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/migracoes-wp/progresso', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'progresso'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/migracoes-wp/testar-conexao', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'testarConexao'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('wp_migration_test', 10, 60)]);
+$roteador->post('/cliente/migracoes-wp/cancelar', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'cancelar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/migracoes-wp/ativar-dominio', [\LRV\App\Controllers\Cliente\MigracaoWpController::class, 'ativarDominio'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('wp_domain_activate', 5, 60)]);
+
 $roteador->get('/cliente/monitoramento', [ClienteMonitoramentoController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
 $roteador->get('/cliente/monitoramento/ver', [ClienteMonitoramentoController::class, 'ver'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
 $roteador->get('/cliente/status', [ClienteStatusController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
@@ -414,6 +426,17 @@ $roteador->post('/equipe/chat-flows/passo/salvar', [\LRV\App\Controllers\Equipe\
 $roteador->post('/equipe/chat-flows/passo/remover', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'removerPasso'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/chat-flows/passo/reordenar', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'reordenarPassos'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/chat-flows/dispatch', [\LRV\App\Controllers\Equipe\ChatFlowsController::class, 'dispatch'], [Middlewares::exigirPermissao('reply_tickets')]);
+
+// Migração WordPress (equipe)
+$roteador->get('/equipe/migracoes-wp', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->get('/equipe/migracoes-wp/novo', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'novo'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/migracoes-wp/salvar', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'salvar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('wp_migration', 10, 60)]);
+$roteador->get('/equipe/migracoes-wp/ver', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'ver'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->get('/equipe/migracoes-wp/progresso', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'progresso'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/migracoes-wp/testar-conexao', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'testarConexao'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('wp_migration_test', 10, 60)]);
+$roteador->post('/equipe/migracoes-wp/reexecutar', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'reexecutar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('wp_migration', 10, 60)]);
+$roteador->post('/equipe/migracoes-wp/cancelar', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'cancelar'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/migracoes-wp/ativar-dominio', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'ativarDominio'], [Middlewares::exigirPermissao('manage_vps')]);
 
 // API Keys (cliente — gerenciamento de chaves da Public API)
 $roteador->get('/cliente/api-keys', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
