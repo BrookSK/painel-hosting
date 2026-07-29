@@ -15,8 +15,8 @@ endif;
 <style>
 /* ── Reset & Base ─────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;overflow-x:hidden;}
-body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#f1f5f9;color:#0f172a;}
+html{scroll-behavior:smooth;overflow-x:hidden;height:100%;}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#060d1f;color:#0f172a;min-height:100%;}
 a{color:#4F46E5;text-decoration:none;}
 a:hover{text-decoration:none;}
 
