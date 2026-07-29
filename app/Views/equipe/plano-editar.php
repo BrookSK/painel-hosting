@@ -39,7 +39,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Tipo de produto</label>
         <select class="input" name="plan_type" id="planTypeSelect" onchange="togglePlanTypeFields()">
           <?php foreach ($planTypes as $ptKey => $ptInfo): ?>
-            <option value="<?php echo $ptKey; ?>" <?php echo $currentType === $ptKey ? 'selected' : ''; ?>><?php echo View::e($ptInfo[0]); ?></option>
+            <option value="<?php echo $ptKey; ?>" <?php echo $currentType === $ptKey ? 'selected' : ''; ?>><?php echo strip_tags($ptInfo[0]); ?></option>
           <?php endforeach; ?>
         </select>
         <p class="texto" style="font-size:12px;margin-top:4px;" id="planTypeDesc"><?php echo View::e($planTypes[$currentType][1] ?? ''); ?></p>
