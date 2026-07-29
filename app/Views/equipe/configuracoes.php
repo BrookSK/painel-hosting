@@ -689,12 +689,13 @@ function instalarAgenteEmail(){
 function testarTempDomain(){
   var btn=document.getElementById('btnTestarTempDomain');
   var res=document.getElementById('tempDomainTestResult');
+  var csrfToken=document.querySelector('input[name="_csrf"]').value||'';
   btn.disabled=true;btn.textContent='Testando...';
   res.style.display='block';res.style.background='#f1f5f9';res.style.color='var(--text)';
   res.textContent='Criando registro DNS de teste no Cloudflare...';
   var controller=new AbortController();
   var timer=setTimeout(function(){controller.abort();},20000);
-  fetch('/equipe/configuracoes/testar-temp-domain',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF),signal:controller.signal})
+  fetch('/equipe/configuracoes/testar-temp-domain',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(csrfToken),signal:controller.signal})
     .then(function(r){clearTimeout(timer);return r.json();})
     .then(function(d){
       btn.disabled=false;btn.textContent='Testar agora';
