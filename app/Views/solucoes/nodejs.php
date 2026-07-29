@@ -249,6 +249,5 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </section>
 
 <?php require __DIR__ . '/../_partials/footer.php'; ?>
-<?php require __DIR__ . '/../_partials/chat-widget.php'; ?>
 </body>
 </html>
