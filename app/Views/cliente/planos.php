@@ -62,7 +62,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <div class="linha" style="gap:6px;">
             <?php foreach ($channels as $ch): ?>
               <span class="badge-new" style="background:#f0fdf4; color:#166534; font-size:11px;">
-                <?php echo View::e($channelLabels[$ch] ?? $ch); ?>
+                <?php echo $channelLabels[$ch] ?? View::e($ch); ?>
               </span>
             <?php endforeach; ?>
           </div>
