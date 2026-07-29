@@ -242,11 +242,9 @@ final class MigracaoWpController
             return Resposta::json(['ok' => true, 'size' => '—', 'files' => 0, 'active' => false]);
         }
 
-        // Descobrir o deploy path
-        $pathStmt = $pdo->prepare('SELECT dest_path FROM wp_migrations WHERE id = :id LIMIT 1');
-        $pathStmt->execute([':id' => $id]);
-        $destPath = (string)($pathStmt->fetchColumn() ?: '');
-        if ($destPath === '') return Resposta::json(['ok' => true, 'size' => '—', 'files' => 0, 'active' => true]);
+        // Construir o deploy path (mesma lógica do WordPressMigrationService)
+        $volumeBase = rtrim((string)\LRV\Core\Settings::obter('infra.volume_base', '/vps'), '/');
+        $destPath = $volumeBase . '/client_' . $clienteId . '/wordpress_' . $id;
 
         try {
             $exec = new \LRV\App\Services\Infra\SshExecutor();
@@ -255,14 +253,14 @@ final class MigracaoWpController
             $user = (string)$row['ssh_user'];
             $authType = (string)($row['ssh_auth_type'] ?? 'password');
 
-            $cmd = 'du -sh ' . escapeshellarg($destPath) . ' 2>/dev/null | cut -f1; find ' . escapeshellarg($destPath) . ' -type f 2>/dev/null | wc -l';
+            $cmd = 'du -sh ' . escapeshellarg($destPath) . ' 2>/dev/null | cut -f1; ls -1 ' . escapeshellarg($destPath) . ' 2>/dev/null | wc -l';
 
             if ($authType === 'password') {
                 $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $cmd, 10);
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $cmd, 30);
             } else {
                 $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
-                $result = $exec->executar($host, $port, $user, $keyPath, $cmd, 10);
+                $result = $exec->executar($host, $port, $user, $keyPath, $cmd, 30);
             }
 
             $output = trim((string)($result['saida'] ?? ''));
