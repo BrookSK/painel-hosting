@@ -78,6 +78,19 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
     </div>
   </div>
 
+  <div style="margin-top:12px;margin-bottom:4px;">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);">
+      <input type="checkbox" name="source_use_sudo" value="1" style="accent-color:var(--accent);width:16px;height:16px;" onchange="document.getElementById('sudoPassCli').style.display=this.checked?'block':'none';" />
+      <span><?php echo View::e(I18n::t('migracao_wp_cli.usar_sudo')); ?></span>
+    </label>
+    <small class="form-text" style="margin-left:24px;"><?php echo View::e(I18n::t('migracao_wp_cli.usar_sudo_hint')); ?></small>
+  </div>
+  <div id="sudoPassCli" style="display:none;margin-top:8px;max-width:300px;">
+    <label class="form-label"><?php echo View::e(I18n::t('migracao_wp_cli.senha_sudo')); ?></label>
+    <input type="password" name="source_sudo_password" class="form-control" autocomplete="new-password">
+    <small class="form-text"><?php echo View::e(I18n::t('migracao_wp_cli.senha_sudo_hint')); ?></small>
+  </div>
+
   <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
 
   <!-- Banco de dados de origem -->

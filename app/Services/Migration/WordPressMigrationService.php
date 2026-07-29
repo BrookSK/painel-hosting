@@ -137,6 +137,10 @@ final class WordPressMigrationService
         $srcDbPass = SshCrypto::decifrar((string)$migration['source_db_password_enc']);
         $srcDbHost = (string)($migration['source_db_host'] ?: 'localhost');
         $srcDbPort = (int)($migration['source_db_port'] ?: 3306);
+        $srcUseSudo = (bool)(int)($migration['source_use_sudo'] ?? 0);
+        $srcSudoPass = $srcUseSudo ? SshCrypto::decifrar((string)($migration['source_sudo_password_enc'] ?? '')) : '';
+        // Se sudo ativo mas sem senha de sudo, usa a senha SSH como fallback
+        if ($srcUseSudo && $srcSudoPass === '') $srcSudoPass = $srcPass;
 
         // Dados do DESTINO (nosso servidor)
         $vpsId = (int)$migration['vps_id'];
@@ -180,6 +184,7 @@ final class WordPressMigrationService
             $this->appendLog($migrationId, "Conectando ao servidor de origem: {$srcUser}@{$srcHost}:{$srcPort}");
 
             $testCmd = 'test -d ' . escapeshellarg($srcWpPath . '/wp-content') . ' && echo wp-found || echo wp-not-found';
+            if ($srcUseSudo) $testCmd = SshExecutor::elevarComSudo($testCmd, $srcSudoPass);
             $result = $this->ssh->executarComSenha($srcHost, $srcPort, $srcUser, $srcPass, $testCmd, 15);
             $output = trim((string)($result['saida'] ?? ''));
 
@@ -291,6 +296,7 @@ final class WordPressMigrationService
                 . ' 2>/dev/null | gzip > ' . escapeshellarg($dumpFile)
                 . ' && ls -la ' . escapeshellarg($dumpFile)
                 . ' && echo dump-ok';
+            if ($srcUseSudo) $dumpCmd = SshExecutor::elevarComSudo($dumpCmd, $srcSudoPass);
 
             $dumpResult = $this->ssh->executarComSenha($srcHost, $srcPort, $srcUser, $srcPass, $dumpCmd, 600);
             $dumpOutput = (string)($dumpResult['saida'] ?? '');

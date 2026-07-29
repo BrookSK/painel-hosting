@@ -78,6 +78,20 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <p class="texto" style="font-size:12px;margin-top:4px;"><?php echo View::e(I18n::t('migracao_wp.caminho_wp_hint')); ?></p>
       </div>
     </div>
+    <div style="margin-top:12px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+        <input type="checkbox" name="source_use_sudo" value="1" style="accent-color:#4F46E5;width:16px;height:16px;" id="chkSudo" onchange="document.getElementById('sudoPassRow').style.display=this.checked?'':'none';" />
+        <span>Usar sudo no servidor de origem</span>
+      </label>
+      <p class="texto" style="font-size:12px;margin-top:4px;">Marque se o usuário SSH não é root e precisa de sudo para acessar os arquivos do WordPress e MySQL.</p>
+    </div>
+    <div class="grid" style="margin-top:8px;display:none;" id="sudoPassRow">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Senha do sudo</label>
+        <input class="input" type="password" name="source_sudo_password" autocomplete="new-password">
+        <p class="texto" style="font-size:12px;margin-top:4px;">Deixe em branco para usar a mesma senha SSH.</p>
+      </div>
+    </div>
 
     <!-- Origem Banco de Dados -->
     <h2 class="titulo" style="font-size:15px;margin:20px 0 14px;">

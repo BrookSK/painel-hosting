@@ -91,6 +91,8 @@ final class MigracaoWpController
         $sourceDbPassword = (string)($req->post['source_db_password'] ?? '');
         $sourceDbHost = trim((string)($req->post['source_db_host'] ?? 'localhost'));
         $sourceDbPort = (int)($req->post['source_db_port'] ?? 3306);
+        $sourceUseSudo = (int)(!empty($req->post['source_use_sudo']));
+        $sourceSudoPassword = (string)($req->post['source_sudo_password'] ?? '');
         $destDomain = trim((string)($req->post['dest_domain'] ?? ''));
 
         // Validações
@@ -126,8 +128,8 @@ final class MigracaoWpController
         $pdo->prepare(
             "INSERT INTO wp_migrations (client_id, vps_id, source_host, source_port, source_user, source_password_enc,
              source_wp_path, source_db_name, source_db_user, source_db_password_enc, source_db_host, source_db_port,
-             dest_domain, status, progress_percent, created_at, created_by)
-             VALUES (:c, :v, :sh, :sp, :su, :spe, :swp, :sdn, :sdu, :sdpe, :sdh, :sdp, :dd, 'pending', 0, :cr, NULL)"
+             source_use_sudo, source_sudo_password_enc, dest_domain, status, progress_percent, created_at, created_by)
+             VALUES (:c, :v, :sh, :sp, :su, :spe, :swp, :sdn, :sdu, :sdpe, :sdh, :sdp, :sudo, :sudop, :dd, 'pending', 0, :cr, NULL)"
         )->execute([
             ':c' => $clienteId, ':v' => $vpsId,
             ':sh' => $sourceHost, ':sp' => $sourcePort,
@@ -135,6 +137,8 @@ final class MigracaoWpController
             ':swp' => $sourceWpPath, ':sdn' => $sourceDbName,
             ':sdu' => $sourceDbUser, ':sdpe' => SshCrypto::cifrar($sourceDbPassword),
             ':sdh' => $sourceDbHost, ':sdp' => $sourceDbPort,
+            ':sudo' => $sourceUseSudo,
+            ':sudop' => $sourceUseSudo && $sourceSudoPassword !== '' ? SshCrypto::cifrar($sourceSudoPassword) : '',
             ':dd' => $destDomain !== '' ? $destDomain : null,
             ':cr' => date('Y-m-d H:i:s'),
         ]);
