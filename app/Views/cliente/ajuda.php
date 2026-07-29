@@ -30,6 +30,111 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->
+<!-- GUIA RAPIDO - O QUE VOCE QUER FAZER? -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="card-new" style="max-width:760px;">
+  <div class="card-new-title" style="margin-bottom:6px;">O que você quer fazer?</div>
+  <p style="font-size:13px;color:#64748b;margin:0 0 16px;">Clique no seu objetivo e veja o caminho completo, passo a passo.</p>
+
+  <details>
+    <summary>Quero colocar meu site/projeto no ar pela primeira vez</summary>
+    <p>Se você já tem um projeto no GitHub (ou GitLab), siga este caminho:</p>
+    <ol>
+      <li><strong>Cadastre um domínio</strong> (ou use um temporário):
+        <ul>
+          <li>Se já tem domínio próprio: vá em <a href="/cliente/dominios">Domínios</a> &rarr; adicione seu subdomínio &rarr; siga a verificação DNS</li>
+          <li>Se não tem domínio: não se preocupe, ao criar o Git Deploy você pode gerar um domínio temporário gratuito</li>
+        </ul>
+      </li>
+      <li><strong>Conecte seu repositório</strong>: vá em <a href="/cliente/git-deploy/novo">Git Deploy &rarr; Novo repositório</a>. Preencha nome, VPS, URL do GitHub, branch e tipo de app.</li>
+      <li><strong>Configure a Deploy Key</strong> (só para repos privados): copie a chave gerada e adicione no GitHub (Settings &rarr; Deploy keys).</li>
+      <li><strong>Faça o primeiro deploy</strong>: clique em "Deploy agora" no card do repositório.</li>
+      <li><strong>Acesse seu site</strong>: clique no link do domínio que aparece no card. Pronto!</li>
+    </ol>
+    <div class="tip">Tempo estimado: 5 a 10 minutos na primeira vez. Depois disso, cada deploy leva segundos.</div>
+  </details>
+
+  <details>
+    <summary>Quero criar um e-mail profissional (contato@meusite.com)</summary>
+    <ol>
+      <li>Vá em <a href="/cliente/dominios">Domínios</a> e adicione seu domínio raiz (ex: <code>meusite.com.br</code>).</li>
+      <li>Configure os registros DNS (MX, SPF, DKIM) conforme as instruções que o sistema mostra.</li>
+      <li>Aguarde a propagação DNS (5 min a 2h).</li>
+      <li>Vá em <a href="/cliente/emails">E-mails</a> &rarr; crie a conta (ex: contato@meusite.com.br) com uma senha.</li>
+      <li>Acesse pelo webmail ou configure no Outlook/Gmail (veja tutoriais na seção E-mails abaixo).</li>
+    </ol>
+    <div class="tip">Tempo estimado: 10 a 30 minutos (a maior parte é esperar o DNS propagar).</div>
+  </details>
+
+  <details>
+    <summary>Quero que meu site atualize automaticamente quando eu der git push</summary>
+    <ol>
+      <li>Vá em <a href="/cliente/git-deploy">Git Deploy</a> &rarr; clique em "Editar" no seu repositório.</li>
+      <li>Marque a opção <strong>Auto Deploy</strong> e salve.</li>
+      <li>Copie a <strong>URL do Webhook</strong> que apareceu.</li>
+      <li>No GitHub: Settings &rarr; Webhooks &rarr; Add webhook &rarr; cole a URL &rarr; Content type: application/json &rarr; push event &rarr; salve.</li>
+      <li>Pronto! Agora toda vez que você fizer <code>git push</code>, o servidor atualiza sozinho.</li>
+    </ol>
+    <div class="tip">Teste: faça uma alteração pequena no código, dê git push e veja o deploy acontecer automaticamente no painel.</div>
+  </details>
+
+  <details>
+    <summary>Quero instalar WordPress com 1 clique</summary>
+    <ol>
+      <li>Vá em <a href="/cliente/aplicacoes/catalogo">Aplicações &rarr; Catálogo</a>.</li>
+      <li>Encontre "WordPress" na lista e clique em <strong>Instalar</strong>.</li>
+      <li>Selecione a VPS e o domínio (ou gere um temporário).</li>
+      <li>Aguarde a instalação (1-3 minutos).</li>
+      <li>Acesse o domínio no navegador — o WordPress já está instalado e pronto para uso.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>Quero criar um banco de dados para meu projeto</summary>
+    <ol>
+      <li>Vá em <a href="/cliente/banco-dados/criar">Bancos de Dados &rarr; Criar</a>.</li>
+      <li>Selecione a VPS, defina um nome e uma senha.</li>
+      <li>Clique em "Criar".</li>
+      <li>Use os dados de conexão (host: localhost, porta: 3306, usuario e senha) no arquivo <code>.env</code> ou config do seu projeto.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>Quero migrar meu WordPress de outro servidor</summary>
+    <ol>
+      <li>Vá em <a href="/cliente/migracoes-wp/novo">Migrar WordPress &rarr; Nova Migração</a>.</li>
+      <li>Preencha os dados SSH do servidor atual (IP, porta, usuario, senha, caminho do WordPress).</li>
+      <li>Preencha os dados do banco MySQL (nome, usuario, senha — estão no wp-config.php).</li>
+      <li>Clique em "Iniciar Migração" e aguarde. O sistema copia tudo automaticamente.</li>
+      <li>Quando concluir, teste pelo domínio temporário. Depois, ative seu domínio real.</li>
+    </ol>
+    <div class="tip">Funciona com sites de qualquer tamanho (10GB, 50GB+). Não precisa fazer zip ou backup manual.</div>
+  </details>
+
+  <details>
+    <summary>Quero agendar uma tarefa automática (ex: limpeza de cache)</summary>
+    <ol>
+      <li>Vá em <a href="/cliente/cron-jobs">Cron Jobs</a>.</li>
+      <li>Preencha o comando (ex: <code>cd /var/www/meu-projeto && php artisan schedule:run</code>).</li>
+      <li>Escolha a frequência (a cada minuto, hora, dia, etc.).</li>
+      <li>Salve. O comando vai rodar automaticamente no horário definido.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>Meu site está fora do ar. O que fazer?</summary>
+    <ol>
+      <li><strong>Verifique o status da VPS</strong>: vá em <a href="/cliente/vps">VPS</a> e veja se está "Em execução". Se estiver suspensa, verifique pagamentos.</li>
+      <li><strong>Verifique os logs</strong>: no Git Deploy, clique em "Logs servidor" para ver erros do Nginx ou PHP.</li>
+      <li><strong>Verifique o monitoramento</strong>: em <a href="/cliente/monitoramento">Monitoramento</a>, veja se CPU/RAM estão no limite (100%).</li>
+      <li><strong>Tente um novo deploy</strong>: às vezes um deploy resolve o problema (código travado, processo parado).</li>
+      <li><strong>Reinicie o processo</strong> (Node.js): clique em "Reiniciar" no card do Git Deploy.</li>
+      <li>Se nada resolver, abra um <a href="/cliente/tickets/novo">ticket</a> com o erro que está vendo.</li>
+    </ol>
+  </details>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
 <!-- GIT DEPLOY -->
 <!-- ═══════════════════════════════════════════════ -->
 <div class="card-new" style="max-width:760px;">
@@ -186,6 +291,84 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li><strong>Remover:</strong> clique em "Remover" e confirme. Isso remove a integracao do painel, mas <strong>nao apaga</strong> os arquivos no servidor.</li>
     </ul>
   </details>
+
+  <div class="faq-section">Problemas comuns e como resolver</div>
+
+  <details>
+    <summary>Erro "Permission denied" ou "Authentication failed"</summary>
+    <p><strong>Causa:</strong> o servidor nao consegue acessar seu repositorio no GitHub porque a Deploy Key nao foi adicionada (ou foi adicionada errada).</p>
+    <p><strong>Solucao:</strong></p>
+    <ol>
+      <li>Va em Git Deploy &rarr; Editar o repositorio.</li>
+      <li>Copie a Deploy Key (caixa azul).</li>
+      <li>No GitHub, va no repositorio &rarr; Settings &rarr; Deploy keys.</li>
+      <li>Se ja existe uma key antiga, remova ela.</li>
+      <li>Clique em "Add deploy key" e cole a nova chave.</li>
+      <li>Tente o deploy novamente.</li>
+    </ol>
+    <div class="tip">Se o repositorio for <strong>publico</strong>, esse erro nao deveria acontecer. Nesse caso, verifique se a URL esta correta.</div>
+  </details>
+
+  <details>
+    <summary>Erro "Branch not found" ou "Remote branch not found"</summary>
+    <p><strong>Causa:</strong> a branch informada no painel nao existe no repositorio.</p>
+    <p><strong>Solucao:</strong></p>
+    <ol>
+      <li>No GitHub, clique no seletor de branches (geralmente mostra "main") e veja o nome exato da branch principal.</li>
+      <li>Copie o nome (ex: <code>main</code>, <code>master</code>, <code>develop</code>).</li>
+      <li>No painel, edite o repositorio e corrija o campo "Branch".</li>
+      <li>Salve e tente o deploy novamente.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>Erro "Could not resolve host" ou "DNS"</summary>
+    <p><strong>Causa:</strong> o servidor nao esta conseguindo acessar a internet (problema de rede/DNS).</p>
+    <p><strong>Solucao:</strong> isso e um problema no servidor, nao no seu codigo. Abra um <a href="/cliente/tickets/novo">ticket de suporte</a> informando o erro completo e o ID do repositorio. Resolveremos rapidamente.</p>
+  </details>
+
+  <details>
+    <summary>Deploy deu certo mas o site nao abre (erro 502 ou pagina em branco)</summary>
+    <p><strong>Para PHP/Laravel:</strong></p>
+    <ul>
+      <li>Verifique se o arquivo <code>.env</code> existe no servidor (use o Gerenciador de Arquivos).</li>
+      <li>Execute no Console: <code>php artisan key:generate</code> e depois <code>php artisan config:cache</code>.</li>
+      <li>Verifique permissoes: execute <code>chmod -R 775 storage bootstrap/cache</code>.</li>
+    </ul>
+    <p><strong>Para Node.js:</strong></p>
+    <ul>
+      <li>Verifique se a porta informada no painel e a mesma que o app usa.</li>
+      <li>Clique em "Logs PM2" para ver se o processo iniciou ou se ha erros.</li>
+      <li>Se o processo caiu, clique em "Reiniciar".</li>
+    </ul>
+    <p><strong>Para site estatico:</strong></p>
+    <ul>
+      <li>Verifique se existe um arquivo <code>index.html</code> na raiz do projeto.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Fiz deploy mas as alteracoes nao aparecem no site</summary>
+    <p>Possíveis causas:</p>
+    <ul>
+      <li><strong>Cache do navegador:</strong> pressione Ctrl+Shift+R (ou Cmd+Shift+R no Mac) para forcar reload sem cache.</li>
+      <li><strong>Branch errada:</strong> verifique se voce deu push na mesma branch configurada no painel.</li>
+      <li><strong>Build nao rodou:</strong> se seu projeto precisa de <code>npm run build</code>, coloque isso no campo "Comando pos-deploy".</li>
+      <li><strong>Cache do servidor (Laravel):</strong> execute no Console: <code>php artisan cache:clear && php artisan view:clear</code>.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Como colocar variaveis de ambiente (.env) no servidor?</summary>
+    <p>O arquivo <code>.env</code> geralmente nao vai no Git (ele fica no .gitignore). Entao voce precisa criar manualmente:</p>
+    <ol>
+      <li>Va em <a href="/cliente/arquivos">Arquivos</a> e navegue ate a pasta do seu projeto.</li>
+      <li>Clique em "Novo arquivo" e nomeie como <code>.env</code>.</li>
+      <li>Cole o conteudo do seu <code>.env</code> local (adaptando host do banco, URLs, etc.).</li>
+      <li>Salve.</li>
+    </ol>
+    <div class="tip">Com a opcao "Substituir tudo" ativada, o Git nao mexe em arquivos que nao estao no repositorio. Ou seja, seu .env fica seguro entre deploys.</div>
+  </details>
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->
@@ -237,6 +420,32 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li>No DNS do seu provedor, crie um <strong>registro A</strong> apontando para o IP do seu servidor (o IP e exibido na tela de dominios).</li>
       <li>Verifique e pronto — o dominio raiz fica disponivel para usar em aplicacoes e Git Deploy.</li>
     </ol>
+  </details>
+
+  <div class="faq-section">Problemas comuns com dominios</div>
+
+  <details>
+    <summary>O DNS nao propaga (verificacao falha)</summary>
+    <p><strong>Causas comuns:</strong></p>
+    <ul>
+      <li><strong>Criou o registro no lugar errado:</strong> o registro TXT/CNAME deve ser criado no provedor que gerencia o DNS do seu dominio (Cloudflare, Registro.br, GoDaddy, etc.). Se nao sabe qual e, use o site <a href="https://who.is" target="_blank" rel="noopener">who.is</a> para verificar.</li>
+      <li><strong>Tempo de propagacao:</strong> normalmente leva 5-30 minutos, mas em casos raros pode levar ate 48 horas. Tente novamente depois.</li>
+      <li><strong>Proxy do Cloudflare (nuvem laranja):</strong> se usa Cloudflare, desative o proxy (nuvem cinza) no registro CNAME/A. O proxy pode interferir na verificacao.</li>
+      <li><strong>Erro de digitacao:</strong> confira se copiou o valor exato que o sistema pediu (sem espacos extras).</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Onde encontro o painel de DNS do meu dominio?</summary>
+    <p>Depende de onde voce comprou/gerencia o dominio:</p>
+    <ul>
+      <li><strong>Registro.br:</strong> acesse registro.br &rarr; login &rarr; clique no dominio &rarr; "Editar zona DNS"</li>
+      <li><strong>Cloudflare:</strong> painel Cloudflare &rarr; selecione o site &rarr; menu "DNS"</li>
+      <li><strong>GoDaddy:</strong> Meus Dominios &rarr; DNS &rarr; Gerenciar</li>
+      <li><strong>Hostinger:</strong> hPanel &rarr; Dominios &rarr; DNS/Nameservers</li>
+      <li><strong>HostGator:</strong> Portal &rarr; Dominios &rarr; Zona de DNS</li>
+    </ul>
+    <p>Se nao sabe onde esta, abra um ticket e nos ajudamos a identificar.</p>
   </details>
 </div>
 
@@ -351,6 +560,34 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li><code>systemctl restart nginx</code> — reiniciar o Nginx</li>
     </ul>
   </details>
+
+  <details>
+    <summary>Cenarios praticos: o que executar em cada situacao</summary>
+    <p><strong>Meu site Laravel esta dando erro 500:</strong></p>
+    <ul>
+      <li><code>cd /var/www/meu-projeto</code></li>
+      <li><code>php artisan config:cache</code></li>
+      <li><code>php artisan route:cache</code></li>
+      <li><code>chmod -R 775 storage bootstrap/cache</code></li>
+      <li><code>cat storage/logs/laravel.log | tail -50</code> (ver ultimas 50 linhas do log)</li>
+    </ul>
+    <p><strong>Preciso instalar uma extensao PHP:</strong></p>
+    <ul>
+      <li><code>apt-get update && apt-get install php8.3-extensao</code> (ex: php8.3-gd, php8.3-curl, php8.3-mbstring)</li>
+      <li><code>systemctl restart php8.3-fpm</code></li>
+    </ul>
+    <p><strong>Meu app Node.js caiu:</strong></p>
+    <ul>
+      <li><code>pm2 status</code> — ver se o processo esta rodando</li>
+      <li><code>pm2 logs</code> — ver os erros</li>
+      <li><code>pm2 restart all</code> — reiniciar todos os processos</li>
+    </ul>
+    <p><strong>Quero ver quanto espaco em disco estou usando:</strong></p>
+    <ul>
+      <li><code>df -h</code> — espaco total do disco</li>
+      <li><code>du -sh /var/www/*</code> — tamanho de cada pasta de projeto</li>
+    </ul>
+  </details>
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->
@@ -425,6 +662,18 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
     <summary>Como baixar um backup?</summary>
     <p>Na lista de backups, clique em <strong>Baixar</strong> ao lado do backup desejado. O arquivo .tar.gz sera baixado para o seu computador.</p>
   </details>
+
+  <details>
+    <summary>Com que frequencia devo fazer backup?</summary>
+    <p>O sistema ja faz backups automaticos diarios. Mas recomendamos fazer um backup <strong>manual</strong> antes de:</p>
+    <ul>
+      <li>Fazer alteracoes grandes no codigo ou banco de dados</li>
+      <li>Atualizar plugins ou temas do WordPress</li>
+      <li>Mudar configuracoes do servidor</li>
+      <li>Migrar de dominio</li>
+    </ul>
+    <div class="tip">Backup manual + deploy = seguranca. Se algo der errado no deploy, voce restaura o backup e volta ao normal em segundos.</div>
+  </details>
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->
@@ -468,6 +717,28 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li><strong>Catalogo de Aplicacoes:</strong> instala templates prontos com 1 clique. Ideal para quem quer algo funcionando rapido sem ter um repositorio Git.</li>
       <li><strong>Git Deploy:</strong> conecta um repositorio seu (GitHub/GitLab) e faz deploy do seu codigo personalizado. Ideal para desenvolvedores que ja tem um projeto.</li>
     </ul>
+    <p><strong>Quando usar cada um:</strong></p>
+    <ul>
+      <li>"Quero um WordPress rapido" &rarr; Catalogo</li>
+      <li>"Tenho meu codigo no GitHub e quero publicar" &rarr; Git Deploy</li>
+      <li>"Preciso de um banco MySQL" &rarr; Catalogo (ou Bancos de Dados)</li>
+      <li>"Quero um site custom com React/Next.js" &rarr; Git Deploy</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>A instalacao falhou (status "Erro"). O que fazer?</summary>
+    <ol>
+      <li>Clique no card da aplicacao para ver a <strong>mensagem de erro</strong>.</li>
+      <li>Erros comuns:
+        <ul>
+          <li><strong>"Porta em uso"</strong> — outra aplicacao ja esta usando essa porta. Altere a porta da nova app.</li>
+          <li><strong>"Disco cheio"</strong> — sua VPS nao tem espaco suficiente. Apague arquivos desnecessarios ou faca upgrade.</li>
+          <li><strong>"Timeout"</strong> — a instalacao demorou demais (servidor lento). Tente novamente.</li>
+        </ul>
+      </li>
+      <li>Se nao entender o erro, copie a mensagem e cole num <a href="/cliente/tickets/novo">ticket</a>.</li>
+    </ol>
   </details>
 </div>
 
@@ -526,6 +797,39 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li><strong>DMARC</strong> — politica de autenticacao</li>
     </ul>
     <p>Crie esses registros no painel do seu provedor de DNS (Cloudflare, Registro.br, etc.). A verificacao e automatica apos propagacao.</p>
+  </details>
+
+  <div class="faq-section">Problemas comuns com e-mail</div>
+
+  <details>
+    <summary>Meus e-mails estao indo para o spam do destinatario</summary>
+    <p><strong>Causas mais comuns:</strong></p>
+    <ul>
+      <li><strong>DNS incompleto:</strong> verifique se todos os registros (MX, SPF, DKIM, DMARC) estao configurados corretamente.</li>
+      <li><strong>Dominio novo:</strong> dominios recem-registrados tem reputacao baixa. A situacao melhora com o tempo.</li>
+      <li><strong>Conteudo do e-mail:</strong> evite usar palavras excessivamente promocionais, imagens sem texto, ou links encurtados.</li>
+    </ul>
+    <p><strong>O que fazer:</strong></p>
+    <ol>
+      <li>Em <a href="/cliente/emails/dominios">Dominios de E-mail</a>, verifique se todos os registros mostram status verde (verificado).</li>
+      <li>Envie e-mails de teste para o Gmail e verifique o cabecalho ("Mostrar original") — procure por "spf=pass", "dkim=pass" e "dmarc=pass".</li>
+      <li>Se algum estiver "fail", revise o registro DNS correspondente.</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>Nao consigo enviar e-mails (erro de SMTP)</summary>
+    <ul>
+      <li>Verifique se esta usando a <strong>porta correta</strong>: 587 com STARTTLS (nao use a 25, ela e bloqueada).</li>
+      <li>Verifique se o <strong>usuario</strong> e o e-mail completo (com @dominio.com) e a <strong>senha</strong> esta correta.</li>
+      <li>Se usa Cloudflare, certifique-se de que o registro MX <strong>nao esta com proxy</strong> (nuvem cinza, nao laranja).</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Quero receber e-mails de um dominio no Gmail</summary>
+    <p>Voce pode configurar o Gmail para buscar seus e-mails profissionais. Veja o tutorial completo em <a href="/cliente/emails">E-mails</a> &rarr; secao "Configurar em outros apps" &rarr; Gmail.</p>
+    <p>Resumo: Gmail &rarr; Configuracoes &rarr; Contas e importacao &rarr; Adicionar conta de e-mail &rarr; IMAP &rarr; use os dados (servidor, porta 993, SSL).</p>
   </details>
 </div>
 
@@ -788,6 +1092,45 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li><strong>Ticket:</strong> menu lateral &rarr; Tickets &rarr; Novo Ticket</li>
       <li><strong>E-mail:</strong> envie para o e-mail de suporte da empresa</li>
     </ul>
+  </details>
+
+  <details>
+    <summary>O que sao API Keys e para que servem?</summary>
+    <p>API Keys permitem que voce (ou sistemas externos) se comuniquem com a plataforma de forma automatizada. Por exemplo: um script que cria backups, um bot que abre tickets, ou uma integracao com outro sistema.</p>
+    <p>Se voce nao e desenvolvedor e nao vai integrar nada, nao precisa mexer nas API Keys.</p>
+    <p>Se precisar: va em <a href="/cliente/api-keys">API Keys</a> no menu lateral &rarr; "Criar API Key" &rarr; escolha um nome e os escopos (permissoes).</p>
+  </details>
+
+  <details>
+    <summary>Qual a diferenca entre planos VPS, Web Hosting e WordPress?</summary>
+    <ul>
+      <li><strong>VPS:</strong> acesso completo ao servidor (terminal, monitoramento, tudo). Para quem precisa de controle total.</li>
+      <li><strong>Web Hosting:</strong> painel simplificado com catalogo de apps e git deploy. Sem terminal. Para quem quer praticidade.</li>
+      <li><strong>WordPress:</strong> focado 100% em WordPress. Instalacao em 1 clique, backups, SSL. O mais simples de todos.</li>
+    </ul>
+    <p><strong>Nao sabe qual escolher?</strong> Se voce so quer um site WordPress, escolha o plano WordPress. Se tem um projeto custom (Node, PHP, Python), escolha VPS ou Web Hosting.</p>
+  </details>
+
+  <details>
+    <summary>O painel esta lento ou travando. O que fazer?</summary>
+    <ul>
+      <li><strong>Limpe o cache do navegador:</strong> Ctrl+Shift+Delete &rarr; limpe dados de navegacao.</li>
+      <li><strong>Tente outro navegador:</strong> Chrome, Firefox ou Edge (evite Internet Explorer).</li>
+      <li><strong>Conexao lenta:</strong> teste sua internet em <a href="https://fast.com" target="_blank" rel="noopener">fast.com</a>.</li>
+      <li>Se o problema persistir, pode ser algo no servidor. Abra um ticket informando o que esta lento.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Posso ter mais de um projeto/site na mesma VPS?</summary>
+    <p><strong>Sim!</strong> Voce pode ter quantos projetos quiser na mesma VPS. Basta usar o Git Deploy para cada projeto, cada um com seu proprio subdominio.</p>
+    <p>Exemplo: voce pode ter:</p>
+    <ul>
+      <li><code>site.meudominio.com</code> — seu site principal</li>
+      <li><code>api.meudominio.com</code> — sua API backend</li>
+      <li><code>blog.meudominio.com</code> — um WordPress</li>
+    </ul>
+    <p>Todos na mesma VPS, cada um no seu diretorio.</p>
   </details>
 </div>
 
