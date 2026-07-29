@@ -38,6 +38,39 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   </div>
 </div>
 
+<!-- Mensagem tranquilizadora -->
+<?php if (!in_array($status, ['completed', 'failed', 'cancelled'], true)): ?>
+<div id="reassureBox" class="card-new" style="margin-bottom:16px;background:#f0fdf4;border:1px solid #bbf7d0;">
+  <div style="display:flex;align-items:flex-start;gap:12px;">
+    <div style="font-size:22px;line-height:1;" id="reassureIcon">&#10003;</div>
+    <div>
+      <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:4px;" id="reassureTitle">Tudo está funcionando normalmente</div>
+      <div style="font-size:13px;color:#15803d;line-height:1.6;" id="reassureMsg">
+        <?php if ($status === 'rsync_transfer' || ($m['current_step'] ?? '') === 'rsync_transfer'): ?>
+          Seus arquivos estão sendo copiados de servidor a servidor. Esse processo acontece em segundo plano — você pode fechar esta página, desligar o computador ou sair do sistema que a migração continua normalmente. Sites grandes (com muitas imagens e uploads) podem levar de 30 minutos a 2 horas. Não se preocupe, está tudo certo.
+        <?php elseif ($status === 'connecting' || $status === 'syncing_files'): ?>
+          Estamos conectando ao servidor de origem e preparando a transferência. Isso leva poucos segundos.
+        <?php elseif ($status === 'dumping_db'): ?>
+          O banco de dados está sendo exportado do servidor de origem. Normalmente leva de 10 segundos a 5 minutos, dependendo do tamanho.
+        <?php elseif ($status === 'importing_db'): ?>
+          O banco de dados está sendo importado no novo servidor. Quase lá!
+        <?php elseif ($status === 'configuring'): ?>
+          Estamos ajustando as configurações do WordPress para o novo servidor (wp-config.php, URLs, Nginx). Falta muito pouco!
+        <?php elseif ($status === 'finalizing'): ?>
+          Finalizando a migração — aplicando permissões e configurações finais. Questão de segundos!
+        <?php else: ?>
+          A migração está em andamento. Você pode acompanhar o progresso aqui ou fechar a página — o processo continua no servidor.
+        <?php endif; ?>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#166534;opacity:.8;">
+        <span id="reassureTimer"></span>
+        <span style="margin-left:8px;">&#8226; A página atualiza automaticamente a cada 3 segundos</span>
+      </div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
 <!-- Timeline de etapas -->
 <div class="card-new" style="margin-bottom:16px;">
   <div id="stepsTimeline" style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -133,6 +166,31 @@ var MIG_ID = <?php echo $id; ?>;
 var CSRF = '<?php echo Csrf::token(); ?>';
 var STATUS = '<?php echo $status; ?>';
 var POLLING = null;
+var startTime = new Date('<?php echo (string)($m['started_at'] ?? $m['created_at'] ?? ''); ?>'.replace(' ', 'T'));
+
+var reassureMsgs = {
+  'connecting': 'Estamos conectando ao servidor de origem e preparando a transferência. Isso leva poucos segundos.',
+  'syncing_files': 'Seus arquivos estão sendo copiados de servidor a servidor. Esse processo acontece em segundo plano — você pode fechar esta página, desligar o computador ou sair do sistema que a migração continua normalmente. Sites grandes (com muitas imagens e uploads) podem levar de 30 minutos a 2 horas. Não se preocupe, está tudo certo.',
+  'rsync_transfer': 'Seus arquivos estão sendo copiados de servidor a servidor. Esse processo acontece em segundo plano — você pode fechar esta página, desligar o computador ou sair do sistema que a migração continua normalmente. Sites grandes (com muitas imagens e uploads) podem levar de 30 minutos a 2 horas. Não se preocupe, está tudo certo.',
+  'dumping_db': 'O banco de dados está sendo exportado do servidor de origem. Normalmente leva de 10 segundos a 5 minutos, dependendo do tamanho.',
+  'importing_db': 'O banco de dados está sendo importado no novo servidor. Quase lá!',
+  'configuring': 'Estamos ajustando as configurações do WordPress para o novo servidor (wp-config.php, URLs, Nginx). Falta muito pouco!',
+  'finalizing': 'Finalizando a migração — aplicando permissões e configurações finais. Questão de segundos!'
+};
+
+function updateTimer(){
+  var el=document.getElementById('reassureTimer');
+  if(!el||!startTime||isNaN(startTime.getTime()))return;
+  var diff=Math.floor((Date.now()-startTime.getTime())/1000);
+  var h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60),s=diff%60;
+  var t='Tempo decorrido: ';
+  if(h>0)t+=h+'h '+m+'min';
+  else if(m>0)t+=m+'min '+s+'s';
+  else t+=s+'s';
+  el.textContent=t;
+}
+setInterval(updateTimer,1000);
+updateTimer();
 
 function poll(){
   fetch('/cliente/migracoes-wp/progresso?id='+MIG_ID)
@@ -158,7 +216,17 @@ function poll(){
 
       if(d.status==='completed'||d.status==='failed'||d.status==='cancelled'){
         clearInterval(POLLING);
+        var rbox=document.getElementById('reassureBox');
+        if(rbox){
+          if(d.status==='completed'){rbox.style.background='#f0fdf4';rbox.style.borderColor='#bbf7d0';}
+          else{rbox.style.display='none';}
+        }
         if(d.status==='completed') setTimeout(function(){location.reload();},1500);
+      } else {
+        // Atualizar mensagem tranquilizadora
+        var rmsg=document.getElementById('reassureMsg');
+        if(rmsg&&reassureMsgs[d.status]){rmsg.textContent=reassureMsgs[d.status];}
+        else if(rmsg&&d.step&&reassureMsgs[d.step]){rmsg.textContent=reassureMsgs[d.step];}
       }
       STATUS = d.status;
     }).catch(function(){});
