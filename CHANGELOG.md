@@ -5,6 +5,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.4.0] — 2026-07-29
+
+### Adicionado
+- **Auto Deploy no Git Deploy**: agora você pode ativar o deploy automático para que, sempre que fizer um push na branch configurada, o servidor atualize sozinho — sem precisar clicar em nada
+- **Webhook para GitHub, GitLab e Bitbucket**: ao ativar o Auto Deploy, o sistema gera uma URL única de webhook para você configurar no seu repositório
+- **Instruções de configuração**: o painel mostra o passo a passo para adicionar o webhook no GitHub, GitLab ou Bitbucket
+- **Indicador visual na listagem**: badge "Auto Deploy" aparece nos repositórios que têm a funcionalidade ativada
+
+---
+
 ## [3.3.0] — 2026-07-28
 
 ### Adicionado

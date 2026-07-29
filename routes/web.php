@@ -244,6 +244,7 @@ $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlew
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
 $roteador->post('/webhooks/stripe', [StripeController::class, 'receber']);
+$roteador->post('/webhooks/git-deploy/{secret}', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'webhook']);
 
 // 2FA equipe
 $roteador->get('/equipe/2fa/configurar', [DoisFatoresController::class, 'configurar'], [Middlewares::exigirLoginEquipe()]);

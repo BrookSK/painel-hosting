@@ -92,6 +92,7 @@ final class GitDeployController
         $appType = trim((string)($req->post['app_type'] ?? 'php'));
         if (!in_array($appType, ['php', 'static', 'nodejs', 'python', 'cpp'], true)) $appType = 'php';
         $appPort = in_array($appType, ['nodejs', 'python', 'cpp']) ? max(1024, min(65535, (int)($req->post['app_port'] ?? 3000))) : null;
+        $autoDeploy = (int)($req->post['auto_deploy'] ?? 0) === 1 ? 1 : 0;
         $phpVersion = trim((string)($req->post['php_version'] ?? '8.3'));
         $phpSettings = json_encode([
             'memory_limit' => trim((string)($req->post['php_memory_limit'] ?? '256M')),
@@ -137,8 +138,18 @@ final class GitDeployController
             // Liberar subdomínio anterior
             $subSvc->liberarUso('git_deploy', $id);
 
-            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc, php_version=:pv, php_settings=:ps, app_type=:at2, app_port=:ap';
-            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':at2'=>$appType,':ap'=>$appPort,':id'=>$id,':c'=>$clienteId];
+            $updateSql = 'UPDATE git_deployments SET name=:n, repo_url=:r, branch=:b, subdomain=:s, deploy_path=:dp, force_overwrite=:fo, post_deploy_cmd=:pdc, php_version=:pv, php_settings=:ps, app_type=:at2, app_port=:ap, auto_deploy=:ad';
+            $params = [':n'=>$name,':r'=>$repoUrl,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':at2'=>$appType,':ap'=>$appPort,':ad'=>$autoDeploy,':id'=>$id,':c'=>$clienteId];
+            // Gerar webhook_secret se auto_deploy ativado e ainda não existe
+            if ($autoDeploy === 1) {
+                $secretCheck = $pdo->prepare('SELECT webhook_secret FROM git_deployments WHERE id = :id AND client_id = :c LIMIT 1');
+                $secretCheck->execute([':id' => $id, ':c' => $clienteId]);
+                $existingSecret = (string)($secretCheck->fetchColumn() ?: '');
+                if ($existingSecret === '') {
+                    $updateSql .= ', webhook_secret=:ws';
+                    $params[':ws'] = bin2hex(random_bytes(32));
+                }
+            }
             if ($authToken !== '') {
                 $updateSql .= ', auth_token_enc=:at';
                 $params[':at'] = \LRV\App\Services\Infra\SshCrypto::cifrar($authToken);
@@ -185,8 +196,11 @@ final class GitDeployController
                 $deployKeyPrivateEnc = \LRV\App\Services\Infra\SshCrypto::cifrar($keyPair['private']);
             } catch (\Throwable) {}
 
-            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, php_version, php_settings, app_type, app_port, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:pv,:ps,:at2,:ap,:st,:cr)')
-                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':at2'=>$appType,':ap'=>$appPort,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
+            // Gerar webhook_secret se auto_deploy ativado
+            $webhookSecret = $autoDeploy === 1 ? bin2hex(random_bytes(32)) : null;
+
+            $pdo->prepare('INSERT INTO git_deployments (client_id, vps_id, name, repo_url, auth_token_enc, deploy_key_public, deploy_key_private_enc, branch, subdomain, temp_domain, deploy_path, force_overwrite, post_deploy_cmd, php_version, php_settings, app_type, app_port, auto_deploy, webhook_secret, status, created_at) VALUES (:c,:v,:n,:r,:at,:dkpub,:dkpriv,:b,:s,:td,:dp,:fo,:pdc,:pv,:ps,:at2,:ap,:ad,:ws,:st,:cr)')
+                ->execute([':c'=>$clienteId,':v'=>$vpsId,':n'=>$name,':r'=>$repoUrl,':at'=>$tokenEnc,':dkpub'=>$deployKeyPublic,':dkpriv'=>$deployKeyPrivateEnc,':b'=>$branch,':s'=>$subdomain!==''?$subdomain:null,':td'=>$tempDomain,':dp'=>$deployPath,':fo'=>$forceOverwrite,':pdc'=>$postDeployCmd!==''?$postDeployCmd:null,':pv'=>$phpVersion,':ps'=>$phpSettings,':at2'=>$appType,':ap'=>$appPort,':ad'=>$autoDeploy,':ws'=>$webhookSecret,':st'=>'active',':cr'=>date('Y-m-d H:i:s')]);
 
             // Marcar subdomínio como em uso
             $newDeployId = (int)$pdo->lastInsertId();
@@ -751,6 +765,98 @@ final class GitDeployController
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Webhook público para Auto Deploy.
+     * Recebe push events do GitHub/GitLab e dispara deploy automaticamente.
+     * Rota: POST /webhooks/git-deploy/{secret}
+     */
+    public function webhook(Requisicao $req): Resposta
+    {
+        $secret = trim((string)($req->params['secret'] ?? ''));
+        if ($secret === '' || strlen($secret) < 32) {
+            return Resposta::json(['ok' => false, 'erro' => 'Invalid webhook secret.'], 403);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.*, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.webhook_secret = :s AND g.auto_deploy = 1 AND g.status != "inactive" LIMIT 1'
+        );
+        $stmt->execute([':s' => $secret]);
+        $dep = $stmt->fetch();
+
+        if (!is_array($dep)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Webhook not found or auto-deploy disabled.'], 404);
+        }
+
+        // Verificar se o push é para a branch configurada
+        $body = file_get_contents('php://input');
+        $payload = json_decode($body, true);
+        $branch = (string)($dep['branch'] ?? 'main');
+
+        if (is_array($payload)) {
+            // GitHub: "ref" = "refs/heads/main"
+            $ref = (string)($payload['ref'] ?? '');
+            if ($ref !== '' && $ref !== 'refs/heads/' . $branch) {
+                return Resposta::json(['ok' => true, 'skipped' => true, 'reason' => 'Push to different branch.']);
+            }
+
+            // GitLab: "ref" = "refs/heads/main" (mesmo padrão)
+            // Bitbucket: "push.changes[0].new.name" = "main"
+            if (empty($ref) && isset($payload['push']['changes'])) {
+                $pushBranch = (string)($payload['push']['changes'][0]['new']['name'] ?? '');
+                if ($pushBranch !== '' && $pushBranch !== $branch) {
+                    return Resposta::json(['ok' => true, 'skipped' => true, 'reason' => 'Push to different branch.']);
+                }
+            }
+        }
+
+        // Executar deploy
+        $id = (int)$dep['id'];
+        try {
+            $result = $this->executarDeploy($dep);
+        } catch (\Throwable $e) {
+            $pdo->prepare('UPDATE git_deployments SET status="error", error_message=:e WHERE id=:id')
+                ->execute([':e' => $e->getMessage(), ':id' => $id]);
+            $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, output, deployed_at) VALUES (:d,:s,:o,:t)')
+                ->execute([':d' => $id, ':s' => 'error', ':o' => $e->getMessage(), ':t' => date('Y-m-d H:i:s')]);
+            return Resposta::json(['ok' => false, 'erro' => 'Deploy failed: ' . $e->getMessage()], 500);
+        }
+
+        $pdo->prepare('UPDATE git_deployments SET status="active", last_deployed_at=:t, last_commit_hash=:h, last_commit_message=:m, last_commit_author=:a, error_message=NULL WHERE id=:id')
+            ->execute([':t' => date('Y-m-d H:i:s'), ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':id' => $id]);
+        $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, commit_hash, commit_message, commit_author, output, deployed_at) VALUES (:d,:s,:h,:m,:a,:o,:t)')
+            ->execute([':d' => $id, ':s' => 'success', ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':o' => $result['output'], ':t' => date('Y-m-d H:i:s')]);
+
+        // Atualizar vhost Nginx se necessário
+        $deployDomain = trim((string)($dep['subdomain'] ?? ''));
+        $deployServerId = (int)($dep['server_id'] ?? 0);
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        $appType = (string)($dep['app_type'] ?? 'php');
+        $appPort = (int)($dep['app_port'] ?? 3000);
+
+        if ($deployDomain !== '' && $deployServerId > 0) {
+            try {
+                $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
+                if (in_array($appType, ['nodejs', 'python', 'cpp'])) {
+                    $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
+                } else {
+                    $phpVer = (string)($dep['php_version'] ?? '8.3');
+                    $phpSet = [];
+                    if (!empty($dep['php_settings'])) {
+                        $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
+                    }
+                    $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
+                }
+            } catch (\Throwable) {}
+        }
+
+        return Resposta::json(['ok' => true, 'commit' => $result['hash'], 'message' => $result['message']]);
     }
 
     private function renderizarErro(int $clienteId, int $id, string $erro): Resposta

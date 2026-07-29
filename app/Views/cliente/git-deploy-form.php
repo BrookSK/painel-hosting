@@ -185,6 +185,38 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </label>
     </div>
 
+    <!-- Auto Deploy -->
+    <?php $autoDeployAtivo = ((int)($dep['auto_deploy'] ?? 0)) === 1; ?>
+    <div style="margin-bottom:20px;border:1px solid <?php echo $autoDeployAtivo ? '#bbf7d0' : '#e2e8f0'; ?>;border-radius:10px;padding:14px;background:<?php echo $autoDeployAtivo ? '#f0fdf4' : 'transparent'; ?>;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" name="auto_deploy" value="1" <?php echo $autoDeployAtivo ? 'checked' : ''; ?> style="margin-top:2px;accent-color:#16a34a;width:16px;height:16px;flex-shrink:0;" />
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b;"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Auto Deploy</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Quando ativado, o deploy será executado automaticamente sempre que houver um push na branch <strong><?php echo View::e((string)($dep['branch'] ?? 'main')); ?></strong>. Configure o webhook no seu repositório (GitHub/GitLab/Bitbucket).</div>
+        </div>
+      </label>
+
+      <?php if ($isEdit && $autoDeployAtivo && !empty($dep['webhook_secret'])): ?>
+      <div style="margin-top:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+        <div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:6px;">URL do Webhook:</div>
+        <div style="position:relative;">
+          <input type="text" id="webhookUrl" readonly value="<?php echo View::e(rtrim((string)(\LRV\Core\Settings::obter('app.url', '')), '/') . '/webhooks/git-deploy/' . (string)$dep['webhook_secret']); ?>" style="width:100%;font-family:monospace;font-size:11px;padding:8px 70px 8px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;box-sizing:border-box;" />
+          <button type="button" onclick="document.getElementById('webhookUrl').select();navigator.clipboard.writeText(document.getElementById('webhookUrl').value).then(function(){this.textContent='Copiada!'}.bind(this))" style="position:absolute;top:5px;right:6px;background:#4F46E5;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;">Copiar</button>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:8px;">
+          Configure esta URL como webhook no seu repositório:
+          <ul style="margin:6px 0 0 16px;padding:0;list-style:disc;">
+            <li><strong>GitHub:</strong> Settings &rarr; Webhooks &rarr; Add webhook &rarr; Payload URL &rarr; Content type: <code>application/json</code> &rarr; Evento: <code>push</code></li>
+            <li><strong>GitLab:</strong> Settings &rarr; Webhooks &rarr; URL &rarr; Trigger: <code>Push events</code></li>
+            <li><strong>Bitbucket:</strong> Repository settings &rarr; Webhooks &rarr; Add webhook &rarr; URL &rarr; Trigger: <code>Repository push</code></li>
+          </ul>
+        </div>
+      </div>
+      <?php elseif (!$isEdit): ?>
+      <div style="margin-top:8px;font-size:11px;color:#94a3b8;">A URL do webhook será gerada após salvar.</div>
+      <?php endif; ?>
+    </div>
+
     <div class="grid" style="margin-bottom:14px;">
       <div>
         <label style="display:block;font-size:13px;margin-bottom:5px;">Tipo de aplicação</label>
