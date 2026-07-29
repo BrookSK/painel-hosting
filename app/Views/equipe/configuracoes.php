@@ -692,8 +692,10 @@ function testarTempDomain(){
   btn.disabled=true;btn.textContent='Testando...';
   res.style.display='block';res.style.background='#f1f5f9';res.style.color='var(--text)';
   res.textContent='Criando registro DNS de teste no Cloudflare...';
-  fetch('/equipe/configuracoes/testar-temp-domain',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)})
-    .then(function(r){return r.json();})
+  var controller=new AbortController();
+  var timer=setTimeout(function(){controller.abort();},20000);
+  fetch('/equipe/configuracoes/testar-temp-domain',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF),signal:controller.signal})
+    .then(function(r){clearTimeout(timer);return r.json();})
     .then(function(d){
       btn.disabled=false;btn.textContent='Testar agora';
       if(d.ok){
@@ -706,7 +708,7 @@ function testarTempDomain(){
         res.style.background='rgba(239,68,68,.1)';res.style.color='#dc2626';
         res.innerHTML='<strong>&#10007; Falhou</strong><br>'+(d.erro||'Erro desconhecido');
       }
-    }).catch(function(e){btn.disabled=false;btn.textContent='Testar agora';res.style.background='rgba(239,68,68,.1)';res.style.color='#dc2626';res.textContent='Erro de rede: '+e;});
+    }).catch(function(e){clearTimeout(timer);btn.disabled=false;btn.textContent='Testar agora';res.style.background='rgba(239,68,68,.1)';res.style.color='#dc2626';res.textContent=e.name==='AbortError'?'Timeout: o servidor demorou demais para responder. Verifique se o Cloudflare API Token e Zone ID estão corretos.':'Erro de rede: '+e.message;});
 }
 </script>
 

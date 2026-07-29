@@ -728,6 +728,8 @@ final class ConfiguracoesController
      */
     public function testarTempDomain(Requisicao $req): Resposta
     {
+        if (function_exists('set_time_limit')) @set_time_limit(30);
+
         $tempBase = trim((string)Settings::obter('infra.temp_domain_base', ''));
         if ($tempBase === '') {
             return Resposta::json(['ok' => false, 'erro' => 'infra.temp_domain_base não está configurado. Defina o domínio base para domínios temporários acima e salve antes de testar.']);
@@ -750,7 +752,7 @@ final class ConfiguracoesController
         $serverIp = is_array($srv) ? trim((string)($srv['ip_address'] ?? '')) : '';
 
         if ($serverIp === '') {
-            return Resposta::json(['ok' => false, 'erro' => 'Nenhum servidor ativo encontrado para obter o IP de destino.']);
+            return Resposta::json(['ok' => false, 'erro' => 'Nenhum servidor ativo encontrado para obter o IP de destino. Cadastre um servidor primeiro.']);
         }
 
         // Gerar hostname de teste
@@ -766,21 +768,31 @@ final class ConfiguracoesController
             $success = (bool)($createResult['success'] ?? false);
             if (!$success) {
                 $errors = $createResult['errors'] ?? [];
-                $errMsg = !empty($errors) ? json_encode($errors) : 'Resposta inesperada do Cloudflare.';
-                return Resposta::json(['ok' => false, 'erro' => 'Falha ao criar registro DNS no Cloudflare: ' . $errMsg]);
+                $errMsg = '';
+                if (is_array($errors) && !empty($errors)) {
+                    $firstErr = $errors[0] ?? [];
+                    $errMsg = (string)($firstErr['message'] ?? json_encode($errors));
+                } else {
+                    $errMsg = 'Resposta inesperada: ' . json_encode($createResult);
+                }
+                return Resposta::json(['ok' => false, 'erro' => 'Cloudflare recusou: ' . $errMsg . '. Verifique se o API Token tem permissão Zone:DNS:Edit e se o Zone ID está correto.']);
             }
 
             // 2. Verificar se resolve (aguardar propagação breve)
-            sleep(2);
+            sleep(1);
             $resolved = false;
-            $dnsResult = @dns_get_record($testHostname, DNS_A);
-            if (is_array($dnsResult)) {
-                foreach ($dnsResult as $r) {
-                    if (($r['ip'] ?? '') === $serverIp) {
-                        $resolved = true;
-                        break;
+            try {
+                $dnsResult = @dns_get_record($testHostname, DNS_A);
+                if (is_array($dnsResult)) {
+                    foreach ($dnsResult as $r) {
+                        if (($r['ip'] ?? '') === $serverIp) {
+                            $resolved = true;
+                            break;
+                        }
                     }
                 }
+            } catch (\Throwable) {
+                // DNS check falhou — não é crítico
             }
 
             // 3. Remover registro de teste
@@ -798,7 +810,7 @@ final class ConfiguracoesController
             ]);
 
         } catch (\Throwable $e) {
-            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+            return Resposta::json(['ok' => false, 'erro' => 'Exceção: ' . $e->getMessage()]);
         }
     }
 }
