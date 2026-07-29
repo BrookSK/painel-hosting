@@ -85,9 +85,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <?php endif; ?>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs servidor</button>
-      <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirm('Remover esta integração?')">
+      <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirmarExclusao(this)">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $did; ?>" />
+        <input type="hidden" name="apagar_arquivos" value="0" id="apagar-arquivos-<?php echo $did; ?>" />
         <button class="botao danger sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remover</button>
       </form>
       <span id="deploy-status-<?php echo $did; ?>" style="font-size:12px;color:#64748b;"></span>
@@ -135,6 +136,43 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
 <script>
 var _csrf = '<?php echo View::e(Csrf::token()); ?>';
+
+function confirmarExclusao(form) {
+  var id = form.querySelector('input[name="id"]').value;
+  var msg = 'Remover esta integração?\n\nEscolha:\n• OK = remove apenas a integração do painel (os arquivos ficam no servidor)\n\nSe quiser TAMBÉM apagar os arquivos do servidor, marque a opção abaixo antes de clicar em Remover.';
+
+  // Create a custom dialog
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:14px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);';
+  box.innerHTML = '<div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:12px;">Remover integração</div>'
+    + '<p style="font-size:14px;color:#334155;margin:0 0 16px;line-height:1.6;">Tem certeza que deseja remover esta integração do Git Deploy?</p>'
+    + '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;">'
+    + '<input type="checkbox" id="chk-apagar-' + id + '" style="margin-top:2px;accent-color:#dc2626;width:16px;height:16px;flex-shrink:0;" />'
+    + '<div><div style="font-size:13px;font-weight:600;color:#dc2626;">Também apagar os arquivos do servidor</div>'
+    + '<div style="font-size:12px;color:#92400e;margin-top:2px;">Isso vai excluir permanentemente a pasta do projeto no servidor. Essa ação não pode ser desfeita.</div></div>'
+    + '</label>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    + '<button id="cancel-del-' + id + '" style="padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;">Cancelar</button>'
+    + '<button id="confirm-del-' + id + '" style="padding:8px 16px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Remover</button>'
+    + '</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  document.getElementById('cancel-del-' + id).onclick = function() { document.body.removeChild(overlay); };
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) document.body.removeChild(overlay); });
+
+  document.getElementById('confirm-del-' + id).onclick = function() {
+    var chk = document.getElementById('chk-apagar-' + id);
+    form.querySelector('input[name="apagar_arquivos"]').value = chk.checked ? '1' : '0';
+    document.body.removeChild(overlay);
+    form.onsubmit = null;
+    form.submit();
+  };
+
+  return false;
+}
 
 function executarDeploy(id) {
   var btn = document.getElementById('btn-deploy-' + id);

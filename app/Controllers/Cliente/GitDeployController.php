@@ -395,16 +395,61 @@ final class GitDeployController
         if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
 
         $id = (int)($req->post['id'] ?? 0);
+        $apagarArquivos = (int)($req->post['apagar_arquivos'] ?? 0) === 1;
         $pdo = BancoDeDados::pdo();
 
-        // Remove proxy Nginx se tinha domínio temporário
-        $st = $pdo->prepare('SELECT temp_domain FROM git_deployments WHERE id = :id AND client_id = :c LIMIT 1');
+        // Buscar dados completos do deploy (para apagar arquivos e remover proxy)
+        $st = $pdo->prepare(
+            'SELECT g.temp_domain, g.deploy_path, g.app_type,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.id = :id AND g.client_id = :c LIMIT 1'
+        );
         $st->execute([':id' => $id, ':c' => $clienteId]);
         $dep = $st->fetch();
-        if (is_array($dep) && !empty($dep['temp_domain'])) {
-            try {
-                (new \LRV\App\Services\Infra\NginxProxyService())->removerProxy((string)$dep['temp_domain']);
-            } catch (\Throwable) {}
+
+        if (is_array($dep)) {
+            // Remove proxy Nginx se tinha domínio temporário
+            if (!empty($dep['temp_domain'])) {
+                try {
+                    (new \LRV\App\Services\Infra\NginxProxyService())->removerProxy((string)$dep['temp_domain']);
+                } catch (\Throwable) {}
+            }
+
+            // Apagar arquivos do servidor se solicitado
+            if ($apagarArquivos) {
+                $deployPath = rtrim((string)($dep['deploy_path'] ?? ''), '/');
+                // Segurança: não permitir apagar diretórios críticos
+                if ($deployPath !== '' && $deployPath !== '/' && $deployPath !== '/var' && $deployPath !== '/var/www' && str_starts_with($deployPath, '/var/www/')) {
+                    try {
+                        $exec = new \LRV\App\Services\Infra\SshExecutor();
+                        $host = (string)($dep['ip_address'] ?? '');
+                        $port = (int)($dep['ssh_port'] ?? 22);
+                        $user = (string)($dep['ssh_user'] ?? 'root');
+                        $authType = (string)($dep['ssh_auth_type'] ?? 'password');
+
+                        // Parar processo PM2 se for Node.js
+                        $pm2Cmd = '';
+                        if (($dep['app_type'] ?? '') === 'nodejs') {
+                            $pm2Cmd = 'pm2 delete deploy-' . $id . ' 2>/dev/null; pm2 save 2>/dev/null; ';
+                        }
+
+                        $rmCmd = $pm2Cmd . 'rm -rf ' . escapeshellarg($deployPath);
+
+                        if ($authType === 'password') {
+                            $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
+                            $exec->executarComSenha($host, $port, $user, $senha, $rmCmd, 30);
+                        } else {
+                            $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($dep['ssh_key_id'] ?? '');
+                            $exec->executar($host, $port, $user, $keyPath, $rmCmd, 30);
+                        }
+                    } catch (\Throwable) {
+                        // Silencioso — continua a remoção da integração mesmo se falhar apagar arquivos
+                    }
+                }
+            }
         }
 
         // Liberar subdomínio
