@@ -18,6 +18,7 @@ $_curSymbol = $_visitorUsd ? 'US$' : 'R$';
 $_convRate = 1.0;
 try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (\Throwable) { $_convRate = 5.0; }
 ?>
+<?php if (!empty($_planos)): ?>
 <section class="lps-section" id="planos">
   <div class="lps-inner">
     <div style="text-align:center;margin-bottom:40px;">
@@ -240,13 +241,14 @@ try { $_convRate = \LRV\Core\ConfiguracoesSistema::taxaConversaoUsd(); } catch (
   };
 })();
 </script>
+<?php endif; ?>
 
 <?php if (empty($_planos)): ?>
-<section style="padding:60px 20px;background:#f8fafc;text-align:center;" id="planos">
+<section style="padding:40px 20px;background:#060d1f;text-align:center;" id="planos">
   <div style="max-width:600px;margin:0 auto;">
-    <h2 style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:12px;"><?php echo I18n::t('sol_plans.empty_title'); ?></h2>
-    <p style="font-size:15px;color:#64748b;margin-bottom:24px;"><?php echo I18n::t('sol_plans.empty_desc'); ?></p>
-    <a href="/contato" style="display:inline-block;padding:14px 32px;background:<?php echo $_accent; ?>;color:#fff;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;"><?php echo I18n::t('sol_plans.empty_cta'); ?></a>
+    <h2 style="font-size:24px;font-weight:800;color:#fff;margin-bottom:12px;"><?php echo I18n::t('sol_plans.empty_title'); ?></h2>
+    <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:20px;"><?php echo I18n::t('sol_plans.empty_desc'); ?></p>
+    <a href="/contato" style="display:inline-block;padding:12px 28px;background:<?php echo $_accent; ?>;color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;"><?php echo I18n::t('sol_plans.empty_cta'); ?></a>
   </div>
 </section>
 <?php endif; ?>
