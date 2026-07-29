@@ -5,6 +5,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.3.0] — 2026-07-28
+
+### Adicionado
+- **Migração de WordPress via SSH**: ferramenta completa para migrar WordPress de servidores externos (AAPanel, cPanel, etc.) diretamente via rsync + mysqldump, sem necessidade de backup manual
+- **Self-service para clientes**: clientes podem iniciar migrações pelo próprio painel, sem depender da equipe
+- **Domínio temporário automático**: sites migrados recebem um subdomínio temporário para testes antes de ativar o domínio real
+- **Ativação de domínio real**: após testar, o cliente ativa o domínio definitivo com um clique — o sistema atualiza banco (siteurl/home), wp-config.php e Nginx automaticamente
+- **Opção de sudo no servidor de origem**: suporte a servidores onde o usuário SSH não é root
+- **Botão "Testar domínio temporário"** nas configurações da equipe: valida a integração Cloudflare DNS criando e removendo um registro de teste
+- **Migração no chat bot (FAQ)**: opção "Migrar WordPress" no assistente virtual com explicação do processo
+- **Destaque institucional**: migração automática como feature na landing page WordPress Gerenciado e nas FAQs
+
+### Melhorado
+- **Rsync com retry automático**: 3 tentativas com SSH keepalive (ServerAliveInterval + TCPKeepAlive) para sites pesados
+- **Timeout de transferência**: aumentado para 2h com reconexão automática em caso de queda
+- **FAQ de migração atualizado**: respostas nas páginas públicas agora mencionam o migrador automático
+
+### Corrigido
+- Espaço em branco abaixo do footer nas páginas de soluções (include duplicado do chat-widget)
+- Chaves i18n faltantes nas landing pages
+
+---
+
 ## [3.2.0] — 2026-07-09
 
 ### Adicionado
