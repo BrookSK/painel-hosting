@@ -213,6 +213,70 @@ final class MigracaoWpController
     }
 
     /**
+     * Atividade em tempo real: tamanho transferido e número de arquivos.
+     * Executa du -sh no diretório de destino via SSH.
+     */
+    public function atividade(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->query['id'] ?? 0);
+        if ($id <= 0) return Resposta::json(['ok' => false], 404);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT m.status, m.vps_id, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM wp_migrations m
+             JOIN vps v ON v.id = m.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE m.id = :id AND m.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row)) return Resposta::json(['ok' => false], 404);
+
+        // Só mostra atividade se estiver em andamento
+        if (in_array($row['status'], ['completed', 'failed', 'cancelled'], true)) {
+            return Resposta::json(['ok' => true, 'size' => '—', 'files' => 0, 'active' => false]);
+        }
+
+        // Descobrir o deploy path
+        $pathStmt = $pdo->prepare('SELECT dest_path FROM wp_migrations WHERE id = :id LIMIT 1');
+        $pathStmt->execute([':id' => $id]);
+        $destPath = (string)($pathStmt->fetchColumn() ?: '');
+        if ($destPath === '') return Resposta::json(['ok' => true, 'size' => '—', 'files' => 0, 'active' => true]);
+
+        try {
+            $exec = new \LRV\App\Services\Infra\SshExecutor();
+            $host = (string)$row['ip_address'];
+            $port = (int)$row['ssh_port'];
+            $user = (string)$row['ssh_user'];
+            $authType = (string)($row['ssh_auth_type'] ?? 'password');
+
+            $cmd = 'du -sh ' . escapeshellarg($destPath) . ' 2>/dev/null | cut -f1; find ' . escapeshellarg($destPath) . ' -type f 2>/dev/null | wc -l';
+
+            if ($authType === 'password') {
+                $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
+                $result = $exec->executarComSenha($host, $port, $user, $senha, $cmd, 10);
+            } else {
+                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($row['ssh_key_id'] ?? '');
+                $result = $exec->executar($host, $port, $user, $keyPath, $cmd, 10);
+            }
+
+            $output = trim((string)($result['saida'] ?? ''));
+            $lines = explode("\n", $output);
+            $size = trim($lines[0] ?? '0');
+            $files = (int)trim($lines[1] ?? '0');
+
+            return Resposta::json(['ok' => true, 'size' => $size, 'files' => $files, 'active' => true]);
+        } catch (\Throwable) {
+            return Resposta::json(['ok' => true, 'size' => '—', 'files' => 0, 'active' => true]);
+        }
+    }
+
+    /**
      * Testar conexão SSH com o servidor de origem.
      */
     public function testarConexao(Requisicao $req): Resposta

@@ -71,6 +71,30 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 <?php endif; ?>
 
+<!-- Atividade em tempo real -->
+<?php if (!in_array($status, ['completed', 'failed', 'cancelled'], true)): ?>
+<div id="activityBox" class="card-new" style="margin-bottom:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <h4 style="margin:0;font-size:14px;color:var(--text);">Atividade em tempo real</h4>
+    <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;" id="activityPulse">
+      <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;animation:pulse 1.5s infinite;"></span> Monitorando
+    </span>
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;">
+    <div style="text-align:center;">
+      <div style="font-size:24px;font-weight:700;color:var(--accent);" id="actSize">—</div>
+      <div style="font-size:12px;color:var(--text-muted);">Transferido</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:24px;font-weight:700;color:var(--accent);" id="actFiles">—</div>
+      <div style="font-size:12px;color:var(--text-muted);">Arquivos copiados</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">Atualiza a cada 10 segundos. Os dados são consultados diretamente no servidor de destino.</div>
+</div>
+<style>@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}</style>
+<?php endif; ?>
+
 <!-- Timeline de etapas -->
 <div class="card-new" style="margin-bottom:16px;">
   <div id="stepsTimeline" style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -191,6 +215,27 @@ function updateTimer(){
 }
 setInterval(updateTimer,1000);
 updateTimer();
+
+// Atividade em tempo real
+var lastSize = '';
+function pollActivity(){
+  fetch('/cliente/migracoes-wp/atividade?id='+MIG_ID)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.ok||!d.active)return;
+      var sizeEl=document.getElementById('actSize');
+      var filesEl=document.getElementById('actFiles');
+      if(sizeEl&&d.size&&d.size!=='—'){
+        if(lastSize!==d.size){sizeEl.style.transition='transform .3s';sizeEl.style.transform='scale(1.1)';setTimeout(function(){sizeEl.style.transform='scale(1)';},300);}
+        sizeEl.textContent=d.size;lastSize=d.size;
+      }
+      if(filesEl&&d.files>0){filesEl.textContent=d.files.toLocaleString('pt-BR');}
+    }).catch(function(){});
+}
+if(STATUS!=='completed'&&STATUS!=='failed'&&STATUS!=='cancelled'){
+  setInterval(pollActivity, 10000);
+  setTimeout(pollActivity, 2000);
+}
 
 function poll(){
   fetch('/cliente/migracoes-wp/progresso?id='+MIG_ID)
