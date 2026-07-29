@@ -90,6 +90,7 @@ final class PlanosController
         $status = (string) ($req->post['status'] ?? 'active');
         $backupSlots = max(0, min(2, (int) ($req->post['backup_slots'] ?? 0)));
         $isFeatured = (int) ($req->post['is_featured'] ?? 0) === 1 ? 1 : 0;
+        $isCustom = (int) ($req->post['is_custom'] ?? 0) === 1 ? 1 : 0;
         $clientId = (int) ($req->post['client_id'] ?? 0);
         $clientIdVal = $clientId > 0 ? $clientId : null;
 
@@ -127,14 +128,14 @@ final class PlanosController
         try {
             if ($id > 0) {
                 try {
-                    $stmt = $pdo->prepare('UPDATE plans SET name=:n, description=:d, cpu=:c, ram=:r, storage=:s, price_monthly=:p, stripe_price_id=:sp, specs_json=:j, support_channels=:sc, backup_slots=:bs, is_featured=:ft, status=:st WHERE id=:id');
+                    $stmt = $pdo->prepare('UPDATE plans SET name=:n, description=:d, cpu=:c, ram=:r, storage=:s, price_monthly=:p, stripe_price_id=:sp, specs_json=:j, support_channels=:sc, backup_slots=:bs, is_featured=:ft, is_custom=:cu, status=:st WHERE id=:id');
                     $stmt->execute([
                         ':n' => $nome, ':d' => $desc !== '' ? $desc : null,
                         ':c' => $cpu, ':r' => $ram, ':s' => $storage, ':p' => $preco,
                         ':sp' => $stripePriceId !== '' ? $stripePriceId : null,
                         ':j' => $specs !== '' ? $specs : null,
                         ':sc' => $supportChannels !== '' ? $supportChannels : null,
-                        ':bs' => $backupSlots, ':ft' => $isFeatured,
+                        ':bs' => $backupSlots, ':ft' => $isFeatured, ':cu' => $isCustom,
                         ':st' => $status, ':id' => $id,
                     ]);
                 } catch (\Throwable $e) {
@@ -148,14 +149,14 @@ final class PlanosController
                 }
             } else {
                 try {
-                    $stmt = $pdo->prepare('INSERT INTO plans (name, description, cpu, ram, storage, price_monthly, stripe_price_id, specs_json, support_channels, backup_slots, is_featured, status, created_at) VALUES (:n,:d,:c,:r,:s,:p,:sp,:j,:sc,:bs,:ft,:st,:cr)');
+                    $stmt = $pdo->prepare('INSERT INTO plans (name, description, cpu, ram, storage, price_monthly, stripe_price_id, specs_json, support_channels, backup_slots, is_featured, is_custom, status, created_at) VALUES (:n,:d,:c,:r,:s,:p,:sp,:j,:sc,:bs,:ft,:cu,:st,:cr)');
                     $stmt->execute([
                         ':n' => $nome, ':d' => $desc !== '' ? $desc : null,
                         ':c' => $cpu, ':r' => $ram, ':s' => $storage, ':p' => $preco,
                         ':sp' => $stripePriceId !== '' ? $stripePriceId : null,
                         ':j' => $specs !== '' ? $specs : null,
                         ':sc' => $supportChannels !== '' ? $supportChannels : null,
-                        ':bs' => $backupSlots, ':ft' => $isFeatured,
+                        ':bs' => $backupSlots, ':ft' => $isFeatured, ':cu' => $isCustom,
                         ':st' => $status, ':cr' => date('Y-m-d H:i:s'),
                     ]);
                 } catch (\Throwable $e) {

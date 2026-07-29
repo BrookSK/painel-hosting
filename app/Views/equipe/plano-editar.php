@@ -64,6 +64,13 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
 
     <div style="margin-top:12px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" name="is_custom" value="1" <?php echo ((int)($plano['is_custom'] ?? 0)) === 1 ? 'checked' : ''; ?> style="accent-color:#4F46E5;width:16px;height:16px;" />
+        <span><strong>Plano sob consulta (custom)</strong> — não pode ser contratado diretamente. Exibe "Fale conosco" no lugar do botão de compra.</span>
+      </label>
+    </div>
+
+    <div style="margin-top:12px;">
       <label style="display:block;font-size:13px;margin-bottom:6px;">Cliente exclusivo (opcional)</label>
       <select class="input" name="client_id">
         <option value="">— Plano público (todos os clientes)</option>
