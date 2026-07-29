@@ -157,7 +157,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
         </ul>
       </li>
       <li>Em <strong>Branch</strong>, coloque o nome da branch que você usa (geralmente <code>main</code> ou <code>master</code>). Se você não sabe, deixe <code>main</code>.</li>
-      <li>Em <strong>Subdomínio</strong>, selecione um subdomínio que vocêjácadastrou em Domínios. Se não tiver nenhum, marque a opção <strong>"Gerar domínio temporário"</strong> — o sistema vai criar um endereço gratuito para você testar (ex: <code>meusite3f2a.apps.seuservidor.com</code>).</li>
+      <li>Em <strong>Subdomínio</strong>, selecione um subdomínio que você já cadastrou em Domínios. Se não tiver nenhum, marque a opção <strong>"Gerar domínio temporário"</strong> — o sistema vai criar um endereço gratuito para você testar (ex: <code>meusite3f2a.apps.seuservidor.com</code>).</li>
       <li>Escolha o <strong>Tipo de aplicação</strong>:
         <ul>
           <li><strong>PHP / Laravel / WordPress</strong> — para projetos em PHP</li>
@@ -309,7 +309,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li>Vá em Git Deploy &rarr; Editar o repositório.</li>
       <li>Copie a Deploy Key (caixa azul).</li>
       <li>No GitHub, va no repositório &rarr; Settings &rarr; Deploy keys.</li>
-      <li>Sejáexiste uma key antiga, remova ela.</li>
+      <li>Se já existe uma key antiga, remova ela.</li>
       <li>Clique em "Add deploy key" e cole a nova chave.</li>
       <li>Tente o deploy novamente.</li>
     </ol>
@@ -481,7 +481,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
     <ol>
       <li>Em <a href="/cliente/banco-dados">Bancos de Dados</a>, clique no banco desejado.</li>
       <li>Clique no botão <strong>phpMyAdmin</strong>.</li>
-      <li>Uma nova aba vai abrir com o phpMyAdminjálogado no seu banco.</li>
+      <li>Uma nova aba vai abrir com o phpMyAdmin já logado no seu banco.</li>
     </ol>
     <div class="tip">Se o phpMyAdmin não estiver configurado, o botão vai pedir para configurar primeiro. Basta clicar e aguardar.</div>
   </details>
@@ -523,8 +523,8 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li>você vera as pastas e arquivos do servidor. Navegue clicando nas pastas.</li>
       <li>Para <strong>editar</strong> um arquivo, clique nele. Um editor abre com o conteúdo. Faça as alterações e clique em "Salvar".</li>
       <li>Para <strong>enviar</strong> um arquivo do seu computador, clique em "Upload" e selecione o arquivo.</li>
-      <li>Para <strong>baixar</strong> um arquivo, clique com botão direito (ou no icone de download) e salve no seu computador.</li>
-      <li>Para <strong>criar</strong> um novo arquivo ou pasta, use os botoes "Novo arquivo" / "Nova pasta".</li>
+      <li>Para <strong>baixar</strong> um arquivo, clique com botão direito (ou no ícone de download) e salve no seu computador.</li>
+      <li>Para <strong>criar</strong> um novo arquivo ou pasta, use os botões "Novo arquivo" / "Nova pasta".</li>
       <li>Para <strong>renomear ou excluir</strong>, clique com botão direito no item.</li>
     </ol>
     <div class="tip">O gerenciador de arquivos funciona 100% no navegador. você não precisa instalar nenhum programa de FTP.</div>
@@ -536,10 +536,10 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
     <p><strong>Motivo técnico:</strong> o Git Deploy coloca seus arquivos em <code>/var/www/nome-do-projeto</code>, mas o gerenciador de arquivos pode abrir em outro diretório (como <code>/root</code> ou <code>/home</code>).</p>
     <p><strong>Como acessar os arquivos do seu projeto Git Deploy:</strong></p>
     <ul>
-      <li><strong>Forma rapida:</strong> Vá em <a href="/cliente/git-deploy">Git Deploy</a> e clique no botão <strong>"Arquivos"</strong> (icone de pasta) no card do repositório. Isso abre o gerenciador de arquivosjáposicionado na pasta correta do projeto.</li>
-      <li><strong>Forma manual:</strong> Vá em Arquivos, selecione a VPS, e navegue manualmente ate o caminho do projeto (ex: <code>/var/www/meu-projeto</code>). O caminho exato aparece no card do Git Deploy, logo abaixo do nome.</li>
+      <li><strong>Forma rápida:</strong> Vá em <a href="/cliente/git-deploy">Git Deploy</a> e clique no botão <strong>"Arquivos"</strong> (ícone de pasta) no card do repositório. Isso abre o gerenciador de arquivos já posicionado na pasta correta do projeto.</li>
+      <li><strong>Forma manual:</strong> Vá em Arquivos, selecione a VPS, e navegue manualmente até o caminho do projeto (ex: <code>/var/www/meu-projeto</code>). O caminho exato aparece no card do Git Deploy, logo abaixo do nome.</li>
     </ul>
-    <div class="tip">Dica: sempre use o botão "Arquivos" dentro do Git Deploy. Elejáte leva direto para a pasta certa, sem precisar ficar navegando.</div>
+    <div class="tip">Dica: sempre use o botão "Arquivos" dentro do Git Deploy. Ele já te leva direto para a pasta certa, sem precisar ficar navegando.</div>
   </details>
 
   <details>
@@ -688,7 +688,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
 
   <details>
     <summary>Com que frequência devo fazer backup?</summary>
-    <p>O sistemajáfaz backups automáticos diários. Mas recomendamos fazer um backup <strong>manual</strong> antes de:</p>
+    <p>O sistema já faz backups automáticos diários. Mas recomendamos fazer um backup <strong>manual</strong> antes de:</p>
     <ul>
       <li>Fazer alterações grandes no código ou banco de dados</li>
       <li>Atualizar plugins ou temas do WordPress</li>
@@ -1043,10 +1043,10 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
 <!-- migração WORDPRESS -->
 <!-- ═══════════════════════════════════════════════ -->
 <div class="card-new" style="max-width:760px;margin-top:20px;">
-  <div class="card-new-title" style="margin-bottom:16px;">migração de WordPress</div>
+  <div class="card-new-title" style="margin-bottom:16px;">Migração de WordPress</div>
 
   <details>
-    <summary>Como migrar meu WordPress de outro servidor para ca?</summary>
+    <summary>Como migrar meu WordPress de outro servidor para cá?</summary>
     <ol>
       <li>No menu lateral, clique em <strong>Migrar WordPress</strong>.</li>
       <li>Clique em <strong>Nova migração</strong>.</li>
@@ -1073,7 +1073,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
   </details>
 
   <details>
-    <summary>Como ativar meu domínio real apos a migração?</summary>
+    <summary>Como ativar meu domínio real após a migração?</summary>
     <ol>
       <li>após a migração concluir, seu site está rodando com um domínio temporário.</li>
       <li>Teste o site pelo domínio temporário para garantir que está tudo OK.</li>
@@ -1093,7 +1093,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
   <div class="card-new-title" style="margin-bottom:16px;">Perguntas rápidas</div>
 
   <details>
-    <summary>Nao encontro uma opção no menu. Por que?</summary>
+    <summary>Não encontro uma opção no menu. Por que?</summary>
     <p>O menu mostra apenas as funcionalidades do seu plano. Planos mais simples (como WordPress) não incluem Terminal ou Monitoramento, por exemplo. Para acesso completo, contrate um plano VPS.</p>
   </details>
 
@@ -1135,7 +1135,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
   </details>
 
   <details>
-    <summary>O painel esta lento ou travando. O que fazer?</summary>
+    <summary>O painel está lento ou travando. O que fazer?</summary>
     <ul>
       <li><strong>Limpe o cache do navegador:</strong> Ctrl+Shift+Delete &rarr; limpe dados de navegacao.</li>
       <li><strong>Tente outro navegador:</strong> Chrome, Firefox ou Edge (evite Internet Explorer).</li>
@@ -1162,11 +1162,11 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
 <!-- ═══════════════════════════════════════════════ -->
 <div class="card-new" style="max-width:760px;margin-top:20px;">
   <div style="padding-top:4px;">
-    <p style="font-size:13px;color:#64748b;margin-bottom:12px;"><?php echo View::e(I18n::t('ajuda.não_encontrou')); ?></p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:12px;"><?php echo View::e(I18n::t('ajuda.nao_encontrou')); ?></p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <a class="botão" href="/cliente/chat"><?php echo View::e(I18n::t('ajuda.chat_vivo')); ?></a>
-      <a class="botão" href="/cliente/tickets/novo"><?php echo View::e(I18n::t('ajuda.abrir_ticket')); ?></a>
-      <a class="botão ghost" href="/contato"><?php echo View::e(I18n::t('ajuda.fale_conosco')); ?></a>
+      <a class="botao" href="/cliente/chat"><?php echo View::e(I18n::t('ajuda.chat_vivo')); ?></a>
+      <a class="botao" href="/cliente/tickets/novo"><?php echo View::e(I18n::t('ajuda.abrir_ticket')); ?></a>
+      <a class="botao ghost" href="/contato"><?php echo View::e(I18n::t('ajuda.fale_conosco')); ?></a>
     </div>
   </div>
 </div>
