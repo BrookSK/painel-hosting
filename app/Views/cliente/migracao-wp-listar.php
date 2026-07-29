@@ -20,7 +20,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div class="page-subtitle"><?php echo View::e(I18n::t('migracao_wp_cli.subtitulo')); ?></div>
 
 <div style="margin-bottom:16px;">
-  <a href="/cliente/migracoes-wp/novo" class="btn btn-primary">
+  <a href="/cliente/migracoes-wp/novo" class="botao">
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;margin-right:4px;"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <?php echo View::e(I18n::t('migracao_wp_cli.nova_migracao')); ?>
   </a>

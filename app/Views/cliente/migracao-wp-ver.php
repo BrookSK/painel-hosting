@@ -69,10 +69,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <!-- Ações -->
 <div class="card-new" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;">
   <?php if ($status === 'pending'): ?>
-  <button class="btn btn-primary" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp_cli.testar_ssh')); ?></button>
+  <button class="botao sm" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp_cli.testar_ssh')); ?></button>
   <?php endif; ?>
   <?php if (!in_array($status, ['completed','failed','cancelled'], true)): ?>
-  <button class="btn btn-danger" onclick="cancelar()"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
+  <button class="botao danger sm" onclick="cancelar()"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
   <?php endif; ?>
   <span id="actionMsg" style="font-size:13px;color:var(--text-muted);"></span>
 </div>
@@ -100,10 +100,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 
   <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
     <div style="flex:1;min-width:200px;">
-      <label class="form-label"><?php echo View::e(I18n::t('migracao_wp_cli.dominio_novo')); ?></label>
-      <input type="text" id="novoDominioInput" class="form-control" placeholder="meusite.com.br" value="">
+      <label style="display:block;font-size:13px;margin-bottom:5px;"><?php echo View::e(I18n::t('migracao_wp_cli.dominio_novo')); ?></label>
+      <input type="text" id="novoDominioInput" class="input" placeholder="meusite.com.br" value="">
     </div>
-    <button class="btn btn-primary" onclick="ativarDominio()" id="btnAtivarDominio"><?php echo View::e(I18n::t('migracao_wp_cli.dominio_ativar')); ?></button>
+    <button class="botao sm" onclick="ativarDominio()" id="btnAtivarDominio"><?php echo View::e(I18n::t('migracao_wp_cli.dominio_ativar')); ?></button>
   </div>
   <div id="dominioMsg" style="margin-top:8px;font-size:13px;"></div>
 
