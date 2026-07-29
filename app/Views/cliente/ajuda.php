@@ -6,7 +6,7 @@ use LRV\Core\I18n;
 $pageTitle    = I18n::t('ajuda.titulo');
 $clienteNome  = (string)($cliente['name'] ?? '');
 $clienteEmail = (string)($cliente['email'] ?? '');
-require __DIR__ . '/../_partials/layout-cliente-início.php';
+require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 ?>
 
 <style>
