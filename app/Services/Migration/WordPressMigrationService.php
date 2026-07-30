@@ -165,6 +165,17 @@ final class WordPressMigrationService
             return;
         }
 
+        // Criar registro DNS para domínio temporário apontando para o servidor de destino
+        if ($destDomain !== '' && str_contains($destDomain, trim((string)Settings::obter('infra.temp_domain_base', '')))) {
+            try {
+                $destIp = (string)$destSrv['ip_address'];
+                (new NginxProxyService())->criarProxy($destDomain, $destIp, 80);
+                $this->appendLog($migrationId, "Registro DNS criado: {$destDomain} → {$destIp}");
+            } catch (\Throwable $e) {
+                $this->appendLog($migrationId, 'Aviso: não foi possível criar registro DNS: ' . $e->getMessage());
+            }
+        }
+
         $destHost = (string)$destSrv['ip_address'];
         $destPort = (int)$destSrv['ssh_port'];
         $destUser = (string)$destSrv['ssh_user'];
