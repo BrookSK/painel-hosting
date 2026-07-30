@@ -712,6 +712,84 @@ final class ServerSetupService
                     }
                 },
             ],
+
+            // ── 13. MariaDB (MySQL) ──
+            [
+                'name'           => 'Instalar MariaDB (MySQL)',
+                'cmd'            => '(which mysql >/dev/null 2>&1 && echo "mariadb ok") || (export DEBIAN_FRONTEND=noninteractive && apt-get install -y -qq mariadb-server mariadb-client 2>&1 && systemctl start mariadb && systemctl enable mariadb && mysql -u root -e "SELECT 1" 2>&1 && echo lrv-mariadb-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 120,
+                'essencial'      => true,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala MariaDB (compatível com MySQL) para bancos de dados de clientes. Necessário para migrações WordPress, Git Deploy com banco, e aplicações PHP/Python.',
+            ],
+
+            // ── 14. PHP 7.4 (compatibilidade com sites antigos) ──
+            [
+                'name'           => 'Instalar PHP 7.4 FPM (compatibilidade)',
+                'cmd'            => '(which php7.4 >/dev/null 2>&1 && echo "php7.4 ok") || (apt-get install -y -qq php7.4-fpm php7.4-mysql php7.4-curl php7.4-mbstring php7.4-xml php7.4-zip php7.4-gd php7.4-intl php7.4-soap php7.4-bcmath 2>&1 && systemctl start php7.4-fpm && systemctl enable php7.4-fpm && echo lrv-php74-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 120,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala PHP 7.4 FPM para compatibilidade com WordPress e sites legados que ainda não suportam PHP 8.x.',
+            ],
+
+            // ── 15. Node.js (para planos Node.js) ──
+            [
+                'name'           => 'Instalar Node.js 20 LTS + PM2',
+                'cmd'            => '(which node >/dev/null 2>&1 && echo "node ok") || (curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>&1 && apt-get install -y -qq nodejs 2>&1 && npm install -g pm2 2>&1 && node -v && npm -v && echo lrv-node-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 120,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala Node.js 20 LTS e PM2 para gerenciamento de processos. Necessário para planos Node.js e Git Deploy com Node.',
+            ],
+
+            // ── 16. Python (para planos Python) ──
+            [
+                'name'           => 'Instalar Python 3 + pip + venv',
+                'cmd'            => '(which python3 >/dev/null 2>&1 && which pip3 >/dev/null 2>&1 && echo "python ok") || (apt-get install -y -qq python3 python3-pip python3-venv 2>&1 && python3 --version && echo lrv-python-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 60,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala Python 3, pip e venv. Necessário para planos Python (Django, Flask, FastAPI) e Git Deploy com Python.',
+            ],
+
+            // ── 17. GCC/G++/CMake (para planos C/C++) ──
+            [
+                'name'           => 'Instalar GCC, G++, CMake e Make',
+                'cmd'            => '(which gcc >/dev/null 2>&1 && which cmake >/dev/null 2>&1 && echo "gcc ok") || (apt-get install -y -qq build-essential cmake 2>&1 && gcc --version && cmake --version && echo lrv-gcc-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 120,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala GCC, G++, Make e CMake para compilação de aplicações C/C++. Necessário para planos C/C++ App.',
+            ],
+
+            // ── 18. Composer (para PHP/Laravel) ──
+            [
+                'name'           => 'Instalar Composer',
+                'cmd'            => '(which composer >/dev/null 2>&1 && echo "composer ok") || (curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 2>&1 && composer --version && echo lrv-composer-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'precisa_root'   => true,
+                'timeout'        => 60,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala o Composer globalmente. Necessário para projetos PHP/Laravel no Git Deploy.',
+            ],
         ];
     }
 

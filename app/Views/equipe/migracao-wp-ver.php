@@ -91,14 +91,20 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 </div>
 
 <!-- Ações -->
-<div class="card-new" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;">
+<div class="card-new" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
   <?php if ($status === 'pending'): ?>
   <button class="botao sm" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp.testar_conexao')); ?></button>
+  <?php endif; ?>
+  <?php if (!in_array($status, ['completed','cancelled'], true)): ?>
+  <button class="botao sm" onclick="retomar()" id="btnRetomar">Retomar de onde parou</button>
   <?php endif; ?>
   <?php if (in_array($status, ['failed','cancelled'], true)): ?>
   <button class="botao sm" onclick="reexecutar()"><?php echo View::e(I18n::t('migracao_wp.reexecutar')); ?></button>
   <?php endif; ?>
-  <?php if (!in_array($status, ['completed','failed','cancelled'], true)): ?>
+  <?php if ($status === 'completed' && !empty($m['dest_domain'])): ?>
+  <button class="botao sm ghost" onclick="recriarDns()">Recriar DNS</button>
+  <?php endif; ?>
+  <?php if (!in_array($status, ['completed','cancelled'], true)): ?>
   <button class="botao danger sm" onclick="cancelar()"><?php echo View::e(I18n::t('migracao_wp.cancelar_migracao')); ?></button>
   <?php endif; ?>
   <span id="actionMsg" style="font-size:13px;color:var(--text-muted);"></span>
@@ -175,6 +181,29 @@ function testarConexao(){
     .then(function(d){
       document.getElementById('actionMsg').textContent = d.ok ? 'Conexão OK: '+d.output : 'Falhou: '+(d.erro||'erro');
       document.getElementById('actionMsg').style.color = d.ok?'#10b981':'#ef4444';
+    }).catch(function(e){document.getElementById('actionMsg').textContent='Erro: '+e;});
+}
+
+function retomar(){
+  if(!confirm('Retomar a migração de onde parou? O sistema verifica automaticamente o que já foi feito.')) return;
+  var btn=document.getElementById('btnRetomar');btn.disabled=true;btn.textContent='Retomando...';
+  document.getElementById('actionMsg').textContent='Verificando e criando job...';
+  fetch('/equipe/migracoes-wp/reexecutar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&id='+MIG_ID})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.disabled=false;btn.textContent='Retomar de onde parou';
+      if(d.ok){document.getElementById('actionMsg').innerHTML='<span style="color:#10b981;">✓ Job criado. Aguarde...</span>';setTimeout(function(){location.reload();},2000);}
+      else{document.getElementById('actionMsg').innerHTML='<span style="color:#ef4444;">✘ '+(d.erro||'Erro')+'</span>';}
+    }).catch(function(e){btn.disabled=false;btn.textContent='Retomar de onde parou';});
+}
+
+function recriarDns(){
+  document.getElementById('actionMsg').textContent='Criando DNS...';
+  fetch('/equipe/migracoes-wp/recriar-dns',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&id='+MIG_ID})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){document.getElementById('actionMsg').innerHTML='<span style="color:#10b981;">✓ DNS: '+d.domain+' → '+d.ip+'</span>';}
+      else{document.getElementById('actionMsg').innerHTML='<span style="color:#ef4444;">✘ '+(d.erro||'Erro')+'</span>';}
     }).catch(function(e){document.getElementById('actionMsg').textContent='Erro: '+e;});
 }
 

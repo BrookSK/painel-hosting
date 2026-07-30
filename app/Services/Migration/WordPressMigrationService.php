@@ -553,10 +553,16 @@ final class WordPressMigrationService
                 $this->appendLog($migrationId, "URLs atualizadas para: {$newUrl}");
             }
 
-            // Ajustar permissões dos arquivos
-            $chownCmd = 'chown -R www-data:www-data ' . escapeshellarg($destWpPath) . ' 2>/dev/null; chmod -R 755 ' . escapeshellarg($destWpPath) . ' 2>/dev/null; echo perms-ok';
-            $this->execDest($destSrv, $chownCmd, 30);
+            // Ajustar permissões dos arquivos e diretórios pai
+            $chownCmd = 'chmod 755 /vps 2>/dev/null; chmod 755 ' . escapeshellarg(dirname($destWpPath)) . ' 2>/dev/null; '
+                . 'chown -R www-data:www-data ' . escapeshellarg($destWpPath) . ' 2>/dev/null; '
+                . 'chmod -R 755 ' . escapeshellarg($destWpPath) . ' 2>/dev/null; echo perms-ok';
+            $this->execDest($destSrv, $chownCmd, 60);
             $this->appendLog($migrationId, 'Permissões ajustadas.');
+
+            // Remover .user.ini (open_basedir do aaPanel/cPanel que veio na migração)
+            $this->execDest($destSrv, 'rm -f ' . escapeshellarg($destWpPath . '/.user.ini') . ' 2>/dev/null; echo userini-cleaned', 5);
+            $this->appendLog($migrationId, 'Removido .user.ini (restrições do servidor de origem).');
 
             // ═══ ETAPA 6: Configurar Nginx vhost + SSL ═══
             $this->atualizarStatus($migrationId, 'finalizing', 90, 'nginx_vhost');
@@ -578,8 +584,10 @@ final class WordPressMigrationService
 
                 // Criar vhost Nginx apontando para o diretório do WordPress
                 $serverId = (int)$destSrv['server_id'];
-                $this->criarVhostWordPress($destSrv, $destDomain, $destWpPath);
-                $this->appendLog($migrationId, 'Nginx vhost criado.');
+                // Usar PHP 7.4 como padrão para migrações de WordPress (compatibilidade)
+                $phpVer = '7.4';
+                $this->criarVhostWordPress($destSrv, $destDomain, $destWpPath, $phpVer);
+                $this->appendLog($migrationId, 'Nginx vhost criado (PHP ' . $phpVer . ').');
             }
 
             // Atualizar registro da migração
@@ -622,18 +630,24 @@ final class WordPressMigrationService
     /**
      * Cria vhost Nginx para WordPress (PHP-FPM com root no diretório).
      */
-    private function criarVhostWordPress(array $destSrv, string $domain, string $wpPath): void
+    private function criarVhostWordPress(array $destSrv, string $domain, string $wpPath, string $phpVersion = '8.3'): void
     {
         $isManaged = (int)($destSrv['is_managed_server'] ?? 0) === 1;
         $vhostPath = $isManaged ? '/www/server/panel/vhost/nginx' : '/etc/nginx/sites-available/lrv';
 
-        $config = $this->gerarNginxWordPress($domain, $wpPath);
+        $config = $this->gerarNginxWordPress($domain, $wpPath, $phpVersion);
         $b64 = base64_encode($config);
         $vhostFile = $vhostPath . '/' . str_replace('.', '_', $domain) . '.conf';
 
         $cmd = 'mkdir -p ' . escapeshellarg($vhostPath)
-            . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostFile)
-            . ' && nginx -t 2>&1 && ';
+            . ' && echo ' . escapeshellarg($b64) . ' | base64 -d > ' . escapeshellarg($vhostFile);
+
+        if (!$isManaged) {
+            // Ativar vhost com symlink em sites-enabled
+            $cmd .= ' && ln -sf ' . escapeshellarg($vhostFile) . ' /etc/nginx/sites-enabled/';
+        }
+
+        $cmd .= ' && nginx -t 2>&1 && ';
 
         if ($isManaged) {
             $cmd .= 'kill -HUP $(pgrep -o nginx.real 2>/dev/null || cat /www/server/nginx/logs/nginx.pid 2>/dev/null) 2>/dev/null; /etc/init.d/nginx reload 2>/dev/null; true';
@@ -646,13 +660,28 @@ final class WordPressMigrationService
         if (!str_contains($result, 'vhost-ok')) {
             $this->log('Aviso: vhost pode não ter sido criado corretamente: ' . substr($result, -200));
         }
+
+        // Emitir SSL com certbot (servidores não-gerenciados)
+        if (!$isManaged) {
+            $sslCmd = '(which certbot >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq certbot python3-certbot-nginx 2>&1)) && '
+                . 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo ssl-done';
+            $sslResult = $this->execDest($destSrv, $sslCmd, 120);
+            if (str_contains($sslResult, 'Successfully') || str_contains($sslResult, 'Congratulations') || str_contains($sslResult, 'not yet due')) {
+                $this->log('SSL emitido com sucesso para ' . $domain);
+            } else {
+                $this->log('Aviso: SSL pode não ter sido emitido. Site funciona em HTTP. Detalhe: ' . substr($sslResult, -150));
+            }
+        }
     }
 
     /**
      * Gera configuração Nginx para servir WordPress com PHP-FPM.
      */
-    private function gerarNginxWordPress(string $domain, string $wpPath): string
+    private function gerarNginxWordPress(string $domain, string $wpPath, string $phpVersion = '8.3'): string
     {
+        // Determinar socket PHP baseado na versão
+        $phpSocket = '/run/php/php' . $phpVersion . '-fpm.sock';
+
         return <<<NGINX
 server {
     listen 80;
@@ -667,7 +696,7 @@ server {
     }
 
     location ~ \\.php$ {
-        fastcgi_pass unix:/run/php/php-fpm.sock;
+        fastcgi_pass unix:{$phpSocket};
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_read_timeout 300;

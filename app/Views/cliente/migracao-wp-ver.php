@@ -139,6 +139,10 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 <div class="card-new" style="margin-bottom:16px;border-left:3px solid #ef4444;">
   <h4 style="margin:0 0 8px;font-size:14px;color:#ef4444;"><?php echo View::e(I18n::t('migracao_wp_cli.erro')); ?></h4>
   <pre style="white-space:pre-wrap;font-size:12px;color:var(--text);margin:0;"><?php echo View::e((string)$m['error_message']); ?></pre>
+  <div style="margin-top:12px;display:flex;gap:8px;">
+    <a href="/cliente/tickets/novo" class="botao sm">Abrir ticket de suporte</a>
+    <a href="/cliente/chat" class="botao sm ghost">Chat ao vivo</a>
+  </div>
 </div>
 <?php endif; ?>
 

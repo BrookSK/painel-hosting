@@ -245,6 +245,37 @@ final class MigracaoWpController
     }
 
     /**
+     * Recriar registro DNS para domínio temporário da migração.
+     */
+    public function recriarDns(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) return Resposta::json(['ok' => false, 'erro' => 'ID inválido.'], 422);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT m.dest_domain, s.ip_address
+             FROM wp_migrations m
+             JOIN vps v ON v.id = m.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE m.id = :id LIMIT 1'
+        );
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        if (!is_array($row) || empty($row['dest_domain'])) {
+            return Resposta::json(['ok' => false, 'erro' => 'Migração não encontrada ou sem domínio.']);
+        }
+
+        try {
+            (new \LRV\App\Services\Infra\NginxProxyService())->criarProxy((string)$row['dest_domain'], (string)$row['ip_address'], 80);
+            return Resposta::json(['ok' => true, 'domain' => (string)$row['dest_domain'], 'ip' => (string)$row['ip_address']]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Cancelar migração em andamento.
      */
     public function cancelar(Requisicao $req): Resposta

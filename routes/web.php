@@ -448,6 +448,7 @@ $roteador->get('/equipe/migracoes-wp/ver', [\LRV\App\Controllers\Equipe\Migracao
 $roteador->get('/equipe/migracoes-wp/progresso', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'progresso'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/migracoes-wp/testar-conexao', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'testarConexao'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('wp_migration_test', 10, 60)]);
 $roteador->post('/equipe/migracoes-wp/reexecutar', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'reexecutar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('wp_migration', 10, 60)]);
+$roteador->post('/equipe/migracoes-wp/recriar-dns', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'recriarDns'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/migracoes-wp/cancelar', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'cancelar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/migracoes-wp/ativar-dominio', [\LRV\App\Controllers\Equipe\MigracaoWpController::class, 'ativarDominio'], [Middlewares::exigirPermissao('manage_vps')]);
 
