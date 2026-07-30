@@ -658,7 +658,18 @@ final class ServerSetupService
                 'descricao'      => 'Instala PHP 8.3, 8.2 e 8.1 com FPM e extensões comuns. Clientes podem escolher a versão por deploy. Se 8.2/8.1 não estiverem disponíveis no repositório, são pulados.',
             ],
 
-            // ── 11. phpMyAdmin ──
+            // ── 11. Certbot (SSL Let's Encrypt) ──
+            [
+                'name'           => 'Instalar Certbot (SSL automático)',
+                'cmd'            => '(which certbot >/dev/null 2>&1 && echo "certbot ok") || (apt-get install -y -qq certbot python3-certbot-nginx 2>&1 && echo lrv-certbot-ok)',
+                'ok_if_contains' => 'ok',
+                'fatal'          => false,
+                'essencial'      => false,
+                'risco'          => 'nenhum',
+                'descricao'      => 'Instala o Certbot com plugin Nginx para emissão automática de certificados SSL Let\'s Encrypt. Usado automaticamente ao criar vhosts.',
+            ],
+
+            // ── 12. phpMyAdmin ──
             [
                 'name'           => 'Instalar phpMyAdmin (Docker)',
                 'cmd'            => 'docker ps -a --format "{{.Names}}" | grep -q lrv_phpmyadmin && echo "already exists" || (docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps) . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e PMA_ABSOLUTE_URI=http://pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '/ phpmyadmin/phpmyadmin:latest 2>&1 && echo lrv-pma-ok)',

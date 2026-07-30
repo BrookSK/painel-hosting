@@ -216,7 +216,14 @@ final class NginxVhostService
                 $logs[] = 'Aviso: Falha ao atualizar vhost com SSL. HTTP funciona.';
             }
         } else {
-            // Não-gerenciado: certbot --nginx (comportamento original)
+            // Não-gerenciado: certbot --nginx (instalar se necessário + emitir)
+            $installCertbot = '(which certbot >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq certbot python3-certbot-nginx 2>&1)) && echo certbot-ready';
+            $installResult = $this->exec($ssh, $srv, $installCertbot);
+            if (!str_contains($installResult['saida'] ?? '', 'certbot-ready')) {
+                $logs[] = 'Aviso: Não foi possível instalar certbot. SSL não emitido.';
+                return ['logs' => $logs];
+            }
+
             $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
             $certResult = $this->exec($ssh, $srv, $certCmd);
             $certOutput = trim($certResult['saida'] ?? '');
