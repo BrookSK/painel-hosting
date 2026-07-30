@@ -226,6 +226,8 @@ final class WordPressMigrationService
             }
 
             // ═══ Verificar espaço em disco disponível no servidor de destino ═══
+            // Pular verificação se é retomada (arquivos já estão no destino)
+            if ($skipToStep === '') {
             $this->appendLog($migrationId, 'Verificando espaço em disco no servidor de destino...');
             $dfCmd = 'df -BG ' . escapeshellarg($destWpPath) . ' 2>/dev/null | tail -1 | awk \'{print $4}\' | tr -d "G"';
             $availGb = (int)trim($this->execDest($destSrv, $dfCmd, 10));
@@ -256,6 +258,7 @@ final class WordPressMigrationService
             } else {
                 $this->appendLog($migrationId, 'Não foi possível verificar espaço (continuando).');
             }
+            } // fim do if ($skipToStep === '') para verificação de espaço
 
             // Instalar a chave pública do destino no servidor de origem para rsync direto
             // Estratégia: gerar par de chaves temporário no destino, autorizar no origem, rsync server-to-server
@@ -445,9 +448,17 @@ final class WordPressMigrationService
             $destDbPass = bin2hex(random_bytes(12));
 
             if ($mysqlRootPass === '') {
-                $this->falhar($migrationId, 'Senha root do MySQL do servidor de destino não configurada.');
-                $this->cleanupKey($destSrv, $keyPath, $srcHost, $srcPort, $srcUser, $srcPass, $pubKey);
-                return;
+                // Tentar root sem senha como fallback (comum em servidores recém-instalados)
+                $testMysql = 'mysql -u root -e "SELECT 1" 2>&1 && echo mysql-nopass-ok';
+                $testResult = $this->execDest($destSrv, $testMysql, 10);
+                if (str_contains($testResult, 'mysql-nopass-ok')) {
+                    $mysqlRootPass = '';
+                    $this->appendLog($migrationId, 'MySQL root sem senha configurada — usando acesso direto.');
+                } else {
+                    $this->falhar($migrationId, "Senha root do MySQL do servidor de destino não configurada.\n\nVá em Equipe → Servidores → editar o servidor e preencha o campo 'Senha root do MySQL'.\nSe não sabe a senha, tente acessar o MySQL via terminal com: mysql -u root");
+                    $this->cleanupKey($destSrv, $keyPath, $srcHost, $srcPort, $srcUser, $srcPass, $pubKey);
+                    return;
+                }
             }
 
             $createDbSql = "CREATE DATABASE IF NOT EXISTS \`{$destDbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -457,7 +468,9 @@ final class WordPressMigrationService
                 . " GRANT ALL PRIVILEGES ON \`{$destDbName}\`.* TO '{$destDbUser}'@'%';"
                 . " FLUSH PRIVILEGES;";
 
-            $createCmd = 'mysql -u root -p' . escapeshellarg($mysqlRootPass) . ' -e ' . escapeshellarg($createDbSql) . ' 2>&1 && echo db-created';
+            $mysqlAuth = $mysqlRootPass !== '' ? '-u root -p' . escapeshellarg($mysqlRootPass) : '-u root';
+
+            $createCmd = 'mysql ' . $mysqlAuth . ' -e ' . escapeshellarg($createDbSql) . ' 2>&1 && echo db-created';
             $createOutput = $this->execDest($destSrv, $createCmd, 30);
 
             if (!str_contains($createOutput, 'db-created')) {
@@ -471,7 +484,7 @@ final class WordPressMigrationService
 
             // Importar dump
             $importCmd = 'gunzip -c ' . escapeshellarg($destDumpFile)
-                . ' | mysql -u root -p' . escapeshellarg($mysqlRootPass) . ' ' . escapeshellarg($destDbName)
+                . ' | mysql ' . $mysqlAuth . ' ' . escapeshellarg($destDbName)
                 . ' 2>&1 && echo import-ok';
             $importOutput = $this->execDest($destSrv, $importCmd, 900);
 
@@ -522,7 +535,7 @@ final class WordPressMigrationService
             if ($destDomain !== '') {
                 $newUrl = 'https://' . $destDomain;
                 $urlUpdateSql = "UPDATE {$destDbName}.wp_options SET option_value = '{$newUrl}' WHERE option_name IN ('siteurl','home');";
-                $urlCmd = 'mysql -u root -p' . escapeshellarg($mysqlRootPass) . ' -e ' . escapeshellarg($urlUpdateSql) . ' 2>&1';
+                $urlCmd = 'mysql ' . $mysqlAuth . ' -e ' . escapeshellarg($urlUpdateSql) . ' 2>&1';
                 $this->execDest($destSrv, $urlCmd, 15);
                 $this->appendLog($migrationId, "URLs atualizadas para: {$newUrl}");
             }
@@ -778,7 +791,7 @@ NGINX;
 
         // 1. Atualizar wp_options (siteurl e home) no banco MySQL
         $urlSql = "UPDATE \`{$destDbName}\`.wp_options SET option_value = '{$newUrl}' WHERE option_name IN ('siteurl','home');";
-        $urlCmd = 'mysql -u root -p' . escapeshellarg($mysqlRootPass) . ' -e ' . escapeshellarg($urlSql) . ' 2>&1 && echo url-ok';
+        $urlCmd = 'mysql ' . ($mysqlRootPass !== '' ? '-u root -p' . escapeshellarg($mysqlRootPass) : '-u root') . ' -e ' . escapeshellarg($urlSql) . ' 2>&1 && echo url-ok';
         $urlResult = $this->execDest($destSrv, $urlCmd, 15);
         if (!str_contains($urlResult, 'url-ok')) {
             return ['ok' => false, 'erro' => 'Falha ao atualizar URLs no banco: ' . substr($urlResult, -200)];

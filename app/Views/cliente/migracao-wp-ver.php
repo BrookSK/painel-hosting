@@ -299,14 +299,36 @@ function poll(){
         var rbox=document.getElementById('reassureBox');
         if(rbox){
           if(d.status==='completed'){rbox.style.background='#f0fdf4';rbox.style.borderColor='#bbf7d0';}
+          else if(d.status==='failed'){
+            rbox.style.background='#fef2f2';rbox.style.borderColor='#fecaca';
+            document.getElementById('reassureIcon').textContent='✘';
+            document.getElementById('reassureTitle').textContent='A migração encontrou um problema';
+            document.getElementById('reassureTitle').style.color='#dc2626';
+            document.getElementById('reassureMsg').textContent=d.error||'Erro desconhecido. Clique em "Retomar de onde parou" para tentar novamente ou abra um ticket.';
+            document.getElementById('reassureMsg').style.color='#dc2626';
+          }
           else{rbox.style.display='none';}
         }
         if(d.status==='completed') setTimeout(function(){location.reload();},1500);
+        if(d.status==='failed') setTimeout(function(){location.reload();},2000);
       } else {
         // Atualizar mensagem tranquilizadora
         var rmsg=document.getElementById('reassureMsg');
         if(rmsg&&reassureMsgs[d.status]){rmsg.textContent=reassureMsgs[d.status];}
         else if(rmsg&&d.step&&reassureMsgs[d.step]){rmsg.textContent=reassureMsgs[d.step];}
+
+        // Detectar migração travada (progresso não muda por 10 min)
+        if(typeof pollLastProgress==='undefined') pollLastProgress=d.progress;
+        if(typeof pollLastChange==='undefined') pollLastChange=Date.now();
+        if(d.progress!==pollLastProgress){pollLastProgress=d.progress;pollLastChange=Date.now();}
+        var stuckMinutes=Math.floor((Date.now()-pollLastChange)/60000);
+        if(stuckMinutes>=10){
+          var rmsg2=document.getElementById('reassureMsg');
+          if(rmsg2&&!rmsg2.dataset.stuck){
+            rmsg2.dataset.stuck='1';
+            rmsg2.innerHTML='<span style="color:#f59e0b;font-weight:600;">O progresso não avança há '+stuckMinutes+' minutos.</span><br>Pode ser normal para sites muito grandes, ou a migração pode ter travado. Se continuar assim por mais de 30 minutos, clique em <strong>"Retomar de onde parou"</strong> para o sistema verificar e continuar automaticamente.';
+          }
+        }
       }
       STATUS = d.status;
     }).catch(function(){});
