@@ -120,8 +120,8 @@ final class WordPressMigrationService
             throw new \RuntimeException('Migração #' . $migrationId . ' não encontrada.');
         }
 
-        if (!in_array($migration['status'], ['pending', 'failed'], true)) {
-            throw new \RuntimeException('Migração não está em estado válido para execução.');
+        if (!in_array($migration['status'], ['pending', 'failed', 'syncing_files', 'dumping_db', 'importing_db', 'configuring', 'finalizing', 'connecting'], true)) {
+            throw new \RuntimeException('Migração não está em estado válido para execução (status: ' . $migration['status'] . ').');
         }
 
         $pdo = BancoDeDados::pdo();
