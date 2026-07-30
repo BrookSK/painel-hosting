@@ -390,11 +390,51 @@ final class MigracaoWpController
 
         // Determinar de onde retomar
         $currentStep = (string)($mig['current_step'] ?? '');
-        // Se rsync já copiou arquivos (step rsync_transfer ou similar), pular para dump_db
+        // Se rsync já copiou arquivos (step rsync_transfer ou similar), verificar se realmente completou
         if (in_array($status, ['syncing_files'], true) || str_contains($currentStep, 'rsync')) {
-            $pdo->prepare("UPDATE wp_migrations SET status = 'syncing_files', progress_percent = 50, current_step = 'rsync_done' WHERE id = :id")
-                ->execute([':id' => $id]);
-            $this->appendLog($id, '[RETOMADA] Rsync marcado como concluído. Retomando a partir do dump do banco...');
+            // Verificar via SSH se wp-config.php existe no destino (prova que rsync completou)
+            $volumeBase = rtrim((string)\LRV\Core\Settings::obter('infra.volume_base', '/vps'), '/');
+            $destPath = $volumeBase . '/client_' . $clienteId . '/wordpress_' . $id;
+
+            $vpsStmt = $pdo->prepare(
+                'SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+                 FROM vps v JOIN servers s ON s.id = v.server_id
+                 WHERE v.id = (SELECT vps_id FROM wp_migrations WHERE id = :id) LIMIT 1'
+            );
+            $vpsStmt->execute([':id' => $id]);
+            $srv = $vpsStmt->fetch();
+
+            $filesCompleted = false;
+            if (is_array($srv)) {
+                try {
+                    $exec = new \LRV\App\Services\Infra\SshExecutor();
+                    $host = (string)$srv['ip_address'];
+                    $port = (int)$srv['ssh_port'];
+                    $user = (string)$srv['ssh_user'];
+                    $authType = (string)($srv['ssh_auth_type'] ?? 'password');
+                    $checkCmd = 'test -f ' . escapeshellarg($destPath . '/wp-config.php') . ' && echo wp-ok || echo wp-missing';
+
+                    if ($authType === 'password') {
+                        $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($srv['ssh_password'] ?? ''));
+                        $result = $exec->executarComSenha($host, $port, $user, $senha, $checkCmd, 10);
+                    } else {
+                        $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($srv['ssh_key_id'] ?? '');
+                        $result = $exec->executar($host, $port, $user, $keyPath, $checkCmd, 10);
+                    }
+                    $filesCompleted = str_contains((string)($result['saida'] ?? ''), 'wp-ok');
+                } catch (\Throwable) {}
+            }
+
+            if ($filesCompleted) {
+                $pdo->prepare("UPDATE wp_migrations SET status = 'syncing_files', progress_percent = 50, current_step = 'rsync_done' WHERE id = :id")
+                    ->execute([':id' => $id]);
+                $this->appendLog($id, '[RETOMADA] Arquivos verificados no servidor (wp-config.php encontrado). Pulando rsync. Continuando do dump do banco...');
+            } else {
+                // Arquivos não estão completos — precisa refazer do zero
+                $pdo->prepare("UPDATE wp_migrations SET status = 'pending', progress_percent = 0, current_step = NULL, error_message = NULL WHERE id = :id")
+                    ->execute([':id' => $id]);
+                $this->appendLog($id, '[RETOMADA] Arquivos NÃO encontrados no servidor (rsync não completou). Reiniciando migração do zero...');
+            }
         }
 
         // Criar novo job
