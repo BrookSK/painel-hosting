@@ -181,6 +181,7 @@ final class WordPressMigrationService
         // Variáveis de chave SSH (podem ser redefinidas na retomada)
         $keyPath = '/tmp/migration_' . $migrationId . '_' . time();
         $pubKey = '';
+        $destDumpFile = '/tmp/wp_migration_' . $migrationId . '.sql.gz';
 
         try {
             // ═══ Verificar se é uma retomada (pular etapas já concluídas) ═══
