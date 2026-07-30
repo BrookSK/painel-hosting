@@ -123,6 +123,9 @@ $roteador->get('/equipe/backups', [BackupsController::class, 'listar'], [Middlew
 $roteador->post('/equipe/backups/criar', [BackupsController::class, 'criar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/backups/baixar', [BackupsController::class, 'baixar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/backups/excluir', [BackupsController::class, 'excluir'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->get('/equipe/armazenamento', [\LRV\App\Controllers\Equipe\ArmazenamentoController::class, 'index'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->get('/equipe/armazenamento/escanear', [\LRV\App\Controllers\Equipe\ArmazenamentoController::class, 'escanear'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/armazenamento/limpar', [\LRV\App\Controllers\Equipe\ArmazenamentoController::class, 'limpar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/usuarios', [UsuariosController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->get('/equipe/usuarios/novo', [UsuariosController::class, 'novo'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->get('/equipe/usuarios/editar', [UsuariosController::class, 'editar'], [Middlewares::exigirPermissao('manage_users')]);
@@ -383,6 +386,11 @@ $roteador->get('/cliente/backups', [\LRV\App\Controllers\Cliente\BackupsControll
 $roteador->post('/cliente/backups/criar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_create', 3, 60)]);
 $roteador->get('/cliente/backups/baixar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'baixar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
 $roteador->post('/cliente/backups/restaurar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'restaurar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_restore', 2, 60)]);
+
+// Armazenamento cliente
+$roteador->get('/cliente/armazenamento', [\LRV\App\Controllers\Cliente\ArmazenamentoController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
+$roteador->get('/cliente/armazenamento/escanear', [\LRV\App\Controllers\Cliente\ArmazenamentoController::class, 'escanear'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('storage_scan', 10, 60)]);
+$roteador->post('/cliente/armazenamento/limpar', [\LRV\App\Controllers\Cliente\ArmazenamentoController::class, 'limpar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('storage_clean', 10, 60)]);
 
 // Soluções (landing pages públicas)
 $roteador->get('/solucoes/vps', [\LRV\App\Controllers\SolucoesController::class, 'vps']);

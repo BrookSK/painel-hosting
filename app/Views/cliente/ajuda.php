@@ -651,6 +651,53 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->
+<!-- ARMAZENAMENTO -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="card-new" style="max-width:760px;margin-top:20px;">
+  <div class="card-new-title" style="margin-bottom:16px;">Armazenamento (gerenciar espaço em disco)</div>
+
+  <details>
+    <summary>Como ver quanto espaço meu servidor está usando?</summary>
+    <ol>
+      <li>No menu lateral, clique em <strong>Armazenamento</strong>.</li>
+      <li>Selecione a VPS desejada e clique em <strong>Escanear disco</strong>.</li>
+      <li>O sistema conecta no servidor e mostra em tempo real:
+        <ul>
+          <li>Barra de uso total (verde = OK, amarelo = atenção, vermelho = quase cheio)</li>
+          <li>Tamanho de cada aplicação e deploy instalado</li>
+          <li>Espaço usado por arquivos temporários (/tmp)</li>
+          <li>Espaço usado por logs do servidor (/var/log)</li>
+          <li>Espaço usado por "outros" (sistema, caches, pacotes)</li>
+        </ul>
+      </li>
+    </ol>
+  </details>
+
+  <details>
+    <summary>Como liberar espaço no servidor?</summary>
+    <p>Na tela de Armazenamento, após escanear, você tem várias opções de limpeza:</p>
+    <ul>
+      <li><strong>Limpar /tmp:</strong> apaga arquivos temporários com mais de 1 dia. Seguro — não afeta suas aplicações.</li>
+      <li><strong>Limpar logs antigos:</strong> trunca logs grandes e remove logs compactados. Os logs recomeçam do zero.</li>
+      <li><strong>Limpar caches (npm/composer/pip):</strong> remove caches de gerenciadores de pacotes. Na próxima instalação, eles serão recriados automaticamente.</li>
+      <li><strong>Apagar uma aplicação/deploy específico:</strong> clique em "Apagar" ao lado do item. Remove permanentemente todos os arquivos daquele projeto.</li>
+    </ul>
+    <div class="warn">Apagar um projeto é irreversível. Faça backup antes se precisar dos arquivos.</div>
+    <div class="tip">Depois de limpar, o sistema escaneia novamente automaticamente para mostrar o espaço liberado.</div>
+  </details>
+
+  <details>
+    <summary>O disco está quase cheio (vermelho). O que fazer?</summary>
+    <ol>
+      <li>Escaneie o disco para identificar o que está ocupando mais espaço.</li>
+      <li>Geralmente os maiores vilões são: uploads antigos (wp-content/uploads), backups locais, e logs grandes.</li>
+      <li>Use as opções de limpeza para remover o que não precisa.</li>
+      <li>Se mesmo após limpar continuar cheio, considere fazer upgrade do plano para mais armazenamento.</li>
+    </ol>
+  </details>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
 <!-- BACKUPS -->
 <!-- ═══════════════════════════════════════════════ -->
 <div class="card-new" style="max-width:760px;margin-top:20px;">

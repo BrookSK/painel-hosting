@@ -148,6 +148,10 @@ function _temFeature(array $features, string $feature): bool {
       <span>Backups</span>
     </a>
     <?php endif; ?>
+    <a href="/cliente/armazenamento" class="nav-item<?php echo _nav_ativo_cli('/cliente/armazenamento', $_seg); ?>" data-tooltip="Armazenamento">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v2H3V5zM3 9h14v2H3V9zM3 13h14v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="15" r="1" fill="currentColor"/></svg>
+      <span>Armazenamento</span>
+    </a>
     <a href="/cliente/assinaturas" class="nav-item<?php echo _nav_ativo_cli('/cliente/assinaturas', $_seg); ?>" data-tooltip="<?php echo View::e(I18n::t('sidebar.assinaturas')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 9h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('sidebar.assinaturas')); ?></span>

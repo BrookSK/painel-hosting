@@ -12,6 +12,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Webhook para GitHub, GitLab e Bitbucket**: ao ativar o Auto Deploy, o sistema gera uma URL única de webhook para você configurar no seu repositório
 - **Instruções de configuração**: o painel mostra o passo a passo para adicionar o webhook no GitHub, GitLab ou Bitbucket
 - **Indicador visual na listagem**: badge "Auto Deploy" aparece nos repositórios que têm a funcionalidade ativada
+- **Gerenciamento de Armazenamento**: nova tela no menu lateral (tanto para clientes quanto para a equipe) que mostra quanto espaço cada aplicação, deploy, banco de dados e arquivo ocupa no servidor — com opção de limpar itens individualmente ou em lote
+- **Escaneamento de disco em tempo real**: clique em "Escanear disco" para ver o uso atualizado de cada item no servidor, com barra visual colorida (verde, amarelo ou vermelho conforme o uso)
+- **Limpeza seletiva**: apague arquivos temporários, logs antigos, caches (npm/composer/pip) ou pastas específicas direto pelo painel, sem precisar de terminal
+- **Opção de apagar arquivos ao remover integração Git Deploy**: ao remover um repositório, agora aparece um diálogo perguntando se deseja também apagar os arquivos do servidor (com aviso de que é irreversível)
+- **Opção de apagar arquivos e banco ao remover aplicação**: ao deletar uma aplicação, você pode escolher se quer apagar os arquivos do servidor e/ou o banco de dados vinculado — liberando espaço em disco
+- **Verificação de espaço antes de migrar WordPress**: o sistema verifica se o servidor tem espaço suficiente antes de iniciar a cópia. Se não couber, cancela com uma mensagem clara informando os tamanhos
+- **Limpeza automática em caso de disco cheio durante migração**: se o disco encher no meio da cópia, o sistema apaga os arquivos parciais automaticamente e avisa o que fazer
+- **Plano sob consulta (custom)**: novo campo na edição de planos que marca o plano como "sob consulta" — exibe "Fale conosco" ao invés do botão de compra
+- **Atividade em tempo real na migração WordPress**: mostra o tamanho transferido e número de arquivos copiados, atualizado a cada 10 segundos durante a migração
+- **Mensagens tranquilizadoras na migração**: bloco verde com status "Tudo está funcionando normalmente" que muda conforme a etapa, com timer de tempo decorrido
+- **Dados da migração visíveis**: seção colapsável mostrando todos os campos preenchidos (host, usuário, caminho, banco) com botão de copiar e olhinho para revelar senhas
+- **Tutoriais completos na Central de Ajuda**: guias passo a passo detalhados para leigos cobrindo Git Deploy, Auto Deploy, domínios, bancos de dados, arquivos, terminal, cron jobs, backups, aplicações, e-mails, tickets, monitoramento, conta, segurança, migração WordPress e armazenamento
+- **Guia "O que você quer fazer?"**: seção no topo da ajuda com cenários comuns (publicar site, criar e-mail, ativar auto deploy, instalar WordPress, etc.)
+- **Troubleshooting expandido**: seções de problemas comuns com soluções detalhadas para Git Deploy (Permission denied, Branch not found, site não abre), domínios (DNS não propaga, onde fica o painel DNS), e-mails (spam, SMTP) e aplicações
+
+### Corrigido
+- Ícones SVG dos canais de suporte na página de planos apareciam como código em vez de renderizar
+- Campo "Tipo de produto" na edição de planos mostrava código SVG no select
 
 ---
 
