@@ -182,6 +182,7 @@ final class WordPressMigrationService
         $keyPath = '/tmp/migration_' . $migrationId . '_' . time();
         $pubKey = '';
         $destDumpFile = '/tmp/wp_migration_' . $migrationId . '.sql.gz';
+        $dumpFile = '/tmp/wp_migration_' . $migrationId . '.sql.gz';
 
         try {
             // ═══ Verificar se é uma retomada (pular etapas já concluídas) ═══
