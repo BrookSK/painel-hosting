@@ -148,6 +148,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <p style="margin:0;font-size:13px;color:var(--text-muted);"><?php echo View::e(I18n::t('migracao_wp_cli.sucesso_desc')); ?></p>
   <?php if ($m['dest_domain'] ?? ''): ?>
   <p style="margin:8px 0 0;"><a href="https://<?php echo View::e((string)$m['dest_domain']); ?>" target="_blank" rel="noopener">https://<?php echo View::e((string)$m['dest_domain']); ?> &rarr;</a></p>
+  <button class="botao sm ghost" onclick="recriarDns()" id="btnDns" style="margin-top:8px;">Recriar DNS (se o site não abre)</button>
+  <span id="dnsMsg" style="font-size:12px;margin-left:8px;"></span>
   <?php endif; ?>
 </div>
 
@@ -360,6 +362,18 @@ function revelarSenha(campo, spanId){
       if(d.ok){span.textContent=d.valor||'(vazio)';span.dataset.revealed='1';}
       else{span.textContent='(erro)';}
     }).catch(function(){span.textContent='(erro)';});
+}
+
+function recriarDns(){
+  var btn=document.getElementById('btnDns');btn.disabled=true;btn.textContent='Criando...';
+  var msg=document.getElementById('dnsMsg');msg.textContent='';
+  fetch('/cliente/migracoes-wp/recriar-dns',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&id='+MIG_ID})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.disabled=false;btn.textContent='Recriar DNS (se o site não abre)';
+      if(d.ok){msg.innerHTML='<span style="color:#10b981;">✓ DNS criado: '+d.domain+' → '+d.ip+'. Aguarde 1-2 minutos para propagar.</span>';}
+      else{msg.innerHTML='<span style="color:#ef4444;">✘ '+(d.erro||'Erro')+'</span>';}
+    }).catch(function(e){btn.disabled=false;btn.textContent='Recriar DNS (se o site não abre)';msg.innerHTML='<span style="color:#ef4444;">Erro: '+e+'</span>';});
 }
 
 function retomar(){
