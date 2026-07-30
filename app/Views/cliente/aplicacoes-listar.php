@@ -77,9 +77,11 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
                     <button class="botao sm" type="submit" style="font-size:11px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reinstalar</button>
                   </form>
                 <?php endif; ?>
-                <form method="post" action="/cliente/aplicacoes/deletar" style="display:inline;" onsubmit="return confirm('Deletar aplicação #<?php echo $appId; ?>?')">
+                <form method="post" action="/cliente/aplicacoes/deletar" style="display:inline;" onsubmit="return confirmarDeletarApp(this)">
                   <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>"/>
                   <input type="hidden" name="app_id" value="<?php echo $appId; ?>"/>
+                  <input type="hidden" name="apagar_arquivos" value="0"/>
+                  <input type="hidden" name="apagar_banco" value="0"/>
                   <button class="botao danger sm" type="submit" style="font-size:11px;">✕</button>
                 </form>
               </div>
@@ -112,6 +114,40 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 
 <script>
+function confirmarDeletarApp(form) {
+  var appId = form.querySelector('input[name="app_id"]').value;
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:14px;padding:24px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);';
+  box.innerHTML = '<div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:12px;">Remover aplicação</div>'
+    + '<p style="font-size:14px;color:#334155;margin:0 0 16px;line-height:1.6;">Tem certeza que deseja remover esta aplicação?</p>'
+    + '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:10px;">'
+    + '<input type="checkbox" id="chk-files-'+appId+'" style="margin-top:2px;accent-color:#dc2626;width:16px;height:16px;flex-shrink:0;" />'
+    + '<div><div style="font-size:13px;font-weight:600;color:#dc2626;">Apagar os arquivos do servidor</div>'
+    + '<div style="font-size:12px;color:#92400e;margin-top:2px;">Remove permanentemente a pasta do projeto no servidor. Libera o espaço em disco.</div></div></label>'
+    + '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;">'
+    + '<input type="checkbox" id="chk-db-'+appId+'" style="margin-top:2px;accent-color:#dc2626;width:16px;height:16px;flex-shrink:0;" />'
+    + '<div><div style="font-size:13px;font-weight:600;color:#dc2626;">Apagar o banco de dados vinculado</div>'
+    + '<div style="font-size:12px;color:#92400e;margin-top:2px;">Remove o banco MySQL associado a esta aplicação. Todos os dados serão perdidos.</div></div></label>'
+    + '<div style="background:#fffbeb;border:1px solid #fef08a;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:#854d0e;">Essas ações são irreversíveis. Faça backup antes se precisar dos dados.</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    + '<button id="cancel-app-'+appId+'" style="padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;">Cancelar</button>'
+    + '<button id="confirm-app-'+appId+'" style="padding:8px 16px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Remover</button></div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('cancel-app-'+appId).onclick = function(){document.body.removeChild(overlay);};
+  overlay.addEventListener('click',function(e){if(e.target===overlay)document.body.removeChild(overlay);});
+  document.getElementById('confirm-app-'+appId).onclick = function(){
+    form.querySelector('input[name="apagar_arquivos"]').value = document.getElementById('chk-files-'+appId).checked?'1':'0';
+    form.querySelector('input[name="apagar_banco"]').value = document.getElementById('chk-db-'+appId).checked?'1':'0';
+    document.body.removeChild(overlay);
+    form.onsubmit=null;
+    form.submit();
+  };
+  return false;
+}
+
 function toggleAppLogs(appId) {
   var row = document.getElementById('app-logs-row-' + appId);
   if (row.style.display === 'none') {

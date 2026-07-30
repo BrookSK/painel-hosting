@@ -755,13 +755,25 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li>Clique no card da aplicação para ver a <strong>mensagem de erro</strong>.</li>
       <li>Erros comuns:
         <ul>
-          <li><strong>"Porta em uso"</strong> — outra aplicaçãojáestá usando essa porta. Altere a porta da nova app.</li>
-          <li><strong>"Disco cheio"</strong> — sua VPS não tem espaço suficiente. Apague arquivos desnecessarios ou faca upgrade.</li>
+          <li><strong>"Porta em uso"</strong> — outra aplicação já está usando essa porta. Altere a porta da nova app.</li>
+          <li><strong>"Disco cheio"</strong> — sua VPS não tem espaço suficiente. Apague arquivos desnecessários ou faça upgrade.</li>
           <li><strong>"Timeout"</strong> — a instalação demorou demais (servidor lento). Tente novamente.</li>
         </ul>
       </li>
       <li>Se não entender o erro, copie a mensagem e cole num <a href="/cliente/tickets/novo">ticket</a>.</li>
     </ol>
+  </details>
+
+  <details>
+    <summary>Como deletar uma aplicação e liberar espaço?</summary>
+    <p>Ao clicar no botão <strong>✕</strong> ao lado da aplicação, um diálogo aparece com opções:</p>
+    <ul>
+      <li><strong>Apagar os arquivos do servidor</strong> — remove permanentemente a pasta do projeto no servidor, liberando o espaço em disco (WordPress de 30GB+ volta a zero).</li>
+      <li><strong>Apagar o banco de dados vinculado</strong> — dropa o banco MySQL associado. Todos os dados (posts, páginas, usuários, etc.) serão perdidos.</li>
+    </ul>
+    <p>Se você não marcar nenhuma opção, apenas o registro é removido do painel — os arquivos e o banco continuam no servidor (ocupando espaço).</p>
+    <div class="warn">Essas ações são irreversíveis. Faça um backup antes se precisar manter os dados para o futuro.</div>
+    <div class="tip">Dica: se quiser apenas "pausar" a aplicação sem apagar nada, você pode alterar o status para "Inativa" ao invés de deletar.</div>
   </details>
 </div>
 

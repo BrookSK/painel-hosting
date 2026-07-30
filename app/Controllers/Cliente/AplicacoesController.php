@@ -264,16 +264,94 @@ final class AplicacoesController
         if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
 
         $appId = (int)($req->post['app_id'] ?? 0);
+        $apagarArquivos = (int)($req->post['apagar_arquivos'] ?? 0) === 1;
+        $apagarBanco = (int)($req->post['apagar_banco'] ?? 0) === 1;
+
         if ($appId <= 0) return Resposta::texto('ID inválido.', 400);
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare("SELECT a.id FROM applications a INNER JOIN vps v ON v.id = a.vps_id WHERE a.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt = $pdo->prepare(
+            'SELECT a.id, a.domain, a.deploy_path, a.vps_id, a.database_id, v.server_id,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM applications a
+             INNER JOIN vps v ON v.id = a.vps_id
+             INNER JOIN servers s ON s.id = v.server_id
+             WHERE a.id = :id AND v.client_id = :c LIMIT 1'
+        );
         $stmt->execute([':id' => $appId, ':c' => $clienteId]);
-        if (!$stmt->fetch()) return Resposta::texto('Aplicação não encontrada.', 404);
+        $app = $stmt->fetch();
+        if (!is_array($app)) return Resposta::texto('Aplicação não encontrada.', 404);
 
-        // Liberar porta
+        // Apagar arquivos do servidor se solicitado
+        if ($apagarArquivos) {
+            $deployPath = rtrim((string)($app['deploy_path'] ?? ''), '/');
+            if ($deployPath !== '' && $deployPath !== '/' && $deployPath !== '/var' && $deployPath !== '/var/www' && strlen($deployPath) > 5) {
+                try {
+                    $exec = new \LRV\App\Services\Infra\SshExecutor();
+                    $host = (string)$app['ip_address'];
+                    $port = (int)$app['ssh_port'];
+                    $user = (string)$app['ssh_user'];
+                    $authType = (string)($app['ssh_auth_type'] ?? 'password');
+                    $rmCmd = 'rm -rf ' . escapeshellarg($deployPath);
+
+                    if ($authType === 'password') {
+                        $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($app['ssh_password'] ?? ''));
+                        $exec->executarComSenha($host, $port, $user, $senha, $rmCmd, 60);
+                    } else {
+                        $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($app['ssh_key_id'] ?? '');
+                        $exec->executar($host, $port, $user, $keyPath, $rmCmd, 60);
+                    }
+                } catch (\Throwable) {}
+            }
+        }
+
+        // Apagar banco de dados vinculado se solicitado
+        if ($apagarBanco && !empty($app['database_id'])) {
+            $dbId = (int)$app['database_id'];
+            try {
+                $dbStmt = $pdo->prepare('SELECT db_name, db_user FROM client_databases WHERE id = :id AND client_id = :c LIMIT 1');
+                $dbStmt->execute([':id' => $dbId, ':c' => $clienteId]);
+                $dbRow = $dbStmt->fetch();
+                if (is_array($dbRow)) {
+                    $dbName = (string)$dbRow['db_name'];
+                    $dbUser = (string)$dbRow['db_user'];
+                    // Dropar banco e usuário via SSH + mysql root
+                    $rootPass = trim((string)\LRV\Core\Settings::obter('infra.mysql_root_password', ''));
+                    if ($rootPass !== '') {
+                        $exec = new \LRV\App\Services\Infra\SshExecutor();
+                        $host = (string)$app['ip_address'];
+                        $port = (int)$app['ssh_port'];
+                        $user = (string)$app['ssh_user'];
+                        $authType = (string)($app['ssh_auth_type'] ?? 'password');
+                        $dropCmd = 'mysql -u root -p' . escapeshellarg($rootPass) . ' -e '
+                            . escapeshellarg('DROP DATABASE IF EXISTS `' . $dbName . '`; DROP USER IF EXISTS \'' . $dbUser . '\'@\'localhost\'; DROP USER IF EXISTS \'' . $dbUser . '\'@\'%\'; FLUSH PRIVILEGES;')
+                            . ' 2>&1';
+
+                        if ($authType === 'password') {
+                            $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($app['ssh_password'] ?? ''));
+                            $exec->executarComSenha($host, $port, $user, $senha, $dropCmd, 30);
+                        } else {
+                            $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($app['ssh_key_id'] ?? '');
+                            $exec->executar($host, $port, $user, $keyPath, $dropCmd, 30);
+                        }
+                    }
+                    // Remover registro do banco
+                    $pdo->prepare('DELETE FROM client_databases WHERE id = :id')->execute([':id' => $dbId]);
+                }
+            } catch (\Throwable) {}
+        }
+
+        // Remover vhost Nginx se tinha domínio
+        $domain = trim((string)($app['domain'] ?? ''));
+        $serverId = (int)($app['server_id'] ?? 0);
+        if ($domain !== '' && $serverId > 0) {
+            try {
+                (new \LRV\App\Services\Infra\NginxVhostService())->removerVhost($serverId, $domain);
+            } catch (\Throwable) {}
+        }
+
+        // Liberar porta e deletar registro
         $pdo->prepare("DELETE FROM ports WHERE application_id = :id")->execute([':id' => $appId]);
-        // Deletar aplicação
         $pdo->prepare("DELETE FROM applications WHERE id = :id")->execute([':id' => $appId]);
 
         return Resposta::redirecionar('/cliente/aplicacoes');
