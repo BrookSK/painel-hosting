@@ -128,7 +128,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php if ($status === 'pending'): ?>
   <button class="botao sm" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp_cli.testar_ssh')); ?></button>
   <?php endif; ?>
-  <?php if (!in_array($status, ['completed','failed','cancelled'], true)): ?>
+  <?php if (!in_array($status, ['completed','cancelled'], true)): ?>
   <button class="botao sm" onclick="retomar()" id="btnRetomar" title="Use se a migração travou e não avança há muito tempo">Retomar de onde parou</button>
   <button class="botao danger sm" onclick="cancelar()"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
   <?php endif; ?>
