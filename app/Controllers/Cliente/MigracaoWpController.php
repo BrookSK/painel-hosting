@@ -173,6 +173,11 @@ final class MigracaoWpController
             return Resposta::redirecionar('/cliente/migracoes-wp');
         }
 
+        // Preparar dados para exibição (senhas mascaradas, serão reveladas via AJAX)
+        $migration['_source_password_masked'] = !empty($migration['source_password_enc']) ? '••••••••' : '';
+        $migration['_source_db_password_masked'] = !empty($migration['source_db_password_enc']) ? '••••••••' : '';
+        $migration['_source_sudo_password_masked'] = !empty($migration['source_sudo_password_enc'] ?? '') ? '••••••••' : '(mesma do SSH)';
+
         $cStmt = $pdo->prepare('SELECT name, email FROM clients WHERE id = ?');
         $cStmt->execute([$clienteId]);
         $cliente = $cStmt->fetch() ?: [];
@@ -272,6 +277,38 @@ final class MigracaoWpController
         } catch (\Throwable) {
             return Resposta::json(['ok' => true, 'size' => '—', 'files' => 0, 'active' => true]);
         }
+    }
+
+    /**
+     * Revelar senha de uma migração (AJAX, olhinho).
+     */
+    public function revelarSenha(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->query['id'] ?? 0);
+        $campo = (string)($req->query['campo'] ?? '');
+        $camposPermitidos = ['source_password_enc', 'source_db_password_enc', 'source_sudo_password_enc'];
+
+        if ($id <= 0 || !in_array($campo, $camposPermitidos, true)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Parâmetros inválidos.'], 422);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT ' . $campo . ' FROM wp_migrations WHERE id = :id AND client_id = :c LIMIT 1');
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $enc = (string)($stmt->fetchColumn() ?: '');
+
+        if ($enc === '') return Resposta::json(['ok' => true, 'valor' => '']);
+
+        try {
+            $valor = \LRV\App\Services\Infra\SshCrypto::decifrar($enc);
+        } catch (\Throwable) {
+            $valor = '(erro ao decifrar)';
+        }
+
+        return Resposta::json(['ok' => true, 'valor' => $valor]);
     }
 
     /**

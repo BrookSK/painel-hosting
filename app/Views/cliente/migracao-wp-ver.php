@@ -173,6 +173,40 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
 </div>
 <?php endif; ?>
 
+<!-- Dados da migração (campos preenchidos) -->
+<div class="card-new" style="margin-bottom:16px;">
+  <details>
+    <summary style="font-size:14px;font-weight:700;cursor:pointer;">Dados da migração (ver informações preenchidas)</summary>
+    <div style="margin-top:14px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">Servidor de origem — SSH</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+        <div><span style="font-size:12px;color:var(--text-muted);">Host / IP</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><?php echo View::e((string)($m['source_host'] ?? '')); ?> <button onclick="navigator.clipboard.writeText('<?php echo View::e((string)($m['source_host'] ?? '')); ?>')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);">copiar</button></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Porta SSH</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;"><?php echo (int)($m['source_port'] ?? 22); ?></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Usuário</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><?php echo View::e((string)($m['source_user'] ?? '')); ?> <button onclick="navigator.clipboard.writeText('<?php echo View::e((string)($m['source_user'] ?? '')); ?>')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);">copiar</button></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Senha SSH</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><span id="pwd-ssh"><?php echo View::e($m['_source_password_masked']); ?></span> <button onclick="revelarSenha('source_password_enc','pwd-ssh')" style="background:none;border:none;cursor:pointer;font-size:14px;" title="Ver senha">👁</button></div></div>
+        <div style="grid-column:span 2;"><span style="font-size:12px;color:var(--text-muted);">Caminho do WordPress</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><?php echo View::e((string)($m['source_wp_path'] ?? '')); ?> <button onclick="navigator.clipboard.writeText('<?php echo View::e((string)($m['source_wp_path'] ?? '')); ?>')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);">copiar</button></div></div>
+        <?php if ((int)($m['source_use_sudo'] ?? 0) === 1): ?>
+        <div style="grid-column:span 2;"><span style="font-size:12px;color:var(--text-muted);">Sudo</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">Ativado — Senha: <span id="pwd-sudo"><?php echo View::e($m['_source_sudo_password_masked']); ?></span> <button onclick="revelarSenha('source_sudo_password_enc','pwd-sudo')" style="background:none;border:none;cursor:pointer;font-size:14px;" title="Ver senha">👁</button></div></div>
+        <?php endif; ?>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">Servidor de origem — Banco de Dados</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+        <div><span style="font-size:12px;color:var(--text-muted);">Nome do banco</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><?php echo View::e((string)($m['source_db_name'] ?? '')); ?> <button onclick="navigator.clipboard.writeText('<?php echo View::e((string)($m['source_db_name'] ?? '')); ?>')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);">copiar</button></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Usuário MySQL</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><?php echo View::e((string)($m['source_db_user'] ?? '')); ?> <button onclick="navigator.clipboard.writeText('<?php echo View::e((string)($m['source_db_user'] ?? '')); ?>')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);">copiar</button></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Senha MySQL</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;align-items:center;"><span id="pwd-db"><?php echo View::e($m['_source_db_password_masked']); ?></span> <button onclick="revelarSenha('source_db_password_enc','pwd-db')" style="background:none;border:none;cursor:pointer;font-size:14px;" title="Ver senha">👁</button></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Host MySQL</span><div style="font-family:monospace;font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;"><?php echo View::e((string)($m['source_db_host'] ?? '')); ?>:<?php echo (int)($m['source_db_port'] ?? 3306); ?></div></div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">Destino</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
+        <div><span style="font-size:12px;color:var(--text-muted);">VPS</span><div style="font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;">#<?php echo (int)($m['vps_id'] ?? 0); ?></div></div>
+        <div><span style="font-size:12px;color:var(--text-muted);">Domínio</span><div style="font-size:13px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;"><?php echo View::e((string)($m['dest_domain'] ?? '(temporário)')); ?></div></div>
+      </div>
+    </div>
+  </details>
+</div>
+
 <!-- Logs -->
 <div class="card-new">
   <h4 style="margin:0 0 10px;font-size:14px;"><?php echo View::e(I18n::t('migracao_wp_cli.logs')); ?></h4>
@@ -290,6 +324,19 @@ function testarConexao(){
       document.getElementById('actionMsg').textContent = d.ok ? '<?php echo View::e(I18n::t('migracao_wp_cli.conexao_ok')); ?>' : (d.erro||'Erro');
       document.getElementById('actionMsg').style.color = d.ok?'#10b981':'#ef4444';
     }).catch(function(e){document.getElementById('actionMsg').textContent='Erro: '+e;});
+}
+
+function revelarSenha(campo, spanId){
+  var span=document.getElementById(spanId);
+  if(!span)return;
+  if(span.dataset.revealed==='1'){span.textContent='••••••••';span.dataset.revealed='0';return;}
+  span.textContent='...';
+  fetch('/cliente/migracoes-wp/revelar-senha?id='+MIG_ID+'&campo='+encodeURIComponent(campo))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){span.textContent=d.valor||'(vazio)';span.dataset.revealed='1';}
+      else{span.textContent='(erro)';}
+    }).catch(function(){span.textContent='(erro)';});
 }
 
 function cancelar(){
