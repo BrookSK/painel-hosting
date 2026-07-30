@@ -461,21 +461,16 @@ final class WordPressMigrationService
                 }
             }
 
+            $createDbSql = "CREATE DATABASE IF NOT EXISTS {$destDbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+                . " CREATE USER IF NOT EXISTS '{$destDbUser}'@'localhost' IDENTIFIED BY '" . addslashes($destDbPass) . "';"
+                . " CREATE USER IF NOT EXISTS '{$destDbUser}'@'%' IDENTIFIED BY '" . addslashes($destDbPass) . "';"
+                . " GRANT ALL PRIVILEGES ON {$destDbName}.* TO '{$destDbUser}'@'localhost';"
+                . " GRANT ALL PRIVILEGES ON {$destDbName}.* TO '{$destDbUser}'@'%';"
+                . " FLUSH PRIVILEGES;";
+
             $mysqlAuth = $mysqlRootPass !== '' ? '-u root -p' . escapeshellarg($mysqlRootPass) : '-u root';
 
-            // Usar heredoc para evitar problemas de escaping com backticks/aspas
-            $sqlFile = '/tmp/wp_mig_create_' . $migrationId . '.sql';
-            $createDbSql = "CREATE DATABASE IF NOT EXISTS \`{$destDbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n"
-                . "CREATE USER IF NOT EXISTS '{$destDbUser}'@'localhost' IDENTIFIED BY '" . addslashes($destDbPass) . "';\n"
-                . "CREATE USER IF NOT EXISTS '{$destDbUser}'@'%' IDENTIFIED BY '" . addslashes($destDbPass) . "';\n"
-                . "GRANT ALL PRIVILEGES ON \`{$destDbName}\`.* TO '{$destDbUser}'@'localhost';\n"
-                . "GRANT ALL PRIVILEGES ON \`{$destDbName}\`.* TO '{$destDbUser}'@'%';\n"
-                . "FLUSH PRIVILEGES;\n";
-
-            $writeCmd = 'printf ' . escapeshellarg($createDbSql) . ' > ' . $sqlFile;
-            $this->execDest($destSrv, $writeCmd, 10);
-
-            $createCmd = 'mysql ' . $mysqlAuth . ' < ' . $sqlFile . ' 2>&1 && rm -f ' . $sqlFile . ' && echo db-created';
+            $createCmd = 'mysql ' . $mysqlAuth . ' -e ' . escapeshellarg($createDbSql) . ' 2>&1 && echo db-created';
             $createOutput = $this->execDest($destSrv, $createCmd, 30);
 
             if (!str_contains($createOutput, 'db-created')) {
