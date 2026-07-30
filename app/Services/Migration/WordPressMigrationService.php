@@ -285,8 +285,8 @@ final class WordPressMigrationService
             // Rsync com retry automático (3 tentativas)
             $rsyncCmd = 'for i in 1 2 3; do ' . $rsyncBase . ' 2>&1 && break; echo "rsync tentativa $i falhou, retentando em 5s..."; sleep 5; done; echo "rsync-exit-$?"';
 
-            // Rsync pode demorar muito — timeout alto (2h para sites muito grandes)
-            $rsyncOutput = $this->execDest($destSrv, $rsyncCmd, 7200);
+            // Rsync pode demorar muito — timeout alto (24h para sites muito grandes >100GB)
+            $rsyncOutput = $this->execDest($destSrv, $rsyncCmd, 86400);
 
             if (!str_contains($rsyncOutput, 'rsync-exit-0')) {
                 // Verificar se pelo menos parcial funcionou

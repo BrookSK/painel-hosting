@@ -349,6 +349,72 @@ final class MigracaoWpController
     }
 
     /**
+     * Retomar migração travada (re-enfileira o job continuando de onde parou).
+     */
+    public function retomar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) return Resposta::json(['ok' => false, 'erro' => 'ID inválido.'], 422);
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare("SELECT id, status, current_step, job_id FROM wp_migrations WHERE id = :id AND client_id = :c LIMIT 1");
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $mig = $stmt->fetch();
+
+        if (!is_array($mig)) return Resposta::json(['ok' => false, 'erro' => 'Migração não encontrada.'], 404);
+
+        $status = (string)$mig['status'];
+        if (in_array($status, ['completed', 'cancelled'], true)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Migração já finalizada.']);
+        }
+
+        // Verificar se o job antigo está realmente morto (não running recentemente)
+        $jobId = (int)($mig['job_id'] ?? 0);
+        if ($jobId > 0) {
+            $jobStmt = $pdo->prepare("SELECT status, updated_at FROM jobs WHERE id = :id LIMIT 1");
+            $jobStmt->execute([':id' => $jobId]);
+            $job = $jobStmt->fetch();
+            if (is_array($job) && $job['status'] === 'running') {
+                // Se atualizou nos últimos 5 minutos, pode estar ativo ainda
+                $updatedAt = strtotime($job['updated_at'] ?? '');
+                if ($updatedAt && (time() - $updatedAt) < 300) {
+                    return Resposta::json(['ok' => false, 'erro' => 'O job ainda parece estar ativo (atualizado há menos de 5 min). Aguarde mais um pouco.']);
+                }
+                // Marcar job antigo como failed
+                $pdo->prepare("UPDATE jobs SET status = 'failed', updated_at = NOW() WHERE id = :id")->execute([':id' => $jobId]);
+            }
+        }
+
+        // Determinar de onde retomar
+        $currentStep = (string)($mig['current_step'] ?? '');
+        // Se rsync já copiou arquivos (step rsync_transfer ou similar), pular para dump_db
+        if (in_array($status, ['syncing_files'], true) || str_contains($currentStep, 'rsync')) {
+            $pdo->prepare("UPDATE wp_migrations SET status = 'syncing_files', progress_percent = 50, current_step = 'rsync_done' WHERE id = :id")
+                ->execute([':id' => $id]);
+            $this->appendLog($id, '[RETOMADA] Rsync marcado como concluído. Retomando a partir do dump do banco...');
+        }
+
+        // Criar novo job
+        $newJobId = (new \LRV\Core\Jobs\RepositorioJobs())->criar('wp_migration', ['migration_id' => $id]);
+        $pdo->prepare("UPDATE wp_migrations SET job_id = :j WHERE id = :id")->execute([':j' => $newJobId, ':id' => $id]);
+
+        $this->appendLog($id, '[RETOMADA] Novo job #' . $newJobId . ' criado para continuar a migração.');
+
+        return Resposta::json(['ok' => true, 'job_id' => $newJobId]);
+    }
+
+    private function appendLog(int $id, string $msg): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $ts = date('H:i:s');
+        $pdo->prepare("UPDATE wp_migrations SET logs = CONCAT(COALESCE(logs,''), :l) WHERE id = :id")
+            ->execute([':l' => "\n[{$ts}] {$msg}", ':id' => $id]);
+    }
+
+    /**
      * Ativar/trocar domínio real de uma migração concluída.
      */
     public function ativarDominio(Requisicao $req): Resposta

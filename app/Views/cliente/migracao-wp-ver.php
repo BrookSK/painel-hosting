@@ -129,6 +129,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <button class="botao sm" onclick="testarConexao()"><?php echo View::e(I18n::t('migracao_wp_cli.testar_ssh')); ?></button>
   <?php endif; ?>
   <?php if (!in_array($status, ['completed','failed','cancelled'], true)): ?>
+  <button class="botao sm" onclick="retomar()" id="btnRetomar" title="Use se a migração travou e não avança há muito tempo">Retomar de onde parou</button>
   <button class="botao danger sm" onclick="cancelar()"><?php echo View::e(I18n::t('geral.cancelar')); ?></button>
   <?php endif; ?>
   <span id="actionMsg" style="font-size:13px;color:var(--text-muted);"></span>
@@ -337,6 +338,23 @@ function revelarSenha(campo, spanId){
       if(d.ok){span.textContent=d.valor||'(vazio)';span.dataset.revealed='1';}
       else{span.textContent='(erro)';}
     }).catch(function(){span.textContent='(erro)';});
+}
+
+function retomar(){
+  if(!confirm('Retomar a migração de onde parou?\n\nUse isso se a migração está parada há muito tempo sem progresso. O sistema vai pular a etapa atual (que já completou) e continuar com a próxima.')) return;
+  var btn=document.getElementById('btnRetomar');btn.disabled=true;btn.textContent='Retomando...';
+  document.getElementById('actionMsg').textContent='Criando novo job...';
+  fetch('/cliente/migracoes-wp/retomar',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(CSRF)+'&id='+MIG_ID})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.disabled=false;btn.textContent='Retomar de onde parou';
+      if(d.ok){
+        document.getElementById('actionMsg').innerHTML='<span style="color:#10b981;">✓ Migração retomada! Job #'+d.job_id+' criado. Aguarde...</span>';
+        setTimeout(function(){location.reload();},3000);
+      } else {
+        document.getElementById('actionMsg').innerHTML='<span style="color:#ef4444;">✘ '+(d.erro||'Erro')+'</span>';
+      }
+    }).catch(function(e){btn.disabled=false;btn.textContent='Retomar de onde parou';document.getElementById('actionMsg').textContent='Erro: '+e;});
 }
 
 function cancelar(){
