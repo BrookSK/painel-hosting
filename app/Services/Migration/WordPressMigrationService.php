@@ -178,7 +178,26 @@ final class WordPressMigrationService
         $volumeBase = (string)Settings::obter('infra.volume_base', '/vps');
         $destWpPath = rtrim($volumeBase, '/') . '/client_' . $clientId . '/wordpress_' . $migrationId;
 
+        // Variáveis de chave SSH (podem ser redefinidas na retomada)
+        $keyPath = '/tmp/migration_' . $migrationId . '_' . time();
+        $pubKey = '';
+
         try {
+            // ═══ Verificar se é uma retomada (pular etapas já concluídas) ═══
+            $currentStep = (string)($migration['current_step'] ?? '');
+            $skipToStep = '';
+            if (in_array($currentStep, ['rsync_done', 'mysqldump_remote'], true) || (string)$migration['status'] === 'dumping_db') {
+                $skipToStep = 'dump_db';
+                $this->appendLog($migrationId, '[RETOMADA] Detectada retomada — pulando rsync (arquivos já copiados). Continuando do dump do banco.');
+            } elseif (in_array($currentStep, ['dump_done', 'importing_db', 'scp_dump'], true) || (string)$migration['status'] === 'importing_db') {
+                $skipToStep = 'import_db';
+                $this->appendLog($migrationId, '[RETOMADA] Detectada retomada — pulando rsync e dump. Continuando da importação.');
+            } elseif (in_array($currentStep, ['import_done', 'configuring', 'wp_config'], true) || (string)$migration['status'] === 'configuring') {
+                $skipToStep = 'configure';
+                $this->appendLog($migrationId, '[RETOMADA] Detectada retomada — pulando rsync, dump e import. Continuando da configuração.');
+            }
+
+            if ($skipToStep === '') {
             // ═══ ETAPA 1: Conectar ao servidor de origem ═══
             $this->atualizarStatus($migrationId, 'connecting', 5, 'ssh_source');
             $this->appendLog($migrationId, "Conectando ao servidor de origem: {$srcUser}@{$srcHost}:{$srcPort}");
@@ -329,7 +348,35 @@ final class WordPressMigrationService
             $this->appendLog($migrationId, 'Rsync concluído. Tamanho: ' . $this->formatBytes($filesSize));
             $this->atualizarStatus($migrationId, 'syncing_files', 50, 'rsync_done');
 
+            } // fim do if ($skipToStep === '') — etapas 1 e 2 (connect + rsync)
+
             // ═══ ETAPA 3: Dump do banco de dados no servidor de origem ═══
+            if ($skipToStep === '' || $skipToStep === 'dump_db') {
+
+            // Se retomando, precisamos recriar a chave temporária para SSH (rsync/scp)
+            if ($skipToStep === 'dump_db') {
+                $this->appendLog($migrationId, '[RETOMADA] Recriando chave SSH temporária para transferir dump do banco...');
+                $keyName = 'migration_' . $migrationId . '_' . time();
+                $keyPath = '/tmp/' . $keyName;
+                $genKeyCmd = 'rm -f ' . escapeshellarg($keyPath) . ' ' . escapeshellarg($keyPath . '.pub')
+                    . ' && ssh-keygen -t ed25519 -f ' . escapeshellarg($keyPath) . ' -N "" -q'
+                    . ' && cat ' . escapeshellarg($keyPath . '.pub');
+                $pubKey = trim($this->execDest($destSrv, $genKeyCmd, 20));
+                if ($pubKey === '' || !str_contains($pubKey, 'ssh-ed25519')) {
+                    $this->falhar($migrationId, '[RETOMADA] Falha ao gerar chave temporária.');
+                    return;
+                }
+                $authCmd = 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'
+                    . ' && echo ' . escapeshellarg($pubKey) . ' >> ~/.ssh/authorized_keys'
+                    . ' && chmod 600 ~/.ssh/authorized_keys && echo auth-ok';
+                $authResult = $this->ssh->executarComSenha($srcHost, $srcPort, $srcUser, $srcPass, $authCmd, 15);
+                if (!str_contains((string)($authResult['saida'] ?? ''), 'auth-ok')) {
+                    $this->falhar($migrationId, '[RETOMADA] Falha ao autorizar chave no servidor de origem.');
+                    return;
+                }
+                $this->appendLog($migrationId, '[RETOMADA] Chave SSH temporária recriada com sucesso.');
+            }
+
             $this->atualizarStatus($migrationId, 'dumping_db', 55, 'mysqldump_remote');
             $this->appendLog($migrationId, "Fazendo dump do banco '{$srcDbName}' no servidor de origem...");
 
@@ -386,6 +433,8 @@ final class WordPressMigrationService
             }
 
             $this->appendLog($migrationId, 'Dump transferido. Tamanho (gzip): ' . $this->formatBytes($dbSize));
+
+            } // fim do if dump_db
 
             // ═══ ETAPA 4: Criar banco de dados no destino e importar dump ═══
             $this->atualizarStatus($migrationId, 'importing_db', 70, 'create_db');
