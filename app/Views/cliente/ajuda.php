@@ -1096,6 +1096,24 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
       <li>Aponte o DNS do seu domínio (registro A) para o IP do nosso servidor.</li>
     </ol>
   </details>
+
+  <details>
+    <summary>E se o servidor não tiver espaço suficiente para a migração?</summary>
+    <p>O sistema verifica automaticamente o espaço disponível no servidor de destino <strong>antes de iniciar</strong> a cópia dos arquivos. Se não couber, a migração é cancelada imediatamente com uma mensagem clara informando:</p>
+    <ul>
+      <li>O tamanho estimado do site</li>
+      <li>Quanto espaço é necessário</li>
+      <li>Quanto espaço está disponível</li>
+    </ul>
+    <p><strong>Se o disco encher durante a migração</strong> (caso raro — o site cresceu entre a verificação e a cópia), o sistema detecta o erro automaticamente, <strong>apaga os arquivos parciais</strong> para liberar o espaço, e marca a migração como "Falhou" com instruções de como resolver.</p>
+    <p><strong>Para resolver:</strong></p>
+    <ul>
+      <li>Apague aplicações, sites ou backups antigos que não usa mais (lembre de marcar "Apagar arquivos do servidor" ao deletar)</li>
+      <li>Ou faça upgrade do plano para mais armazenamento</li>
+      <li>Depois, tente a migração novamente</li>
+    </ul>
+    <div class="tip">O sistema nunca deixa o servidor instável. Se faltar espaço, ele limpa tudo e avisa você.</div>
+  </details>
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->

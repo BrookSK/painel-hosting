@@ -206,6 +206,38 @@ final class WordPressMigrationService
                 return;
             }
 
+            // ═══ Verificar espaço em disco disponível no servidor de destino ═══
+            $this->appendLog($migrationId, 'Verificando espaço em disco no servidor de destino...');
+            $dfCmd = 'df -BG ' . escapeshellarg($destWpPath) . ' 2>/dev/null | tail -1 | awk \'{print $4}\' | tr -d "G"';
+            $availGb = (int)trim($this->execDest($destSrv, $dfCmd, 10));
+
+            // Estimar tamanho do site no servidor de origem (du -sm)
+            $duSrcCmd = 'du -sm ' . escapeshellarg($srcWpPath) . ' 2>/dev/null | cut -f1';
+            if ($srcUseSudo) $duSrcCmd = SshExecutor::elevarComSudo($duSrcCmd, $srcSudoPass);
+            $srcSizeResult = $this->ssh->executarComSenha($srcHost, $srcPort, $srcUser, $srcPass, $duSrcCmd, 30);
+            $srcSizeMb = (int)trim((string)($srcSizeResult['saida'] ?? '0'));
+            $srcSizeGb = round($srcSizeMb / 1024, 1);
+
+            if ($availGb > 0 && $srcSizeMb > 0) {
+                // Verificar se cabe com margem de 20% (para banco + temporários)
+                $requiredGb = ceil($srcSizeGb * 1.2);
+                if ($availGb < $requiredGb) {
+                    $this->falhar($migrationId,
+                        "Espaço em disco insuficiente no servidor de destino.\n\n"
+                        . "• Tamanho estimado do site: {$srcSizeGb} GB\n"
+                        . "• Espaço necessário (com margem): {$requiredGb} GB\n"
+                        . "• Espaço disponível no servidor: {$availGb} GB\n\n"
+                        . "Libere espaço no servidor (apague sites/backups antigos) ou faça upgrade do plano para mais armazenamento."
+                    );
+                    // Limpar diretório vazio criado
+                    $this->execDest($destSrv, 'rmdir ' . escapeshellarg($destWpPath) . ' 2>/dev/null; true', 5);
+                    return;
+                }
+                $this->appendLog($migrationId, "Espaço OK: site ~{$srcSizeGb} GB, disponível {$availGb} GB.");
+            } else {
+                $this->appendLog($migrationId, 'Não foi possível verificar espaço (continuando).');
+            }
+
             // Instalar a chave pública do destino no servidor de origem para rsync direto
             // Estratégia: gerar par de chaves temporário no destino, autorizar no origem, rsync server-to-server
             $this->appendLog($migrationId, 'Configurando rsync servidor-a-servidor...');
@@ -261,7 +293,24 @@ final class WordPressMigrationService
                 $checkCmd = 'test -f ' . escapeshellarg($destWpPath . '/wp-config.php') . ' && echo wp-ok';
                 $check = $this->execDest($destSrv, $checkCmd, 10);
                 if (!str_contains($check, 'wp-ok')) {
-                    $this->falhar($migrationId, 'Rsync falhou. Saída: ' . substr($rsyncOutput, -500));
+                    // Verificar se foi por falta de espaço
+                    $isNoSpace = str_contains($rsyncOutput, 'No space left on device') || str_contains($rsyncOutput, 'write failed') || str_contains($rsyncOutput, 'disk full');
+                    if ($isNoSpace) {
+                        // Limpar arquivos parciais para liberar espaço
+                        $this->appendLog($migrationId, 'Disco cheio detectado. Limpando arquivos parciais...');
+                        $this->execDest($destSrv, 'rm -rf ' . escapeshellarg($destWpPath), 120);
+                        $this->falhar($migrationId,
+                            "Falha na migração: espaço em disco insuficiente no servidor de destino.\n\n"
+                            . "O rsync foi interrompido porque o disco encheu durante a cópia dos arquivos. "
+                            . "Os arquivos parciais foram removidos automaticamente para liberar espaço.\n\n"
+                            . "Para resolver:\n"
+                            . "• Libere espaço no servidor (apague sites, backups ou aplicações antigas)\n"
+                            . "• Ou faça upgrade do plano para mais armazenamento\n\n"
+                            . "Depois, tente a migração novamente."
+                        );
+                    } else {
+                        $this->falhar($migrationId, 'Rsync falhou. Saída: ' . substr($rsyncOutput, -500));
+                    }
                     $this->cleanupKey($destSrv, $keyPath, $srcHost, $srcPort, $srcUser, $srcPass, $pubKey);
                     return;
                 }
