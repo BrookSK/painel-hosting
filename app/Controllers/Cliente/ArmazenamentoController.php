@@ -43,7 +43,7 @@ final class ArmazenamentoController
         foreach ($vpsList as $vps) {
             $vpsId = (int)$vps['id'];
 
-            $apps = $pdo->prepare("SELECT id, name, app_type, domain, deploy_path FROM applications WHERE vps_id = :v ORDER BY name");
+            $apps = $pdo->prepare("SELECT a.id, t.name AS name, a.type AS app_type, a.domain FROM applications a LEFT JOIN app_templates t ON t.id = a.template_id WHERE a.vps_id = :v ORDER BY t.name");
             $apps->execute([':v' => $vpsId]);
 
             $deploys = $pdo->prepare("SELECT id, name, deploy_path, app_type FROM git_deployments WHERE vps_id = :v AND client_id = :c ORDER BY name");
@@ -91,13 +91,8 @@ final class ArmazenamentoController
         $srv = $stmt->fetch();
         if (!is_array($srv)) return Resposta::json(['ok' => false, 'erro' => 'VPS não encontrada.'], 404);
 
-        // Buscar paths conhecidos (apps + deploys)
+        // Buscar paths conhecidos (apenas git deploys — apps rodam em containers)
         $paths = [];
-        $appsStmt = $pdo->prepare("SELECT id, name, deploy_path FROM applications WHERE vps_id = :v");
-        $appsStmt->execute([':v' => $vpsId]);
-        foreach ($appsStmt->fetchAll() ?: [] as $a) {
-            if (!empty($a['deploy_path'])) $paths[] = ['tipo' => 'app', 'id' => (int)$a['id'], 'nome' => (string)$a['name'], 'path' => (string)$a['deploy_path']];
-        }
         $depsStmt = $pdo->prepare("SELECT id, name, deploy_path FROM git_deployments WHERE vps_id = :v AND client_id = :c");
         $depsStmt->execute([':v' => $vpsId, ':c' => $clienteId]);
         foreach ($depsStmt->fetchAll() ?: [] as $d) {

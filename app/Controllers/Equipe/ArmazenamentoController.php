@@ -56,7 +56,7 @@ final class ArmazenamentoController
             }
 
             // Buscar apps e deploys desta VPS
-            $apps = $pdo->prepare("SELECT id, name, deploy_path, app_type FROM applications WHERE vps_id = :v");
+            $apps = $pdo->prepare("SELECT a.id, COALESCE(t.name, a.type) AS name, a.type AS app_type FROM applications a LEFT JOIN app_templates t ON t.id = a.template_id WHERE a.vps_id = :v");
             $apps->execute([':v' => (int)$vps['id']]);
             $deploys = $pdo->prepare("SELECT id, name, deploy_path, app_type FROM git_deployments WHERE vps_id = :v");
             $deploys->execute([':v' => (int)$vps['id']]);
@@ -100,13 +100,8 @@ final class ArmazenamentoController
 
         $clientId = (int)$srv['client_id'];
 
-        // Buscar paths conhecidos
+        // Buscar paths conhecidos (apenas git deploys)
         $paths = [];
-        $appsStmt = $pdo->prepare("SELECT id, name, deploy_path FROM applications WHERE vps_id = :v");
-        $appsStmt->execute([':v' => $vpsId]);
-        foreach ($appsStmt->fetchAll() ?: [] as $a) {
-            if (!empty($a['deploy_path'])) $paths[] = ['tipo' => 'app', 'id' => (int)$a['id'], 'nome' => (string)$a['name'], 'path' => (string)$a['deploy_path']];
-        }
         $depsStmt = $pdo->prepare("SELECT id, name, deploy_path FROM git_deployments WHERE vps_id = :v");
         $depsStmt->execute([':v' => $vpsId]);
         foreach ($depsStmt->fetchAll() ?: [] as $d) {
