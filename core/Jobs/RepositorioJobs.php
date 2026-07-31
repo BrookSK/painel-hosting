@@ -61,6 +61,20 @@ final class RepositorioJobs
         return (int) $pdo->lastInsertId();
     }
 
+    public function temPendente(): bool
+    {
+        $pdo = BancoDeDados::pdo();
+        $agora = date('Y-m-d H:i:s');
+        $temRunAt = $this->temColunaRunAt();
+        if ($temRunAt) {
+            $stmt = $pdo->prepare("SELECT 1 FROM jobs WHERE status = 'pending' AND (run_at IS NULL OR run_at <= :agora) LIMIT 1");
+            $stmt->execute([':agora' => $agora]);
+        } else {
+            $stmt = $pdo->query("SELECT 1 FROM jobs WHERE status = 'pending' LIMIT 1");
+        }
+        return (bool) $stmt->fetch();
+    }
+
     public function pegarProximoEMarcarRunning(): ?Job
     {
         $pdo = BancoDeDados::pdo();

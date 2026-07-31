@@ -27,24 +27,42 @@ final class WorkerController
             return Resposta::json(['ok' => false, 'erro' => 'unauthorized'], 401);
         }
 
+        // Verificar se há jobs pendentes antes de iniciar processamento longo
+        $repo = new RepositorioJobs();
+        $temPendente = $repo->temPendente();
+
+        if (!$temPendente) {
+            return Resposta::json(['ok' => true, 'executou' => false]);
+        }
+
+        // Enviar resposta imediatamente ao Plesk/cron e continuar processando em background
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        // Retornar resposta HTTP imediatamente
+        $response = json_encode(['ok' => true, 'executou' => true, 'modo' => 'background']);
+        header('Content-Type: application/json');
+        header('Content-Length: ' . strlen($response));
+        header('Connection: close');
+        echo $response;
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            ob_end_flush();
+            flush();
+        }
+
+        // Agora processa o job em background (a conexão HTTP já foi fechada)
         try {
-            $repo = new RepositorioJobs();
             $proc = new ProcessadorJobs();
             RegistroHandlers::registrar($proc);
             $worker = new WorkerJobs($repo, $proc);
-
-            $executou = $worker->executarUmaVez();
-
-            return Resposta::json([
-                'ok' => true,
-                'executou' => $executou,
-            ]);
-        } catch (\Throwable $e) {
-            return Resposta::json([
-                'ok' => false,
-                'erro' => 'internal_error',
-                'mensagem' => $e->getMessage(),
-            ], 500);
+            $worker->executarUmaVez();
+        } catch (\Throwable) {
+            // Silencioso — o erro fica no log do job
         }
+
+        exit(0);
     }
 }
