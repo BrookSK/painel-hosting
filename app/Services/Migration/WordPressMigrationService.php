@@ -9,6 +9,7 @@ use LRV\Core\Settings;
 use LRV\App\Services\Infra\SshCrypto;
 use LRV\App\Services\Infra\SshExecutor;
 use LRV\App\Services\Infra\NginxVhostService;
+use LRV\App\Services\Infra\NginxProxyService;
 
 /**
  * Serviço de migração de WordPress de servidores externos via SSH.
