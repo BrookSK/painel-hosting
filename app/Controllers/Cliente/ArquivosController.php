@@ -30,7 +30,7 @@ final class ArquivosController
         $appId = (int)($req->query['app_id'] ?? 0);
         if ($appId > 0) {
             $aStmt = $pdo->prepare(
-                'SELECT a.id, a.type, a.domain, t.name AS template_name, t.icon AS template_icon
+                'SELECT a.id, a.type, a.domain, a.repository, a.vps_id, t.name AS template_name, t.icon AS template_icon
                  FROM applications a
                  INNER JOIN vps v ON v.id = a.vps_id
                  LEFT JOIN app_templates t ON t.id = a.template_id
