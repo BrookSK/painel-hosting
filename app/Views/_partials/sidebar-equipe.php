@@ -152,6 +152,10 @@ function _nav_ativo(string $path, string $uri): string {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('equipe.configuracoes')); ?></span>
     </a>
+    <a href="/equipe/ajuda" class="nav-item<?php echo _nav_ativo('/equipe/ajuda', $_seg); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 7.5a2.5 2.5 0 013.5 2.3c0 1.2-1.5 1.5-1.5 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14.5" r=".8" fill="currentColor"/></svg>
+      <span><?php echo View::e(I18n::t('equipe.ajuda')); ?></span>
+    </a>
     <a href="/equipe/sair" class="nav-item nav-item-danger">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M13 10H3M13 10l-3-3M13 10l-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5H6a2 2 0 00-2 2v6a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('geral.sair')); ?></span>

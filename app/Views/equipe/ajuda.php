@@ -376,4 +376,139 @@ Header obrigatório: asaas-access-token: {segredo configurado}</pre>
 </p>
 
 </div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- COMANDOS ÚTEIS PARA OPERAÇÃO DE SERVIDORES -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="card-new" style="max-width:980px;margin-top:20px;">
+
+  <div class="section-title">Comandos úteis — Operação de servidores</div>
+  <p style="color:#475569;font-size:13px;margin-bottom:16px;">Comandos SSH para resolver problemas comuns nos nodes. Execute pelo Terminal (Admin) do painel.</p>
+
+  <div class="section-title" style="font-size:14px;">Disco / Armazenamento</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver uso do disco:</p>
+  <pre>df -h /</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver quais pastas usam mais espaço:</p>
+  <pre>du -sh /vps/client_*/* 2>/dev/null | sort -rh | head -20</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Limpar backups antigos do UpdraftPlus (WordPress):</p>
+  <pre>find /vps -path "*/wp-content/updraft" -type d -exec rm -rf {} + 2>/dev/null; echo "done"</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Limpar logs antigos e cache do sistema:</p>
+  <pre>journalctl --vacuum-size=10M && find /var/log -name "*.gz" -delete && find /var/log -type f -name "*.log" -exec truncate -s 0 {} + && apt-get clean && rm -rf /var/cache/apt/* /root/.cache 2>/dev/null && df -h /</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Limpar caches de pacotes (npm/composer/pip):</p>
+  <pre>rm -rf /root/.npm/_cacache /root/.composer/cache /root/.cache/pip /var/cache/apt/archives/*.deb 2>/dev/null && df -h /</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Encontrar arquivos grandes (>100MB):</p>
+  <pre>find /vps -type f -size +100M -exec ls -lh {} + 2>/dev/null | sort -k5 -rh | head -20</pre>
+
+  <div class="section-title" style="font-size:14px;">Nginx / SSL</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Listar vhosts ativos:</p>
+  <pre>ls -la /etc/nginx/sites-enabled/</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Testar configuração do Nginx:</p>
+  <pre>nginx -t</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Recarregar Nginx:</p>
+  <pre>systemctl reload nginx</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Emitir SSL para um domínio:</p>
+  <pre>certbot --nginx -d DOMINIO.AQUI --non-interactive --agree-tos --register-unsafely-without-email</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ativar vhost que não foi ativado:</p>
+  <pre>ln -sf /etc/nginx/sites-available/lrv/NOME_DO_VHOST.conf /etc/nginx/sites-enabled/ && nginx -t && systemctl reload nginx</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver logs de erro do Nginx:</p>
+  <pre>tail -30 /var/log/nginx/error.log</pre>
+
+  <div class="section-title" style="font-size:14px;">PHP / WordPress</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Reiniciar PHP-FPM (todas as versões):</p>
+  <pre>systemctl restart php7.4-fpm php8.1-fpm php8.2-fpm php8.3-fpm 2>/dev/null; echo "done"</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Corrigir permissões WordPress:</p>
+  <pre>chown -R www-data:www-data /vps/client_ID/wordpress_X && chmod 755 /vps /vps/client_ID /vps/client_ID/wordpress_X</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Remover .user.ini (open_basedir do aaPanel):</p>
+  <pre>rm -f /vps/client_ID/wordpress_X/.user.ini && systemctl restart php7.4-fpm</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver qual versão do PHP está rodando:</p>
+  <pre>ls /run/php/*.sock</pre>
+
+  <div class="section-title" style="font-size:14px;">MySQL / MariaDB</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Verificar se MySQL está rodando:</p>
+  <pre>mysql -u root -e "SELECT 1;" && echo "mysql-ok"</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Listar bancos de dados:</p>
+  <pre>mysql -u root -e "SHOW DATABASES;"</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver tamanho dos bancos:</p>
+  <pre>mysql -u root -e "SELECT table_schema, ROUND(SUM(data_length+index_length)/1048576,1) AS 'MB' FROM information_schema.tables GROUP BY table_schema ORDER BY MB DESC;"</pre>
+
+  <div class="section-title" style="font-size:14px;">Processos / Debug</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver processos rsync ativos (migração em andamento):</p>
+  <pre>ps aux | grep rsync | grep -v grep</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver processos PM2 (Node.js):</p>
+  <pre>pm2 status 2>/dev/null || echo "PM2 não instalado"</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver uso de memória:</p>
+  <pre>free -h</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver uso de CPU (top 10 processos):</p>
+  <pre>ps aux --sort=-%cpu | head -11</pre>
+
+  <div class="section-title" style="font-size:14px;">Migração WordPress — Troubleshooting</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Migração travada a 20% — verificar se rsync está ativo:</p>
+  <pre>ps aux | grep rsync | grep -v grep</pre>
+  <p style="font-size:12px;color:#64748b;">Se não aparecer nada, o rsync morreu. Use o botão "Retomar" no painel.</p>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Site WordPress migrado dá "No input file specified":</p>
+  <pre># 1. Corrigir permissões:
+chmod 755 /vps /vps/client_ID /vps/client_ID/wordpress_X
+chown -R www-data:www-data /vps/client_ID/wordpress_X
+
+# 2. Remover .user.ini:
+rm -f /vps/client_ID/wordpress_X/.user.ini
+
+# 3. Reiniciar PHP-FPM:
+systemctl restart php7.4-fpm
+
+# 4. Verificar vhost ativo:
+ls /etc/nginx/sites-enabled/ | grep wordpress</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Certificado SSL não emite (disco cheio):</p>
+  <pre># 1. Liberar espaço:
+find /vps -path "*/wp-content/updraft" -type d -exec rm -rf {} + 2>/dev/null
+journalctl --vacuum-size=1M
+find /var/log -name "*.gz" -delete
+
+# 2. Tentar novamente:
+certbot --nginx -d DOMINIO -d DOMINIO2 --non-interactive --agree-tos --register-unsafely-without-email</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Recriar job de migração manualmente (emergência):</p>
+  <pre>-- No phpMyAdmin:
+UPDATE wp_migrations SET status = 'dumping_db', progress_percent = 55, current_step = 'rsync_done', error_message = NULL WHERE id = X;
+INSERT INTO jobs (type, payload, status, created_at, updated_at) VALUES ('wp_migration', '{"migration_id":X}', 'pending', NOW(), NOW());</pre>
+
+  <div class="section-title" style="font-size:14px;">Docker</div>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver containers rodando:</p>
+  <pre>docker ps</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Reiniciar phpMyAdmin:</p>
+  <pre>docker restart lrv_phpmyadmin</pre>
+
+  <p style="font-size:13px;font-weight:600;margin-bottom:4px;">Ver logs de um container:</p>
+  <pre>docker logs --tail 50 NOME_CONTAINER</pre>
+
+</div>
+
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
