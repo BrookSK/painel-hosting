@@ -565,6 +565,10 @@ final class WordPressMigrationService
             $this->execDest($destSrv, 'rm -f ' . escapeshellarg($destWpPath . '/.user.ini') . ' 2>/dev/null; echo userini-cleaned', 5);
             $this->appendLog($migrationId, 'Removido .user.ini (restrições do servidor de origem).');
 
+            // Remover backups antigos que vieram na migração (UpdraftPlus, All-in-One, etc.)
+            $this->execDest($destSrv, 'rm -rf ' . escapeshellarg($destWpPath . '/wp-content/updraft') . ' ' . escapeshellarg($destWpPath . '/wp-content/ai1wm-backups') . ' ' . escapeshellarg($destWpPath . '/wp-content/backups-dup-lite') . ' 2>/dev/null; echo backups-cleaned', 120);
+            $this->appendLog($migrationId, 'Removidos backups antigos do servidor de origem (updraft/ai1wm/duplicator).');
+
             // ═══ ETAPA 6: Configurar Nginx vhost + SSL ═══
             $this->atualizarStatus($migrationId, 'finalizing', 90, 'nginx_vhost');
 
