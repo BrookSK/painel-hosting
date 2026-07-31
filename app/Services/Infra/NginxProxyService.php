@@ -23,7 +23,7 @@ final class NginxProxyService
 
     /**
      * Cria um registro DNS A para o domínio temporário apontando pro IP da VPS.
-     * O Cloudflare proxy (orange cloud) dá SSL automático.
+     * Proxy desativado (nuvem cinza) para permitir emissão de SSL via certbot direto no servidor.
      */
     public function criarProxy(string $tempDomain, string $vpsIp, int $vpsPort = 80): void
     {
@@ -32,7 +32,7 @@ final class NginxProxyService
             throw new \RuntimeException('Zone ID do Cloudflare não encontrado. Configure cloudflare.zone_id nas settings.');
         }
 
-        $result = $this->cf->criarRegistroA($zoneId, $tempDomain, $vpsIp, true);
+        $result = $this->cf->criarRegistroA($zoneId, $tempDomain, $vpsIp, false);
 
         $success = (bool)($result['success'] ?? false);
         if (!$success) {
