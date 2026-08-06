@@ -107,6 +107,11 @@ function _nav_ativo(string $path, string $uri): string {
       <span><?php echo View::e(I18n::t('equipe.aplicacoes')); ?></span>
     </a>
 
+    <a href="/equipe/dev" class="nav-item<?php echo _nav_ativo('/equipe/dev', $_seg); ?>">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M6 3v2M14 3v2M3 7h14M5 5h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 11l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span><?php echo View::e(I18n::t('equipe.dev_workflow')); ?></span>
+    </a>
+
     <a href="/equipe/migracoes-wp" class="nav-item<?php echo _nav_ativo('/equipe/migracoes-wp', $_seg); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 10h4l2-6 2 12 2-6h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span><?php echo View::e(I18n::t('equipe.migracoes_wp')); ?></span>
