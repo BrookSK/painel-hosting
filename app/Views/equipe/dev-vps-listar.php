@@ -7,7 +7,7 @@ use LRV\Core\Csrf;
 $pageTitle = 'VPS da Equipe';
 require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
-function gbDevVps(int $mb): string {
+function gbTeamVps(int $mb): string {
     if ($mb <= 0) return '0 GB';
     return ((int)round($mb / 1024)) . ' GB';
 }
@@ -16,19 +16,17 @@ function gbDevVps(int $mb): string {
 <div class="page-subtitle">Crie e gerencie VPS internas da empresa para desenvolvimento e ambientes de teste.</div>
 
 <?php if (!empty($erro)): ?>
-<div class="alerta alerta-erro" style="margin-bottom:16px;"><?php echo View::e($erro); ?></div>
+  <div class="erro"><?php echo View::e($erro); ?></div>
 <?php endif; ?>
 <?php if (!empty($sucesso)): ?>
-<div class="alerta alerta-sucesso" style="margin-bottom:16px;"><?php echo View::e($sucesso); ?></div>
+  <div class="sucesso"><?php echo View::e($sucesso); ?></div>
 <?php endif; ?>
 
 <!-- VPS existentes -->
 <?php if (!empty($vpsList)): ?>
 <div class="card-new" style="margin-bottom:24px;">
-  <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
-    <h3 style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">VPS ativas (<?php echo count($vpsList); ?>)</h3>
-  </div>
-  <div style="overflow:auto;">
+  <div class="texto" style="margin-bottom:0;"><strong>VPS ativas (<?php echo count($vpsList); ?>)</strong></div>
+  <div style="overflow:auto;margin-top:12px;">
     <table>
       <thead>
         <tr>
@@ -48,35 +46,27 @@ function gbDevVps(int $mb): string {
           $ip = (string)($v['ip_address'] ?? '');
           $st = (string)($v['status'] ?? '');
           $createdAt = (string)($v['created_at'] ?? '');
+          $stMap = [
+              'running' => ['Em execução', 'badge-green'],
+              'pending_provisioning' => ['Aguardando', 'badge-yellow'],
+              'provisioning' => ['Provisionando', 'badge-blue'],
+              'error' => ['Erro', 'badge-red'],
+              'suspended_payment' => ['Suspensa', 'badge-red'],
+          ];
+          $badge = $stMap[$st] ?? [ucfirst($st), 'badge-gray'];
         ?>
           <tr>
-            <td><span style="font-weight:600;color:#6366f1;">#<?php echo $vid; ?></span></td>
-            <td><strong><?php echo View::e($nome); ?></strong></td>
+            <td><strong>#<?php echo $vid; ?></strong></td>
+            <td><?php echo View::e($nome); ?></td>
             <td>
               <?php echo View::e($hostname); ?>
               <?php if ($ip !== ''): ?>
-                <br><span style="font-size:11px;color:#64748b;"><?php echo View::e($ip); ?></span>
+                <br><code style="font-size:11px;"><?php echo View::e($ip); ?></code>
               <?php endif; ?>
             </td>
-            <td style="white-space:nowrap;">
-              <span style="font-size:13px;"><?php echo (int)($v['cpu'] ?? 0); ?> vCPU</span> ·
-              <span style="font-size:13px;"><?php echo gbDevVps((int)($v['ram'] ?? 0)); ?></span> ·
-              <span style="font-size:13px;"><?php echo gbDevVps((int)($v['storage'] ?? 0)); ?></span>
-            </td>
-            <td>
-              <?php
-                $stMap = [
-                    'running' => ['Em execução', 'badge-green'],
-                    'pending_provisioning' => ['Aguardando', 'badge-yellow'],
-                    'provisioning' => ['Provisionando', 'badge-blue'],
-                    'error' => ['Erro', 'badge-red'],
-                    'suspended_payment' => ['Suspensa', 'badge-red'],
-                ];
-                $badge = $stMap[$st] ?? [ucfirst($st), 'badge-gray'];
-              ?>
-              <span class="badge-new <?php echo $badge[1]; ?>"><?php echo View::e($badge[0]); ?></span>
-            </td>
-            <td><span style="font-size:12px;color:#64748b;"><?php echo $createdAt !== '' ? date('d/m/Y H:i', strtotime($createdAt)) : '—'; ?></span></td>
+            <td><?php echo (int)($v['cpu'] ?? 0); ?> vCPU · <?php echo gbTeamVps((int)($v['ram'] ?? 0)); ?> · <?php echo gbTeamVps((int)($v['storage'] ?? 0)); ?></td>
+            <td><span class="badge-new <?php echo $badge[1]; ?>"><?php echo View::e($badge[0]); ?></span></td>
+            <td><?php echo $createdAt !== '' ? date('d/m/Y H:i', strtotime($createdAt)) : '—'; ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -85,38 +75,32 @@ function gbDevVps(int $mb): string {
 </div>
 <?php endif; ?>
 
-<!-- Formulário para criar VPS -->
-<div class="card-new" style="padding:28px;">
-  <h3 style="margin:0 0 6px;font-size:17px;font-weight:700;color:#0f172a;">Criar nova VPS</h3>
-  <p style="margin:0 0 20px;font-size:13px;color:#64748b;">Preencha as configurações da VPS interna. Ela ficará disponível para vincular aos projetos do Dev Workflow.</p>
+<!-- Criar nova VPS -->
+<div class="card-new">
+  <div class="texto" style="margin-bottom:16px;"><strong>Criar nova VPS da Equipe</strong></div>
 
   <form method="post" action="/equipe/vps-equipe/salvar">
     <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
 
-    <!-- Nome -->
-    <div class="form-group" style="margin-bottom:16px;">
-      <label class="form-label">Nome *</label>
-      <input type="text" name="name" class="form-input" required maxlength="150" placeholder="Ex: VPS Dev 1, Staging, QA..." style="max-width:400px;" />
-      <small style="color:#64748b;font-size:11px;display:block;margin-top:4px;">Um nome amigável para identificar esta VPS internamente.</small>
+    <div class="form-group">
+      <label class="form-label">Nome</label>
+      <input type="text" name="name" class="form-input" required maxlength="150" placeholder="Ex: VPS Dev 1, Staging, QA..." />
     </div>
 
-    <!-- Servidor -->
-    <div class="form-group" style="margin-bottom:16px;">
-      <label class="form-label">Servidor *</label>
-      <select name="server_id" class="form-input" required style="max-width:500px;">
+    <div class="form-group">
+      <label class="form-label">Servidor</label>
+      <select name="server_id" class="form-input" required>
         <option value="">— Selecione o servidor —</option>
         <?php foreach (($servidores ?? []) as $s): ?>
           <option value="<?php echo (int)$s['id']; ?>">
-            <?php echo View::e((string)($s['hostname'] ?? '')); ?> — <?php echo View::e((string)($s['ip_address'] ?? '')); ?> (<?php echo (int)($s['cpu_total'] ?? 0); ?> CPU · <?php echo gbDevVps((int)($s['ram_total'] ?? 0)); ?> RAM · <?php echo gbDevVps((int)($s['storage_total'] ?? 0)); ?> Disco)
+            <?php echo View::e((string)($s['hostname'] ?? '')); ?> (<?php echo View::e((string)($s['ip_address'] ?? '')); ?>) — <?php echo (int)($s['cpu_total'] ?? 0); ?> CPU / <?php echo gbTeamVps((int)($s['ram_total'] ?? 0)); ?> RAM / <?php echo gbTeamVps((int)($s['storage_total'] ?? 0)); ?> Disco
           </option>
         <?php endforeach; ?>
       </select>
-      <small style="color:#64748b;font-size:11px;display:block;margin-top:4px;">Servidor físico onde a VPS será provisionada.</small>
     </div>
 
-    <!-- Recursos -->
-    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-bottom:20px;max-width:600px;">
-      <div class="form-group">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div class="form-group" style="flex:1;min-width:140px;">
         <label class="form-label">vCPU</label>
         <select name="cpu" class="form-input">
           <option value="1">1 vCPU</option>
@@ -126,7 +110,7 @@ function gbDevVps(int $mb): string {
           <option value="16">16 vCPU</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="flex:1;min-width:140px;">
         <label class="form-label">Memória RAM</label>
         <select name="ram" class="form-input">
           <option value="1024">1 GB</option>
@@ -137,7 +121,7 @@ function gbDevVps(int $mb): string {
           <option value="32768">32 GB</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="flex:1;min-width:140px;">
         <label class="form-label">Disco</label>
         <select name="storage" class="form-input">
           <option value="10240">10 GB</option>
@@ -149,18 +133,10 @@ function gbDevVps(int $mb): string {
       </div>
     </div>
 
-    <button type="submit" class="botao">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Criar VPS da Equipe
-    </button>
+    <div style="margin-top:16px;">
+      <button type="submit" class="botao">Criar VPS</button>
+    </div>
   </form>
 </div>
-
-<?php if (empty($vpsList)): ?>
-<div style="margin-top:24px;padding:32px;text-align:center;color:#94a3b8;">
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="margin:0 auto 10px;display:block;opacity:.5;"><rect x="2" y="5" width="20" height="5" rx="2"/><rect x="2" y="13" width="20" height="5" rx="2"/><circle cx="18" cy="7.5" r="1"/><circle cx="18" cy="15.5" r="1"/></svg>
-  <p style="margin:0;font-size:13px;">Nenhuma VPS da equipe criada ainda. Crie a primeira usando o formulário acima.</p>
-</div>
-<?php endif; ?>
 
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>
