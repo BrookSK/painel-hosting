@@ -66,7 +66,7 @@ $id = (int)($p['id'] ?? 0);
         <?php endforeach; ?>
       </select>
       <?php if (empty($vpsList)): ?>
-        <small style="color:#f59e0b;font-size:11px;">Nenhuma VPS da equipe encontrada. <a href="/equipe/dev/vps" style="color:#4F46E5;">Criar uma VPS da equipe</a></small>
+        <small style="color:#f59e0b;font-size:11px;">Nenhuma VPS da equipe encontrada. <a href="/equipe/vps-equipe" style="color:#4F46E5;">Criar uma VPS da equipe</a></small>
       <?php endif; ?>
     </div>
 

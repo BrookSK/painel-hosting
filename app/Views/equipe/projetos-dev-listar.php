@@ -33,13 +33,7 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
   <span class="texto" style="margin:0;"><?php echo View::e(I18n::t('dev_workflow.projetos_desc')); ?></span>
-  <div style="display:flex;gap:10px;">
-    <a class="botao botao-secundario" href="/equipe/dev/vps">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;"><rect x="2" y="5" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="16" height="4" rx="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/></svg>
-      VPS da Equipe
-    </a>
-    <a class="botao" href="/equipe/dev/projeto/novo"><?php echo View::e(I18n::t('dev_workflow.novo_projeto')); ?></a>
-  </div>
+  <a class="botao" href="/equipe/dev/projeto/novo"><?php echo View::e(I18n::t('dev_workflow.novo_projeto')); ?></a>
 </div>
 
 <?php if (empty($projetos)): ?>

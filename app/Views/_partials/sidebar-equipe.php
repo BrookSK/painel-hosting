@@ -57,6 +57,11 @@ function _nav_ativo(string $path, string $uri): string {
       <span><?php echo View::e(I18n::t('equipe.vps')); ?></span>
     </a>
 
+    <a href="/equipe/vps-equipe" class="nav-item<?php echo _nav_ativo('/equipe/vps-equipe', $_seg); ?>" style="padding-left:36px;font-size:13px;">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><rect x="3" y="6" width="14" height="3.5" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="11.5" width="14" height="3.5" rx="1.2" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="7.75" r=".8" fill="currentColor"/><circle cx="14" cy="13.25" r=".8" fill="currentColor"/></svg>
+      <span>VPS da Equipe</span>
+    </a>
+
     <a href="/equipe/servidores" class="nav-item<?php echo _nav_ativo('/equipe/servidores', $_seg); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" stroke="currentColor" stroke-width="1.6"/><path d="M7 10h6M10 7v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('equipe.servidores')); ?></span>

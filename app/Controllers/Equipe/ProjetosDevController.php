@@ -482,6 +482,6 @@ final class ProjetosDevController
             // Se falhar, fica em pending_provisioning pro admin provisionar manualmente
         }
 
-        return Resposta::redirecionar('/equipe/dev/vps?ok=1');
+        return Resposta::redirecionar('/equipe/vps-equipe?ok=1');
     }
 }

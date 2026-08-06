@@ -184,8 +184,10 @@ $roteador->post('/equipe/dev/demanda/fechar', [\LRV\App\Controllers\Equipe\Proje
 $roteador->post('/equipe/dev/demanda/reabrir', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'reabrirDemanda'], [Middlewares::exigirLoginEquipe()]);
 $roteador->post('/equipe/dev/demanda/atribuir', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'atribuirDemanda'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/dev/minhas-demandas', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'minhasDemandas'], [Middlewares::exigirLoginEquipe()]);
-$roteador->get('/equipe/dev/vps', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'vpsEquipe'], [Middlewares::exigirPermissao('manage_vps')]);
-$roteador->post('/equipe/dev/vps/salvar', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'salvarVps'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('dev_vps_create', 5, 60)]);
+
+// VPS da Equipe (página separada)
+$roteador->get('/equipe/vps-equipe', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'vpsEquipe'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/vps-equipe/salvar', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'salvarVps'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('dev_vps_create', 5, 60)]);
 
 $roteador->get('/equipe/sair', [EquipeSairController::class, 'sair'], [Middlewares::exigirLoginEquipe()]);
 
