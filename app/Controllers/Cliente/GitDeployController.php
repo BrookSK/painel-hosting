@@ -354,7 +354,7 @@ final class GitDeployController
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT g.deploy_path, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+            'SELECT g.deploy_path, g.php_version, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
              JOIN servers s ON s.id = v.server_id
@@ -365,7 +365,12 @@ final class GitDeployController
         if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
 
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
-        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $command . ' 2>&1';
+        // Aplicar o mesmo prefixo de PHP do deploy, para que "php"/"composer" no console
+        // usem a versão configurada (ex: php83 do aPanel) em vez do PHP padrão do PATH.
+        $prefixoPhp = $this->montarPrefixoPhp(trim((string)($dep['php_version'] ?? '8.3')));
+        // safe.directory evita "dubious ownership" do git ao rodar comandos git no console.
+        $prefixoGit = 'git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
+        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoGit . $prefixoPhp . $command . ' 2>&1';
 
         $exec = new \LRV\App\Services\Infra\SshExecutor();
         $host = (string)($dep['ip_address'] ?? '');
@@ -720,16 +725,35 @@ final class GitDeployController
             return '';
         }
 
-        $phpBin = 'php' . $phpVersion; // ex: php8.3
+        // Servidores usam convenções de nome diferentes para o binário PHP:
+        //   - apt/Debian:  php8.3  (com ponto)
+        //   - aPanel:      php83   (sem ponto)     e  /www/server/php/83/bin/php
+        //   - Plesk:       /opt/plesk/php/8.3/bin/php
+        // Montamos uma lista de candidatos em ordem de preferência e usamos o primeiro
+        // que existir. Só cai no "php" padrão do PATH se nenhum for encontrado.
+        $comPonto = $phpVersion;                       // 8.3
+        $semPonto = str_replace('.', '', $phpVersion); // 83
 
-        // Descobrir o binário PHP da versão desejada e exportar como variável.
-        // Se a versão específica não existir no servidor, cai no "php" padrão.
-        // Depois criamos uma função "composer" que sempre roda com o PHP escolhido,
-        // e uma função "php" que aponta para o binário correto.
-        //
-        // Usar funções de shell (não alias, que não funciona em shell não-interativo).
+        $candidatos = [
+            'php' . $comPonto,                             // php8.3 (apt)
+            'php' . $semPonto,                             // php83 (aPanel no PATH)
+            '/www/server/php/' . $semPonto . '/bin/php',   // aPanel caminho absoluto
+            '/opt/plesk/php/' . $comPonto . '/bin/php',    // Plesk caminho absoluto
+        ];
+
+        // Constrói uma expressão shell que testa cada candidato e define PHP_BIN
+        // com o primeiro disponível (command -v resolve tanto nome no PATH quanto
+        // caminho absoluto executável).
+        $exprPhpBin = 'PHP_BIN=""; for c in';
+        foreach ($candidatos as $cand) {
+            $exprPhpBin .= ' ' . escapeshellarg($cand);
+        }
+        $exprPhpBin .= '; do if command -v "$c" >/dev/null 2>&1; then PHP_BIN="$c"; break; fi; done; '
+            . '[ -z "$PHP_BIN" ] && PHP_BIN="php"; ';
+
+        // Funções de shell (alias não funciona em shell não-interativo).
         return
-            'PHP_BIN="$(command -v ' . $phpBin . ' 2>/dev/null || command -v php)"; '
+            $exprPhpBin
             . 'COMPOSER_BIN="$(command -v composer 2>/dev/null || echo /usr/local/bin/composer)"; '
             . 'php() { "$PHP_BIN" "$@"; }; '
             . 'composer() { "$PHP_BIN" "$COMPOSER_BIN" "$@"; }; '
