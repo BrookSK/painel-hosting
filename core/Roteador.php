@@ -52,6 +52,12 @@ final class Roteador
         $caminho = $this->normalizarCaminho($req->caminho);
 
         $rota = $this->rotas[$metodo][$caminho] ?? null;
+        $parametros = [];
+
+        // Fallback: rotas com parâmetros dinâmicos (ex: /webhooks/git-deploy/{secret})
+        if ($rota === null) {
+            [$rota, $parametros] = $this->casarRotaDinamica($metodo, $caminho);
+        }
 
         if ($rota === null) {
             // Ignorar rotas automáticas de browsers/OS que geram ruído
@@ -66,6 +72,11 @@ final class Roteador
             );
             $this->renderizarErro(404)->enviar();
             return;
+        }
+
+        // Injetar parâmetros dinâmicos na requisição
+        if ($parametros !== []) {
+            $req->params = $parametros;
         }
 
         $handler = $rota['handler'] ?? null;
@@ -113,6 +124,44 @@ final class Roteador
             );
             $this->renderizarErro(500, $errorId)->enviar();
         }
+    }
+
+    /**
+     * Tenta casar o caminho contra rotas com parâmetros dinâmicos ({param}).
+     *
+     * @return array{0: array|null, 1: array<string,string>}
+     */
+    private function casarRotaDinamica(string $metodo, string $caminho): array
+    {
+        $rotasDoMetodo = $this->rotas[$metodo] ?? [];
+
+        foreach ($rotasDoMetodo as $padrao => $rota) {
+            // Só interessa padrões que contenham parâmetros dinâmicos
+            if (!str_contains($padrao, '{')) {
+                continue;
+            }
+
+            // Converter /webhooks/git-deploy/{secret} em regex nomeada.
+            // preg_quote escapa tudo; desfazemos as chaves para o callback substituir.
+            $regex = str_replace(['\{', '\}'], ['{', '}'], preg_quote($padrao, '#'));
+            $regex = preg_replace_callback(
+                '/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/',
+                static fn(array $m): string => '(?P<' . $m[1] . '>[^/]+)',
+                $regex
+            );
+
+            if (preg_match('#^' . $regex . '$#', $caminho, $matches)) {
+                $parametros = [];
+                foreach ($matches as $chave => $valor) {
+                    if (is_string($chave)) {
+                        $parametros[$chave] = $valor;
+                    }
+                }
+                return [$rota, $parametros];
+            }
+        }
+
+        return [null, []];
     }
 
     private function executarHandler(callable|array $handler, Requisicao $req): mixed
