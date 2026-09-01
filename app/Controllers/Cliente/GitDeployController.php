@@ -291,8 +291,11 @@ final class GitDeployController
         $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, commit_hash, commit_message, commit_author, output, deployed_at) VALUES (:d,:s,:h,:m,:a,:o,:t)')
             ->execute([':d'=>$id,':s'=>'success',':h'=>$result['hash'],':m'=>$result['message'],':a'=>$result['author'],':o'=>$result['output'],':t'=>date('Y-m-d H:i:s')]);
 
-        // Criar/atualizar vhost Nginx para o subdomínio (se configurado)
+        // Criar/atualizar vhost Nginx para o domínio (subdomínio próprio OU domínio temporário .lrvweb)
         $deployDomain = trim((string)($dep['subdomain'] ?? ''));
+        if ($deployDomain === '') {
+            $deployDomain = trim((string)($dep['temp_domain'] ?? ''));
+        }
         $deployServerId = (int)($dep['server_id'] ?? 0);
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
         $appType = (string)($dep['app_type'] ?? 'php');
@@ -1012,8 +1015,11 @@ final class GitDeployController
         $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, commit_hash, commit_message, commit_author, output, deployed_at) VALUES (:d,:s,:h,:m,:a,:o,:t)')
             ->execute([':d' => $id, ':s' => 'success', ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':o' => $result['output'], ':t' => date('Y-m-d H:i:s')]);
 
-        // Atualizar vhost Nginx se necessário
+        // Atualizar vhost Nginx se necessário (subdomínio próprio OU domínio temporário .lrvweb)
         $deployDomain = trim((string)($dep['subdomain'] ?? ''));
+        if ($deployDomain === '') {
+            $deployDomain = trim((string)($dep['temp_domain'] ?? ''));
+        }
         $deployServerId = (int)($dep['server_id'] ?? 0);
         $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
         $appType = (string)($dep['app_type'] ?? 'php');
