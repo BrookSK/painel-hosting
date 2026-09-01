@@ -825,19 +825,46 @@ final class GitDeployController
         }
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare(
-            'SELECT g.*, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
-             FROM git_deployments g
-             JOIN vps v ON v.id = g.vps_id
-             JOIN servers s ON s.id = v.server_id
-             WHERE g.webhook_secret = :s AND g.auto_deploy = 1 AND g.status != "inactive" LIMIT 1'
-        );
-        $stmt->execute([':s' => $secret]);
-        $dep = $stmt->fetch();
+
+        // 1) Buscar o deployment apenas pelo secret (sem JOINs), para diagnóstico preciso
+        $depStmt = $pdo->prepare('SELECT * FROM git_deployments WHERE webhook_secret = :s LIMIT 1');
+        $depStmt->execute([':s' => $secret]);
+        $dep = $depStmt->fetch();
 
         if (!is_array($dep)) {
-            return Resposta::json(['ok' => false, 'erro' => 'Webhook not found or auto-deploy disabled.'], 404);
+            return Resposta::json(['ok' => false, 'erro' => 'Webhook secret não encontrado. Verifique se o Auto Deploy está ativo e salve novamente para gerar o secret.'], 404);
         }
+
+        // 2) Validar auto_deploy e status
+        if ((int)($dep['auto_deploy'] ?? 0) !== 1) {
+            return Resposta::json(['ok' => false, 'erro' => 'Auto Deploy está desativado para este projeto.'], 409);
+        }
+        if ((string)($dep['status'] ?? '') === 'inactive') {
+            return Resposta::json(['ok' => false, 'erro' => 'Deployment inativo.'], 409);
+        }
+
+        // 3) Tratar evento "ping" do GitHub (enviado ao criar/testar o webhook)
+        $githubEvent = strtolower((string)($req->headers['x-github-event'] ?? ''));
+        if ($githubEvent === 'ping') {
+            return Resposta::json(['ok' => true, 'pong' => true, 'message' => 'Webhook configurado com sucesso.']);
+        }
+
+        // 4) Carregar dados de VPS/servidor (LEFT JOIN para não sumir a linha se faltar)
+        $infoStmt = $pdo->prepare(
+            'SELECT v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM vps v
+             LEFT JOIN servers s ON s.id = v.server_id
+             WHERE v.id = :vid LIMIT 1'
+        );
+        $infoStmt->execute([':vid' => (int)($dep['vps_id'] ?? 0)]);
+        $info = $infoStmt->fetch();
+
+        if (!is_array($info) || empty($info['ip_address'])) {
+            return Resposta::json(['ok' => false, 'erro' => 'VPS ou servidor não configurado corretamente para este deployment.'], 409);
+        }
+
+        // Mesclar dados de infra no $dep (compatível com executarDeploy)
+        $dep = array_merge($dep, $info);
 
         // Verificar se o push é para a branch configurada
         $body = file_get_contents('php://input');
