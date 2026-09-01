@@ -370,7 +370,9 @@ final class GitDeployController
         $prefixoPhp = $this->montarPrefixoPhp(trim((string)($dep['php_version'] ?? '8.3')));
         // safe.directory evita "dubious ownership" do git ao rodar comandos git no console.
         $prefixoGit = 'git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
-        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoGit . $prefixoPhp . $command . ' 2>&1';
+        // Garantir escrita na pasta (chown de deploy anterior pode ter deixado como www-data).
+        $prefixoPerm = 'sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
+        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPerm . $prefixoGit . $prefixoPhp . $command . ' 2>&1';
 
         $exec = new \LRV\App\Services\Infra\SshExecutor();
         $host = (string)($dep['ip_address'] ?? '');
@@ -612,6 +614,11 @@ final class GitDeployController
         // Comando pós-deploy (npm install, composer install, etc.)
         $postCmd = trim((string)($dep['post_deploy_cmd'] ?? ''));
         if ($postCmd !== '') {
+            // Garantir que o usuário atual tenha permissão de escrita na pasta antes
+            // de rodar o composer/npm (um chown para www-data de deploy anterior pode
+            // impedir a gravação de composer.lock, vendor/, node_modules/, etc.).
+            $runCmd('sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+
             // Usar a versão de PHP escolhida no deploy. O comando "composer" no shell
             // costuma apontar para o PHP padrão do sistema (que pode não ter as extensões
             // necessárias). Aqui montamos um prefixo que garante o binário phpX.Y correto.
