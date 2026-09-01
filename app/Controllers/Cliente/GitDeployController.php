@@ -608,14 +608,20 @@ final class GitDeployController
             $output .= "\n--- Pós-deploy ---\n" . $postOutput;
         }
 
-        // Corrigir permissões + buscar commit info — tudo numa única conexão
+        // Capturar commit info ANTES do chown (evita "dubious ownership" do git).
+        // safe.directory garante que o git aceite operar mesmo se o dono divergir.
+        $commitCmd = 'cd ' . escapeshellarg($deployPath)
+            . ' && git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
+            . ' echo "LRV_COMMIT_START"; git log -1 --format="%H|%s|%an" 2>&1; echo "LRV_COMMIT_END"';
+        $commitResult = $runCmd($commitCmd);
+        $finalOutput = (string)($commitResult['saida'] ?? '');
+
+        // Corrigir permissões DEPOIS de capturar o commit — numa conexão separada.
         // Excluir storage/ do chmod 755 para preservar permissões de escrita
-        $finalCmd = '(sudo chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
+        $permCmd = '(sudo chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
             . ' && (sudo find ' . escapeshellarg($deployPath) . ' -not -path "*/storage/*" -exec chmod 755 {} + 2>/dev/null || chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
-            . ' && (sudo chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || true);'
-            . ' cd ' . escapeshellarg($deployPath) . ' && echo "LRV_COMMIT_START" && git log -1 --format="%H|%s|%an" 2>/dev/null; echo "LRV_COMMIT_END"';
-        $finalResult = $runCmd($finalCmd);
-        $finalOutput = (string)($finalResult['saida'] ?? '');
+            . ' && (sudo chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || true)';
+        $runCmd($permCmd);
         // Limpar warnings SSH antes de parsear
         $cleanLines = [];
         foreach (explode("\n", $finalOutput) as $l) {
@@ -625,12 +631,37 @@ final class GitDeployController
         }
         $cleanOutput = implode("\n", $cleanLines);
         $hash = ''; $message = ''; $author = '';
-        if (preg_match('/LRV_COMMIT_START\s*\n(.*?)\nLRV_COMMIT_END/s', $cleanOutput, $m)) {
-            $commitLine = trim($m[1]);
-            $parts = explode('|', $commitLine, 3);
-            $hash = substr(trim($parts[0] ?? ''), 0, 40);
-            $message = trim($parts[1] ?? '');
-            $author = trim($parts[2] ?? '');
+
+        // Extrair o bloco entre os marcadores de forma tolerante
+        $startPos = strpos($cleanOutput, 'LRV_COMMIT_START');
+        $endPos = strpos($cleanOutput, 'LRV_COMMIT_END');
+        if ($startPos !== false && $endPos !== false && $endPos > $startPos) {
+            $bloco = substr($cleanOutput, $startPos + strlen('LRV_COMMIT_START'), $endPos - $startPos - strlen('LRV_COMMIT_START'));
+            // Procurar a primeira linha que contenha o formato hash|mensagem|autor
+            foreach (explode("\n", $bloco) as $linha) {
+                $linha = trim($linha);
+                if ($linha === '' || !str_contains($linha, '|')) {
+                    continue;
+                }
+                $parts = explode('|', $linha, 3);
+                $possivelHash = trim($parts[0] ?? '');
+                // Validar que a primeira parte parece um hash git (hex, 7-40 chars)
+                if (preg_match('/^[0-9a-f]{7,40}$/i', $possivelHash)) {
+                    $hash = substr($possivelHash, 0, 40);
+                    $message = trim($parts[1] ?? '');
+                    $author = trim($parts[2] ?? '');
+                    break;
+                }
+            }
+        }
+
+        // Fallback: se não capturou o commit, registrar o output bruto no log
+        // para diagnóstico (aparece no output do deploy).
+        if ($hash === '') {
+            $trechoDebug = trim(substr($cleanOutput, (int)$startPos, 300));
+            if ($trechoDebug !== '') {
+                $output .= "\n--- Captura de commit (debug) ---\n" . $trechoDebug;
+            }
         }
         $appType = (string)($dep['app_type'] ?? 'php');
         $appPort = (int)($dep['app_port'] ?? 3000);
