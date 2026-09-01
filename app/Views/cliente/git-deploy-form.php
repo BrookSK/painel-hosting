@@ -197,18 +197,31 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       </label>
 
       <?php if ($isEdit && $autoDeployAtivo && !empty($dep['webhook_secret'])): ?>
+      <?php $webhookUrlCompleta = \LRV\Core\ConfiguracoesSistema::appUrlBase() . '/webhooks/git-deploy/' . (string)$dep['webhook_secret']; ?>
       <div style="margin-top:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
-        <div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:6px;">URL do Webhook:</div>
+        <div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:6px;">Payload URL (URL do Webhook):</div>
         <div style="position:relative;">
-          <input type="text" id="webhookUrl" readonly value="<?php echo View::e(rtrim((string)(\LRV\Core\Settings::obter('app.url', '')), '/') . '/webhooks/git-deploy/' . (string)$dep['webhook_secret']); ?>" style="width:100%;font-family:monospace;font-size:11px;padding:8px 70px 8px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;box-sizing:border-box;" />
+          <input type="text" id="webhookUrl" readonly value="<?php echo View::e($webhookUrlCompleta); ?>" style="width:100%;font-family:monospace;font-size:11px;padding:8px 70px 8px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;box-sizing:border-box;" />
           <button type="button" onclick="document.getElementById('webhookUrl').select();navigator.clipboard.writeText(document.getElementById('webhookUrl').value).then(function(){this.textContent='Copiada!'}.bind(this))" style="position:absolute;top:5px;right:6px;background:#4F46E5;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;">Copiar</button>
         </div>
+
+        <div style="font-size:12px;color:#334155;margin-top:12px;font-weight:600;">Como configurar no GitHub:</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">
+          No repositório: <strong>Settings &rarr; Webhooks &rarr; Add webhook</strong>, e preencha os campos assim:
+        </div>
+        <div style="font-size:11px;color:#475569;margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;line-height:1.9;">
+          <div><strong>Payload URL:</strong> cole a URL acima</div>
+          <div><strong>Content type:</strong> <code>application/json</code></div>
+          <div><strong>Secret:</strong> deixe <em>em branco</em> (a segurança já está no token da URL)</div>
+          <div><strong>SSL verification:</strong> <code>Enable SSL verification</code> (recomendado)</div>
+          <div><strong>Which events?:</strong> selecione <code>Just the push event</code></div>
+          <div><strong>Active:</strong> deixe marcado</div>
+        </div>
         <div style="font-size:11px;color:#94a3b8;margin-top:8px;">
-          Configure esta URL como webhook no seu repositório:
+          Depois clique em <strong>Add webhook</strong>. Os outros campos podem ficar no padrão.
           <ul style="margin:6px 0 0 16px;padding:0;list-style:disc;">
-            <li><strong>GitHub:</strong> Settings &rarr; Webhooks &rarr; Add webhook &rarr; Payload URL &rarr; Content type: <code>application/json</code> &rarr; Evento: <code>push</code></li>
-            <li><strong>GitLab:</strong> Settings &rarr; Webhooks &rarr; URL &rarr; Trigger: <code>Push events</code></li>
-            <li><strong>Bitbucket:</strong> Repository settings &rarr; Webhooks &rarr; Add webhook &rarr; URL &rarr; Trigger: <code>Repository push</code></li>
+            <li><strong>GitLab:</strong> Settings &rarr; Webhooks &rarr; URL (cole a URL) &rarr; Trigger: <code>Push events</code> &rarr; Add webhook</li>
+            <li><strong>Bitbucket:</strong> Repository settings &rarr; Webhooks &rarr; Add webhook &rarr; URL (cole a URL) &rarr; Trigger: <code>Repository push</code></li>
           </ul>
         </div>
       </div>
