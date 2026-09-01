@@ -51,9 +51,18 @@ final class NginxVhostService
         $custom = trim((string)($srv['nginx_reload_cmd'] ?? ''));
         if ($custom !== '') return $custom;
 
-        // Auto-detectar aaPanel: servidores gerenciados usam nginx.real
+        // Auto-detectar aaPanel: servidores gerenciados usam nginx do /www/server/nginx.
+        // O método mais confiável é enviar HUP direto no PID do master real, lendo o
+        // pidfile do local correto (varia: /run/nginx.pid ou /www/server/nginx/logs/nginx.pid).
+        // Tentamos em cascata, parando na primeira forma que funcionar.
         if ((int)($srv['is_managed_server'] ?? 0) === 1) {
-            return 'kill -HUP $(pgrep -o nginx.real 2>/dev/null || cat /www/server/nginx/logs/nginx.pid 2>/dev/null) 2>/dev/null; /etc/init.d/nginx reload 2>/dev/null; true';
+            return '('
+                . 'sudo kill -HUP "$(cat /run/nginx.pid 2>/dev/null)" 2>/dev/null'
+                . ' || sudo kill -HUP "$(cat /www/server/nginx/logs/nginx.pid 2>/dev/null)" 2>/dev/null'
+                . ' || sudo kill -HUP "$(pgrep -f \'nginx: master\' | head -1)" 2>/dev/null'
+                . ' || sudo /www/server/nginx/sbin/nginx -s reload 2>/dev/null'
+                . ' || sudo /etc/init.d/nginx reload 2>/dev/null'
+                . '); true';
         }
 
         return 'systemctl reload nginx';
@@ -146,70 +155,74 @@ final class NginxVhostService
         $isCustom = $this->isCustomNginxPath($srv);
 
         if ($isManaged) {
-            // Usar acme.sh com Cloudflare DNS API
+            $certDir = '/www/server/panel/vhost/cert/' . $domain;
+            $webroot = trim((string)($srv['_webroot'] ?? ''));
+            $acmeOk = false;
+            $acmeOutput = '';
+
+            // MÉTODO 1 (preferencial): HTTP challenge via webroot.
+            // Não precisa de token Cloudflare e funciona quando o DNS já aponta pro servidor
+            // (registro A em nuvem cinza). É o método mais simples e confiável.
+            if ($webroot !== '') {
+                $acmeHttpCmd = 'sudo /root/.acme.sh/acme.sh --issue -d ' . escapeshellarg($domain)
+                    . ' -w ' . escapeshellarg($webroot)
+                    . ' --server letsencrypt --keylength ec-256 2>&1; echo lrv-acme-exit-$?';
+                $acmeHttpResult = $this->exec($ssh, $srv, $acmeHttpCmd);
+                $acmeOutput = trim($acmeHttpResult['saida'] ?? '');
+                $logs[] = 'acme.sh (HTTP): ' . $acmeOutput;
+                $acmeOk = str_contains($acmeOutput, 'Cert success')
+                    || str_contains($acmeOutput, 'Cert is already valid')
+                    || str_contains($acmeOutput, 'lrv-acme-exit-0');
+            }
+
+            // MÉTODO 2 (fallback): DNS challenge via Cloudflare (precisa de token).
             $cfToken = trim((string)\LRV\Core\Settings::obter('cloudflare.api_token', ''));
-            if ($cfToken === '') {
-                $logs[] = 'Aviso SSL: Cloudflare API Token não configurado. SSL não emitido.';
+            if (!$acmeOk && $cfToken !== '') {
+                $acmeCmd = 'export CF_Token=' . escapeshellarg($cfToken) . ' && '
+                    . 'sudo /root/.acme.sh/acme.sh --issue -d ' . escapeshellarg($domain)
+                    . ' --dns dns_cf --server letsencrypt --force --keylength ec-256 2>&1; echo lrv-acme-exit-$?';
+                $acmeResult = $this->exec($ssh, $srv, $acmeCmd);
+                $acmeOutput = trim($acmeResult['saida'] ?? '');
+                $logs[] = 'acme.sh (Cloudflare DNS): ' . $acmeOutput;
+                $acmeOk = str_contains($acmeOutput, 'Cert success')
+                    || str_contains($acmeOutput, 'Cert is already valid')
+                    || str_contains($acmeOutput, 'lrv-acme-exit-0');
+            }
+
+            if (!$acmeOk && $webroot === '' && $cfToken === '') {
+                $logs[] = 'Aviso SSL: sem webroot e sem token Cloudflare. SSL não emitido — site funciona em HTTP.';
                 return ['logs' => $logs];
             }
 
-            $certDir = '/www/server/panel/vhost/cert/' . $domain;
-
-            // Emitir via acme.sh com DNS challenge Cloudflare
-            $acmeCmd = 'export CF_Token=' . escapeshellarg($cfToken) . ' && '
-                . '/root/.acme.sh/acme.sh --issue -d ' . escapeshellarg($domain)
-                . ' --dns dns_cf --server letsencrypt --force --keylength ec-256 2>&1; echo lrv-acme-exit-$?';
-            $acmeResult = $this->exec($ssh, $srv, $acmeCmd);
-            $acmeOutput = trim($acmeResult['saida'] ?? '');
-            $logs[] = 'acme.sh: ' . $acmeOutput;
-
-            $acmeOk = str_contains($acmeOutput, 'Cert success') || str_contains($acmeOutput, 'Cert is already valid') || str_contains($acmeOutput, 'lrv-acme-exit-0');
-
             if (!$acmeOk) {
-                // Fallback: tentar sem Cloudflare (DNS manual mode se já tem o TXT)
-                $logs[] = 'Aviso: acme.sh com Cloudflare falhou. Tentando certbot fallback...';
-                $certCmd = $sudo . 'certbot certonly --webroot -w /var/www/certbot -d ' . escapeshellarg($domain)
-                    . ' --non-interactive --agree-tos --register-unsafely-without-email 2>&1; echo lrv-cert-done';
-                $certResult = $this->exec($ssh, $srv, $certCmd);
-                $logs[] = 'certbot fallback: ' . trim($certResult['saida'] ?? '');
-                // Se também falhou, site funciona em HTTP
-                if (!str_contains($certResult['saida'] ?? '', 'Successfully')) {
-                    $logs[] = 'Aviso: SSL não emitido. O site funciona em HTTP.';
-                    return ['logs' => $logs];
-                }
-                // Certbot emitiu — copiar certs pro path do aaPanel
-                $installCmd = $sudo . 'mkdir -p ' . escapeshellarg($certDir)
-                    . ' && cp /etc/letsencrypt/live/' . escapeshellarg($domain) . '/fullchain.pem ' . escapeshellarg($certDir . '/fullchain.pem')
-                    . ' && cp /etc/letsencrypt/live/' . escapeshellarg($domain) . '/privkey.pem ' . escapeshellarg($certDir . '/privkey.pem');
-                $this->exec($ssh, $srv, $installCmd);
-            } else {
-                // Instalar cert do acme.sh no path do aaPanel
-                $installCmd = $sudo . 'mkdir -p ' . escapeshellarg($certDir)
-                    . ' && /root/.acme.sh/acme.sh --install-cert -d ' . escapeshellarg($domain) . ' --ecc'
-                    . ' --cert-file ' . escapeshellarg($certDir . '/cert.pem')
-                    . ' --key-file ' . escapeshellarg($certDir . '/privkey.pem')
-                    . ' --fullchain-file ' . escapeshellarg($certDir . '/fullchain.pem')
-                    . ' 2>&1';
-                $installResult = $this->exec($ssh, $srv, $installCmd);
-                $logs[] = 'Install cert: ' . trim($installResult['saida'] ?? '');
+                $logs[] = 'Aviso: SSL não emitido (acme.sh falhou). O site funciona em HTTP. Detalhe: ' . mb_substr($acmeOutput, 0, 300);
+                return ['logs' => $logs];
             }
 
-            // Atualizar vhost com SSL
-            $sslConfig = $this->gerarConfigComSSL($domain, (int)($srv['_app_port'] ?? 0), $certDir);
-            if ((int)($srv['_app_port'] ?? 0) <= 0) {
-                // Ler porta do conf existente
-                $readCmd = 'grep -oP "proxy_pass http://127.0.0.1:\\K[0-9]+" ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' 2>/dev/null | head -1';
-                $portResult = $this->exec($ssh, $srv, $readCmd);
-                $port = (int)trim($portResult['saida'] ?? '');
-                if ($port > 0) {
-                    $sslConfig = $this->gerarConfigComSSL($domain, $port, $certDir);
-                }
-            }
+            // Instalar cert do acme.sh no path do aaPanel
+            $installCmd = $sudo . 'mkdir -p ' . escapeshellarg($certDir)
+                . ' && sudo /root/.acme.sh/acme.sh --install-cert -d ' . escapeshellarg($domain) . ' --ecc'
+                . ' --cert-file ' . escapeshellarg($certDir . '/cert.pem')
+                . ' --key-file ' . escapeshellarg($certDir . '/privkey.pem')
+                . ' --fullchain-file ' . escapeshellarg($certDir . '/fullchain.pem')
+                . ' 2>&1';
+            $installResult = $this->exec($ssh, $srv, $installCmd);
+            $logs[] = 'Install cert: ' . trim($installResult['saida'] ?? '');
 
-            $b64 = base64_encode($sslConfig);
-            $updateCmd = 'echo ' . escapeshellarg($b64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($vhostPath . '/' . $vhostName . '.conf') . ' > /dev/null'
-                . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-ssl-ok';
-            $updateResult = $this->exec($ssh, $srv, $updateCmd);
+            // Atualizar o vhost existente para incluir HTTPS, PRESERVANDO o tipo do site.
+            // Injetamos as diretivas SSL (listen 443 + certs) logo após o "listen 80"
+            // sem trocar a config PHP/proxy que já existe no arquivo.
+            $confFile = $vhostPath . '/' . $vhostName . '.conf';
+            $sslLines = 'listen 443 ssl http2;\\n'
+                . '    ssl_certificate ' . $certDir . '/fullchain.pem;\\n'
+                . '    ssl_certificate_key ' . $certDir . '/privkey.pem;\\n'
+                . '    ssl_protocols TLSv1.2 TLSv1.3;\\n'
+                . '    error_page 497 https://$host$request_uri;';
+            // Só injeta se ainda não tiver "listen 443" no arquivo (idempotente)
+            $sslInjectCmd = 'if ! ' . $sudo . 'grep -q "listen 443" ' . escapeshellarg($confFile) . ' 2>/dev/null; then '
+                . $sudo . 'sed -i "0,/listen 80;/s|listen 80;|listen 80;\\n    ' . $sslLines . '|" ' . escapeshellarg($confFile)
+                . '; fi; ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-ssl-ok';
+            $updateResult = $this->exec($ssh, $srv, $sslInjectCmd);
             $logs[] = 'SSL vhost: ' . trim($updateResult['saida'] ?? '');
 
             if (!str_contains($updateResult['saida'] ?? '', 'lrv-ssl-ok')) {
@@ -410,6 +423,8 @@ final class NginxVhostService
         }
 
         if ($ssl) {
+            // Passar o webroot (root real do site) para permitir SSL via HTTP challenge
+            $srv['_webroot'] = $actualRoot;
             $sslResult = $this->emitirSSL($ssh, $srv, $domain, $vhostPath, $vhostName, $sudo, $reloadCmd);
             $logs = array_merge($logs, $sslResult['logs']);
         }
