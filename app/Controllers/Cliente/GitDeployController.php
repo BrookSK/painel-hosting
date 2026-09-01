@@ -301,12 +301,13 @@ final class GitDeployController
         $appType = (string)($dep['app_type'] ?? 'php');
         $appPort = (int)($dep['app_port'] ?? 3000);
 
+        $vhostLogs = [];
         if ($deployDomain !== '' && $deployServerId > 0) {
             try {
                 $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
                 if (in_array($appType, ['nodejs', 'python', 'cpp'])) {
                     // Reverse proxy para Node.js/Python
-                    $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
+                    $vhostRes = $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
                 } else {
                     // Static/PHP vhost
                     $phpVer = (string)($dep['php_version'] ?? '8.3');
@@ -314,12 +315,29 @@ final class GitDeployController
                     if (!empty($dep['php_settings'])) {
                         $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
                     }
-                    $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
+                    $vhostRes = $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
                 }
-            } catch (\Throwable) {}
+                $vhostLogs = is_array($vhostRes['logs'] ?? null) ? $vhostRes['logs'] : [];
+                if (!($vhostRes['ok'] ?? false)) {
+                    $vhostLogs[] = 'ERRO vhost: ' . (string)($vhostRes['erro'] ?? 'desconhecido');
+                }
+            } catch (\Throwable $e) {
+                $vhostLogs[] = 'ERRO vhost/SSL: ' . $e->getMessage();
+            }
+
+            // Anexar o resultado do vhost/SSL ao log do deploy para diagnóstico
+            if ($vhostLogs !== []) {
+                $vhostOutput = "\n--- Vhost/SSL (" . $deployDomain . ") ---\n" . implode("\n", $vhostLogs);
+                // Atualizar o último log de sucesso deste deployment (id máximo)
+                $ultimoLogId = (int)$pdo->query('SELECT MAX(id) FROM git_deploy_logs WHERE deployment_id = ' . $id)->fetchColumn();
+                if ($ultimoLogId > 0) {
+                    $pdo->prepare('UPDATE git_deploy_logs SET output = CONCAT(COALESCE(output, ""), :extra) WHERE id = :lid')
+                        ->execute([':extra' => $vhostOutput, ':lid' => $ultimoLogId]);
+                }
+            }
         }
 
-        return Resposta::json(['ok' => true, 'commit' => $result['hash'], 'mensagem' => $result['message']]);
+        return Resposta::json(['ok' => true, 'commit' => $result['hash'], 'mensagem' => $result['message'], 'vhost' => $vhostLogs]);
     }
 
     public function logs(Requisicao $req): Resposta
