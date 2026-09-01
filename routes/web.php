@@ -280,16 +280,6 @@ $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
 $roteador->post('/webhooks/stripe', [StripeController::class, 'receber']);
 $roteador->post('/webhooks/git-deploy/{secret}', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'webhook']);
 
-// Diagnóstico: confirma se o roteamento dinâmico ({param}) está ativo em produção.
-// Abra no navegador: /_diag/rota/qualquercoisa — deve retornar JSON com o valor capturado.
-$roteador->get('/_diag/rota/{valor}', static function (\LRV\Core\Http\Requisicao $req): \LRV\Core\Http\Resposta {
-    return \LRV\Core\Http\Resposta::json([
-        'ok' => true,
-        'roteamento_dinamico' => 'ativo',
-        'valor_capturado' => $req->params['valor'] ?? null,
-    ]);
-});
-
 // 2FA equipe
 $roteador->get('/equipe/2fa/configurar', [DoisFatoresController::class, 'configurar'], [Middlewares::exigirLoginEquipe()]);
 $roteador->post('/equipe/2fa/ativar', [DoisFatoresController::class, 'ativar'], [Middlewares::exigirLoginEquipe()]);
