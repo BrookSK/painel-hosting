@@ -486,6 +486,10 @@ final class GitDeployController
         // Ensure git is installed + Fix DNS — tudo numa única conexão SSH
         $runCmd('(which git 2>/dev/null || (apt-get update -qq && apt-get install -y -qq git 2>/dev/null) || true) && (getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true)');
 
+        // Marcar o diretório de deploy como seguro para o git (evita "dubious ownership"
+        // quando o dono dos arquivos difere do usuário que executa os comandos).
+        $runCmd('git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; sudo git config --system --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+
         // Autenticação: token HTTPS ou deploy key SSH
         $tokenEnc = (string)($dep['auth_token_enc'] ?? '');
         $deployKeyPrivateEnc = (string)($dep['deploy_key_private_enc'] ?? '');
@@ -603,15 +607,23 @@ final class GitDeployController
         // Comando pós-deploy (npm install, composer install, etc.)
         $postCmd = trim((string)($dep['post_deploy_cmd'] ?? ''));
         if ($postCmd !== '') {
-            $postResult = $runCmd('cd ' . escapeshellarg($deployPath) . ' && ' . $postCmd . ' 2>&1');
+            // Usar a versão de PHP escolhida no deploy. O comando "composer" no shell
+            // costuma apontar para o PHP padrão do sistema (que pode não ter as extensões
+            // necessárias). Aqui montamos um prefixo que garante o binário phpX.Y correto.
+            $phpVer = trim((string)($dep['php_version'] ?? '8.3'));
+            $prefixoPhp = $this->montarPrefixoPhp($phpVer);
+
+            $postResult = $runCmd('cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPhp . $postCmd . ' 2>&1');
             $postOutput = $this->filtrarOutputSsh((string)($postResult['saida'] ?? ''));
-            $output .= "\n--- Pós-deploy ---\n" . $postOutput;
+            $output .= "\n--- Pós-deploy (PHP " . $phpVer . ") ---\n" . $postOutput;
         }
 
         // Capturar commit info ANTES do chown (evita "dubious ownership" do git).
         // safe.directory garante que o git aceite operar mesmo se o dono divergir.
-        $commitCmd = 'cd ' . escapeshellarg($deployPath)
-            . ' && git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
+        // Aplica para o usuário atual e via sudo (caso o dono seja www-data/root).
+        $commitCmd = 'git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
+            . ' sudo git config --system --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
+            . ' cd ' . escapeshellarg($deployPath) . ';'
             . ' echo "LRV_COMMIT_START"; git log -1 --format="%H|%s|%an" 2>&1; echo "LRV_COMMIT_END"';
         $commitResult = $runCmd($commitCmd);
         $finalOutput = (string)($commitResult['saida'] ?? '');
@@ -689,6 +701,39 @@ final class GitDeployController
         }
 
         return ['hash' => $hash, 'message' => $message, 'author' => $author, 'output' => $output];
+    }
+
+    /**
+     * Monta um prefixo de shell que força o uso do binário PHP da versão escolhida
+     * no comando pós-deploy. Isso garante que "composer" e "php" usem a versão correta
+     * (com as extensões esperadas), em vez do PHP padrão do PATH do servidor.
+     *
+     * Retorna algo como: 'export PHP_BIN=/usr/bin/php8.3; alias php="$PHP_BIN"; '
+     * seguido de uma reescrita do comando quando aplicável.
+     *
+     * @return string Prefixo a ser concatenado antes do comando pós-deploy.
+     */
+    private function montarPrefixoPhp(string $phpVersion): string
+    {
+        // Sanitizar: só aceitar formato X.Y (ex: 8.3, 7.4)
+        if (!preg_match('/^\d+\.\d+$/', $phpVersion)) {
+            return '';
+        }
+
+        $phpBin = 'php' . $phpVersion; // ex: php8.3
+
+        // Descobrir o binário PHP da versão desejada e exportar como variável.
+        // Se a versão específica não existir no servidor, cai no "php" padrão.
+        // Depois criamos uma função "composer" que sempre roda com o PHP escolhido,
+        // e uma função "php" que aponta para o binário correto.
+        //
+        // Usar funções de shell (não alias, que não funciona em shell não-interativo).
+        return
+            'PHP_BIN="$(command -v ' . $phpBin . ' 2>/dev/null || command -v php)"; '
+            . 'COMPOSER_BIN="$(command -v composer 2>/dev/null || echo /usr/local/bin/composer)"; '
+            . 'php() { "$PHP_BIN" "$@"; }; '
+            . 'composer() { "$PHP_BIN" "$COMPOSER_BIN" "$@"; }; '
+            . 'export COMPOSER_ALLOW_SUPERUSER=1; ';
     }
 
     /**
