@@ -547,71 +547,74 @@ final class NginxVhostService
         $ssh = new SshExecutor();
         $logs = [];
 
-        // 1) Gravar a página HTML de manutenção num local próprio (não toca a pasta do site)
         $pageDir = '/var/www/_lrv_suspenso';
         $pageFile = $pageDir . '/index.html';
-        $htmlB64 = base64_encode($this->gerarPaginaSuspensao($domain));
-        $prepPage = $sudo . 'mkdir -p ' . escapeshellarg($pageDir)
-            . ' && echo ' . escapeshellarg($htmlB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($pageFile) . ' > /dev/null';
 
-        // 2) Detectar se há certificado SSL do domínio no servidor (para a página de
-        //    manutenção também abrir limpa em https, sem aviso de certificado).
-        $certDir = $this->detectarCertDir($ssh, $srv, $domain, $sudo);
-        if ($certDir !== '') {
-            $logs[] = 'Cert SSL detectado para bloqueio HTTPS: ' . $certDir;
+        // 1) Extrair o cert do vhost ATUAL (mais confiável que adivinhar o path):
+        //    lê ssl_certificate/ssl_certificate_key direto do .conf existente.
+        $certLine = ''; $keyLine = '';
+        try {
+            $grepCmd = $sudo . 'grep -hoP "ssl_certificate(_key)?\\s+\\K[^;]+" ' . escapeshellarg($confFile) . ' 2>/dev/null';
+            $r = $this->exec($ssh, $srv, $grepCmd);
+            $linhas = array_values(array_filter(array_map('trim', explode("\n", (string)($r['saida'] ?? '')))));
+            foreach ($linhas as $ln) {
+                if (str_contains($ln, 'fullchain') || (str_contains($ln, 'cert') && !str_contains($ln, 'key'))) {
+                    if ($certLine === '') $certLine = $ln;
+                } elseif (str_contains($ln, 'key') || str_contains($ln, 'privkey')) {
+                    if ($keyLine === '') $keyLine = $ln;
+                }
+            }
+            // fallback: se achou 2 linhas e não classificou, assume ordem cert/key
+            if ($certLine === '' && count($linhas) >= 1) $certLine = $linhas[0];
+            if ($keyLine === '' && count($linhas) >= 2) $keyLine = $linhas[1];
+        } catch (\Throwable) {}
+
+        if ($certLine !== '' && $keyLine !== '') {
+            $logs[] = 'Cert SSL do vhost atual detectado (bloqueio HTTPS ativo).';
+        } else {
+            $logs[] = 'Sem cert detectado — bloqueio só em HTTP.';
         }
 
-        // 3) Preservar o vhost original (renomear para .conf.suspenso) — só se ainda não houver backup.
-        //    E gravar o vhost de bloqueio no lugar.
-        $blqB64 = base64_encode($this->gerarVhostBloqueio($domain, $pageDir, $certDir));
-        $cmd = $prepPage
-            . ' && (test -f ' . escapeshellarg($backupFile) . ' || (test -f ' . escapeshellarg($confFile) . ' && ' . $sudo . 'mv ' . escapeshellarg($confFile) . ' ' . escapeshellarg($backupFile) . '))'
-            . ' && echo ' . escapeshellarg($blqB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($confFile) . ' > /dev/null'
-            . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-suspend-ok';
+        // 2) Gravar a página HTML de manutenção (comando isolado)
+        $htmlB64 = base64_encode($this->gerarPaginaSuspensao($domain));
+        $cmdPage = $sudo . 'mkdir -p ' . escapeshellarg($pageDir)
+            . ' && echo ' . escapeshellarg($htmlB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($pageFile) . ' > /dev/null'
+            . ' && echo lrv-page-ok';
+        $rPage = $this->exec($ssh, $srv, $cmdPage);
+        if (!str_contains((string)($rPage['saida'] ?? ''), 'lrv-page-ok')) {
+            $logs[] = 'Falha ao gravar página de manutenção: ' . trim((string)($rPage['saida'] ?? ''));
+            return ['ok' => false, 'erro' => 'Falha ao preparar página de manutenção.', 'logs' => $logs];
+        }
 
-        $result = $this->exec($ssh, $srv, $cmd);
-        $saida = (string)($result['saida'] ?? '');
-        $logs[] = 'Suspender vhost (' . $domain . '): ' . trim($saida);
+        // 3) Preservar o vhost original: renomear .conf -> .conf.suspenso (só se ainda não há backup) (comando isolado)
+        $cmdBackup = 'if [ ! -f ' . escapeshellarg($backupFile) . ' ] && [ -f ' . escapeshellarg($confFile) . ' ]; then '
+            . $sudo . 'cp -p ' . escapeshellarg($confFile) . ' ' . escapeshellarg($backupFile) . ' && echo lrv-backup-ok; '
+            . 'elif [ -f ' . escapeshellarg($backupFile) . ' ]; then echo lrv-backup-existe; '
+            . 'else echo lrv-sem-conf; fi';
+        $rBackup = $this->exec($ssh, $srv, $cmdBackup);
+        $saidaBackup = (string)($rBackup['saida'] ?? '');
+        $logs[] = 'Backup vhost: ' . trim($saidaBackup);
+
+        // 4) Gravar o vhost de bloqueio (sobrescreve o .conf), validar e recarregar (comando isolado)
+        $blqB64 = base64_encode($this->gerarVhostBloqueio($domain, $pageDir, $certLine, $keyLine));
+        $cmdBloqueio = 'echo ' . escapeshellarg($blqB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($confFile) . ' > /dev/null'
+            . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-suspend-ok';
+        $rBloqueio = $this->exec($ssh, $srv, $cmdBloqueio);
+        $saida = (string)($rBloqueio['saida'] ?? '');
+        $logs[] = 'Bloqueio vhost (' . $domain . '): ' . trim($saida);
 
         if (!str_contains($saida, 'lrv-suspend-ok')) {
-            return ['ok' => false, 'erro' => 'Falha ao suspender vhost.', 'logs' => $logs];
+            // Se falhou o nginx -t, tenta restaurar o backup pra não deixar o site quebrado
+            if (str_contains($saidaBackup, 'lrv-backup-ok')) {
+                $restore = $sudo . 'cp -pf ' . escapeshellarg($backupFile) . ' ' . escapeshellarg($confFile)
+                    . ' && ' . $sudo . $reloadCmd . ' 2>&1; echo lrv-restore-done';
+                $this->exec($ssh, $srv, $restore);
+                $logs[] = 'Bloqueio falhou — vhost original restaurado por segurança.';
+            }
+            return ['ok' => false, 'erro' => 'Falha ao aplicar vhost de bloqueio.', 'logs' => $logs];
         }
 
         return ['ok' => true, 'logs' => $logs];
-    }
-
-    /**
-     * Detecta o diretório do certificado SSL do domínio no servidor, se existir.
-     * Verifica os caminhos padrão (aPanel e Let's Encrypt). Retorna '' se não achar.
-     */
-    private function detectarCertDir(SshExecutor $ssh, array $srv, string $domain, string $sudo): string
-    {
-        $candidatos = [
-            '/www/server/panel/vhost/cert/' . $domain,          // aPanel
-            '/etc/letsencrypt/live/' . $domain,                  // certbot
-        ];
-
-        // Monta um teste: para cada candidato, verifica se fullchain.pem + privkey.pem existem
-        $partes = [];
-        foreach ($candidatos as $dir) {
-            $partes[] = 'if ' . $sudo . 'test -f ' . escapeshellarg($dir . '/fullchain.pem')
-                . ' && ' . $sudo . 'test -f ' . escapeshellarg($dir . '/privkey.pem') . '; then echo ' . escapeshellarg($dir) . '; exit 0; fi';
-        }
-        $cmd = implode('; ', $partes) . '; echo ""';
-
-        try {
-            $r = $this->exec($ssh, $srv, $cmd);
-            $saida = trim((string)($r['saida'] ?? ''));
-            // Pega a primeira linha não vazia que pareça um caminho
-            foreach (explode("\n", $saida) as $linha) {
-                $linha = trim($linha);
-                if ($linha !== '' && str_starts_with($linha, '/')) {
-                    return $linha;
-                }
-            }
-        } catch (\Throwable) {}
-
-        return '';
     }
 
     /**
@@ -640,10 +643,12 @@ final class NginxVhostService
         $ssh = new SshExecutor();
         $logs = [];
 
-        // Se existe o backup, restaura (sobrescreve o vhost de bloqueio). Senão, nada a fazer.
+        // Se existe o backup, restaura (sobrescreve o vhost de bloqueio) e remove o backup. Senão, nada a fazer.
         $cmd = 'if [ -f ' . escapeshellarg($backupFile) . ' ]; then '
-            . $sudo . 'mv -f ' . escapeshellarg($backupFile) . ' ' . escapeshellarg($confFile)
-            . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-reativar-ok; '
+            . $sudo . 'cp -pf ' . escapeshellarg($backupFile) . ' ' . escapeshellarg($confFile)
+            . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1'
+            . ' && ' . $sudo . 'rm -f ' . escapeshellarg($backupFile)
+            . ' && echo lrv-reativar-ok; '
             . 'else echo lrv-sem-backup; fi';
 
         $result = $this->exec($ssh, $srv, $cmd);
@@ -666,16 +671,16 @@ final class NginxVhostService
      * para qualquer requisição. Responde tanto em 80 quanto em 443 (se houver cert),
      * mas para simplicidade e segurança, serve em ambos sem exigir cert específico.
      */
-    private function gerarVhostBloqueio(string $domain, string $pageDir, string $certDir = ''): string
+    private function gerarVhostBloqueio(string $domain, string $pageDir, string $certLine = '', string $keyLine = ''): string
     {
-        // Escuta em 80 e, se houver cert, também em 443 (mesmo server block) para que
-        // a página de manutenção abra limpa em http e https, sem aviso de certificado.
+        // Escuta em 80 e, se houver cert (extraído do vhost original), também em 443
+        // no mesmo server block, para a página de manutenção abrir limpa em http e https.
         $listenBlock = "    listen 80;\n";
         $sslBlock = '';
-        if ($certDir !== '') {
+        if ($certLine !== '' && $keyLine !== '') {
             $listenBlock .= "    listen 443 ssl http2;\n";
-            $sslBlock = "    ssl_certificate {$certDir}/fullchain.pem;\n"
-                . "    ssl_certificate_key {$certDir}/privkey.pem;\n"
+            $sslBlock = "    ssl_certificate {$certLine};\n"
+                . "    ssl_certificate_key {$keyLine};\n"
                 . "    ssl_protocols TLSv1.2 TLSv1.3;\n"
                 . "    error_page 497 https://\$host\$request_uri;\n";
         }
