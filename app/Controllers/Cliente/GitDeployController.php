@@ -864,6 +864,53 @@ final class GitDeployController
     }
 
     /**
+     * AJAX: Regera o certificado SSL do site (reemite/renova + garante HTTPS no vhost).
+     * Botão "Regerar SSL" no card do Git Deploy.
+     */
+    public function regerarSsl(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.subdomain, g.temp_domain, g.deploy_path, v.server_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             WHERE g.id = :id AND g.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
+
+        // Domínio: usa o subdomínio próprio, senão o domínio temporário
+        $domain = trim((string)($dep['subdomain'] ?? ''));
+        if ($domain === '') {
+            $domain = trim((string)($dep['temp_domain'] ?? ''));
+        }
+        $serverId = (int)($dep['server_id'] ?? 0);
+
+        if ($domain === '' || $serverId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Este deploy não tem domínio configurado para gerar SSL.']);
+        }
+
+        // Webroot: o vhost costuma servir de deploy_path/public quando existe
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? ''), '/');
+        $webroot = $deployPath; // o service detecta /public a partir do vhost se preciso
+
+        try {
+            $res = (new \LRV\App\Services\Infra\NginxVhostService())->regerarSSL($serverId, $domain, $webroot);
+            if (!empty($res['ok'])) {
+                return Resposta::json(['ok' => true, 'mensagem' => 'SSL regerado com sucesso para ' . $domain . '.']);
+            }
+            return Resposta::json(['ok' => false, 'erro' => (string)($res['erro'] ?? 'Falha ao regerar SSL.'), 'logs' => $res['logs'] ?? []]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * AJAX: busca logs do servidor para um git deploy (Nginx, PHP, PM2, app logs).
      */
     public function serverLogs(Requisicao $req): Resposta

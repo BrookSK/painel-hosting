@@ -174,6 +174,21 @@ final class NginxVhostService
         $certResult = $this->emitirCertificado($ssh, $srv, $domain, $sudo);
         $logs = array_merge($logs, $certResult['logs']);
         $certDir = (string)($certResult['certDir'] ?? '');
+
+        // FALLBACK CRÍTICO: se não reemitiu agora mas JÁ EXISTE cert no disco, reaproveita.
+        // Evita que um redeploy de app Node/Python derrube o HTTPS que já estava ativo.
+        if ($certDir === '') {
+            $certDirExistente = '/www/server/panel/vhost/cert/' . $domain;
+            $checkCert = 'if ' . $sudo . 'test -f ' . escapeshellarg($certDirExistente . '/fullchain.pem')
+                . ' && ' . $sudo . 'test -f ' . escapeshellarg($certDirExistente . '/privkey.pem')
+                . '; then echo lrv-cert-existe; fi';
+            $rCert = $this->exec($ssh, $srv, $checkCert);
+            if (str_contains((string)($rCert['saida'] ?? ''), 'lrv-cert-existe')) {
+                $certDir = $certDirExistente;
+                $logs[] = 'SSL preservado (proxy): certificado existente reaproveitado.';
+            }
+        }
+
         if ($certDir === '') {
             return ['logs' => $logs];
         }
@@ -413,6 +428,21 @@ final class NginxVhostService
             $logs = array_merge($logs, $certResult['logs']);
             if (!empty($certResult['certDir'])) {
                 $certDir = (string) $certResult['certDir'];
+            }
+
+            // FALLBACK CRÍTICO: se o acme.sh não reemitiu agora (já válido / challenge falhou),
+            // mas JÁ EXISTE um certificado no disco, usamos ele mesmo assim. Isso evita que
+            // um novo deploy derrube o HTTPS de um site que já tinha SSL (gerando vhost só HTTP).
+            if ($certDir === '') {
+                $certDirExistente = '/www/server/panel/vhost/cert/' . $domain;
+                $checkCert = 'if ' . $sudo . 'test -f ' . escapeshellarg($certDirExistente . '/fullchain.pem')
+                    . ' && ' . $sudo . 'test -f ' . escapeshellarg($certDirExistente . '/privkey.pem')
+                    . '; then echo lrv-cert-existe; fi';
+                $rCert = $this->exec($ssh, $srv, $checkCert);
+                if (str_contains((string)($rCert['saida'] ?? ''), 'lrv-cert-existe')) {
+                    $certDir = $certDirExistente;
+                    $logs[] = 'SSL preservado: certificado existente reaproveitado (' . $certDir . ').';
+                }
             }
         }
 
@@ -714,6 +744,99 @@ final class NginxVhostService
             . "        add_header Retry-After 3600 always;\n"
             . "    }\n"
             . "}\n";
+    }
+
+    /**
+     * Regenera o SSL de um site: reemite/renova o certificado e garante que o vhost
+     * existente tenha o bloco HTTPS (listen 443 + certs). Não altera o root nem o tipo
+     * do site — só conserta/adiciona o SSL. Ideal para um botão "Regerar SSL" no painel.
+     *
+     * @param string $webroot Caminho do site (para HTTP challenge do acme.sh). Opcional.
+     */
+    public function regerarSSL(int $serverId, string $domain, string $webroot = ''): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $isManaged = (int)($srv['is_managed_server'] ?? 0) === 1;
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
+        $confFile = $vhostPath . '/' . $vhostName . '.conf';
+        $ssh = new SshExecutor();
+        $logs = [];
+
+        // Não-gerenciado: certbot --nginx resolve tudo (emite + injeta no vhost)
+        if (!$isManaged) {
+            $certCmd = 'certbot --nginx -d ' . escapeshellarg($domain) . ' --non-interactive --agree-tos --register-unsafely-without-email --no-redirect 2>&1; echo lrv-cert-done';
+            $r = $this->exec($ssh, $srv, $certCmd);
+            $out = trim((string)($r['saida'] ?? ''));
+            $logs[] = 'SSL (certbot): ' . mb_substr($out, -300);
+            $ok = str_contains($out, 'Successfully') || str_contains($out, 'Congratulations') || str_contains($out, 'not yet due for renewal');
+            return ['ok' => $ok, 'logs' => $logs];
+        }
+
+        // Gerenciado (aaPanel): emitir/renovar cert via acme.sh
+        if ($webroot === '') {
+            // Descobrir o root a partir do vhost atual, se não veio por parâmetro
+            $rootCmd = $sudo . 'grep -oP "root\\s+\\K[^;]+" ' . escapeshellarg($confFile) . ' 2>/dev/null | head -1';
+            $rr = $this->exec($ssh, $srv, $rootCmd);
+            $webroot = trim((string)($rr['saida'] ?? ''));
+        }
+
+        $srv['_webroot'] = $webroot;
+        $certResult = $this->emitirCertificado($ssh, $srv, $domain, $sudo);
+        $logs = array_merge($logs, $certResult['logs']);
+        $certDir = (string)($certResult['certDir'] ?? '');
+
+        // Se não reemitiu mas o cert existe no disco, usa o existente
+        if ($certDir === '') {
+            $certDirExistente = '/www/server/panel/vhost/cert/' . $domain;
+            $checkCert = 'if ' . $sudo . 'test -f ' . escapeshellarg($certDirExistente . '/fullchain.pem')
+                . ' && ' . $sudo . 'test -f ' . escapeshellarg($certDirExistente . '/privkey.pem')
+                . '; then echo lrv-cert-existe; fi';
+            $rc = $this->exec($ssh, $srv, $checkCert);
+            if (str_contains((string)($rc['saida'] ?? ''), 'lrv-cert-existe')) {
+                $certDir = $certDirExistente;
+                $logs[] = 'Certificado existente reaproveitado.';
+            }
+        }
+
+        if ($certDir === '') {
+            $logs[] = 'Não foi possível emitir nem localizar um certificado.';
+            return ['ok' => false, 'erro' => 'Falha ao obter certificado SSL.', 'logs' => $logs];
+        }
+
+        // Garantir o bloco 443 no vhost existente: injeta o listen 443 + certs logo após o listen 80,
+        // apenas se ainda não houver "listen 443". Preserva todo o resto do vhost (root, php, etc.).
+        $sslInject = "    listen 443 ssl http2;\\n"
+            . "    ssl_certificate {$certDir}/fullchain.pem;\\n"
+            . "    ssl_certificate_key {$certDir}/privkey.pem;\\n"
+            . "    ssl_protocols TLSv1.2 TLSv1.3;\\n"
+            . "    error_page 497 https://\$host\$request_uri;";
+        $cmd = 'if ' . $sudo . 'grep -q "listen 443" ' . escapeshellarg($confFile) . ' 2>/dev/null; then '
+            . 'echo lrv-ja-tem-ssl; '
+            . 'else '
+            . $sudo . "sed -i '0,/listen 80;/s|listen 80;|listen 80;\\n" . $sslInject . "|' " . escapeshellarg($confFile)
+            . ' && echo lrv-ssl-injetado; fi';
+        $ri = $this->exec($ssh, $srv, $cmd);
+        $saidaInject = (string)($ri['saida'] ?? '');
+        $logs[] = 'Vhost SSL: ' . trim($saidaInject);
+
+        // Validar e recarregar
+        $reload = $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-reload-ok';
+        $rl = $this->exec($ssh, $srv, $reload);
+        $saidaReload = (string)($rl['saida'] ?? '');
+        $logs[] = 'Reload: ' . trim($saidaReload);
+
+        if (!str_contains($saidaReload, 'lrv-reload-ok')) {
+            return ['ok' => false, 'erro' => 'Nginx não recarregou (config inválida?).', 'logs' => $logs];
+        }
+
+        return ['ok' => true, 'logs' => $logs];
     }
 
     /**

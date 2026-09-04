@@ -85,6 +85,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <?php endif; ?>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs servidor</button>
+      <button class="botao sm ghost" id="btn-ssl-<?php echo $did; ?>" onclick="regerarSSL(<?php echo $did; ?>)" title="Reemite o certificado SSL e reativa o HTTPS caso o cadeado tenha caído"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Regerar SSL</button>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirmarExclusao(this)">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $did; ?>" />
@@ -307,6 +308,35 @@ function toggleServerLogs(id) {
   } else {
     el.style.display = 'none';
   }
+}
+
+function regerarSSL(id) {
+  if (!confirm('Regerar o certificado SSL deste site?\n\nUse isto se o cadeado de segurança (https) parou de funcionar. O sistema reemite o certificado e reativa o HTTPS automaticamente. Pode levar até 1 minuto.')) return;
+  var btn = document.getElementById('btn-ssl-' + id);
+  var txt = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Regerando SSL...'; }
+  var status = document.getElementById('deploy-status-' + id);
+  if (status) { status.textContent = 'Regerando SSL, aguarde...'; status.style.color = '#64748b'; }
+
+  var fd = new FormData();
+  fd.append('_csrf', _csrf);
+  fd.append('id', id);
+
+  fetch('/cliente/git-deploy/regerar-ssl', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (btn) { btn.disabled = false; btn.innerHTML = txt; }
+      if (d.ok) {
+        if (status) { status.textContent = '\u2713 ' + (d.mensagem || 'SSL regerado com sucesso!'); status.style.color = '#16a34a'; }
+      } else {
+        if (status) { status.textContent = '\u2717 ' + (d.erro || 'Falha ao regerar SSL'); status.style.color = '#dc2626'; }
+        alert('Não foi possível regerar o SSL:\n\n' + (d.erro || 'Erro desconhecido') + '\n\nSe persistir, abra um ticket de suporte.');
+      }
+    })
+    .catch(function() {
+      if (btn) { btn.disabled = false; btn.innerHTML = txt; }
+      if (status) { status.textContent = '\u2717 Erro de conexão'; status.style.color = '#dc2626'; }
+    });
 }
 
 function carregarServerLogs(id, tipo) {
