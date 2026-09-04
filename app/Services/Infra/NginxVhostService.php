@@ -744,13 +744,15 @@ final class NginxVhostService
       radial-gradient(1000px 500px at 100% 110%, rgba(79,70,229,.35), transparent 55%),
       linear-gradient(135deg,#0B1C3D 0%, #111c3a 55%, #1e293b 100%);
     min-height:100vh; display:flex; align-items:center; justify-content:center;
-    padding:24px; color:#e2e8f0; overflow:hidden; position:relative;
+    padding:24px; color:#e2e8f0; position:relative;
   }
-  /* bolhas decorativas animadas */
-  .blob { position:absolute; border-radius:50%; filter:blur(40px); opacity:.5; animation:float 14s ease-in-out infinite; }
-  .blob.b1 { width:320px; height:320px; background:#4F46E5; top:-80px; left:-60px; }
-  .blob.b2 { width:260px; height:260px; background:#7C3AED; bottom:-70px; right:-50px; animation-delay:-5s; }
-  @keyframes float { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-26px) } }
+  /* wrapper que recorta as bolhas para não vazarem e criarem "faixas" na borda */
+  .bg { position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+  /* bolhas decorativas animadas (dentro do .bg, sem estourar o viewport) */
+  .blob { position:absolute; border-radius:50%; filter:blur(60px); opacity:.45; animation:float 14s ease-in-out infinite; }
+  .blob.b1 { width:300px; height:300px; background:#4F46E5; top:-60px; left:-40px; }
+  .blob.b2 { width:260px; height:260px; background:#7C3AED; bottom:-40px; right:-30px; animation-delay:-5s; }
+  @keyframes float { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-22px) } }
 
   .card {
     position:relative; z-index:2;
@@ -793,8 +795,10 @@ final class NginxVhostService
 </style>
 </head>
 <body>
-  <div class="blob b1"></div>
-  <div class="blob b2"></div>
+  <div class="bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+  </div>
   <div class="card">
     <div class="icone">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

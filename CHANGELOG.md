@@ -5,6 +5,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.5.0] — 2026-09-04
+
+### Adicionado
+- **Área de projetos da equipe (Dev Workflow)**: novo espaço para a equipe de desenvolvimento cadastrar projetos, criar demandas, gerar sites de teste e acompanhar o fluxo de aprovação de cada tarefa em um só lugar
+- **Fluxo de demandas com aprovação**: o desenvolvedor cria a demanda, testa no ambiente de teste e envia para aprovação; quem revisa recebe um aviso e aprova ou devolve com um comentário, tudo pelo painel
+- **VPS da equipe**: agora dá para criar servidores internos da empresa (para testes e desenvolvimento) direto pelo painel, separados dos servidores dos clientes
+- **Aviso de site em manutenção**: quando um site precisa ficar temporariamente indisponível, o visitante passa a ver uma página amigável de "em manutenção" no lugar de um erro, sem expor motivos internos
+
+### Melhorado
+- **Deploy mais confiável**: o histórico de cada publicação agora mostra o título e o código da alteração enviada, para você saber exatamente o que foi para o ar
+- **Publicação automática ao salvar no seu repositório**: a conexão com GitHub ficou mais estável, com instruções passo a passo mais claras dentro do painel
+- **Reativação automática após pagamento**: quando um cliente regulariza o pagamento, o site volta ao ar sozinho, sem precisar de ação manual da equipe
+
+### Corrigido
+- Sites que ficavam com o endereço apontando para o lugar errado após a publicação
+- Cadeado de segurança (SSL) que, em alguns casos, não era ativado automaticamente no site
+- Situações em que um site aparecia como suspenso no painel mas continuava acessível
+
+---
+
 ## [3.4.0] — 2026-07-29
 
 ### Adicionado

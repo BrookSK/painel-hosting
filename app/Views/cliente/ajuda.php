@@ -302,6 +302,18 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
   <div class="faq-section">Problemas comuns e como resolver</div>
 
   <details>
+    <summary>Meu site está mostrando uma página de "em manutenção". O que aconteceu?</summary>
+    <p>Quando um site exibe a mensagem <strong>"Voltamos já, já / Manutenção em andamento"</strong>, significa que ele foi colocado temporariamente indisponível pela administração da hospedagem.</p>
+    <p><strong>Motivos mais comuns:</strong></p>
+    <ul>
+      <li><strong>Pendência na assinatura:</strong> alguma cobrança em aberto. Assim que o pagamento é confirmado, o site volta ao ar automaticamente, em poucos minutos.</li>
+      <li><strong>Manutenção programada:</strong> algum ajuste técnico no servidor que exige o site fora do ar por um curto período.</li>
+    </ul>
+    <p><strong>Como resolver:</strong> verifique suas <a href="/cliente/faturas">faturas</a> — se houver alguma pendente, quite-a e o site é reativado sozinho. Se não houver pendência ou a dúvida persistir, abra um <a href="/cliente/tickets/novo">ticket de suporte</a> que a equipe verifica rapidamente.</p>
+    <div class="tip">Seus arquivos, banco de dados e e-mails <strong>não são apagados</strong> durante a manutenção — tudo é preservado e volta exatamente como estava.</div>
+  </details>
+
+  <details>
     <summary>Erro "Permission denied" ou "Authentication failed"</summary>
     <p><strong>Causa:</strong> o servidor não consegue acessar seu repositório no GitHub porque a Deploy Key não foi adicionada (ou foi adicionada errada).</p>
     <p><strong>Solucao:</strong></p>
