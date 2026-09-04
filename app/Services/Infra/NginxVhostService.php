@@ -729,48 +729,89 @@ final class NginxVhostService
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Site temporariamente indisponível</title>
+<title>Site em manutenção</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
+  :root { --brand1:#4F46E5; --brand2:#7C3AED; }
+  html,body { height:100%; }
   body {
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #0B1C3D 0%, #1e293b 100%);
-    min-height: 100vh; display:flex; align-items:center; justify-content:center;
-    padding: 24px; color:#e2e8f0;
+    font-family:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background:#0B1C3D;
+    background-image:
+      radial-gradient(1200px 600px at 15% -10%, rgba(124,58,237,.35), transparent 60%),
+      radial-gradient(1000px 500px at 100% 110%, rgba(79,70,229,.35), transparent 55%),
+      linear-gradient(135deg,#0B1C3D 0%, #111c3a 55%, #1e293b 100%);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px; color:#e2e8f0; overflow:hidden; position:relative;
   }
+  /* bolhas decorativas animadas */
+  .blob { position:absolute; border-radius:50%; filter:blur(40px); opacity:.5; animation:float 14s ease-in-out infinite; }
+  .blob.b1 { width:320px; height:320px; background:#4F46E5; top:-80px; left:-60px; }
+  .blob.b2 { width:260px; height:260px; background:#7C3AED; bottom:-70px; right:-50px; animation-delay:-5s; }
+  @keyframes float { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-26px) } }
+
   .card {
-    background:#fff; color:#0f172a; border-radius:20px; padding:48px 40px;
-    max-width:520px; width:100%; text-align:center;
-    box-shadow:0 20px 60px rgba(0,0,0,.3);
+    position:relative; z-index:2;
+    background:rgba(255,255,255,.98); color:#0f172a; border-radius:28px;
+    padding:52px 44px; max-width:560px; width:100%; text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.6);
+    animation:pop .6s cubic-bezier(.16,1,.3,1);
   }
+  @keyframes pop { from{ opacity:0; transform:translateY(20px) scale(.97) } to{ opacity:1; transform:none } }
+
   .icone {
-    width:72px; height:72px; margin:0 auto 20px; border-radius:50%;
-    background:linear-gradient(135deg,#4F46E5,#7C3AED);
+    width:92px; height:92px; margin:0 auto 26px; border-radius:26px;
+    background:linear-gradient(135deg,var(--brand1),var(--brand2));
     display:flex; align-items:center; justify-content:center;
+    box-shadow:0 12px 30px rgba(124,58,237,.45);
+    animation:spin 8s linear infinite;
   }
-  h1 { font-size:24px; font-weight:800; margin-bottom:12px; color:#0f172a; }
-  p { font-size:15px; line-height:1.7; color:#475569; margin-bottom:14px; }
+  @keyframes spin { from{ transform:rotate(0) } to{ transform:rotate(360deg) } }
+  .icone svg { animation:spin 8s linear infinite reverse; } /* mantém o ícone "parado" enquanto o fundo gira */
+
+  .badge {
+    display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--brand2); background:#f3f0ff;
+    padding:6px 14px; border-radius:999px; margin-bottom:18px;
+  }
+  h1 { font-size:28px; font-weight:800; margin-bottom:14px; color:#0f172a; letter-spacing:-.02em; }
+  p { font-size:15.5px; line-height:1.75; color:#475569; margin-bottom:14px; }
   .contato {
-    margin-top:24px; padding:16px; background:#f1f5f9; border-radius:12px;
-    font-size:14px; color:#334155;
+    margin-top:28px; padding:18px 20px; background:#f8fafc; border:1px solid #eef2f7;
+    border-radius:16px; font-size:14.5px; color:#334155; display:flex; align-items:center;
+    gap:12px; justify-content:center; text-align:left;
   }
-  .rodape { margin-top:24px; font-size:12px; color:#94a3b8; }
+  .contato svg { flex-shrink:0; color:var(--brand1); }
+  .dots { margin-top:26px; display:flex; gap:8px; justify-content:center; }
+  .dots span { width:9px; height:9px; border-radius:50%; background:var(--brand2); opacity:.35; animation:blink 1.4s infinite; }
+  .dots span:nth-child(2){ animation-delay:.2s } .dots span:nth-child(3){ animation-delay:.4s }
+  @keyframes blink { 0%,100%{ opacity:.25; transform:scale(.9) } 50%{ opacity:1; transform:scale(1.1) } }
+  .rodape { margin-top:24px; font-size:12.5px; color:#94a3b8; }
+  @media (max-width:520px){ .card{ padding:40px 26px } h1{ font-size:23px } }
 </style>
 </head>
 <body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
   <div class="card">
     <div class="icone">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
       </svg>
     </div>
-    <h1>Site temporariamente indisponível</h1>
-    <p>Este site está passando por uma manutenção e ficará indisponível por um curto período.</p>
-    <p>Se você é responsável por este site, entre em contato com a equipe de suporte para regularizar o acesso.</p>
+    <div class="badge">Manutenção em andamento</div>
+    <h1>Voltamos já, já</h1>
+    <p>Este site está temporariamente em manutenção e ficará indisponível por um curto período. Agradecemos a compreensão.</p>
     <div class="contato">
-      Precisa de ajuda? Fale com o suporte do seu provedor de hospedagem.
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>É o responsável por este site? Entre em contato com o suporte da sua hospedagem para regularizar o acesso.</span>
     </div>
-    <div class="rodape">Voltaremos em breve.</div>
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="rodape">Estamos trabalhando para restabelecer o serviço.</div>
   </div>
 </body>
 </html>
