@@ -185,9 +185,12 @@ final class VpsProvisioningService
         }
 
         $statusAtual = (string) ($vps['status'] ?? '');
+        // Nota: mesmo se a VPS já estiver 'suspended_payment', NÃO saímos aqui.
+        // Um estado inconsistente comum é "suspenso no banco mas ainda no ar"
+        // (ex.: container parado mas site servido pelo Nginx do aPanel). Então
+        // sempre garantimos o bloqueio do Nginx abaixo. As operações são idempotentes.
         if ($statusAtual === 'suspended_payment') {
-            $log('VPS já está suspensa por pagamento.');
-            return;
+            $log('VPS marcada como suspensa — garantindo bloqueio efetivo (container + Nginx).');
         }
 
         $serverId = (int) ($vps['server_id'] ?? 0);
@@ -211,8 +214,76 @@ final class VpsProvisioningService
             $log('Container não encontrado ou Docker indisponível.');
         }
 
+        // Bloquear os sites da VPS no Nginx (mostra página de manutenção).
+        // Essencial para servidores gerenciados (aPanel), onde o site é servido pelo
+        // Nginx/PHP-FPM e não pelo container — parar o container não derruba o site.
+        $this->bloquearSitesNginx($vpsId, $log);
+
         $this->atualizarStatusVps($vpsId, 'suspended_payment');
         $log('VPS suspensa por pagamento.');
+    }
+
+    /**
+     * Bloqueia (via Nginx) todos os domínios da VPS, exibindo página de manutenção.
+     * Preserva a config original (renomeia .conf -> .conf.suspenso). Best-effort:
+     * loga cada passo e nunca lança exceção que interrompa a suspensão.
+     */
+    private function bloquearSitesNginx(int $vpsId, callable $log): void
+    {
+        try {
+            $info = (new \LRV\App\Services\Infra\DominiosDaVpsService())->listar($vpsId);
+            $serverId = (int)($info['server_id'] ?? 0);
+            $dominios = $info['dominios'] ?? [];
+
+            if ($serverId <= 0 || $dominios === []) {
+                $log('Nenhum domínio encontrado para bloquear no Nginx.');
+                return;
+            }
+
+            $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
+            foreach ($dominios as $dom) {
+                try {
+                    $res = $vhostSvc->suspenderVhost($serverId, $dom);
+                    foreach (($res['logs'] ?? []) as $l) {
+                        $log($l);
+                    }
+                } catch (\Throwable $e) {
+                    $log('Erro ao bloquear ' . $dom . ': ' . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            $log('Aviso: falha ao bloquear sites no Nginx: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reativa (via Nginx) todos os domínios da VPS, restaurando a config original.
+     */
+    private function desbloquearSitesNginx(int $vpsId, callable $log): void
+    {
+        try {
+            $info = (new \LRV\App\Services\Infra\DominiosDaVpsService())->listar($vpsId);
+            $serverId = (int)($info['server_id'] ?? 0);
+            $dominios = $info['dominios'] ?? [];
+
+            if ($serverId <= 0 || $dominios === []) {
+                return;
+            }
+
+            $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
+            foreach ($dominios as $dom) {
+                try {
+                    $res = $vhostSvc->reativarVhost($serverId, $dom);
+                    foreach (($res['logs'] ?? []) as $l) {
+                        $log($l);
+                    }
+                } catch (\Throwable $e) {
+                    $log('Erro ao reativar ' . $dom . ': ' . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            $log('Aviso: falha ao reativar sites no Nginx: ' . $e->getMessage());
+        }
     }
 
     public function reiniciar(int $vpsId, callable $log): void
@@ -402,6 +473,12 @@ final class VpsProvisioningService
         if ($statusAtual === 'running') {
             $log('VPS está marcada como running. Garantindo que o container esteja iniciado...');
         }
+
+        // Desbloquear os sites no Nginx PRIMEIRO — é o que efetivamente devolve o acesso
+        // em servidores gerenciados (aPanel), onde o site é servido pelo Nginx e não pelo
+        // container. Feito logo no início para garantir que rode mesmo se o container
+        // já estiver ok ou se algum passo do Docker sair antes.
+        $this->desbloquearSitesNginx($vpsId, $log);
 
         $serverId = (int) ($vps['server_id'] ?? 0);
         if ($serverId > 0) {

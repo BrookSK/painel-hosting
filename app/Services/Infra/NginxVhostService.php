@@ -519,6 +519,247 @@ final class NginxVhostService
     /**
      * Verifica se o servidor precisa de sudo (usuário SSH não é root).
      */
+    /**
+     * Suspende um site bloqueando o acesso via Nginx, PRESERVANDO a config original.
+     *
+     * Estratégia segura (sem perda de dados):
+     *  - O vhost original .conf é RENOMEADO para .conf.suspenso (fica inerte, pois o
+     *    Nginx só carrega arquivos *.conf — mas o conteúdo é 100% preservado).
+     *  - Um novo .conf mínimo é gravado apenas para exibir a página de manutenção (503).
+     *  - Os arquivos do site, banco, cache, certificados: NADA é tocado. Só o roteamento.
+     *
+     * Idempotente: se já houver um .conf.suspenso, não sobrescreve o backup.
+     */
+    public function suspenderVhost(int $serverId, string $domain): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
+        $confFile = $vhostPath . '/' . $vhostName . '.conf';
+        $backupFile = $confFile . '.suspenso';
+
+        $ssh = new SshExecutor();
+        $logs = [];
+
+        // 1) Gravar a página HTML de manutenção num local próprio (não toca a pasta do site)
+        $pageDir = '/var/www/_lrv_suspenso';
+        $pageFile = $pageDir . '/index.html';
+        $htmlB64 = base64_encode($this->gerarPaginaSuspensao($domain));
+        $prepPage = $sudo . 'mkdir -p ' . escapeshellarg($pageDir)
+            . ' && echo ' . escapeshellarg($htmlB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($pageFile) . ' > /dev/null';
+
+        // 2) Detectar se há certificado SSL do domínio no servidor (para a página de
+        //    manutenção também abrir limpa em https, sem aviso de certificado).
+        $certDir = $this->detectarCertDir($ssh, $srv, $domain, $sudo);
+        if ($certDir !== '') {
+            $logs[] = 'Cert SSL detectado para bloqueio HTTPS: ' . $certDir;
+        }
+
+        // 3) Preservar o vhost original (renomear para .conf.suspenso) — só se ainda não houver backup.
+        //    E gravar o vhost de bloqueio no lugar.
+        $blqB64 = base64_encode($this->gerarVhostBloqueio($domain, $pageDir, $certDir));
+        $cmd = $prepPage
+            . ' && (test -f ' . escapeshellarg($backupFile) . ' || (test -f ' . escapeshellarg($confFile) . ' && ' . $sudo . 'mv ' . escapeshellarg($confFile) . ' ' . escapeshellarg($backupFile) . '))'
+            . ' && echo ' . escapeshellarg($blqB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($confFile) . ' > /dev/null'
+            . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-suspend-ok';
+
+        $result = $this->exec($ssh, $srv, $cmd);
+        $saida = (string)($result['saida'] ?? '');
+        $logs[] = 'Suspender vhost (' . $domain . '): ' . trim($saida);
+
+        if (!str_contains($saida, 'lrv-suspend-ok')) {
+            return ['ok' => false, 'erro' => 'Falha ao suspender vhost.', 'logs' => $logs];
+        }
+
+        return ['ok' => true, 'logs' => $logs];
+    }
+
+    /**
+     * Detecta o diretório do certificado SSL do domínio no servidor, se existir.
+     * Verifica os caminhos padrão (aPanel e Let's Encrypt). Retorna '' se não achar.
+     */
+    private function detectarCertDir(SshExecutor $ssh, array $srv, string $domain, string $sudo): string
+    {
+        $candidatos = [
+            '/www/server/panel/vhost/cert/' . $domain,          // aPanel
+            '/etc/letsencrypt/live/' . $domain,                  // certbot
+        ];
+
+        // Monta um teste: para cada candidato, verifica se fullchain.pem + privkey.pem existem
+        $partes = [];
+        foreach ($candidatos as $dir) {
+            $partes[] = 'if ' . $sudo . 'test -f ' . escapeshellarg($dir . '/fullchain.pem')
+                . ' && ' . $sudo . 'test -f ' . escapeshellarg($dir . '/privkey.pem') . '; then echo ' . escapeshellarg($dir) . '; exit 0; fi';
+        }
+        $cmd = implode('; ', $partes) . '; echo ""';
+
+        try {
+            $r = $this->exec($ssh, $srv, $cmd);
+            $saida = trim((string)($r['saida'] ?? ''));
+            // Pega a primeira linha não vazia que pareça um caminho
+            foreach (explode("\n", $saida) as $linha) {
+                $linha = trim($linha);
+                if ($linha !== '' && str_starts_with($linha, '/')) {
+                    return $linha;
+                }
+            }
+        } catch (\Throwable) {}
+
+        return '';
+    }
+
+    /**
+     * Reativa um site suspenso, RESTAURANDO a config original preservada.
+     *
+     *  - Restaura o .conf.suspenso de volta para .conf (sobrescreve o vhost de bloqueio).
+     *  - Se não houver backup .conf.suspenso, não faz nada (o vhost pode ser recriado
+     *    pelo fluxo normal de deploy). Nunca apaga config boa.
+     *
+     * Idempotente: se não há bloqueio ativo, apenas retorna ok.
+     */
+    public function reativarVhost(int $serverId, string $domain): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $vhostPath = $this->getVhostPath($srv);
+        $isCustom = $this->isCustomNginxPath($srv);
+        $reloadCmd = $this->getNginxReloadCmd($srv);
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
+        $vhostName = $this->getVhostFileName($domain, $isCustom);
+        $confFile = $vhostPath . '/' . $vhostName . '.conf';
+        $backupFile = $confFile . '.suspenso';
+
+        $ssh = new SshExecutor();
+        $logs = [];
+
+        // Se existe o backup, restaura (sobrescreve o vhost de bloqueio). Senão, nada a fazer.
+        $cmd = 'if [ -f ' . escapeshellarg($backupFile) . ' ]; then '
+            . $sudo . 'mv -f ' . escapeshellarg($backupFile) . ' ' . escapeshellarg($confFile)
+            . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1 && echo lrv-reativar-ok; '
+            . 'else echo lrv-sem-backup; fi';
+
+        $result = $this->exec($ssh, $srv, $cmd);
+        $saida = (string)($result['saida'] ?? '');
+        $logs[] = 'Reativar vhost (' . $domain . '): ' . trim($saida);
+
+        if (str_contains($saida, 'lrv-reativar-ok')) {
+            return ['ok' => true, 'logs' => $logs];
+        }
+        if (str_contains($saida, 'lrv-sem-backup')) {
+            $logs[] = 'Nenhum vhost suspenso encontrado (nada a restaurar).';
+            return ['ok' => true, 'semBackup' => true, 'logs' => $logs];
+        }
+
+        return ['ok' => false, 'erro' => 'Falha ao reativar vhost.', 'logs' => $logs];
+    }
+
+    /**
+     * Gera o vhost mínimo de bloqueio: serve a página de manutenção (HTTP 503)
+     * para qualquer requisição. Responde tanto em 80 quanto em 443 (se houver cert),
+     * mas para simplicidade e segurança, serve em ambos sem exigir cert específico.
+     */
+    private function gerarVhostBloqueio(string $domain, string $pageDir, string $certDir = ''): string
+    {
+        // Escuta em 80 e, se houver cert, também em 443 (mesmo server block) para que
+        // a página de manutenção abra limpa em http e https, sem aviso de certificado.
+        $listenBlock = "    listen 80;\n";
+        $sslBlock = '';
+        if ($certDir !== '') {
+            $listenBlock .= "    listen 443 ssl http2;\n";
+            $sslBlock = "    ssl_certificate {$certDir}/fullchain.pem;\n"
+                . "    ssl_certificate_key {$certDir}/privkey.pem;\n"
+                . "    ssl_protocols TLSv1.2 TLSv1.3;\n"
+                . "    error_page 497 https://\$host\$request_uri;\n";
+        }
+
+        return "server {\n"
+            . $listenBlock
+            . "    server_name {$domain};\n"
+            . "    root {$pageDir};\n"
+            . "    index index.html;\n"
+            . $sslBlock
+            . "\n"
+            . "    location / {\n"
+            . "        return 503;\n"
+            . "    }\n"
+            . "\n"
+            . "    error_page 503 /index.html;\n"
+            . "    location = /index.html {\n"
+            . "        internal;\n"
+            . "        add_header Retry-After 3600 always;\n"
+            . "    }\n"
+            . "}\n";
+    }
+
+    /**
+     * HTML autocontido da página de "site em manutenção".
+     * NÃO menciona pagamento — orienta a contatar o suporte do servidor.
+     */
+    private function gerarPaginaSuspensao(string $domain): string
+    {
+        $dominioSafe = htmlspecialchars($domain, ENT_QUOTES, 'UTF-8');
+        return <<<HTML
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site temporariamente indisponível</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0B1C3D 0%, #1e293b 100%);
+    min-height: 100vh; display:flex; align-items:center; justify-content:center;
+    padding: 24px; color:#e2e8f0;
+  }
+  .card {
+    background:#fff; color:#0f172a; border-radius:20px; padding:48px 40px;
+    max-width:520px; width:100%; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .icone {
+    width:72px; height:72px; margin:0 auto 20px; border-radius:50%;
+    background:linear-gradient(135deg,#4F46E5,#7C3AED);
+    display:flex; align-items:center; justify-content:center;
+  }
+  h1 { font-size:24px; font-weight:800; margin-bottom:12px; color:#0f172a; }
+  p { font-size:15px; line-height:1.7; color:#475569; margin-bottom:14px; }
+  .contato {
+    margin-top:24px; padding:16px; background:#f1f5f9; border-radius:12px;
+    font-size:14px; color:#334155;
+  }
+  .rodape { margin-top:24px; font-size:12px; color:#94a3b8; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icone">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    </div>
+    <h1>Site temporariamente indisponível</h1>
+    <p>Este site está passando por uma manutenção e ficará indisponível por um curto período.</p>
+    <p>Se você é responsável por este site, entre em contato com a equipe de suporte para regularizar o acesso.</p>
+    <div class="contato">
+      Precisa de ajuda? Fale com o suporte do seu provedor de hospedagem.
+    </div>
+    <div class="rodape">Voltaremos em breve.</div>
+  </div>
+</body>
+</html>
+HTML;
+    }
+
     private function needsSudo(array $srv): bool
     {
         $user = trim((string)($srv['ssh_user'] ?? 'root'));
