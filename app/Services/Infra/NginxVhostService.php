@@ -735,7 +735,8 @@ final class NginxVhostService
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   :root { --brand1:#4F46E5; --brand2:#7C3AED; }
-  html,body { height:100%; }
+  html,body { min-height:100%; overflow-x:hidden; }
+  html { background:#0B1C3D; }
   body {
     font-family:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     background:#0B1C3D;
@@ -749,9 +750,9 @@ final class NginxVhostService
   /* wrapper que recorta as bolhas para não vazarem e criarem "faixas" na borda */
   .bg { position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
   /* bolhas decorativas animadas (dentro do .bg, sem estourar o viewport) */
-  .blob { position:absolute; border-radius:50%; filter:blur(60px); opacity:.45; animation:float 14s ease-in-out infinite; }
-  .blob.b1 { width:300px; height:300px; background:#4F46E5; top:-60px; left:-40px; }
-  .blob.b2 { width:260px; height:260px; background:#7C3AED; bottom:-40px; right:-30px; animation-delay:-5s; }
+  .blob { position:absolute; border-radius:50%; filter:blur(70px); opacity:.4; animation:float 14s ease-in-out infinite; }
+  .blob.b1 { width:300px; height:300px; background:#4F46E5; top:-80px; left:-60px; }
+  .blob.b2 { width:260px; height:260px; background:#7C3AED; bottom:-80px; right:-60px; animation-delay:-5s; }
   @keyframes float { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-22px) } }
 
   .card {
@@ -791,7 +792,27 @@ final class NginxVhostService
   .dots span:nth-child(2){ animation-delay:.2s } .dots span:nth-child(3){ animation-delay:.4s }
   @keyframes blink { 0%,100%{ opacity:.25; transform:scale(.9) } 50%{ opacity:1; transform:scale(1.1) } }
   .rodape { margin-top:24px; font-size:12.5px; color:#94a3b8; }
-  @media (max-width:520px){ .card{ padding:40px 26px } h1{ font-size:23px } }
+
+  /* ---- Mobile ---- */
+  @media (max-width:600px){
+    body { padding:16px; align-items:flex-start; padding-top:8vh; }
+    .card { padding:32px 22px; border-radius:22px; }
+    .icone { width:76px; height:76px; border-radius:22px; margin-bottom:20px; }
+    .icone svg { width:38px; height:38px; }
+    .badge { font-size:10.5px; padding:5px 12px; margin-bottom:14px; }
+    h1 { font-size:22px; margin-bottom:12px; }
+    p { font-size:14.5px; line-height:1.65; }
+    .contato { padding:14px 16px; font-size:13.5px; gap:10px; }
+    .contato svg { width:20px; height:20px; }
+    /* bolhas menores e mais recuadas no mobile, pra nunca formar faixa na borda */
+    .blob { filter:blur(60px); opacity:.32; }
+    .blob.b1 { width:200px; height:200px; top:-90px; left:-80px; }
+    .blob.b2 { width:180px; height:180px; bottom:-100px; right:-80px; }
+  }
+  @media (max-width:360px){
+    .card { padding:28px 18px; }
+    h1 { font-size:20px; }
+  }
 </style>
 </head>
 <body>
