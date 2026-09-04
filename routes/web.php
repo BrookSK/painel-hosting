@@ -153,6 +153,8 @@ $roteador->post('/equipe/vps/reativar', [EquipeVpsController::class, 'reativar']
 $roteador->post('/equipe/vps/reiniciar', [EquipeVpsController::class, 'reiniciar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 30, 60)]);
 $roteador->post('/equipe/vps/remover', [EquipeVpsController::class, 'remover'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 10, 60)]);
 $roteador->get('/equipe/vps/logs', [EquipeVpsController::class, 'logs'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->get('/equipe/vps/atualizar-pagina-manutencao', [EquipeVpsController::class, 'atualizarPaginaManutencao'], [Middlewares::exigirPermissao('manage_vps')]);
+$roteador->post('/equipe/vps/atualizar-pagina-manutencao', [EquipeVpsController::class, 'atualizarPaginaManutencao'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/terminal', [TerminalController::class, 'index'], [Middlewares::exigirPermissao('manage_terminal')]);
 $roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_token', 60, 60)]);
 $roteador->post('/equipe/terminal/exec', [TerminalController::class, 'exec'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_exec', 120, 60)]);

@@ -717,6 +717,35 @@ final class NginxVhostService
     }
 
     /**
+     * Regrava APENAS o HTML da página de manutenção num servidor, sem tocar em
+     * vhosts nem em suspensões. Útil para aplicar melhorias no visual da página
+     * em sites que já estão suspensos, sem precisar re-suspender.
+     */
+    public function atualizarPaginaSuspensao(int $serverId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $srv = $this->getServer($pdo, $serverId);
+        if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
+
+        $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
+        $ssh = new SshExecutor();
+        $pageDir = '/var/www/_lrv_suspenso';
+        $pageFile = $pageDir . '/index.html';
+
+        $htmlB64 = base64_encode($this->gerarPaginaSuspensao(''));
+        $cmd = $sudo . 'mkdir -p ' . escapeshellarg($pageDir)
+            . ' && echo ' . escapeshellarg($htmlB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($pageFile) . ' > /dev/null'
+            . ' && echo lrv-page-updated';
+        $r = $this->exec($ssh, $srv, $cmd);
+        $saida = (string)($r['saida'] ?? '');
+
+        if (!str_contains($saida, 'lrv-page-updated')) {
+            return ['ok' => false, 'erro' => 'Falha ao atualizar página.', 'saida' => trim($saida)];
+        }
+        return ['ok' => true, 'saida' => trim($saida)];
+    }
+
+    /**
      * HTML autocontido da página de "site em manutenção".
      * NÃO menciona pagamento — orienta a contatar o suporte do servidor.
      */

@@ -231,6 +231,35 @@ final class VpsController
         return Resposta::redirecionar('/equipe/vps');
     }
 
+    /**
+     * Atualiza o HTML da página de manutenção em todos os servidores gerenciados,
+     * sem tocar em suspensões. Use após alterar o visual da página de manutenção.
+     */
+    public function atualizarPaginaManutencao(Requisicao $req): Resposta
+    {
+        $pdo = \LRV\Core\BancoDeDados::pdo();
+        $servidores = $pdo->query("SELECT id, hostname FROM servers WHERE status = 'active' AND is_online = 1")->fetchAll() ?: [];
+
+        $svc = new \LRV\App\Services\Infra\NginxVhostService();
+        $resultados = [];
+        foreach ($servidores as $s) {
+            $sid = (int)($s['id'] ?? 0);
+            if ($sid <= 0) continue;
+            try {
+                $r = $svc->atualizarPaginaSuspensao($sid);
+                $resultados[] = [
+                    'servidor' => (string)($s['hostname'] ?? ('#' . $sid)),
+                    'ok' => (bool)($r['ok'] ?? false),
+                    'detalhe' => (string)($r['erro'] ?? $r['saida'] ?? ''),
+                ];
+            } catch (\Throwable $e) {
+                $resultados[] = ['servidor' => (string)($s['hostname'] ?? ('#' . $sid)), 'ok' => false, 'detalhe' => $e->getMessage()];
+            }
+        }
+
+        return Resposta::json(['ok' => true, 'servidores' => $resultados]);
+    }
+
     public function logs(Requisicao $req): Resposta
     {
         $vpsId = (int)($req->query['id'] ?? 0);
