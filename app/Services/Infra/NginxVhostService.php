@@ -743,14 +743,11 @@ final class NginxVhostService
     padding:24px; color:#e2e8f0; position:relative;
   }
   /* Fundo fixo que cobre a viewport inteira (não rola, não emenda, não faz "xadrez").
-     Fica atrás de tudo e é o único responsável pelo gradiente. */
+     Gradiente diagonal simples e contínuo — sem radiais com 'transparent', que criavam
+     bordas duras / divisão de cor. Cobre 100% da tela sempre. */
   .fundo {
-    position:fixed; inset:0; z-index:-1; background:#0B1C3D;
-    background-image:
-      radial-gradient(60% 50% at 18% 0%, rgba(124,58,237,.38), transparent 70%),
-      radial-gradient(55% 50% at 100% 100%, rgba(79,70,229,.38), transparent 70%),
-      linear-gradient(135deg,#0B1C3D 0%, #111c3a 55%, #1e293b 100%);
-    background-repeat:no-repeat; background-size:cover;
+    position:fixed; inset:0; z-index:-1;
+    background:linear-gradient(160deg, #4F46E5 0%, #3730a3 22%, #1e2a5a 50%, #131c3d 75%, #0B1C3D 100%);
   }
 
   .card {
