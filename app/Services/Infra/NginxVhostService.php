@@ -596,6 +596,16 @@ final class NginxVhostService
         $saidaBackup = (string)($rBackup['saida'] ?? '');
         $logs[] = 'Backup vhost: ' . trim($saidaBackup);
 
+        // TRAVA DE SEGURANÇA: só prosseguimos se o vhost original foi preservado
+        // (backup criado agora OU já existia de uma suspensão anterior).
+        // Se não há .conf original pra preservar (lrv-sem-conf), NÃO gravamos o bloqueio,
+        // pra nunca deixar um domínio sem a config original recuperável.
+        $backupOk = str_contains($saidaBackup, 'lrv-backup-ok') || str_contains($saidaBackup, 'lrv-backup-existe');
+        if (!$backupOk) {
+            $logs[] = 'ABORTADO: vhost original não encontrado para preservar. Bloqueio não aplicado (segurança).';
+            return ['ok' => false, 'erro' => 'Vhost original ausente — bloqueio abortado para não perder config.', 'logs' => $logs];
+        }
+
         // 4) Gravar o vhost de bloqueio (sobrescreve o .conf), validar e recarregar (comando isolado)
         $blqB64 = base64_encode($this->gerarVhostBloqueio($domain, $pageDir, $certLine, $keyLine));
         $cmdBloqueio = 'echo ' . escapeshellarg($blqB64) . ' | base64 -d | ' . $sudo . 'tee ' . escapeshellarg($confFile) . ' > /dev/null'
