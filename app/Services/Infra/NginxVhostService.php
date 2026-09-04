@@ -586,10 +586,11 @@ final class NginxVhostService
             return ['ok' => false, 'erro' => 'Falha ao preparar página de manutenção.', 'logs' => $logs];
         }
 
-        // 3) Preservar o vhost original: renomear .conf -> .conf.suspenso (só se ainda não há backup) (comando isolado)
-        $cmdBackup = 'if [ ! -f ' . escapeshellarg($backupFile) . ' ] && [ -f ' . escapeshellarg($confFile) . ' ]; then '
+        // 3) Preservar o vhost original: copiar .conf -> .conf.suspenso (só se ainda não há backup).
+        //    Usa 'sudo test' porque os arquivos de vhost são root:root e o usuário SSH pode não ser root.
+        $cmdBackup = 'if ' . $sudo . 'test ! -f ' . escapeshellarg($backupFile) . ' && ' . $sudo . 'test -f ' . escapeshellarg($confFile) . '; then '
             . $sudo . 'cp -p ' . escapeshellarg($confFile) . ' ' . escapeshellarg($backupFile) . ' && echo lrv-backup-ok; '
-            . 'elif [ -f ' . escapeshellarg($backupFile) . ' ]; then echo lrv-backup-existe; '
+            . 'elif ' . $sudo . 'test -f ' . escapeshellarg($backupFile) . '; then echo lrv-backup-existe; '
             . 'else echo lrv-sem-conf; fi';
         $rBackup = $this->exec($ssh, $srv, $cmdBackup);
         $saidaBackup = (string)($rBackup['saida'] ?? '');
@@ -644,7 +645,8 @@ final class NginxVhostService
         $logs = [];
 
         // Se existe o backup, restaura (sobrescreve o vhost de bloqueio) e remove o backup. Senão, nada a fazer.
-        $cmd = 'if [ -f ' . escapeshellarg($backupFile) . ' ]; then '
+        // Usa 'sudo test' porque os arquivos de vhost são root:root.
+        $cmd = 'if ' . $sudo . 'test -f ' . escapeshellarg($backupFile) . '; then '
             . $sudo . 'cp -pf ' . escapeshellarg($backupFile) . ' ' . escapeshellarg($confFile)
             . ' && ' . $sudo . 'nginx -t 2>&1 && ' . $sudo . $reloadCmd . ' 2>&1'
             . ' && ' . $sudo . 'rm -f ' . escapeshellarg($backupFile)
