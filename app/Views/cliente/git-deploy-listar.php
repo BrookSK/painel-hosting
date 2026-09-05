@@ -30,8 +30,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
   <?php foreach ($deployments as $d):
     $did = (int)($d['id'] ?? 0);
     $status = (string)($d['status'] ?? 'active');
-    $statusColor = $status === 'active' ? '#10b981' : ($status === 'error' ? '#ef4444' : '#94a3b8');
-    $statusLabel = $status === 'active' ? 'Ativo' : ($status === 'error' ? 'Erro' : 'Inativo');
+    $statusColor = $status === 'active' ? '#10b981' : ($status === 'error' ? '#ef4444' : ($status === 'deploying' ? '#f59e0b' : '#94a3b8'));
+    $statusLabel = $status === 'active' ? 'Ativo' : ($status === 'error' ? 'Erro' : ($status === 'deploying' ? 'Publicando...' : 'Inativo'));
     $lastHash = (string)($d['last_commit_hash'] ?? '');
     $lastMsg = (string)($d['last_commit_message'] ?? '');
     $lastAt = (string)($d['last_deployed_at'] ?? '');

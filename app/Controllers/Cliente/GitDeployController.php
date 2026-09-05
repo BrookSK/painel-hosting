@@ -1063,16 +1063,55 @@ final class GitDeployController
             }
         }
 
-        // Executar deploy
+        // ===================================================================
+        // A partir daqui o deploy é pesado (git fetch/reset + composer + vhost)
+        // e demora MUITO mais que os 10s de timeout do GitHub. Por isso:
+        // 1) Respondemos ao GitHub IMEDIATAMENTE (200 OK) e fechamos a conexão.
+        // 2) Rodamos o deploy em background (a entrega do webhook já foi confirmada).
+        // Mesmo padrão do WorkerController::runOnce().
+        // ===================================================================
         $id = (int)$dep['id'];
+
+        // Marcar como "em deploy" antes de responder, para o painel refletir na hora
+        try {
+            $pdo->prepare('UPDATE git_deployments SET status="deploying" WHERE id=:id')->execute([':id' => $id]);
+        } catch (\Throwable) {}
+
+        ignore_user_abort(true);
+        @set_time_limit(0);
+
+        // Responder ao GitHub e fechar a conexão HTTP
+        $response = json_encode(['ok' => true, 'modo' => 'background', 'message' => 'Deploy iniciado em segundo plano.']);
+        if (!headers_sent()) {
+            http_response_code(202);
+            header('Content-Type: application/json');
+            header('Content-Length: ' . strlen($response));
+            header('Connection: close');
+        }
+        // Limpar qualquer buffer de saída pendente antes de emitir a resposta
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        echo $response;
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            @ob_end_flush();
+            @flush();
+        }
+
+        // ---------------- BACKGROUND: conexão com o GitHub já encerrada ----------------
         try {
             $result = $this->executarDeploy($dep);
         } catch (\Throwable $e) {
-            $pdo->prepare('UPDATE git_deployments SET status="error", error_message=:e WHERE id=:id')
-                ->execute([':e' => $e->getMessage(), ':id' => $id]);
-            $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, output, deployed_at) VALUES (:d,:s,:o,:t)')
-                ->execute([':d' => $id, ':s' => 'error', ':o' => $e->getMessage(), ':t' => date('Y-m-d H:i:s')]);
-            return Resposta::json(['ok' => false, 'erro' => 'Deploy failed: ' . $e->getMessage()], 500);
+            try {
+                $pdo->prepare('UPDATE git_deployments SET status="error", error_message=:e WHERE id=:id')
+                    ->execute([':e' => $e->getMessage(), ':id' => $id]);
+                $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, output, deployed_at) VALUES (:d,:s,:o,:t)')
+                    ->execute([':d' => $id, ':s' => 'error', ':o' => $e->getMessage(), ':t' => date('Y-m-d H:i:s')]);
+            } catch (\Throwable) {}
+            exit(0);
         }
 
         $pdo->prepare('UPDATE git_deployments SET status="active", last_deployed_at=:t, last_commit_hash=:h, last_commit_message=:m, last_commit_author=:a, error_message=NULL WHERE id=:id')
@@ -1106,7 +1145,7 @@ final class GitDeployController
             } catch (\Throwable) {}
         }
 
-        return Resposta::json(['ok' => true, 'commit' => $result['hash'], 'message' => $result['message']]);
+        exit(0);
     }
 
     private function renderizarErro(int $clienteId, int $id, string $erro): Resposta

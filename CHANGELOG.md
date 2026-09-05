@@ -5,6 +5,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.5.1] — 2026-09-04
+
+### Adicionado
+- **Botão "Regerar SSL"**: se o cadeado de segurança (https) do seu site cair por algum motivo, agora basta clicar em um botão no painel que o sistema reemite o certificado e reativa a conexão segura sozinho — sem precisar abrir chamado nem mexer em nada técnico
+
+### Corrigido
+- **Publicação automática que não completava em sites maiores**: quando você enviava uma atualização grande para o seu repositório, o site às vezes não terminava de publicar. Agora a publicação sempre é iniciada na hora e roda por completo em segundo plano, sem falhar por demora
+- **Aviso de "Publicando..."**: enquanto uma atualização está sendo colocada no ar, o painel agora mostra o status "Publicando..." para você acompanhar, ao invés de parecer que nada está acontecendo
+
+---
+
 ## [3.5.0] — 2026-09-04
 
 ### Adicionado
