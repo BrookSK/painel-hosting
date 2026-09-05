@@ -489,6 +489,92 @@ final class GitDeployController
         return Resposta::redirecionar('/cliente/git-deploy');
     }
 
+    /**
+     * Executa o deploy completo de um deployment por ID: carrega infra (VPS/servidor),
+     * roda o deploy, grava logs e reconfigura o vhost/SSL. É o caminho ÚNICO usado tanto
+     * pelo botão manual quanto pelo job de webhook (fila). Roda em CLI/worker, sem timeout web.
+     *
+     * @param callable|null $log function(string $msg): void — recebe mensagens de progresso
+     * @return array{ok:bool, hash?:string, message?:string, author?:string}
+     */
+    public function executarDeployPorId(int $id, ?callable $log = null): array
+    {
+        $log = $log ?? static function (string $m): void {};
+        $pdo = BancoDeDados::pdo();
+
+        $stmt = $pdo->prepare('SELECT * FROM git_deployments WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $id]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) {
+            throw new \RuntimeException('Deployment #' . $id . ' não encontrado.');
+        }
+
+        // Carregar infra (VPS/servidor)
+        $infoStmt = $pdo->prepare(
+            'SELECT v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM vps v
+             LEFT JOIN servers s ON s.id = v.server_id
+             WHERE v.id = :vid LIMIT 1'
+        );
+        $infoStmt->execute([':vid' => (int)($dep['vps_id'] ?? 0)]);
+        $info = $infoStmt->fetch();
+        if (!is_array($info) || empty($info['ip_address'])) {
+            throw new \RuntimeException('VPS ou servidor não configurado para o deployment #' . $id . '.');
+        }
+        $dep = array_merge($dep, $info);
+
+        $pdo->prepare('UPDATE git_deployments SET status="deploying" WHERE id=:id')->execute([':id' => $id]);
+        $log('Iniciando deploy do projeto...');
+
+        try {
+            $result = $this->executarDeploy($dep);
+        } catch (\Throwable $e) {
+            $pdo->prepare('UPDATE git_deployments SET status="error", error_message=:e WHERE id=:id')
+                ->execute([':e' => $e->getMessage(), ':id' => $id]);
+            $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, output, deployed_at) VALUES (:d,:s,:o,:t)')
+                ->execute([':d' => $id, ':s' => 'error', ':o' => $e->getMessage(), ':t' => date('Y-m-d H:i:s')]);
+            $log('Erro no deploy: ' . $e->getMessage());
+            throw $e;
+        }
+
+        $pdo->prepare('UPDATE git_deployments SET status="active", last_deployed_at=:t, last_commit_hash=:h, last_commit_message=:m, last_commit_author=:a, error_message=NULL WHERE id=:id')
+            ->execute([':t' => date('Y-m-d H:i:s'), ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':id' => $id]);
+        $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, commit_hash, commit_message, commit_author, output, deployed_at) VALUES (:d,:s,:h,:m,:a,:o,:t)')
+            ->execute([':d' => $id, ':s' => 'success', ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':o' => $result['output'], ':t' => date('Y-m-d H:i:s')]);
+        $log('Código atualizado (commit ' . substr((string)$result['hash'], 0, 8) . ').');
+
+        // Reconfigurar vhost Nginx (subdomínio próprio OU domínio temporário .lrvweb)
+        $deployDomain = trim((string)($dep['subdomain'] ?? ''));
+        if ($deployDomain === '') {
+            $deployDomain = trim((string)($dep['temp_domain'] ?? ''));
+        }
+        $deployServerId = (int)($dep['server_id'] ?? 0);
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        $appType = (string)($dep['app_type'] ?? 'php');
+        $appPort = (int)($dep['app_port'] ?? 3000);
+
+        if ($deployDomain !== '' && $deployServerId > 0) {
+            try {
+                $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
+                if (in_array($appType, ['nodejs', 'python', 'cpp'])) {
+                    $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
+                } else {
+                    $phpVer = (string)($dep['php_version'] ?? '8.3');
+                    $phpSet = [];
+                    if (!empty($dep['php_settings'])) {
+                        $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
+                    }
+                    $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
+                }
+                $log('Site publicado em ' . $deployDomain . '.');
+            } catch (\Throwable $e) {
+                $log('Aviso: deploy concluído, mas houve falha ao reconfigurar o vhost: ' . $e->getMessage());
+            }
+        }
+
+        return ['ok' => true, 'hash' => (string)$result['hash'], 'message' => (string)$result['message'], 'author' => (string)$result['author']];
+    }
+
     private function executarDeploy(array $dep): array
     {
         $host = trim((string)($dep['ip_address'] ?? ''));
@@ -1064,88 +1150,55 @@ final class GitDeployController
         }
 
         // ===================================================================
-        // A partir daqui o deploy é pesado (git fetch/reset + composer + vhost)
-        // e demora MUITO mais que os 10s de timeout do GitHub. Por isso:
-        // 1) Respondemos ao GitHub IMEDIATAMENTE (200 OK) e fechamos a conexão.
-        // 2) Rodamos o deploy em background (a entrega do webhook já foi confirmada).
-        // Mesmo padrão do WorkerController::runOnce().
+        // O deploy é pesado (git fetch/reset + composer + vhost) e demora MUITO
+        // mais que os 10s de timeout do GitHub — e não dá para segurar a conexão
+        // no Apache/mod_php (fastcgi_finish_request só existe em PHP-FPM, causando 504).
+        // Solução robusta: ENFILEIRAR um job e responder ao GitHub na hora.
+        // O worker (cron /api/worker/run-once) executa o deploy em CLI, sem timeout.
         // ===================================================================
         $id = (int)$dep['id'];
 
-        // Marcar como "em deploy" antes de responder, para o painel refletir na hora
         try {
-            $pdo->prepare('UPDATE git_deployments SET status="deploying" WHERE id=:id')->execute([':id' => $id]);
+            // Marca como "em deploy" para o painel refletir na hora
+            $pdo->prepare('UPDATE git_deployments SET status="deploying", error_message=NULL WHERE id=:id')->execute([':id' => $id]);
+
+            // Evita enfileirar duplicado se já houver um job pendente/rodando para este deploy
+            $jaExiste = $pdo->prepare(
+                "SELECT 1 FROM jobs WHERE type='git_deploy' AND status IN ('pending','running') AND payload LIKE :p LIMIT 1"
+            );
+            $jaExiste->execute([':p' => '%deployment_id%:' . $id . '%']);
+            if (!$jaExiste->fetch()) {
+                (new \LRV\Core\Jobs\RepositorioJobs())->criar('git_deploy', ['deployment_id' => $id]);
+            }
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => 'Falha ao agendar deploy: ' . $e->getMessage()], 500);
+        }
+
+        // Dispara o worker imediatamente (best-effort) para não esperar o próximo cron.
+        // Não bloqueia: timeout curto e ignora a resposta.
+        try {
+            $token = (string) \LRV\Core\Settings::obter('worker.http_token', '');
+            if ($token !== '') {
+                $base = rtrim(\LRV\Core\ConfiguracoesSistema::appUrlBase(), '/');
+                $url = $base . '/api/worker/run-once?token=' . urlencode($token);
+                $ch = curl_init($url);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 2,
+                    CURLOPT_CONNECTTIMEOUT => 2,
+                    CURLOPT_NOSIGNAL => true,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                ]);
+                curl_exec($ch);
+                curl_close($ch);
+            }
         } catch (\Throwable) {}
 
-        ignore_user_abort(true);
-        @set_time_limit(0);
-
-        // Responder ao GitHub e fechar a conexão HTTP
-        $response = json_encode(['ok' => true, 'modo' => 'background', 'message' => 'Deploy iniciado em segundo plano.']);
-        if (!headers_sent()) {
-            http_response_code(202);
-            header('Content-Type: application/json');
-            header('Content-Length: ' . strlen($response));
-            header('Connection: close');
-        }
-        // Limpar qualquer buffer de saída pendente antes de emitir a resposta
-        while (ob_get_level() > 0) {
-            @ob_end_clean();
-        }
-        echo $response;
-
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        } else {
-            @ob_end_flush();
-            @flush();
-        }
-
-        // ---------------- BACKGROUND: conexão com o GitHub já encerrada ----------------
-        try {
-            $result = $this->executarDeploy($dep);
-        } catch (\Throwable $e) {
-            try {
-                $pdo->prepare('UPDATE git_deployments SET status="error", error_message=:e WHERE id=:id')
-                    ->execute([':e' => $e->getMessage(), ':id' => $id]);
-                $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, output, deployed_at) VALUES (:d,:s,:o,:t)')
-                    ->execute([':d' => $id, ':s' => 'error', ':o' => $e->getMessage(), ':t' => date('Y-m-d H:i:s')]);
-            } catch (\Throwable) {}
-            exit(0);
-        }
-
-        $pdo->prepare('UPDATE git_deployments SET status="active", last_deployed_at=:t, last_commit_hash=:h, last_commit_message=:m, last_commit_author=:a, error_message=NULL WHERE id=:id')
-            ->execute([':t' => date('Y-m-d H:i:s'), ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':id' => $id]);
-        $pdo->prepare('INSERT INTO git_deploy_logs (deployment_id, status, commit_hash, commit_message, commit_author, output, deployed_at) VALUES (:d,:s,:h,:m,:a,:o,:t)')
-            ->execute([':d' => $id, ':s' => 'success', ':h' => $result['hash'], ':m' => $result['message'], ':a' => $result['author'], ':o' => $result['output'], ':t' => date('Y-m-d H:i:s')]);
-
-        // Atualizar vhost Nginx se necessário (subdomínio próprio OU domínio temporário .lrvweb)
-        $deployDomain = trim((string)($dep['subdomain'] ?? ''));
-        if ($deployDomain === '') {
-            $deployDomain = trim((string)($dep['temp_domain'] ?? ''));
-        }
-        $deployServerId = (int)($dep['server_id'] ?? 0);
-        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
-        $appType = (string)($dep['app_type'] ?? 'php');
-        $appPort = (int)($dep['app_port'] ?? 3000);
-
-        if ($deployDomain !== '' && $deployServerId > 0) {
-            try {
-                $vhostSvc = new \LRV\App\Services\Infra\NginxVhostService();
-                if (in_array($appType, ['nodejs', 'python', 'cpp'])) {
-                    $vhostSvc->criarVhostProxy($deployServerId, $deployDomain, $appPort, true);
-                } else {
-                    $phpVer = (string)($dep['php_version'] ?? '8.3');
-                    $phpSet = [];
-                    if (!empty($dep['php_settings'])) {
-                        $phpSet = is_string($dep['php_settings']) ? (json_decode($dep['php_settings'], true) ?: []) : (array)$dep['php_settings'];
-                    }
-                    $vhostSvc->criarVhostStaticSite($deployServerId, $deployDomain, $deployPath, true, $phpVer, $phpSet);
-                }
-            } catch (\Throwable) {}
-        }
-
-        exit(0);
+        return Resposta::json([
+            'ok' => true,
+            'modo' => 'fila',
+            'message' => 'Deploy agendado. Será executado em instantes pelo worker.',
+        ], 202);
     }
 
     private function renderizarErro(int $clienteId, int $id, string $erro): Resposta

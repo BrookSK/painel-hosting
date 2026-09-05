@@ -129,6 +129,19 @@ final class RegistroHandlers
             }
         });
 
+        // Git Deploy via webhook (Auto Deploy): executado em CLI pelo worker, sem timeout web.
+        $p->registrar('git_deploy', static function (array $payload, ContextoJob $ctx): void {
+            $deploymentId = (int) ($payload['deployment_id'] ?? 0);
+            if ($deploymentId <= 0) {
+                throw new \InvalidArgumentException('deployment_id inválido.');
+            }
+
+            $ctx->log('Deploy do repositório #' . $deploymentId . ' iniciado pelo worker.');
+            $ctrl = new \LRV\App\Controllers\Cliente\GitDeployController();
+            $ctrl->executarDeployPorId($deploymentId, fn (string $m) => $ctx->log($m));
+            $ctx->log('Deploy concluído.');
+        });
+
         $p->registrar('install_app_template', static function (array $payload, ContextoJob $ctx): void {
             $appId = (int) ($payload['application_id'] ?? 0);
             if ($appId <= 0) {
