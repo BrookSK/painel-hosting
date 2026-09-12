@@ -575,6 +575,30 @@ final class GitDeployController
         return ['ok' => true, 'hash' => (string)$result['hash'], 'message' => (string)$result['message'], 'author' => (string)$result['author']];
     }
 
+    /**
+     * Abre uma conexão SSH para o servidor de um deployment e devolve um callable runCmd.
+     * Reaproveita o mesmo padrão de credenciais usado no deploy.
+     *
+     * @param array $dep Deve conter ip_address, ssh_port, ssh_user, ssh_auth_type e (ssh_password|ssh_key_id)
+     * @return callable fn(string $cmd, int $timeout = 60): array{saida:string,...}
+     */
+    private function abrirSshDoServidor(array $dep, int $timeout = 60): callable
+    {
+        $host = trim((string)($dep['ip_address'] ?? ''));
+        $port = (int)($dep['ssh_port'] ?? 22);
+        $user = trim((string)($dep['ssh_user'] ?? 'root'));
+        $authType = (string)($dep['ssh_auth_type'] ?? 'password');
+
+        $exec = new \LRV\App\Services\Infra\SshExecutor();
+        if ($authType === 'password') {
+            $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
+            return fn(string $cmd, int $t = 0) => $exec->executarComSenha($host, $port, $user, $senha, $cmd, $t > 0 ? $t : $timeout);
+        }
+        $keyId = trim((string)($dep['ssh_key_id'] ?? ''));
+        $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . $keyId;
+        return fn(string $cmd, int $t = 0) => $exec->executar($host, $port, $user, $keyPath, $cmd, $t > 0 ? $t : $timeout);
+    }
+
     private function executarDeploy(array $dep): array
     {
         $host = trim((string)($dep['ip_address'] ?? ''));
@@ -991,6 +1015,108 @@ final class GitDeployController
                 return Resposta::json(['ok' => true, 'mensagem' => 'SSL regerado com sucesso para ' . $domain . '.']);
             }
             return Resposta::json(['ok' => false, 'erro' => (string)($res['erro'] ?? 'Falha ao regerar SSL.'), 'logs' => $res['logs'] ?? []]);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Botão "Liberar gravação em pasta" no card do Git Deploy.
+     * Ajusta dono (usuário do PHP-FPM) e permissões (775) de uma pasta do site,
+     * para que uploads/imagens/documentos consigam ser gravados.
+     *
+     * POST: id (deployment), pasta (subpasta relativa opcional, ex: "public/uploads")
+     */
+    public function ajustarPermissoes(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $subpasta = trim((string)($req->post['pasta'] ?? ''));
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.deploy_path, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.id = :id AND g.client_id = :c AND g.status != "inactive" LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Deploy não encontrado.'], 404);
+
+        $deployPath = rtrim((string)($dep['deploy_path'] ?? ''), '/');
+        if ($deployPath === '') {
+            return Resposta::json(['ok' => false, 'erro' => 'Este deploy não tem uma pasta configurada.']);
+        }
+
+        // Montar o caminho final e IMPEDIR escapar do deploy_path (path traversal).
+        $alvo = $deployPath;
+        if ($subpasta !== '') {
+            // Normaliza: remove barras iniciais, resolve . e .., bloqueia absolutos
+            $subpasta = str_replace('\\', '/', $subpasta);
+            $subpasta = ltrim($subpasta, '/');
+            $partes = [];
+            foreach (explode('/', $subpasta) as $p) {
+                if ($p === '' || $p === '.') continue;
+                if ($p === '..') {
+                    return Resposta::json(['ok' => false, 'erro' => 'Caminho inválido: não é permitido usar "..".']);
+                }
+                // Só permite nomes de pasta simples e seguros
+                if (!preg_match('/^[A-Za-z0-9._-]+$/', $p)) {
+                    return Resposta::json(['ok' => false, 'erro' => 'Nome de pasta inválido: "' . $p . '". Use apenas letras, números, ponto, hífen e underline.']);
+                }
+                $partes[] = $p;
+            }
+            if ($partes !== []) {
+                $alvo = $deployPath . '/' . implode('/', $partes);
+            }
+        }
+
+        try {
+            $runCmd = $this->abrirSshDoServidor($dep, 60);
+
+            // 1) Descobrir o usuário que roda o PHP-FPM do site (dono correto no aPanel costuma ser "www")
+            $donoResult = $runCmd(
+                "ps -o user= -C php-fpm 2>/dev/null | sort -u | grep -v '^root$' | head -1"
+                . " || ps aux | grep -E '[p]hp-fpm|[p]hp-cgi' | awk '{print $1}' | grep -v '^root$' | sort -u | head -1"
+            );
+            $dono = trim((string)($donoResult['saida'] ?? ''));
+            // Fallbacks comuns se não conseguir detectar
+            if ($dono === '' || !preg_match('/^[A-Za-z0-9._-]+$/', $dono)) {
+                $dono = 'www';
+            }
+
+            $alvoArg = escapeshellarg($alvo);
+
+            // 2) Criar a pasta se não existir, ajustar dono e permissões (recursivo)
+            $cmd = 'sudo mkdir -p ' . $alvoArg
+                . ' && sudo chown -R ' . escapeshellarg($dono) . ':' . escapeshellarg($dono) . ' ' . $alvoArg
+                . ' && sudo chmod -R 775 ' . $alvoArg
+                . ' && echo PERMISSOES_OK'
+                . ' && (sudo -u ' . escapeshellarg($dono) . ' test -w ' . $alvoArg . ' && echo GRAVAVEL_SIM || echo GRAVAVEL_NAO)';
+            $res = $runCmd($cmd, 90);
+            $saida = (string)($res['saida'] ?? '');
+
+            if (!str_contains($saida, 'PERMISSOES_OK')) {
+                return Resposta::json([
+                    'ok' => false,
+                    'erro' => 'Não foi possível ajustar as permissões. Detalhe do servidor: ' . trim($saida),
+                ]);
+            }
+
+            $gravavel = str_contains($saida, 'GRAVAVEL_SIM');
+            return Resposta::json([
+                'ok' => true,
+                'mensagem' => 'Pasta liberada para gravação: ' . $alvo
+                    . ' (dono: ' . $dono . ', permissão 775).'
+                    . ($gravavel ? ' O site já consegue gravar arquivos aqui.' : ' Aviso: o teste de escrita não confirmou — se ainda falhar, avise para ajustarmos.'),
+                'pasta' => $alvo,
+                'dono' => $dono,
+                'gravavel' => $gravavel,
+            ]);
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }

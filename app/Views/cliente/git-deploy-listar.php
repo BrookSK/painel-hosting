@@ -86,6 +86,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs servidor</button>
       <button class="botao sm ghost" id="btn-ssl-<?php echo $did; ?>" onclick="regerarSSL(<?php echo $did; ?>)" title="Reemite o certificado SSL e reativa o HTTPS caso o cadeado tenha caído"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Regerar SSL</button>
+      <button class="botao sm ghost" id="btn-perm-<?php echo $did; ?>" onclick="ajustarPermissoes(<?php echo $did; ?>)" title="Libera uma pasta do site para gravação (uploads de imagens, documentos, etc.) caso o site não esteja conseguindo salvar arquivos"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/><path d="M12 11v4"/><path d="M10 13h4"/></svg> Liberar pasta de arquivos</button>
       <form method="post" action="/cliente/git-deploy/excluir" style="display:inline;" onsubmit="return confirmarExclusao(this)">
         <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo $did; ?>" />
@@ -331,6 +332,48 @@ function regerarSSL(id) {
       } else {
         if (status) { status.textContent = '\u2717 ' + (d.erro || 'Falha ao regerar SSL'); status.style.color = '#dc2626'; }
         alert('Não foi possível regerar o SSL:\n\n' + (d.erro || 'Erro desconhecido') + '\n\nSe persistir, abra um ticket de suporte.');
+      }
+    })
+    .catch(function() {
+      if (btn) { btn.disabled = false; btn.innerHTML = txt; }
+      if (status) { status.textContent = '\u2717 Erro de conexão'; status.style.color = '#dc2626'; }
+    });
+}
+
+function ajustarPermissoes(id) {
+  var pasta = prompt(
+    'Qual pasta do site você quer liberar para gravação?\n\n' +
+    'Deixe em branco para liberar a pasta principal do projeto.\n' +
+    'Ou informe uma subpasta, por exemplo:\n' +
+    '  public/uploads\n' +
+    '  storage\n' +
+    '  public/arquivos\n\n' +
+    'O sistema vai ajustar o dono e a permissão para que o site consiga salvar imagens e documentos.',
+    'public/uploads'
+  );
+  if (pasta === null) return; // cancelou
+
+  var btn = document.getElementById('btn-perm-' + id);
+  var txt = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Liberando pasta...'; }
+  var status = document.getElementById('deploy-status-' + id);
+  if (status) { status.textContent = 'Ajustando permissões da pasta, aguarde...'; status.style.color = '#64748b'; }
+
+  var fd = new FormData();
+  fd.append('_csrf', _csrf);
+  fd.append('id', id);
+  fd.append('pasta', pasta.trim());
+
+  fetch('/cliente/git-deploy/ajustar-permissoes', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (btn) { btn.disabled = false; btn.innerHTML = txt; }
+      if (d.ok) {
+        if (status) { status.textContent = '\u2713 ' + (d.mensagem || 'Pasta liberada com sucesso!'); status.style.color = '#16a34a'; }
+        alert('\u2713 Pronto!\n\n' + (d.mensagem || 'A pasta foi liberada para gravação.') + '\n\nTente subir um arquivo pelo site agora.');
+      } else {
+        if (status) { status.textContent = '\u2717 ' + (d.erro || 'Falha ao liberar pasta'); status.style.color = '#dc2626'; }
+        alert('Não foi possível liberar a pasta:\n\n' + (d.erro || 'Erro desconhecido') + '\n\nSe persistir, abra um ticket de suporte.');
       }
     })
     .catch(function() {
