@@ -1221,6 +1221,17 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
   </details>
 
   <details>
+    <summary>Como configuro um webhook para receber os eventos?</summary>
+    <p>No menu lateral, clique em <a href="/cliente/webhooks">Webhooks</a> &rarr; "Criar Webhook".</p>
+    <ul>
+      <li>Em <strong>URL de destino</strong>, cole o endereço do seu sistema que vai receber as notificações (precisa ser https).</li>
+      <li>Marque os <strong>eventos</strong> que deseja receber (ex: servidor pronto, deploy concluído, domínio adicionado). Os de provisionamento já vêm marcados.</li>
+      <li>Ao salvar, o painel mostra um <strong>secret</strong> (código de segurança) <strong>uma única vez</strong> — copie e guarde. Ele serve para o seu sistema confirmar que a notificação veio mesmo do LRV Cloud (assinatura <code>X-Webhook-Signature</code>).</li>
+    </ul>
+    <p>Depois, na mesma tela, você acompanha o <strong>histórico de entregas</strong> de cada webhook (o que foi enviado e se o seu sistema respondeu com sucesso).</p>
+  </details>
+
+  <details>
     <summary>Qual a diferença entre planos VPS, Web Hosting e WordPress?</summary>
     <ul>
       <li><strong>VPS:</strong> acesso completo ao servidor (terminal, monitoramento, tudo). Para quem precisa de controle total.</li>

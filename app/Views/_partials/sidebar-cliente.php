@@ -187,6 +187,10 @@ function _temFeature(array $features, string $feature): bool {
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M12.5 3a4.5 4.5 0 00-3.18 7.68L3 17l1.5 1.5L6 17l1-1 1.5 1.5L10 16l.32-.32A4.5 4.5 0 1012.5 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13.5" cy="6.5" r="1.5" fill="currentColor"/></svg>
       <span>API Keys</span>
     </a>
+    <a href="/cliente/webhooks" class="nav-item<?php echo _nav_ativo_cli('/cliente/webhooks', $_seg); ?>" data-tooltip="Webhooks">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M8.5 10.5a3 3 0 014.5-.45l2.5-2.5a4 4 0 10-5.9-5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 9.5a3 3 0 01-4.5.45L4.5 12.4a4 4 0 105.9 5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Webhooks</span>
+    </a>
     <a href="/cliente/sair" class="nav-item nav-item-danger" data-tooltip="<?php echo View::e(I18n::t('geral.sair')); ?>">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M13 10H3M13 10l-3-3M13 10l-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5H6a2 2 0 00-2 2v6a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span><?php echo View::e(I18n::t('geral.sair')); ?></span>

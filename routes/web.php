@@ -490,5 +490,12 @@ $roteador->post('/cliente/api-keys/criar', [\LRV\App\Controllers\Cliente\ApiKeys
 $roteador->post('/cliente/api-keys/revogar', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'revogar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
 $roteador->post('/cliente/api-keys/rotacionar', [\LRV\App\Controllers\Cliente\ApiKeysController::class, 'rotacionar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('api_key_rotate', 5, 60)]);
 
+// Webhooks (cliente — notificações de eventos para sistemas externos)
+$roteador->get('/cliente/webhooks', [\LRV\App\Controllers\Cliente\WebhooksController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
+$roteador->get('/cliente/webhooks/novo', [\LRV\App\Controllers\Cliente\WebhooksController::class, 'formularioCriar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
+$roteador->post('/cliente/webhooks/criar', [\LRV\App\Controllers\Cliente\WebhooksController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('webhook_create', 10, 60)]);
+$roteador->post('/cliente/webhooks/remover', [\LRV\App\Controllers\Cliente\WebhooksController::class, 'remover'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
+$roteador->get('/cliente/webhooks/entregas', [\LRV\App\Controllers\Cliente\WebhooksController::class, 'deliveries'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado(), Middlewares::verificarFeaturePlano()]);
+
 // API — Métricas de monitoramento (recebe dados dos servidores)
 $roteador->post('/api/metrics/servers', [\LRV\App\Controllers\Api\MetricsController::class, 'registrarServidor'], [Middlewares::rateLimitIp('metrics_push', 30, 60)]);
