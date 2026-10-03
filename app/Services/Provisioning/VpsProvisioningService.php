@@ -323,6 +323,42 @@ final class VpsProvisioningService
         $log('VPS reiniciada.');
     }
 
+    /**
+     * Para (desliga) o container da VPS, mantendo os dados. Status → stopped.
+     */
+    public function parar(int $vpsId, callable $log): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, server_id, container_id, status FROM vps WHERE id = :id AND deleted_at IS NULL');
+        $stmt->execute([':id' => $vpsId]);
+        $vps = $stmt->fetch();
+
+        if (!is_array($vps)) {
+            throw new \RuntimeException('VPS não encontrada.');
+        }
+
+        $serverId = (int) ($vps['server_id'] ?? 0);
+        if ($serverId <= 0) {
+            throw new \RuntimeException('VPS sem node associado.');
+        }
+
+        if (!$this->configurarDockerParaNode($serverId, $log)) {
+            throw new \RuntimeException('Não foi possível configurar Docker remoto.');
+        }
+
+        $containerId = (string) ($vps['container_id'] ?? '');
+        if ($containerId === '') {
+            throw new \RuntimeException('VPS sem container_id.');
+        }
+
+        $log('Parando container...');
+        $out = $this->docker->parar($containerId);
+        $log('Saída stop: ' . $out);
+
+        $this->atualizarStatusVps($vpsId, 'stopped');
+        $log('VPS parada.');
+    }
+
     public function remover(int $vpsId, callable $log): void
     {
         $pdo = BancoDeDados::pdo();

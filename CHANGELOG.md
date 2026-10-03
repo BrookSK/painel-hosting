@@ -5,6 +5,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.6.0] — 2026-08-06
+
+### Adicionado
+- **Integração completa por API para automação**: parceiros e sistemas externos agora conseguem fazer todo o processo de forma automática, do começo ao fim — cadastrar o cliente, criar o servidor, publicar o site a partir do repositório e deixar tudo no ar, sem ninguém precisar fazer nada manualmente no painel
+- **Cadastro de clientes pela API**: um parceiro pode registrar os próprios clientes finais e continuar gerenciando cada um deles de forma separada e organizada
+- **Criação de servidores pela API**: dá para pedir um servidor novo para um cliente escolhendo o plano, e acompanhar sozinho quando ele fica pronto. Também é possível suspender ou desligar um servidor pela API quando necessário
+- **Publicação de sites via repositório pela API**: dá para conectar um repositório (GitHub, GitLab, etc.) e publicar o site automaticamente, inclusive escolhendo a tecnologia (PHP, Node.js, Python)
+- **Ambiente de testes com endereço temporário**: ao publicar, é possível pedir um endereço provisório de homologação já com cadeado de segurança (https), para o cliente ver o site antes de usar o domínio definitivo
+- **Avisos automáticos (webhooks) para cada etapa**: o sistema externo recebe uma notificação na hora em que um cliente é criado, um servidor fica pronto ou um site é publicado, sem precisar ficar consultando o tempo todo
+
+### Melhorado
+- **Documentação da API ampliada**: todos os novos recursos entraram na documentação para desenvolvedores, com exemplos de uso de cada chamada
+
+---
+
 ## [3.5.1] — 2026-09-04
 
 ### Adicionado

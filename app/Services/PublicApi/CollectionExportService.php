@@ -253,10 +253,18 @@ final class CollectionExportService
             ['folder' => 'API Keys', 'name' => 'Revoke Key', 'method' => 'POST', 'path' => '/api/v1/keys/revoke', 'query' => '?id=1'],
             ['folder' => 'API Keys', 'name' => 'Rotate Key', 'method' => 'POST', 'path' => '/api/v1/keys/rotate', 'query' => '?id=1'],
 
+            // Clients
+            ['folder' => 'Clients', 'name' => 'List Clients', 'method' => 'GET', 'path' => '/api/v1/clients'],
+            ['folder' => 'Clients', 'name' => 'Client Details', 'method' => 'GET', 'path' => '/api/v1/clients/show', 'query' => '?id=1'],
+            ['folder' => 'Clients', 'name' => 'Create Client', 'method' => 'POST', 'path' => '/api/v1/clients', 'body_raw' => '{"name": "Acme Ltda", "email": "contato@acme.com", "document": "00.000.000/0001-00", "phone": "+5511999999999", "external_ref": "crm-123"}'],
+
             // Hosting
             ['folder' => 'Hosting', 'name' => 'List VPS', 'method' => 'GET', 'path' => '/api/v1/hosting'],
             ['folder' => 'Hosting', 'name' => 'VPS Details', 'method' => 'GET', 'path' => '/api/v1/hosting/show', 'query' => '?id=1'],
+            ['folder' => 'Hosting', 'name' => 'Provision VPS', 'method' => 'POST', 'path' => '/api/v1/hosting', 'body_raw' => '{"plan": "Web Hosting Start", "client_id": 1, "hostname": "cliente-app", "os": "ubuntu-22.04"}'],
             ['folder' => 'Hosting', 'name' => 'Restart VPS', 'method' => 'POST', 'path' => '/api/v1/hosting/restart', 'query' => '?id=1'],
+            ['folder' => 'Hosting', 'name' => 'Suspend VPS', 'method' => 'POST', 'path' => '/api/v1/hosting/suspend', 'body_raw' => '{"id": 1}'],
+            ['folder' => 'Hosting', 'name' => 'Stop VPS', 'method' => 'POST', 'path' => '/api/v1/hosting/stop', 'body_raw' => '{"id": 1}'],
             ['folder' => 'Hosting', 'name' => 'VPS Metrics', 'method' => 'GET', 'path' => '/api/v1/hosting/metrics', 'query' => '?id=1&hours=24'],
 
             // Tickets
@@ -292,6 +300,9 @@ final class CollectionExportService
             ['folder' => 'Applications', 'name' => 'Application Catalog', 'method' => 'GET', 'path' => '/api/v1/applications/catalog'],
             ['folder' => 'Applications', 'name' => 'Install Application', 'method' => 'POST', 'path' => '/api/v1/applications/install', 'body_raw' => '{"template_id": 1, "vps_id": 1, "domain": "app.example.com"}'],
             ['folder' => 'Applications', 'name' => 'Application Status', 'method' => 'GET', 'path' => '/api/v1/applications/status', 'query' => '?id=1'],
+            ['folder' => 'Applications', 'name' => 'Create Git App', 'method' => 'POST', 'path' => '/api/v1/applications/git', 'body_raw' => '{"vps_id": 1, "name": "My Site", "git_repo": "https://github.com/user/repo.git", "git_branch": "main", "runtime": "php", "domain": "app.example.com", "staging_subdomain": true}'],
+            ['folder' => 'Applications', 'name' => 'Git App Details', 'method' => 'GET', 'path' => '/api/v1/applications/git/show', 'query' => '?id=1'],
+            ['folder' => 'Applications', 'name' => 'Re-deploy Git App', 'method' => 'POST', 'path' => '/api/v1/applications/git/deploy', 'body_raw' => '{"id": 1}'],
 
             // Emails
             ['folder' => 'Emails', 'name' => 'List Emails', 'method' => 'GET', 'path' => '/api/v1/emails'],

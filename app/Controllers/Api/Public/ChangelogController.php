@@ -20,6 +20,24 @@ final class ChangelogController extends BaseApiController
     {
         $changelog = [
             [
+                'version' => '1.1.0',
+                'date' => '2026-08-06',
+                'type' => 'minor',
+                'changes' => [
+                    'new' => [
+                        'Clients endpoints: register and manage end clients (GET/POST /clients, GET /clients/show)',
+                        'VPS provisioning via API (POST /hosting), plus suspend and stop (POST /hosting/suspend, /hosting/stop)',
+                        'Git-based application deploy (POST /applications/git, /git/deploy, GET /applications/git/show)',
+                        'Staging environment with temporary subdomain and automatic SSL (staging_subdomain flag)',
+                        'New webhook events: client.created, hosting.created, hosting.ready, application.installed, application.deployed',
+                        'Documented POST /databases schema (credentials returned once at creation)',
+                    ],
+                    'changed' => [],
+                    'deprecated' => [],
+                    'fixed' => [],
+                ],
+            ],
+            [
                 'version' => '1.0.0',
                 'date' => '2026-07-09',
                 'type' => 'major',
@@ -46,7 +64,7 @@ final class ChangelogController extends BaseApiController
 
         return $this->sucesso([
             'versions' => $changelog,
-            'current_version' => '1.0.0',
+            'current_version' => '1.1.0',
             'api_status' => 'stable',
         ]);
     }

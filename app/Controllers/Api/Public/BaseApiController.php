@@ -211,6 +211,64 @@ abstract class BaseApiController
     }
 
     /**
+     * Retorna todos os client_ids que a API key autenticada pode gerenciar:
+     * o próprio cliente da key + todos os clientes-filhos que ele criou via API
+     * (coluna clients.created_by_client_id). Permite revenda/parceiros (ex.: helpdeskON)
+     * provisionarem para os clientes finais que cadastraram.
+     *
+     * @return int[]
+     */
+    protected function clienteIdsGerenciados(Requisicao $req): array
+    {
+        $self = $this->clienteId($req);
+        if ($self === null) {
+            return [];
+        }
+
+        $ids = [$self];
+        try {
+            $pdo = \LRV\Core\BancoDeDados::pdo();
+            $stmt = $pdo->prepare('SELECT id FROM clients WHERE created_by_client_id = :c');
+            $stmt->execute([':c' => $self]);
+            foreach ($stmt->fetchAll() ?: [] as $row) {
+                $ids[] = (int) $row['id'];
+            }
+        } catch (\Throwable) {
+            // Se a coluna ainda não existir (migration pendente), opera só com o próprio cliente.
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Resolve o cliente-alvo de uma operação de escrita.
+     *
+     * Se o body trouxer "client_id", valida que a API key tem direito sobre ele
+     * (é o próprio dono ou um cliente-filho criado por ele). Sem "client_id",
+     * assume o próprio cliente da key.
+     *
+     * @return array{0: int|null, 1: Resposta|null} [clienteAlvo, respostaDeErro]
+     */
+    protected function resolverClienteAlvo(Requisicao $req, array $dados): array
+    {
+        $self = $this->clienteId($req);
+        if ($self === null) {
+            return [null, $this->naoAutorizado()];
+        }
+
+        $alvo = isset($dados['client_id']) ? (int) $dados['client_id'] : $self;
+        if ($alvo <= 0) {
+            return [null, $this->validacaoFalhou([['field' => 'client_id', 'message' => 'Invalid client_id.']])];
+        }
+
+        if (!in_array($alvo, $this->clienteIdsGerenciados($req), true)) {
+            return [null, $this->proibido('You do not have permission to manage client_id ' . $alvo . '.')];
+        }
+
+        return [$alvo, null];
+    }
+
+    /**
      * Valida campos obrigatórios e retorna resposta de erro se falhar.
      * @return Resposta|null null se válido
      */

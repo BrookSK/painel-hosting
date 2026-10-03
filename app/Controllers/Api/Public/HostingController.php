@@ -167,6 +167,236 @@ final class HostingController extends BaseApiController
     }
 
     /**
+     * POST /api/v1/hosting
+     * Provisiona uma nova VPS para um cliente (o próprio da key ou um cliente-filho).
+     * Assíncrono: cria o registro, enfileira o provisionamento e retorna 202.
+     *
+     * Body: { "plan" (id ou nome), "client_id"?, "hostname"?, "os"?, "region"? }
+     */
+    public function criar(Requisicao $req): Resposta
+    {
+        if (!$this->temEscopo($req, 'hosting.write')) {
+            return $this->proibido('Scope hosting.write is required.');
+        }
+
+        $dados = $req->json();
+        $validacao = $this->validarObrigatorios($dados, ['plan']);
+        if ($validacao !== null) {
+            return $validacao;
+        }
+
+        // Resolver cliente-alvo (próprio ou filho gerenciado) — validado inclusive em sandbox
+        [$clienteId, $erroCliente] = $this->resolverClienteAlvo($req, $dados);
+        if ($erroCliente !== null) {
+            return $erroCliente;
+        }
+
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('Hosting (VPS)', 'provisioning');
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        // Localizar o plano por id (numérico) ou por nome exato (case-insensitive)
+        $plano = $this->localizarPlano($pdo, (string) $dados['plan']);
+        if ($plano === null) {
+            return $this->erro('PLAN_NOT_FOUND', 'The requested plan was not found or is not active.', 404);
+        }
+
+        $hostname = trim((string) ($dados['hostname'] ?? ''));
+        $os = trim((string) ($dados['os'] ?? ''));
+        $region = trim((string) ($dados['region'] ?? ''));
+        $externalRef = trim((string) ($dados['external_ref'] ?? ''));
+        $agora = date('Y-m-d H:i:s');
+
+        $pdo->beginTransaction();
+        try {
+            // Montar INSERT dinâmico para tolerar colunas opcionais (hostname/os) que
+            // podem não existir em instalações antigas do schema.
+            $colunas = ['client_id', 'server_id', 'container_id', 'cpu', 'ram', 'storage', 'status', 'created_at', 'plan_id'];
+            $valores = [':c', 'NULL', 'NULL', ':cpu', ':ram', ':st', ':status', ':cr', ':pid'];
+            $params = [
+                ':c' => $clienteId,
+                ':cpu' => (int) $plano['cpu'],
+                ':ram' => (int) $plano['ram'],
+                ':st' => (int) $plano['storage'],
+                ':status' => 'pending_provisioning',
+                ':cr' => $agora,
+                ':pid' => (int) $plano['id'],
+            ];
+            if ($hostname !== '' && $this->colunaExiste($pdo, 'vps', 'hostname')) {
+                $colunas[] = 'hostname';
+                $valores[] = ':hostname';
+                $params[':hostname'] = $hostname;
+            }
+            if ($os !== '' && $this->colunaExiste($pdo, 'vps', 'os')) {
+                $colunas[] = 'os';
+                $valores[] = ':os';
+                $params[':os'] = $os;
+            }
+
+            $sql = 'INSERT INTO vps (' . implode(', ', $colunas) . ') VALUES (' . implode(', ', $valores) . ')';
+            $pdo->prepare($sql)->execute($params);
+            $vpsId = (int) $pdo->lastInsertId();
+
+            // Assinatura ativa (sem gateway — cobrança é externa / revenda)
+            $pdo->prepare(
+                'INSERT INTO subscriptions (client_id, vps_id, plan_id, status, next_due_date, created_at)
+                 VALUES (:c, :v, :p, :s, :n, :cr)'
+            )->execute([
+                ':c' => $clienteId,
+                ':v' => $vpsId,
+                ':p' => (int) $plano['id'],
+                ':s' => 'active',
+                ':n' => null,
+                ':cr' => $agora,
+            ]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            return $this->erro('HOSTING_CREATE_FAILED', 'Could not provision VPS: ' . $e->getMessage(), 500);
+        }
+
+        // Enfileirar provisionamento automático
+        try {
+            (new \LRV\Core\Jobs\RepositorioJobs())->criar('provisionar_vps', ['vps_id' => $vpsId]);
+        } catch (\Throwable) {}
+
+        // Webhook hosting.created (notifica a conta-pai / revenda)
+        try {
+            (new \LRV\App\Services\PublicApi\WebhookService())->disparar(
+                (int) $this->clienteId($req),
+                'hosting.created',
+                ['id' => $vpsId, 'client_id' => $clienteId, 'plan' => $plano['name'], 'status' => 'provisioning']
+            );
+        } catch (\Throwable) {}
+
+        return $this->sucesso([
+            'id' => $vpsId,
+            'client_id' => $clienteId,
+            'plan' => $plano['name'],
+            'status' => 'provisioning',
+            'hostname' => $hostname !== '' ? $hostname : null,
+            'os' => $os !== '' ? $os : null,
+            'region' => $region !== '' ? $region : null,
+            'external_ref' => $externalRef !== '' ? $externalRef : null,
+            'note' => 'VPS provisioning started. Track status via GET /hosting/show?id=' . $vpsId . ' (provisioning → running) or the hosting.created / hosting.ready webhooks.',
+        ], 'VPS provisioning queued.', 202);
+    }
+
+    /**
+     * POST /api/v1/hosting/suspend
+     * Suspende a VPS (ex.: inadimplência no sistema externo). Body: { "id" }
+     */
+    public function suspender(Requisicao $req): Resposta
+    {
+        return $this->mudarEstado($req, 'suspend');
+    }
+
+    /**
+     * POST /api/v1/hosting/stop
+     * Para a VPS (desliga o container). Body: { "id" }
+     */
+    public function parar(Requisicao $req): Resposta
+    {
+        return $this->mudarEstado($req, 'stop');
+    }
+
+    /**
+     * Lógica compartilhada de suspend/stop.
+     */
+    private function mudarEstado(Requisicao $req, string $acao): Resposta
+    {
+        if (!$this->temEscopo($req, 'hosting.write')) {
+            return $this->proibido('Scope hosting.write is required.');
+        }
+
+        $vpsId = (int) ($req->json()['id'] ?? ($req->query['id'] ?? 0));
+        if ($vpsId <= 0) {
+            return $this->erro('MISSING_ID', 'The VPS id is required.', 400);
+        }
+
+        if ($this->isSandbox($req)) {
+            return $this->respostaSandbox('VPS ' . $acao, 'queued');
+        }
+
+        $pdo = BancoDeDados::pdo();
+
+        // Ownership: VPS do próprio cliente OU de um cliente-filho gerenciado
+        $ids = $this->clienteIdsGerenciados($req);
+        if ($ids === []) {
+            return $this->naoAutorizado();
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $pdo->prepare("SELECT id, status, client_id FROM vps WHERE id = ? AND client_id IN ($placeholders) LIMIT 1");
+        $stmt->execute(array_merge([$vpsId], $ids));
+        $vps = $stmt->fetch();
+        if (!is_array($vps)) {
+            return $this->naoEncontrado('VPS');
+        }
+
+        $jobType = $acao === 'suspend' ? 'suspender_vps' : 'parar_vps';
+        // Reportar o estado real que o worker vai persistir (suspender_vps grava
+        // 'suspended_payment' via suspenderPorPagamento; parar_vps grava 'stopped').
+        $novoStatus = $acao === 'suspend' ? 'suspending' : 'stopping';
+
+        $pdo->prepare(
+            "INSERT INTO jobs (type, payload, status, created_at) VALUES (:t, :payload, 'pending', NOW())"
+        )->execute([':t' => $jobType, ':payload' => json_encode(['vps_id' => $vpsId])]);
+
+        // Webhook
+        if ($acao === 'suspend') {
+            try {
+                (new \LRV\App\Services\PublicApi\WebhookService())->disparar(
+                    (int) $this->clienteId($req),
+                    'hosting.suspended',
+                    ['id' => $vpsId, 'client_id' => (int) $vps['client_id']]
+                );
+            } catch (\Throwable) {}
+        }
+
+        return $this->sucesso(['vps_id' => $vpsId, 'action' => $acao, 'status' => $novoStatus], 'VPS ' . $acao . ' queued.', 202);
+    }
+
+    /**
+     * Localiza um plano ativo por id numérico ou por nome exato (case-insensitive).
+     * @return array|null
+     */
+    private function localizarPlano(\PDO $pdo, string $plan): ?array
+    {
+        $plan = trim($plan);
+        if ($plan === '') {
+            return null;
+        }
+
+        if (ctype_digit($plan)) {
+            $stmt = $pdo->prepare("SELECT id, name, cpu, ram, storage FROM plans WHERE id = :id AND status = 'active' LIMIT 1");
+            $stmt->execute([':id' => (int) $plan]);
+        } else {
+            $stmt = $pdo->prepare("SELECT id, name, cpu, ram, storage FROM plans WHERE LOWER(name) = LOWER(:name) AND status = 'active' LIMIT 1");
+            $stmt->execute([':name' => $plan]);
+        }
+
+        $row = $stmt->fetch();
+        return is_array($row) ? $row : null;
+    }
+
+    /**
+     * Verifica se uma coluna existe numa tabela (para INSERTs tolerantes a schema).
+     */
+    private function colunaExiste(\PDO $pdo, string $tabela, string $coluna): bool
+    {
+        try {
+            $stmt = $pdo->prepare('SHOW COLUMNS FROM `' . $tabela . '` LIKE :c');
+            $stmt->execute([':c' => $coluna]);
+            return $stmt->fetch() !== false;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
      * GET /api/v1/hosting/metrics?id=&period=
      */
     public function metricas(Requisicao $req): Resposta

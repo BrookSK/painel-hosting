@@ -45,8 +45,14 @@ tags:
     description: Autenticação e gestão de tokens
   - name: API Keys
     description: Gerenciamento de API Keys
+  - name: Clients
+    description: Cadastro de clientes finais (revenda/parceiro)
   - name: Hosting
     description: VPS e hospedagem
+  - name: Applications
+    description: Aplicações (catálogo e deploy via Git)
+  - name: Databases
+    description: Bancos de dados
   - name: Tickets
     description: Sistema de suporte
   - name: Subscriptions
@@ -235,6 +241,47 @@ paths:
       responses:
         "200":
           description: Lista paginada de VPS
+    post:
+      tags: [Hosting]
+      summary: Provisionar VPS
+      description: |
+        Cria e provisiona uma nova VPS (assíncrono). Retorna 202 com `status: provisioning`.
+        Acompanhe por `GET /hosting/show?id=` (provisioning → running) ou pelos webhooks
+        `hosting.created` / `hosting.ready`. Requer escopo `hosting.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan]
+              properties:
+                plan:
+                  description: ID numérico ou nome exato do plano
+                  oneOf:
+                    - type: integer
+                    - type: string
+                client_id:
+                  type: integer
+                  description: Cliente-alvo (omitido = o próprio cliente da key; aceita clientes-filhos gerenciados)
+                hostname:
+                  type: string
+                os:
+                  type: string
+                region:
+                  type: string
+                external_ref:
+                  type: string
+      responses:
+        "202":
+          description: Provisionamento enfileirado
+        "404":
+          description: Plano não encontrado
+        "422":
+          $ref: "#/components/responses/ValidationError"
 
   /api/v1/hosting/show:
     get:
@@ -656,6 +703,337 @@ paths:
         "200":
           description: Lista paginada de incidentes
 
+  # ─────────────────────────────────────────────────────────────
+  # CLIENTS — cadastro de clientes finais (revenda/parceiro)
+  # ─────────────────────────────────────────────────────────────
+  /api/v1/clients:
+    get:
+      tags: [Clients]
+      summary: Listar clientes gerenciados
+      description: Retorna o próprio cliente da API Key e todos os clientes-filhos criados por ele via API.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de clientes
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [Clients]
+      summary: Criar cliente final
+      description: |
+        Cadastra um cliente final vinculado à conta autenticada (revenda).
+        O cliente é criado com uma senha aleatória; o acesso direto ao painel,
+        se necessário, é feito via "esqueci minha senha". Dispara o evento
+        `client.created`. Requer escopo `clients.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                document:
+                  type: string
+                  description: CPF ou CNPJ
+                phone:
+                  type: string
+                notes:
+                  type: string
+                external_ref:
+                  type: string
+                  description: Identificador do cliente no sistema externo (ex.: id no helpdeskON)
+      responses:
+        "201":
+          description: Cliente criado
+        "409":
+          description: Já existe um cliente com este e-mail
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/clients/show:
+    get:
+      tags: [Clients]
+      summary: Detalhe de um cliente
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dados do cliente
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─────────────────────────────────────────────────────────────
+  # HOSTING — provisionamento e ciclo de vida da VPS
+  # ─────────────────────────────────────────────────────────────
+  /api/v1/hosting/suspend:
+    post:
+      tags: [Hosting]
+      summary: Suspender VPS
+      description: Suspende a VPS (ex.: inadimplência no sistema externo). Dispara `hosting.suspended`. Escopo `hosting.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      responses:
+        "202":
+          description: Suspensão enfileirada
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/hosting/stop:
+    post:
+      tags: [Hosting]
+      summary: Parar VPS
+      description: Desliga o container da VPS, preservando os dados. Escopo `hosting.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      responses:
+        "202":
+          description: Parada enfileirada
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─────────────────────────────────────────────────────────────
+  # DATABASES
+  # ─────────────────────────────────────────────────────────────
+  /api/v1/databases:
+    get:
+      tags: [Databases]
+      summary: Listar bancos de dados
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de bancos
+    post:
+      tags: [Databases]
+      summary: Criar banco de dados
+      description: |
+        Cria um banco numa VPS do cliente (assíncrono). A senha gerada é retornada
+        **uma única vez** na resposta — guarde com segurança. Requer escopo `databases.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vps_id, db_name]
+              properties:
+                vps_id:
+                  type: integer
+                db_name:
+                  type: string
+                  description: "Minúsculas alfanuméricas, 2-49 chars, começa com letra (^[a-z][a-z0-9_]{1,48}$)"
+                db_user:
+                  type: string
+                  description: Opcional; default = db_name
+                db_type:
+                  type: string
+                  enum: [mysql, postgresql]
+                  default: mysql
+      responses:
+        "201":
+          description: Criação enfileirada; retorna credenciais (senha exibida só uma vez)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      db_name: { type: string }
+                      db_user: { type: string }
+                      db_type: { type: string }
+                      password: { type: string }
+                      status: { type: string, example: creating }
+                      warning: { type: string }
+        "409":
+          description: Já existe um banco com este nome nesta VPS
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/databases/remove:
+    post:
+      tags: [Databases]
+      summary: Remover banco de dados
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─────────────────────────────────────────────────────────────
+  # APPLICATIONS — Git Deploy
+  # ─────────────────────────────────────────────────────────────
+  /api/v1/applications/git:
+    post:
+      tags: [Applications]
+      summary: Criar aplicação conectada a Git e disparar deploy
+      description: |
+        Cria uma aplicação apontando um repositório Git numa VPS e enfileira o deploy
+        (git fetch + build), executado em background pelo worker. Retorna 202.
+        Com `staging_subdomain: true`, gera um subdomínio temporário de homologação
+        com SSL automático e retorna `staging_url`. Dispara `application.installed`.
+        Requer escopo `applications.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vps_id, name, git_repo]
+              properties:
+                vps_id:
+                  type: integer
+                name:
+                  type: string
+                git_repo:
+                  type: string
+                  description: URL do repositório (https ou ssh)
+                git_branch:
+                  type: string
+                  default: main
+                runtime:
+                  type: string
+                  enum: [php, nodejs, python, cpp]
+                  default: php
+                domain:
+                  type: string
+                  description: Domínio próprio (opcional)
+                deploy_path:
+                  type: string
+                  default: /var/www/html
+                php_version:
+                  type: string
+                  default: "8.3"
+                app_port:
+                  type: integer
+                  description: Porta interna para runtimes nodejs/python/cpp
+                auth_token:
+                  type: string
+                  description: Token de acesso para repositório privado (armazenado cifrado)
+                staging_subdomain:
+                  type: boolean
+                  default: false
+                  description: Gera subdomínio temporário de homologação com SSL
+                client_id:
+                  type: integer
+                  description: Cliente-alvo (aceita clientes-filhos gerenciados)
+      responses:
+        "202":
+          description: Aplicação criada e deploy enfileirado
+        "404":
+          description: VPS não encontrada
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/applications/git/show:
+    get:
+      tags: [Applications]
+      summary: Detalhe de uma aplicação Git
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dados do deploy (status, último commit, staging_url)
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/applications/git/deploy:
+    post:
+      tags: [Applications]
+      summary: Re-disparar deploy (pull + build)
+      description: Re-executa o deploy de uma aplicação Git existente. Dispara `application.deployed`. Escopo `applications.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      responses:
+        "202":
+          description: Deploy enfileirado
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     apiKey:
@@ -748,6 +1126,12 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
     NotFound:
       description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Dados inválidos
       content:
         application/json:
           schema:

@@ -46,6 +46,26 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
 <div class="cl-content">
     <div class="cl-version">
         <div class="cl-version-header">
+            <span class="cl-version-tag">v1.1.0</span>
+            <span class="cl-version-date">2026-08-06</span>
+            <span class="cl-version-badge"><?= $t('api_changelog.v110_badge') ?></span>
+        </div>
+
+        <div class="cl-changes">
+            <h4><?= $t('api_changelog.novidades') ?></h4>
+            <ul>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_clients') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_hosting_provision') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_git_deploy') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_staging') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_webhooks_prov') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_db_schema') ?></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="cl-version">
+        <div class="cl-version-header">
             <span class="cl-version-tag">v1.0.0</span>
             <span class="cl-version-date">2026-07-09</span>
             <span class="cl-version-badge"><?= $t('api_changelog.major_release') ?></span>

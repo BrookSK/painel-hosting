@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 use LRV\App\Controllers\Api\Public\AuthController;
 use LRV\App\Controllers\Api\Public\ApiKeysController;
+use LRV\App\Controllers\Api\Public\ClientsController;
 use LRV\App\Controllers\Api\Public\HostingController;
 use LRV\App\Controllers\Api\Public\TicketsController;
 use LRV\App\Controllers\Api\Public\SubscriptionsController;
@@ -62,11 +63,21 @@ $roteador->post('/api/v1/keys/revoke', [ApiKeysController::class, 'revogar'], $a
 $roteador->post('/api/v1/keys/rotate', [ApiKeysController::class, 'rotacionar'], $apiAuth);
 
 // ════════════════════════════════════════════════════════════
+// CLIENTS — Cadastro de clientes finais (revenda/parceiro)
+// ════════════════════════════════════════════════════════════
+$roteador->get('/api/v1/clients', [ClientsController::class, 'listar'], $apiAuth);
+$roteador->get('/api/v1/clients/show', [ClientsController::class, 'show'], $apiAuth);
+$roteador->post('/api/v1/clients', [ClientsController::class, 'criar'], $apiAuth);
+
+// ════════════════════════════════════════════════════════════
 // HOSTING (VPS)
 // ════════════════════════════════════════════════════════════
 $roteador->get('/api/v1/hosting', [HostingController::class, 'listar'], $apiAuth);
 $roteador->get('/api/v1/hosting/show', [HostingController::class, 'show'], $apiAuth);
+$roteador->post('/api/v1/hosting', [HostingController::class, 'criar'], $apiAuth);
 $roteador->post('/api/v1/hosting/restart', [HostingController::class, 'reiniciar'], $apiAuth);
+$roteador->post('/api/v1/hosting/suspend', [HostingController::class, 'suspender'], $apiAuth);
+$roteador->post('/api/v1/hosting/stop', [HostingController::class, 'parar'], $apiAuth);
 $roteador->get('/api/v1/hosting/metrics', [HostingController::class, 'metricas'], $apiAuth);
 
 // ════════════════════════════════════════════════════════════
@@ -114,6 +125,10 @@ $roteador->get('/api/v1/applications', [ApplicationsController::class, 'listar']
 $roteador->get('/api/v1/applications/catalog', [ApplicationsController::class, 'catalogo'], $apiPublic);
 $roteador->post('/api/v1/applications/install', [ApplicationsController::class, 'instalar'], $apiAuth);
 $roteador->get('/api/v1/applications/status', [ApplicationsController::class, 'status'], $apiAuth);
+// Git Deploy (aplicações conectadas a repositório Git)
+$roteador->post('/api/v1/applications/git', [ApplicationsController::class, 'criarGitDeploy'], $apiAuth);
+$roteador->get('/api/v1/applications/git/show', [ApplicationsController::class, 'showGitDeploy'], $apiAuth);
+$roteador->post('/api/v1/applications/git/deploy', [ApplicationsController::class, 'redeployGitDeploy'], $apiAuth);
 
 // ════════════════════════════════════════════════════════════
 // EMAILS

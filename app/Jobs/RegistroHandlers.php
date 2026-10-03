@@ -140,6 +140,21 @@ final class RegistroHandlers
             $ctrl = new \LRV\App\Controllers\Cliente\GitDeployController();
             $ctrl->executarDeployPorId($deploymentId, fn (string $m) => $ctx->log($m));
             $ctx->log('Deploy concluído.');
+
+            // Notificar integrações externas (API) que o deploy terminou.
+            try {
+                $pdo = BancoDeDados::pdo();
+                $stmt = $pdo->prepare('SELECT client_id, status FROM git_deployments WHERE id = :id');
+                $stmt->execute([':id' => $deploymentId]);
+                $dep = $stmt->fetch();
+                if (is_array($dep)) {
+                    (new \LRV\App\Services\PublicApi\WebhookService())->disparar(
+                        (int) ($dep['client_id'] ?? 0),
+                        'application.deployed',
+                        ['id' => $deploymentId, 'client_id' => (int) ($dep['client_id'] ?? 0), 'status' => (string) ($dep['status'] ?? 'active')]
+                    );
+                }
+            } catch (\Throwable) {}
         });
 
         $p->registrar('install_app_template', static function (array $payload, ContextoJob $ctx): void {
@@ -342,7 +357,7 @@ final class RegistroHandlers
 
             try {
                 $pdo = BancoDeDados::pdo();
-                $stmt = $pdo->prepare('SELECT status FROM vps WHERE id = :id');
+                $stmt = $pdo->prepare('SELECT status, client_id FROM vps WHERE id = :id');
                 $stmt->execute([':id' => $vpsId]);
                 $vps = $stmt->fetch();
 
@@ -352,6 +367,16 @@ final class RegistroHandlers
                     $quando = new \DateTimeImmutable('now + 5 minutes');
                     $repo->criar('provisionar_vps', ['vps_id' => $vpsId], $quando);
                     $ctx->log('Reagendado provisionar_vps para: ' . $quando->format('Y-m-d H:i:s'));
+                } elseif ($st === 'running' && is_array($vps)) {
+                    // VPS ficou pronta — notificar integrações externas (API) via webhook.
+                    try {
+                        (new \LRV\App\Services\PublicApi\WebhookService())->disparar(
+                            (int) ($vps['client_id'] ?? 0),
+                            'hosting.ready',
+                            ['id' => $vpsId, 'client_id' => (int) ($vps['client_id'] ?? 0), 'status' => 'running']
+                        );
+                        $ctx->log('Webhook hosting.ready disparado.');
+                    } catch (\Throwable) {}
                 }
             } catch (\Throwable $e) {
                 $ctx->log('Falha ao reagendar provisionamento: ' . $e->getMessage());
@@ -423,6 +448,16 @@ final class RegistroHandlers
 
             $svc = new VpsProvisioningService(new DockerCli());
             $svc->reiniciar($vpsId, fn (string $m) => $ctx->log($m));
+        });
+
+        $p->registrar('parar_vps', static function (array $payload, ContextoJob $ctx): void {
+            $vpsId = (int) ($payload['vps_id'] ?? 0);
+            if ($vpsId <= 0) {
+                throw new \InvalidArgumentException('vps_id inválido.');
+            }
+
+            $svc = new VpsProvisioningService(new DockerCli());
+            $svc->parar($vpsId, fn (string $m) => $ctx->log($m));
         });
 
         $p->registrar('remover_vps', static function (array $payload, ContextoJob $ctx): void {

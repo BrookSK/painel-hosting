@@ -34,7 +34,9 @@ final class WebhookService
         'domain.added',
         'domain.removed',
         'application.installed',
+        'application.deployed',
         'application.removed',
+        'hosting.ready',
         'monitoring.alert',
     ];
 

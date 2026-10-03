@@ -2888,6 +2888,15 @@ return [
     'api_changelog.item_colecoes' => 'Colecciones Postman, Bruno e Insomnia',
     'api_changelog.item_docs_i18n' => 'Documentación pública multilingüe (PT/EN/ES)',
     'api_changelog.item_sdks' => 'SDKs: PHP, JavaScript/TypeScript, Python (estructura base)',
+    // v1.1.0 — Aprovisionamiento
+    'api_changelog.v110_badge' => 'Aprovisionamiento',
+    'api_changelog.v110_titulo' => 'Aprovisionamiento de extremo a extremo',
+    'api_changelog.item_clients' => 'Endpoints de clientes: registra y gestiona clientes finales (POST/GET /clients)',
+    'api_changelog.item_hosting_provision' => 'Aprovisionamiento de VPS vía API (POST /hosting) + suspender/detener (/hosting/suspend, /hosting/stop)',
+    'api_changelog.item_git_deploy' => 'Despliegue vía Git por API (POST /applications/git, /git/deploy, /git/show)',
+    'api_changelog.item_staging' => 'Entorno de homologación: subdominio temporal con SSL (staging_subdomain)',
+    'api_changelog.item_webhooks_prov' => 'Nuevos eventos: client.created, hosting.created, hosting.ready, application.installed, application.deployed',
+    'api_changelog.item_db_schema' => 'Esquema de POST /databases documentado (credenciales devueltas una sola vez)',
 
     // ── API Swagger Page ──
     'api_swagger.subtitulo' => 'Pruebe endpoints, autentíquese y vea respuestas en tiempo real',
