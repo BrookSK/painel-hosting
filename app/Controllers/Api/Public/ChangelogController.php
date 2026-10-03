@@ -21,7 +21,7 @@ final class ChangelogController extends BaseApiController
         $changelog = [
             [
                 'version' => '1.1.0',
-                'date' => '2026-08-06',
+                'date' => '2026-10-03',
                 'type' => 'minor',
                 'changes' => [
                     'new' => [

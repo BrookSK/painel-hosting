@@ -5,7 +5,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
-## [3.6.0] — 2026-08-06
+## [3.6.0] — 2026-10-03
 
 ### Adicionado
 - **Integração completa por API para automação**: parceiros e sistemas externos agora conseguem fazer todo o processo de forma automática, do começo ao fim — cadastrar o cliente, criar o servidor, publicar o site a partir do repositório e deixar tudo no ar, sem ninguém precisar fazer nada manualmente no painel

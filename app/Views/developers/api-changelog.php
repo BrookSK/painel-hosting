@@ -47,7 +47,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
     <div class="cl-version">
         <div class="cl-version-header">
             <span class="cl-version-tag">v1.1.0</span>
-            <span class="cl-version-date">2026-08-06</span>
+            <span class="cl-version-date">2026-10-03</span>
             <span class="cl-version-badge"><?= $t('api_changelog.v110_badge') ?></span>
         </div>
 
