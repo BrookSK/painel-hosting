@@ -755,7 +755,7 @@ paths:
                   type: string
                 external_ref:
                   type: string
-                  description: Identificador do cliente no sistema externo (ex.: id no helpdeskON)
+                  description: "Identificador do cliente no sistema externo (ex.: id no helpdeskON)"
       responses:
         "201":
           description: Cliente criado
@@ -790,7 +790,7 @@ paths:
     post:
       tags: [Hosting]
       summary: Suspender VPS
-      description: Suspende a VPS (ex.: inadimplência no sistema externo). Dispara `hosting.suspended`. Escopo `hosting.write`.
+      description: "Suspende a VPS (ex.: inadimplência no sistema externo). Dispara `hosting.suspended`. Escopo `hosting.write`."
       security:
         - apiKey: []
         - bearerAuth: []
