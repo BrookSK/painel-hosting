@@ -37,6 +37,9 @@ final class WebhookService
         'application.deployed',
         'application.removed',
         'hosting.ready',
+        'git.repository.created',
+        'git.collaborator.added',
+        'git.collaborator.removed',
         'monitoring.alert',
     ];
 

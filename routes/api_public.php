@@ -24,6 +24,7 @@ use LRV\App\Controllers\Api\Public\StatusApiController;
 use LRV\App\Controllers\Api\Public\DatabasesController;
 use LRV\App\Controllers\Api\Public\BackupsController;
 use LRV\App\Controllers\Api\Public\ApplicationsController;
+use LRV\App\Controllers\Api\Public\RepositoriesController;
 use LRV\App\Controllers\Api\Public\EmailsController;
 use LRV\App\Controllers\Api\Public\LogsController;
 use LRV\App\Controllers\Api\Public\ChangelogController;
@@ -129,6 +130,15 @@ $roteador->get('/api/v1/applications/status', [ApplicationsController::class, 's
 $roteador->post('/api/v1/applications/git', [ApplicationsController::class, 'criarGitDeploy'], $apiAuth);
 $roteador->get('/api/v1/applications/git/show', [ApplicationsController::class, 'showGitDeploy'], $apiAuth);
 $roteador->post('/api/v1/applications/git/deploy', [ApplicationsController::class, 'redeployGitDeploy'], $apiAuth);
+
+// ════════════════════════════════════════════════════════════
+// GIT REPOSITORIES — criação de repositórios na organização e acesso de devs
+// ════════════════════════════════════════════════════════════
+$roteador->get('/api/v1/git/repositories', [RepositoriesController::class, 'listar'], $apiAuth);
+$roteador->get('/api/v1/git/repositories/show', [RepositoriesController::class, 'show'], $apiAuth);
+$roteador->post('/api/v1/git/repositories', [RepositoriesController::class, 'criar'], $apiAuth);
+$roteador->post('/api/v1/git/repositories/collaborators', [RepositoriesController::class, 'adicionarColaboradores'], $apiAuth);
+$roteador->post('/api/v1/git/repositories/collaborators/remove', [RepositoriesController::class, 'removerColaborador'], $apiAuth);
 
 // ════════════════════════════════════════════════════════════
 // EMAILS

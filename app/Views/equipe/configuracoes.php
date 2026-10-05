@@ -237,6 +237,29 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
     </div>
 
+    <!-- Integração GitHub (criação de repositórios e colaboradores via API) -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <strong style="font-size:13px;">Integração GitHub</strong>
+      <p class="texto" style="font-size:12px;margin:4px 0 12px;">Usado pela API para criar repositórios na organização e conceder acesso aos desenvolvedores.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">GitHub Token</label>
+        <input class="input" type="password" name="github_token" value="<?php echo View::e((string)($github_token??'')); ?>" placeholder="<?php echo ($github_token ?? '') !== '' ? '•••••••• (preenchido)' : 'ghp_... ou token de GitHub App'; ?>" autocomplete="new-password" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Token com permissão de criar repositórios e gerenciar membros na organização (escopo <code>repo</code> + <code>admin:org</code>). Deixe em branco para manter o atual.</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Organização padrão</label>
+        <input class="input" type="text" name="github_org" value="<?php echo View::e((string)($github_org??'')); ?>" placeholder="minha-org" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Organização onde os repositórios serão criados por padrão (pode ser sobrescrita por requisição).</p>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">API URL</label>
+        <input class="input" type="text" name="github_api_url" value="<?php echo View::e((string)($github_api_url??'https://api.github.com')); ?>" placeholder="https://api.github.com" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Padrão: https://api.github.com. Altere apenas para GitHub Enterprise.</p>
+      </div>
+    </div>
+
     <!-- Teste de domínio temporário -->
     <div style="margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">

@@ -50,6 +50,9 @@ final class ConfiguracoesController
             'infra_phpmyadmin_url' => (string) Settings::obter('infra.phpmyadmin_url', ''),
             'cloudflare_api_token' => (string) Settings::obter('cloudflare.api_token', ''),
             'cloudflare_zone_id' => (string) Settings::obter('cloudflare.zone_id', ''),
+            'github_token' => (string) Settings::obter('github.token', ''),
+            'github_org' => (string) Settings::obter('github.org', ''),
+            'github_api_url' => (string) Settings::obter('github.api_url', 'https://api.github.com'),
             'terminal_ws_internal_port' => (string) ConfiguracoesSistema::terminalWsInternalPort(),
             'terminal_token_ttl_seconds' => (string) ConfiguracoesSistema::terminalTokenTtlSegundos(),
             'terminal_idle_timeout_seconds' => (string) ConfiguracoesSistema::terminalIdleTimeoutSegundos(),
@@ -160,6 +163,9 @@ final class ConfiguracoesController
         $proxyServerSshPass = '';
         $cloudflareApiToken = $in->postString('cloudflare_api_token', 500, false);
         $cloudflareZoneId = $in->postString('cloudflare_zone_id', 100, false);
+        $githubToken = $in->postString('github_token', 500, false);
+        $githubOrg = $in->postString('github_org', 120, false);
+        $githubApiUrl = $in->postString('github_api_url', 200, false);
         $terminalPorta = $in->postInt('terminal_ws_internal_port', 1, 65535, false);
         $terminalTokenTtl = $in->postInt('terminal_token_ttl_seconds', 10, 86400, false);
         $terminalIdleTimeout = $in->postInt('terminal_idle_timeout_seconds', 60, 604800, false);
@@ -258,6 +264,9 @@ final class ConfiguracoesController
                 'infra_phpmyadmin_url' => $phpmyadminUrl,
                 'cloudflare_api_token' => $cloudflareApiToken,
                 'cloudflare_zone_id' => $cloudflareZoneId,
+                'github_token' => $githubToken,
+                'github_org' => $githubOrg,
+                'github_api_url' => $githubApiUrl,
                 'terminal_ws_internal_port' => $terminalPorta > 0 ? (string) $terminalPorta : '8081',
                 'terminal_token_ttl_seconds' => $terminalTokenTtl > 0 ? (string) $terminalTokenTtl : '60',
                 'terminal_idle_timeout_seconds' => $terminalIdleTimeout > 0 ? (string) $terminalIdleTimeout : '900',
@@ -364,6 +373,13 @@ final class ConfiguracoesController
             Settings::definir('cloudflare.api_token', $cloudflareApiToken);
         }
         Settings::definir('cloudflare.zone_id', $cloudflareZoneId);
+        // GitHub (criação de repositórios e colaboradores via API): só sobrescreve o token se enviado,
+        // para não apagar o secret ao salvar o formulário sem reinformá-lo.
+        if ($githubToken !== '') {
+            Settings::definir('github.token', $githubToken);
+        }
+        Settings::definir('github.org', trim($githubOrg));
+        Settings::definir('github.api_url', trim($githubApiUrl) !== '' ? rtrim(trim($githubApiUrl), '/') : 'https://api.github.com');
         Settings::definir('terminal.ws_internal_port', $terminalPorta > 0 ? $terminalPorta : 8081);
         Settings::definir('terminal.token_ttl_seconds', $terminalTokenTtl > 0 ? $terminalTokenTtl : 60);
         Settings::definir('terminal.idle_timeout_seconds', $terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900);
@@ -501,6 +517,9 @@ final class ConfiguracoesController
             'infra_phpmyadmin_url' => $phpmyadminUrl,
             'cloudflare_api_token' => $cloudflareApiToken,
             'cloudflare_zone_id' => $cloudflareZoneId,
+            'github_token' => $githubToken,
+            'github_org' => $githubOrg,
+            'github_api_url' => $githubApiUrl,
             'terminal_ws_internal_port' => (string) ($terminalPorta > 0 ? $terminalPorta : 8081),
             'terminal_token_ttl_seconds' => (string) ($terminalTokenTtl > 0 ? $terminalTokenTtl : 60),
             'terminal_idle_timeout_seconds' => (string) ($terminalIdleTimeout > 0 ? $terminalIdleTimeout : 900),

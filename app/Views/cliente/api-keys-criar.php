@@ -30,6 +30,8 @@ $escoposDisponiveis = [
     'databases.write' => I18n::t('api_keys.scope_databases_write'),
     'emails.read' => I18n::t('api_keys.scope_emails_read'),
     'emails.write' => I18n::t('api_keys.scope_emails_write'),
+    'git.read' => I18n::t('api_keys.scope_git_read'),
+    'git.write' => I18n::t('api_keys.scope_git_write'),
 ];
 ?>
 

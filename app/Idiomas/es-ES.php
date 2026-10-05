@@ -2897,6 +2897,8 @@ return [
     'api_changelog.item_staging' => 'Entorno de homologación: subdominio temporal con SSL (staging_subdomain)',
     'api_changelog.item_webhooks_prov' => 'Nuevos eventos: client.created, hosting.created, hosting.ready, application.installed, application.deployed',
     'api_changelog.item_db_schema' => 'Esquema de POST /databases documentado (credenciales devueltas una sola vez)',
+    'api_changelog.item_git_repos' => 'Creación de repositorios en la organización y gestión de colaboradores (POST /git/repositories, /collaborators)',
+    'api_changelog.item_git_webhooks' => 'Nuevos eventos: git.repository.created, git.collaborator.added, git.collaborator.removed',
 
     // ── API Swagger Page ──
     'api_swagger.subtitulo' => 'Pruebe endpoints, autentíquese y vea respuestas en tiempo real',
@@ -2961,6 +2963,8 @@ return [
     'api_keys.scope_databases_write' => 'Bases de datos (Escritura)',
     'api_keys.scope_emails_read' => 'Emails (Lectura)',
     'api_keys.scope_emails_write' => 'Emails (Escritura)',
+    'api_keys.scope_git_read' => 'Repositorios Git (Lectura)',
+    'api_keys.scope_git_write' => 'Repositorios Git (Escritura)',
 
     // ── Migración WordPress ──
     'migracao_wp.titulo' => 'Migraciones WordPress',

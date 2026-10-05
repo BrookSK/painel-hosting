@@ -1215,7 +1215,7 @@ details code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px
 
   <details>
     <summary>Dá para cadastrar clientes e criar servidores automaticamente pela API?</summary>
-    <p>Sim. Se você é um parceiro ou revenda e usa outro sistema, dá para automatizar o processo inteiro pela nossa API: cadastrar o cliente, criar o servidor dele, publicar o site a partir de um repositório e até gerar um endereço de teste temporário — tudo sem precisar entrar no painel manualmente.</p>
+    <p>Sim. Se você é um parceiro ou revenda e usa outro sistema, dá para automatizar o processo inteiro pela nossa API: cadastrar o cliente, criar o servidor dele, criar o repositório do projeto na organização e liberar o acesso dos desenvolvedores, publicar o site a partir desse repositório e até gerar um endereço de teste temporário — tudo sem precisar entrar no painel manualmente.</p>
     <p>Seu sistema também pode receber avisos automáticos (webhooks) quando cada etapa termina (cliente criado, servidor pronto, site publicado).</p>
     <p>É um recurso técnico, voltado para quem desenvolve a integração. A documentação completa, com todos os exemplos, fica em <a href="/developers/api">Documentação da API</a>. As permissões necessárias (escopos como <code>clients.write</code>, <code>hosting.write</code> e <code>applications.write</code>) você define ao criar a API Key.</p>
   </details>

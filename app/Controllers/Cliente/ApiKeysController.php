@@ -97,6 +97,7 @@ final class ApiKeysController
             'applications.read', 'applications.write',
             'databases.read', 'databases.write',
             'emails.read', 'emails.write',
+            'git.read', 'git.write',
         ];
         $escopos = array_values(array_intersect($escopos, $escoposValidos));
 

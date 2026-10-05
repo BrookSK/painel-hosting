@@ -304,6 +304,13 @@ final class CollectionExportService
             ['folder' => 'Applications', 'name' => 'Git App Details', 'method' => 'GET', 'path' => '/api/v1/applications/git/show', 'query' => '?id=1'],
             ['folder' => 'Applications', 'name' => 'Re-deploy Git App', 'method' => 'POST', 'path' => '/api/v1/applications/git/deploy', 'body_raw' => '{"id": 1}'],
 
+            // Git Repositories
+            ['folder' => 'Git Repositories', 'name' => 'List Repositories', 'method' => 'GET', 'path' => '/api/v1/git/repositories'],
+            ['folder' => 'Git Repositories', 'name' => 'Repository Details', 'method' => 'GET', 'path' => '/api/v1/git/repositories/show', 'query' => '?id=1'],
+            ['folder' => 'Git Repositories', 'name' => 'Create Repository', 'method' => 'POST', 'path' => '/api/v1/git/repositories', 'body_raw' => '{"name": "cliente-site", "private": true, "description": "Projeto do cliente", "external_ref": "prov-123"}'],
+            ['folder' => 'Git Repositories', 'name' => 'Add Collaborators', 'method' => 'POST', 'path' => '/api/v1/git/repositories/collaborators', 'body_raw' => '{"id": 1, "usernames": ["dev1", "dev2"], "permission": "push"}'],
+            ['folder' => 'Git Repositories', 'name' => 'Remove Collaborator', 'method' => 'POST', 'path' => '/api/v1/git/repositories/collaborators/remove', 'body_raw' => '{"id": 1, "username": "dev1"}'],
+
             // Emails
             ['folder' => 'Emails', 'name' => 'List Emails', 'method' => 'GET', 'path' => '/api/v1/emails'],
             ['folder' => 'Emails', 'name' => 'Create Email', 'method' => 'POST', 'path' => '/api/v1/emails', 'body_raw' => '{"email_address": "user@example.com", "password": "SecurePass123!", "quota_mb": 1024}'],

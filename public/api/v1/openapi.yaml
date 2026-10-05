@@ -51,6 +51,8 @@ tags:
     description: VPS e hospedagem
   - name: Applications
     description: Aplicações (catálogo e deploy via Git)
+  - name: Git Repositories
+    description: Criação de repositórios na organização e acesso de desenvolvedores
   - name: Databases
     description: Bancos de dados
   - name: Tickets
@@ -1031,6 +1033,167 @@ paths:
       responses:
         "202":
           description: Deploy enfileirado
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─────────────────────────────────────────────────────────────
+  # GIT REPOSITORIES — criar repositório na org e gerir colaboradores
+  # ─────────────────────────────────────────────────────────────
+  /api/v1/git/repositories:
+    get:
+      tags: [Git Repositories]
+      summary: Listar repositórios criados
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Lista paginada de repositórios
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [Git Repositories]
+      summary: Criar repositório na organização
+      description: |
+        Cria um repositório na organização Git configurada e retorna os dados reais
+        (clone_url, html_url) para alimentar a publicação da aplicação. Operação
+        síncrona (201). Dispara `git.repository.created`. Requer escopo `git.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: "Nome do repositório (letras, números, ponto, hífen, underline; máx 100)"
+                private:
+                  type: boolean
+                  default: true
+                org:
+                  type: string
+                  description: Organização (omitido = organização padrão da plataforma)
+                description:
+                  type: string
+                external_ref:
+                  type: string
+                  description: "Identificador no sistema externo (ex.: id do provisionamento no helpdeskON)"
+                client_id:
+                  type: integer
+                  description: Cliente-alvo (aceita clientes-filhos gerenciados)
+      responses:
+        "201":
+          description: Repositório criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      full_name: { type: string }
+                      html_url: { type: string }
+                      clone_url: { type: string }
+                      ssh_url: { type: string }
+                      visibility: { type: string }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "502":
+          description: O provedor Git (GitHub) retornou erro
+        "503":
+          description: Integração Git não configurada na plataforma
+
+  /api/v1/git/repositories/show:
+    get:
+      tags: [Git Repositories]
+      summary: Detalhe de um repositório (inclui colaboradores)
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dados do repositório
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/git/repositories/collaborators:
+    post:
+      tags: [Git Repositories]
+      summary: Conceder acesso a desenvolvedores
+      description: |
+        Adiciona um ou mais colaboradores ao repositório (convite ou acesso direto).
+        Dispara `git.collaborator.added` por colaborador. Requer escopo `git.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, usernames]
+              properties:
+                id:
+                  type: integer
+                  description: ID do repositório (retornado na criação)
+                usernames:
+                  type: array
+                  items:
+                    type: string
+                  description: Lista de usernames do GitHub
+                permission:
+                  type: string
+                  enum: [pull, triage, push, maintain, admin]
+                  default: push
+      responses:
+        "200":
+          description: Colaboradores processados (data.collaborators e data.errors)
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          description: O provedor Git retornou erro para todos os colaboradores
+
+  /api/v1/git/repositories/collaborators/remove:
+    post:
+      tags: [Git Repositories]
+      summary: Revogar acesso de um desenvolvedor
+      description: Remove um colaborador (ou cancela o convite). Dispara `git.collaborator.removed`. Escopo `git.write`.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, username]
+              properties:
+                id:
+                  type: integer
+                username:
+                  type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/Success"
         "404":
           $ref: "#/components/responses/NotFound"
 

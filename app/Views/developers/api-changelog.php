@@ -60,6 +60,8 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;bac
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_staging') ?></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_webhooks_prov') ?></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_db_schema') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_git_repos') ?></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> <?= $t('api_changelog.item_git_webhooks') ?></li>
             </ul>
         </div>
     </div>

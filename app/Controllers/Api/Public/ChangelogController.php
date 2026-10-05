@@ -31,6 +31,8 @@ final class ChangelogController extends BaseApiController
                         'Staging environment with temporary subdomain and automatic SSL (staging_subdomain flag)',
                         'New webhook events: client.created, hosting.created, hosting.ready, application.installed, application.deployed',
                         'Documented POST /databases schema (credentials returned once at creation)',
+                        'Git repositories: create repo in the organization and manage collaborators (POST /git/repositories, /collaborators)',
+                        'New webhook events: git.repository.created, git.collaborator.added, git.collaborator.removed',
                     ],
                     'changed' => [],
                     'deprecated' => [],
