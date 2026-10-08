@@ -103,6 +103,12 @@ final class WebhookAsaasService
             if ($tipo === 'PAYMENT_CONFIRMED' || $tipo === 'PAYMENT_RECEIVED') {
                 $this->marcarAssinaturaAtiva($subId, $nextDueDate);
 
+                // Reconciliar link público de pagamento (se esta assinatura veio de um link)
+                try {
+                    $pdo->prepare("UPDATE payment_links SET status = 'paid', used_at = NOW() WHERE subscription_id = :s AND status <> 'paid'")
+                        ->execute([':s' => $subId]);
+                } catch (\Throwable) {}
+
                 if ($vpsId > 0) {
                     $this->concluirSuspensoesPendentes($pdo, $vpsId, $subId, 'Pagamento confirmado/recebido.');
 

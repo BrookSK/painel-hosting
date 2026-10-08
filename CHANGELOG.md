@@ -16,6 +16,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Avisos automáticos (webhooks) para cada etapa**: o sistema externo recebe uma notificação na hora em que um cliente é criado, um servidor fica pronto ou um site é publicado, sem precisar ficar consultando o tempo todo
 - **Tela de Webhooks no painel**: nova área no menu lateral onde você cria webhooks pelo navegador — informa o endereço do seu sistema, escolhe os eventos que quer receber e copia o código de segurança (secret). Também mostra o histórico de entregas de cada webhook, sem precisar programar nada
 - **Criação de repositórios Git pela API**: parceiros podem criar o repositório do projeto direto na organização e liberar o acesso dos desenvolvedores automaticamente, sem precisar entrar no GitHub manualmente. O endereço do repositório já volta pronto para publicar o site
+- **Link de pagamento (sem precisar logar)**: a equipe agora gera um link exclusivo para cada cliente pagar o plano direto pelo navegador — a pessoa só abre o link, escolhe cartão, boleto ou PIX e paga, sem precisar entrar no painel. Ideal para clientes que não vão usar o sistema no dia a dia. O pagamento é confirmado automaticamente e libera o serviço na sequência
 
 ### Melhorado
 - **Documentação da API ampliada**: todos os novos recursos entraram na documentação para desenvolvedores, com exemplos de uso de cada chamada

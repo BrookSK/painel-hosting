@@ -202,6 +202,7 @@ $roteador->post('/equipe/clientes/salvar', [ClientesController::class, 'salvar']
 $roteador->post('/equipe/clientes/ocultar', [ClientesController::class, 'ocultar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/deletar', [ClientesController::class, 'deletar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/assinar-plano', [ClientesController::class, 'assinarPlano'], [Middlewares::exigirPermissao('manage_billing')]);
+$roteador->post('/equipe/clientes/gerar-link-pagamento', [ClientesController::class, 'gerarLinkPagamento'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/clientes/impersonar', [ClientesController::class, 'impersonar'], [Middlewares::exigirPermissao('manage_users')]);
 
 // Minha conta
@@ -281,6 +282,12 @@ $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlew
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
 $roteador->post('/webhooks/stripe', [StripeController::class, 'receber']);
 $roteador->post('/webhooks/git-deploy/{secret}', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'webhook']);
+
+// Link público de pagamento (sem login — identidade via token na URL)
+$roteador->get('/pagar/{token}', [\LRV\App\Controllers\PagamentoPublicoController::class, 'mostrar'], [Middlewares::rateLimitIp('pay_link_view', 60, 60)]);
+$roteador->post('/pagar/{token}/iniciar', [\LRV\App\Controllers\PagamentoPublicoController::class, 'iniciar'], [Middlewares::rateLimitIp('pay_link_init', 15, 60)]);
+$roteador->get('/pagar/{token}/status', [\LRV\App\Controllers\PagamentoPublicoController::class, 'status'], [Middlewares::rateLimitIp('pay_link_status', 120, 60)]);
+$roteador->post('/pagar/{token}/cartao', [\LRV\App\Controllers\PagamentoPublicoController::class, 'cartao'], [Middlewares::rateLimitIp('pay_link_card', 10, 60)]);
 
 // 2FA equipe
 $roteador->get('/equipe/2fa/configurar', [DoisFatoresController::class, 'configurar'], [Middlewares::exigirLoginEquipe()]);

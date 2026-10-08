@@ -46,8 +46,19 @@ if (count($nomePartes) >= 2) {
 <?php if ($ok === 'assinatura_criada'): ?>
   <div class="sucesso" style="margin-bottom:16px;"><?php echo View::e(I18n::t('eq_cliente.assinatura_criada')); ?></div>
 <?php endif; ?>
-<?php if ($erro !== ''): ?>
-  <div class="erro" style="margin-bottom:16px;"><?php echo View::e($erro); ?></div>
+<?php if ($ok === 'link_gerado'): ?>
+  <div class="sucesso" style="margin-bottom:16px;">Link de pagamento gerado com sucesso. Copie o link abaixo e envie ao cliente.</div>
+<?php endif; ?>
+<?php
+$erroMsg = match ($erro) {
+    'link_dados' => 'Dados inválidos para gerar o link.',
+    'link_falha' => 'Não foi possível gerar o link de pagamento.',
+    '' => '',
+    default => $erro,
+};
+?>
+<?php if ($erroMsg !== ''): ?>
+  <div class="erro" style="margin-bottom:16px;"><?php echo View::e($erroMsg); ?></div>
 <?php endif; ?>
 
 <!-- Header do cliente -->
@@ -190,6 +201,51 @@ if (count($nomePartes) >= 2) {
     </form>
   </div>
   <?php endif; ?>
+
+  <!-- Gerar link de pagamento -->
+  <div class="card-new">
+    <div class="card-new-title"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Gerar link de pagamento</div>
+    <p style="font-size:12px;color:#64748b;margin-bottom:10px;">Cria um link público para o cliente pagar sem precisar entrar no painel. Ele escolhe cartão, boleto ou PIX e paga direto.</p>
+
+    <?php if (!empty($linkPagamento)): ?>
+    <div style="background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:6px;">Link gerado — copie e envie ao cliente:</div>
+      <input id="payLinkInput" class="input" type="text" readonly value="<?php echo View::e($linkPagamento); ?>" onclick="this.select()" style="font-size:12px;font-family:monospace;" />
+      <button type="button" class="botao sm" style="margin-top:8px;" onclick="(function(){var i=document.getElementById('payLinkInput');i.select();navigator.clipboard.writeText(i.value);var b=event.target;b.textContent='Copiado!';setTimeout(function(){b.textContent='Copiar link';},2000);})()">Copiar link</button>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($planos)): ?>
+    <form method="POST" action="/equipe/clientes/gerar-link-pagamento" style="margin-top:8px;">
+      <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+      <input type="hidden" name="client_id" value="<?php echo (int)$cliente['id']; ?>" />
+      <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;"><?php echo View::e(I18n::t('eq_cliente.plano')); ?></label>
+      <select name="plan_id" class="input" required style="margin-bottom:10px;">
+        <option value="">Selecione o plano...</option>
+        <?php foreach ($planos as $pl): ?>
+          <option value="<?php echo (int)$pl['id']; ?>"><?php echo View::e((string)$pl['name']); ?> — <?php echo (int)($pl['cpu'] ?? 0); ?> vCPU / <?php echo round((int)($pl['ram'] ?? 0) / 1024); ?>GB RAM / <?php echo round((int)($pl['storage'] ?? 0) / 1024); ?>GB SSD — <?php echo View::e(I18n::precoPlano($pl)); ?>/<?php echo View::e(I18n::t('assinaturas.mes')); ?></option>
+        <?php endforeach; ?>
+      </select>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Moeda / forma</label>
+          <select name="currency" class="input">
+            <option value="BRL">BRL — cartão, boleto ou PIX (Asaas)</option>
+            <option value="USD">USD — cartão (Stripe)</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Período</label>
+          <select name="periodo" class="input">
+            <option value="1">Mensal</option>
+            <option value="12">Anual</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="botao" style="width:100%;"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Gerar link</button>
+    </form>
+    <?php endif; ?>
+  </div>
 </div>
 
 <!-- VPS -->

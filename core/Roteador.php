@@ -186,6 +186,10 @@ final class Roteador
         if (str_starts_with($caminho, '/webhooks/')) {
             return false;
         }
+        // Link público de pagamento: cliente sem sessão. A credencial é o token na URL.
+        if (str_starts_with($caminho, '/pagar/')) {
+            return false;
+        }
         if (str_starts_with($caminho, '/api/metrics/')) {
             return false;
         }

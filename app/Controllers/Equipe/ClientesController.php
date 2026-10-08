@@ -125,6 +125,11 @@ final class ClientesController
             'vps'          => $vps->fetchAll() ?: [],
             'assinaturas'  => $subs->fetchAll() ?: [],
             'planos'       => $this->planos($id),
+            'linkPagamento' => (function (): string {
+                $l = (string) ($_SESSION['payment_link_gerado'] ?? '');
+                unset($_SESSION['payment_link_gerado']);
+                return $l;
+            })(),
             'ok'           => '',
             'erro'         => '',
         ]));
@@ -274,6 +279,45 @@ final class ClientesController
             ['client_id' => $clienteId, 'plan_id' => $planoId, 'vps_id' => $vpsId, 'free' => true], $req);
 
         return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&ok=assinatura_criada');
+    }
+
+    /**
+     * Gera um link público de pagamento para um cliente + plano.
+     * O cliente abre o link sem login e paga por lá.
+     */
+    public function gerarLinkPagamento(Requisicao $req): Resposta
+    {
+        $clienteId = (int) ($req->post['client_id'] ?? 0);
+        $planoId   = (int) ($req->post['plan_id'] ?? 0);
+        $currency  = strtoupper(trim((string) ($req->post['currency'] ?? 'BRL'))) === 'USD' ? 'USD' : 'BRL';
+        $periodo   = (int) ($req->post['periodo'] ?? 1);
+
+        if ($clienteId <= 0 || $planoId <= 0) {
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&erro=link_dados');
+        }
+
+        try {
+            $service = new \LRV\App\Services\Billing\PaymentLinkService();
+            $resultado = $service->gerar(
+                $clienteId,
+                $planoId,
+                [],
+                $periodo,
+                $currency,
+                \LRV\Core\Auth::equipeId(),
+            );
+        } catch (\Throwable $e) {
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&erro=link_falha');
+        }
+
+        (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(),
+            'client.payment_link', 'payment_link', (int) ($resultado['id'] ?? 0),
+            ['client_id' => $clienteId, 'plan_id' => $planoId, 'currency' => $currency, 'periodo' => $periodo], $req);
+
+        // Guardar o link na sessão para exibir uma única vez na tela do cliente
+        $_SESSION['payment_link_gerado'] = (string) ($resultado['url'] ?? '');
+
+        return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&ok=link_gerado');
     }
 
     // ── helpers ─────────────────────────────────────────────
