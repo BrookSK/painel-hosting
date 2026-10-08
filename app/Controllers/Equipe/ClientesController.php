@@ -176,6 +176,15 @@ final class ClientesController
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->renderErro($id, $nome, $email, $phone, $cpf, 'E-mail inválido.');
         }
+
+        // CPF/CNPJ (aceita os dois). Opcional, mas se preenchido precisa ser válido.
+        // Normaliza para só dígitos para manter o banco consistente e o Asaas feliz.
+        if ($cpf !== '') {
+            if (!\LRV\Core\Documento::valido($cpf)) {
+                return $this->renderErro($id, $nome, $email, $phone, $cpf, 'CPF ou CNPJ inválido. Confira o número ou deixe o campo em branco.');
+            }
+            $cpf = \LRV\Core\Documento::normalizar($cpf);
+        }
         if ($id <= 0 && $senha === '') {
             return $this->renderErro($id, $nome, $email, $phone, $cpf, 'Informe uma senha para o novo cliente.');
         }

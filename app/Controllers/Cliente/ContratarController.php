@@ -96,9 +96,14 @@ final class ContratarController
             return Resposta::json(['ok' => false, 'erro' => 'Preencha todos os campos obrigatórios.'], 422);
         }
 
-        // CPF/CNPJ obrigatório apenas para BRL
-        if ($currency === 'BRL' && $cpfCnpj === '') {
-            return Resposta::json(['ok' => false, 'erro' => 'CPF/CNPJ é obrigatório para pagamento em Real.'], 422);
+        // CPF/CNPJ obrigatório e válido apenas para BRL (Asaas). Aceita CPF ou CNPJ.
+        if ($currency === 'BRL') {
+            if ($cpfCnpj === '') {
+                return Resposta::json(['ok' => false, 'erro' => 'CPF ou CNPJ é obrigatório para pagamento em Real.'], 422);
+            }
+            if (!\LRV\Core\Documento::valido($cpfCnpj)) {
+                return Resposta::json(['ok' => false, 'erro' => 'CPF ou CNPJ inválido. Confira o número informado.'], 422);
+            }
         }
 
         // USD: forçar Stripe
@@ -133,7 +138,7 @@ final class ContratarController
             $ins->execute([
                 ':n'   => $nome,
                 ':e'   => $email,
-                ':cpf' => preg_replace('/\D/', '', $cpfCnpj),
+                ':cpf' => $cpfCnpj !== '' ? \LRV\Core\Documento::normalizar($cpfCnpj) : null,
                 ':mph' => $mobilePhone !== '' ? $mobilePhone : null,
                 ':co'  => $country !== '' ? strtoupper(substr($country, 0, 2)) : null,
                 ':pl'  => in_array($prefLang, ['pt-BR', 'en-US', 'es-ES'], true) ? $prefLang : null,
@@ -228,7 +233,7 @@ final class ContratarController
                                 ], [
                                     'name' => $nome,
                                     'email' => $email,
-                                    'cpfCnpj' => preg_replace('/\D/', '', $cpfCnpj),
+                                    'cpfCnpj' => \LRV\Core\Documento::normalizar($cpfCnpj),
                                     'phone' => $mobilePhone !== '' ? $mobilePhone : null,
                                 ]);
                             } catch (\Throwable $cardErr) {

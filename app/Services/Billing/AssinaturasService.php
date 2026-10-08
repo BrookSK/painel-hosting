@@ -35,8 +35,9 @@ final class AssinaturasService
 
         $asaasId = (string) ($c['asaas_customer_id'] ?? '');
         if ($asaasId !== '') {
-            // Atualizar CPF/CNPJ no Asaas se temos localmente mas pode não ter sido enviado antes
-            $cpf = trim((string) ($c['cpf_cnpj'] ?? ''));
+            // Atualizar CPF/CNPJ no Asaas se temos localmente mas pode não ter sido enviado antes.
+            // Normaliza (só dígitos) — Asaas aceita CPF (11) ou CNPJ (14).
+            $cpf = \LRV\Core\Documento::normalizar((string) ($c['cpf_cnpj'] ?? ''));
             if ($cpf !== '') {
                 try {
                     $this->asaas->atualizarCliente($asaasId, ['cpfCnpj' => $cpf]);
@@ -52,7 +53,7 @@ final class AssinaturasService
             'email' => (string) ($c['email'] ?? ''),
         ];
 
-        $cpf = trim((string) ($c['cpf_cnpj'] ?? ''));
+        $cpf = \LRV\Core\Documento::normalizar((string) ($c['cpf_cnpj'] ?? ''));
         if ($cpf !== '') {
             $dados['cpfCnpj'] = $cpf;
         }

@@ -38,7 +38,8 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       </div>
       <div>
         <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">CPF / CNPJ</label>
-        <input type="text" name="cpf_cnpj" class="input" value="<?php echo View::e((string)($cliente['cpf_cnpj'] ?? '')); ?>" />
+        <input type="text" name="cpf_cnpj" id="cpfCnpjInput" class="input" value="<?php echo View::e(\LRV\Core\Documento::formatar((string)($cliente['cpf_cnpj'] ?? ''))); ?>" placeholder="CPF ou CNPJ" maxlength="18" inputmode="numeric" />
+        <p style="font-size:12px;color:#94a3b8;margin-top:4px;">Opcional. Aceita CPF ou CNPJ — necessário para emitir cobranças em Real (Asaas).</p>
       </div>
     </div>
 
@@ -57,5 +58,21 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
     </div>
   </form>
 </div>
+
+<script>
+(function(){
+  var el=document.getElementById('cpfCnpjInput');
+  if(!el) return;
+  el.addEventListener('input',function(){
+    var v=this.value.replace(/\D/g,'');
+    if(v.length<=11){
+      v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    }else{
+      v=v.substring(0,14).replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+    }
+    this.value=v;
+  });
+})();
+</script>
 
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>

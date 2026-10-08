@@ -67,17 +67,34 @@ final class AssinarPlanoController
             return Resposta::texto('Plano não disponível.', 403);
         }
 
-        // Salvar CPF/CNPJ se enviado e cliente não tem
-        $cpfEnviado = preg_replace('/\D/', '', trim((string)($req->post['cpf_cnpj'] ?? '')));
-        if ($cpfEnviado !== '') {
-            $pdo = \LRV\Core\BancoDeDados::pdo();
-            $pdo->prepare('UPDATE clients SET cpf_cnpj = :c WHERE id = :id AND (cpf_cnpj IS NULL OR cpf_cnpj = \'\')')
-                ->execute([':c' => $cpfEnviado, ':id' => $clienteId]);
-        }
-
         // Usar moeda selecionada pelo cliente no checkout (não o idioma do browser)
         $selectedCurrency = trim(strtoupper((string)($req->post['currency'] ?? '')));
         $isBrl = $selectedCurrency !== 'USD';
+
+        // CPF/CNPJ (aceita os dois). Para BRL (Asaas) é obrigatório e validado.
+        $cpfEnviado = \LRV\Core\Documento::normalizar((string)($req->post['cpf_cnpj'] ?? ''));
+        if ($cpfEnviado !== '') {
+            if (!\LRV\Core\Documento::valido($cpfEnviado)) {
+                return Resposta::json(['ok' => false, 'erro' => 'CPF ou CNPJ inválido. Confira o número informado.'], 422);
+            }
+            // Atualiza o documento do cliente (sobrescreve, pois pode estar incompleto/inválido)
+            \LRV\Core\BancoDeDados::pdo()
+                ->prepare('UPDATE clients SET cpf_cnpj = :c WHERE id = :id')
+                ->execute([':c' => $cpfEnviado, ':id' => $clienteId]);
+        }
+
+        if ($isBrl) {
+            // Garante que há um documento válido salvo antes de chamar o Asaas
+            $docAtual = $cpfEnviado;
+            if ($docAtual === '') {
+                $st = \LRV\Core\BancoDeDados::pdo()->prepare('SELECT cpf_cnpj FROM clients WHERE id = :id');
+                $st->execute([':id' => $clienteId]);
+                $docAtual = \LRV\Core\Documento::normalizar((string)($st->fetch()['cpf_cnpj'] ?? ''));
+            }
+            if (!\LRV\Core\Documento::valido($docAtual)) {
+                return Resposta::json(['ok' => false, 'erro' => 'Informe um CPF ou CNPJ válido para pagamento em Real.'], 422);
+            }
+        }
 
         // BRL → tudo via Asaas (PIX, BOLETO, CREDIT_CARD)
         // USD → só Stripe (cartão)

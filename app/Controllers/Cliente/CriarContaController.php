@@ -47,6 +47,19 @@ final class CriarContaController
         $phone = $in->postString('phone', 20, false);
         $mobilePhone = $in->postString('mobile_phone', 20, false);
 
+        // CPF/CNPJ é opcional aqui, mas se informado precisa ser válido (CPF ou CNPJ).
+        if ($cpfCnpj !== '') {
+            if (!\LRV\Core\Documento::valido($cpfCnpj)) {
+                $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
+                    'erro' => 'CPF ou CNPJ inválido. Confira o número ou deixe o campo em branco.',
+                    'nome' => $nome, 'email' => $email, 'cpf_cnpj' => $cpfCnpj,
+                    'phone' => $phone, 'mobile_phone' => $mobilePhone,
+                ]);
+                return Resposta::html($html, 422);
+            }
+            $cpfCnpj = \LRV\Core\Documento::normalizar($cpfCnpj);
+        }
+
         if ($in->temErros() || $nome === '' || $email === '' || $senha === '') {
             $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
                 'erro' => $in->temErros() ? $in->primeiroErro() : 'Preencha nome, e-mail e senha.',

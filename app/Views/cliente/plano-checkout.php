@@ -144,7 +144,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <?php if ($clienteCpf === ''): ?>
         <div style="margin-bottom:12px;" id="cpfField">
           <label style="display:block;font-size:13px;margin-bottom:6px;"><?php echo View::e(I18n::t('checkout.cpf_cnpj')); ?></label>
-          <input class="input" type="text" name="cpf_cnpj" placeholder="000.000.000-00" maxlength="18" inputmode="numeric" style="max-width:240px;" />
+          <input class="input" type="text" id="cpfCnpjInput" name="cpf_cnpj" placeholder="CPF ou CNPJ" maxlength="18" inputmode="numeric" style="max-width:240px;" />
+          <p style="font-size:12px;color:#94a3b8;margin-top:4px;"><?php echo View::e(I18n::t('checkout.cpf_obrigatorio')); ?></p>
         </div>
         <?php endif; ?>
 
@@ -337,6 +338,20 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       .catch(function(){erro.textContent='Erro de conexão.';erro.style.display='block';btn.disabled=false;btn.textContent='Assinar agora';});
     return false;
   };
+
+  // Máscara dinâmica de CPF/CNPJ (alterna conforme a quantidade de dígitos)
+  var docInput=document.getElementById('cpfCnpjInput');
+  if(docInput){
+    docInput.addEventListener('input',function(){
+      var v=this.value.replace(/\D/g,'');
+      if(v.length<=11){
+        v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+      }else{
+        v=v.substring(0,14).replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+      }
+      this.value=v;
+    });
+  }
 })();
 </script>
 

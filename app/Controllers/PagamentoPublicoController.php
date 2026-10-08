@@ -100,12 +100,27 @@ final class PagamentoPublicoController
             $addons = is_string($link['addons_json']) ? (json_decode($link['addons_json'], true) ?: []) : (array) $link['addons_json'];
         }
 
-        // Salvar CPF/CNPJ enviado se o cliente ainda não tiver
-        $cpfEnviado = preg_replace('/\D/', '', trim((string) ($req->post['cpf_cnpj'] ?? '')));
-        if ($cpfEnviado !== '') {
+        // CPF/CNPJ: o Asaas exige para emitir cobrança. Aceita CPF ou CNPJ, com
+        // validação de dígito verificador. Atualiza o cliente (sobrescreve) se válido.
+        $cpfEnviado = \LRV\Core\Documento::normalizar((string) ($req->post['cpf_cnpj'] ?? ''));
+        if ($cpfEnviado !== '' && \LRV\Core\Documento::valido($cpfEnviado)) {
             BancoDeDados::pdo()
-                ->prepare('UPDATE clients SET cpf_cnpj = :c WHERE id = :id AND (cpf_cnpj IS NULL OR cpf_cnpj = \'\')')
+                ->prepare('UPDATE clients SET cpf_cnpj = :c WHERE id = :id')
                 ->execute([':c' => $cpfEnviado, ':id' => $clienteId]);
+        }
+
+        // Para BRL (Asaas), CPF/CNPJ é obrigatório e deve ser válido.
+        if ($currency !== 'USD') {
+            $docAtual = $cpfEnviado;
+            if ($docAtual === '') {
+                $st = BancoDeDados::pdo()->prepare('SELECT cpf_cnpj FROM clients WHERE id = :id');
+                $st->execute([':id' => $clienteId]);
+                $docAtual = \LRV\Core\Documento::normalizar((string) ($st->fetch()['cpf_cnpj'] ?? ''));
+            }
+            if (!\LRV\Core\Documento::valido($docAtual)) {
+                $service->liberarReivindicacao($linkId);
+                return $this->renderErro('CPF/CNPJ necessário', 'Para gerar a cobrança, informe um CPF ou CNPJ válido na tela anterior.');
+            }
         }
 
         // USD → Stripe Checkout (redirect externo)
@@ -247,7 +262,7 @@ final class PagamentoPublicoController
         $expMonth = trim((string) ($req->post['exp_month'] ?? ''));
         $expYear = trim((string) ($req->post['exp_year'] ?? ''));
         $ccv = trim((string) ($req->post['ccv'] ?? ''));
-        $holderCpf = preg_replace('/\D/', '', (string) ($req->post['holder_cpf'] ?? ''));
+        $holderCpf = \LRV\Core\Documento::normalizar((string) ($req->post['holder_cpf'] ?? ''));
         $holderEmail = trim((string) ($req->post['holder_email'] ?? ''));
         $holderPhone = preg_replace('/\D/', '', (string) ($req->post['holder_phone'] ?? ''));
         $holderCep = preg_replace('/\D/', '', (string) ($req->post['holder_cep'] ?? ''));
@@ -258,6 +273,9 @@ final class PagamentoPublicoController
         }
         if ($holderCpf === '' || $holderEmail === '' || $holderPhone === '' || $holderCep === '' || $holderNumber === '') {
             return Resposta::json(['ok' => false, 'erro' => 'Preencha todos os dados do titular.'], 400);
+        }
+        if (!\LRV\Core\Documento::valido($holderCpf)) {
+            return Resposta::json(['ok' => false, 'erro' => 'CPF ou CNPJ do titular inválido.'], 400);
         }
 
         $api = new AsaasApi(new ClienteHttp());
