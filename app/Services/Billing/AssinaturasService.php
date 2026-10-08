@@ -33,19 +33,33 @@ final class AssinaturasService
             throw new \RuntimeException('Cliente não encontrado.');
         }
 
+        $cpf = \LRV\Core\Documento::normalizar((string) ($c['cpf_cnpj'] ?? ''));
+
         $asaasId = (string) ($c['asaas_customer_id'] ?? '');
         if ($asaasId !== '') {
-            // Atualizar CPF/CNPJ no Asaas se temos localmente mas pode não ter sido enviado antes.
-            // Normaliza (só dígitos) — Asaas aceita CPF (11) ou CNPJ (14).
-            $cpf = \LRV\Core\Documento::normalizar((string) ($c['cpf_cnpj'] ?? ''));
+            // Garantir que o customer no Asaas tenha o CPF/CNPJ atual.
+            // Se a atualização falhar porque o customer NÃO existe na conta/ambiente
+            // atual (ex.: id salvo era do sandbox e agora estamos em produção, ou o
+            // customer foi apagado), recriamos o customer em vez de estourar com
+            // "Cliente inválido ou não informado".
             if ($cpf !== '') {
                 try {
-                    $this->asaas->atualizarCliente($asaasId, ['cpfCnpj' => $cpf]);
-                } catch (\Throwable) {
-                    // Silencioso — pode já estar atualizado
+                    $this->asaas->atualizarCliente($asaasId, [
+                        'name' => (string) ($c['name'] ?? ''),
+                        'email' => (string) ($c['email'] ?? ''),
+                        'cpfCnpj' => $cpf,
+                    ]);
+                    return $asaasId;
+                } catch (\Throwable $e) {
+                    if (!$this->customerInexistente($e)) {
+                        throw $e; // erro real (ex.: documento inválido) — propaga
+                    }
+                    // Customer não existe neste ambiente: zera e recria abaixo.
+                    $asaasId = '';
                 }
+            } else {
+                return $asaasId;
             }
-            return $asaasId;
         }
 
         $dados = [
@@ -53,7 +67,6 @@ final class AssinaturasService
             'email' => (string) ($c['email'] ?? ''),
         ];
 
-        $cpf = \LRV\Core\Documento::normalizar((string) ($c['cpf_cnpj'] ?? ''));
         if ($cpf !== '') {
             $dados['cpfCnpj'] = $cpf;
         }
@@ -78,6 +91,36 @@ final class AssinaturasService
         $up->execute([':a' => $novoId, ':id' => $clientId]);
 
         return $novoId;
+    }
+
+    /**
+     * Detecta se o erro do Asaas indica que o customer não existe na conta/ambiente
+     * atual (HTTP 404 ou código invalid_customer). Nesses casos recriamos o customer.
+     */
+    private function customerInexistente(\Throwable $e): bool
+    {
+        if ($e instanceof \LRV\App\Services\Billing\Asaas\AsaasExcecao) {
+            if ($e->status === 404) {
+                return true;
+            }
+            $json = is_array($e->respostaJson) ? $e->respostaJson : [];
+            $erros = $json['errors'] ?? [];
+            if (is_array($erros)) {
+                foreach ($erros as $err) {
+                    $code = strtolower((string) ($err['code'] ?? ''));
+                    $desc = strtolower((string) ($err['description'] ?? ''));
+                    if (str_contains($code, 'invalid_customer')
+                        || str_contains($desc, 'não encontrado')
+                        || str_contains($desc, 'nao encontrado')
+                        || str_contains($desc, 'not found')
+                        || str_contains($desc, 'inválido ou não informado')
+                        || str_contains($desc, 'invalido ou nao informado')) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType, array $addons = [], int $periodo = 1): array
