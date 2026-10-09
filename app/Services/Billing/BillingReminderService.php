@@ -122,11 +122,24 @@ final class BillingReminderService
         $dueFormatada = date('d/m/Y', $dueDateTs);
         $appUrl = ConfiguracoesSistema::appUrlBase();
 
+        // Para PIX/BOLETO não há cobrança automática — o cliente precisa pagar a cada
+        // ciclo. Gera um link de pagamento pronto para incluir no e-mail (botão "Pagar agora"),
+        // útil para clientes que pagaram via link e não acessam o painel.
+        $linkPagamento = '';
+        if (in_array($billingType, ['PIX', 'BOLETO'], true)) {
+            try {
+                $gerado = (new PaymentLinkService())->gerarRenovacao($subId);
+                if (is_array($gerado)) {
+                    $linkPagamento = (string) ($gerado['url'] ?? '');
+                }
+            } catch (\Throwable) {}
+        }
+
         if ($tipo === 'antes') {
-            $this->enviarLembreteVencimento($email, $nome, $plano, $preco, $dueFormatada, $marco, $billingType, $appUrl);
+            $this->enviarLembreteVencimento($email, $nome, $plano, $preco, $dueFormatada, $marco, $billingType, $appUrl, $linkPagamento);
             $log("Lembrete enviado: assinatura #{$subId}, {$marco} dias antes do vencimento.");
         } else {
-            $this->enviarLembreteAtraso($email, $nome, $plano, $preco, $dueFormatada, $marco, $billingType, $appUrl);
+            $this->enviarLembreteAtraso($email, $nome, $plano, $preco, $dueFormatada, $marco, $billingType, $appUrl, $linkPagamento);
             $log("Lembrete de atraso enviado: assinatura #{$subId}, {$marco} dias de atraso.");
         }
 
@@ -138,6 +151,7 @@ final class BillingReminderService
     private function enviarLembreteVencimento(
         string $email, string $nome, string $plano, float $preco,
         string $dueFormatada, int $diasAntes, string $billingType, string $appUrl,
+        string $linkPagamento = '',
     ): void {
         $saudacao = $nome !== '' ? 'Olá ' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . ',' : 'Olá,';
 
@@ -169,14 +183,16 @@ final class BillingReminderService
                . '<tr><td style="padding:8px 12px;font-weight:600;color:#64748b;">Pagamento</td>'
                . '<td style="padding:8px 12px;">' . htmlspecialchars($metodo, ENT_QUOTES, 'UTF-8') . '</td></tr>'
                . '</table>'
-               . '<p style="margin:0 0 12px;">Acesse o painel para efetuar o pagamento e evitar a suspensão do serviço.</p>';
+               . '<p style="margin:0 0 12px;">' . ($linkPagamento !== ''
+                    ? 'Clique no botão abaixo para pagar agora, de forma rápida e segura.'
+                    : 'Acesse o painel para efetuar o pagamento e evitar a suspensão do serviço.') . '</p>';
 
-        $html = EmailTemplate::renderizar(
-            $titulo,
-            $corpo,
-            'Acessar Painel',
-            $appUrl . '/cliente/assinaturas',
-        );
+        // Para PIX/BOLETO usa o link direto de pagamento; senão, manda para o painel.
+        [$btnTexto, $btnUrl] = $linkPagamento !== ''
+            ? ['Pagar agora', $linkPagamento]
+            : ['Acessar Painel', $appUrl . '/cliente/assinaturas'];
+
+        $html = EmailTemplate::renderizar($titulo, $corpo, $btnTexto, $btnUrl);
 
         try {
             (new SmtpMailer())->enviar($email, $titulo, $html, true);
@@ -186,6 +202,7 @@ final class BillingReminderService
     private function enviarLembreteAtraso(
         string $email, string $nome, string $plano, float $preco,
         string $dueFormatada, int $diasAtraso, string $billingType, string $appUrl,
+        string $linkPagamento = '',
     ): void {
         $saudacao = $nome !== '' ? 'Olá ' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . ',' : 'Olá,';
 
@@ -210,12 +227,11 @@ final class BillingReminderService
                . '</table>'
                . '<p style="margin:0 0 12px;color:#dc2626;font-weight:600;">Regularize o pagamento para evitar a suspensão do seu serviço.</p>';
 
-        $html = EmailTemplate::renderizar(
-            $titulo,
-            $corpo,
-            'Regularizar Pagamento',
-            $appUrl . '/cliente/assinaturas',
-        );
+        [$btnTexto, $btnUrl] = $linkPagamento !== ''
+            ? ['Pagar agora', $linkPagamento]
+            : ['Regularizar Pagamento', $appUrl . '/cliente/assinaturas'];
+
+        $html = EmailTemplate::renderizar($titulo, $corpo, $btnTexto, $btnUrl);
 
         try {
             (new SmtpMailer())->enviar($email, $titulo, $html, true);

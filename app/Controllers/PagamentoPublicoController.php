@@ -326,6 +326,90 @@ final class PagamentoPublicoController
         return Resposta::json(['ok' => true, 'pago' => $pago, 'status' => $status]);
     }
 
+    /**
+     * POST /pagar/{token}/trocar — cancela a cobrança/assinatura atual (Asaas) e
+     * volta à tela de escolha de forma de pagamento, para o cliente escolher outra.
+     * Não permite trocar se já estiver pago.
+     */
+    public function trocar(Requisicao $req): Resposta
+    {
+        $token = (string) ($req->params['token'] ?? '');
+        $service = new PaymentLinkService();
+        $link = $service->resolverPorToken($token);
+
+        if ($link === null) {
+            return $this->renderErro('Link indisponível', 'Este link de pagamento não está mais disponível.');
+        }
+        // Já pago: não há o que trocar.
+        if ((string) ($link['status'] ?? '') === 'paid') {
+            return Resposta::redirecionar('/pagar/' . $token);
+        }
+
+        $subscriptionId = (int) ($link['subscription_id'] ?? 0);
+        if ($subscriptionId > 0) {
+            $pdo = BancoDeDados::pdo();
+            $stmt = $pdo->prepare('SELECT asaas_subscription_id, vps_id, status FROM subscriptions WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $subscriptionId]);
+            $sub = $stmt->fetch();
+
+            if (is_array($sub)) {
+                $subStatus = strtoupper((string) ($sub['status'] ?? ''));
+                // Segurança: se já estiver ativa (paga/confirmada localmente), não troca.
+                if ($subStatus === 'ACTIVE') {
+                    return Resposta::redirecionar('/pagar/' . $token);
+                }
+
+                $asaasSubId = (string) ($sub['asaas_subscription_id'] ?? '');
+
+                // RACE GUARD: antes de cancelar, consultar o Asaas AO VIVO. Se já houver
+                // cobrança paga/confirmada (ex.: PIX pago mas webhook ainda não processou),
+                // NÃO cancela nem apaga — redireciona para a tela, que mostrará o pago.
+                if ($asaasSubId !== '') {
+                    try {
+                        $cobrancas = (new AsaasApi(new ClienteHttp()))->listarCobrancasDaAssinatura($asaasSubId);
+                        foreach (($cobrancas['data'] ?? []) as $c) {
+                            $st = strtoupper((string) ($c['status'] ?? ''));
+                            if (in_array($st, ['CONFIRMED', 'RECEIVED', 'RECEIVED_IN_CASH'], true)) {
+                                return Resposta::redirecionar('/pagar/' . $token);
+                            }
+                        }
+                    } catch (\Throwable) {
+                        // Não conseguiu confirmar o estado no gateway: por segurança, aborta
+                        // a troca (melhor manter a cobrança atual do que arriscar cancelar paga).
+                        return Resposta::redirecionar('/pagar/' . $token);
+                    }
+
+                    // Cancela a assinatura no Asaas (cancela as cobranças pendentes dela).
+                    // Se falhar, NÃO apaga nada local — o vínculo precisa ser preservado.
+                    try {
+                        (new AsaasApi(new ClienteHttp()))->cancelarAssinatura($asaasSubId);
+                    } catch (\Throwable) {
+                        return Resposta::redirecionar('/pagar/' . $token);
+                    }
+                }
+
+                // Marca a subscription como CANCELED (não apaga — o webhook ainda precisa
+                // de uma linha para reconciliar caso um pagamento tardio chegue) e remove
+                // a VPS pendente. Ordem: anular vps_id na subscription ANTES de apagar a VPS
+                // (FK subscriptions.vps_id → vps.id).
+                try {
+                    $vpsId = (int) ($sub['vps_id'] ?? 0);
+                    $pdo->prepare("UPDATE subscriptions SET status = 'CANCELED', vps_id = NULL WHERE id = :id AND status NOT IN ('ACTIVE')")
+                        ->execute([':id' => $subscriptionId]);
+                    if ($vpsId > 0) {
+                        $pdo->prepare("DELETE FROM vps WHERE id = :id AND status IN ('pending_payment','pending_provisioning')")
+                            ->execute([':id' => $vpsId]);
+                    }
+                } catch (\Throwable) {}
+            }
+        }
+
+        // Desvincula o link e volta para a escolha de forma de pagamento.
+        $service->desvincularAssinatura((int) $link['id']);
+
+        return Resposta::redirecionar('/pagar/' . $token);
+    }
+
     // ── render helpers ───────────────────────────────────────────────
 
     /**

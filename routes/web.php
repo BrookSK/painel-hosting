@@ -288,6 +288,7 @@ $roteador->get('/pagar/{token}', [\LRV\App\Controllers\PagamentoPublicoControlle
 $roteador->post('/pagar/{token}/iniciar', [\LRV\App\Controllers\PagamentoPublicoController::class, 'iniciar'], [Middlewares::rateLimitIp('pay_link_init', 15, 60)]);
 $roteador->get('/pagar/{token}/status', [\LRV\App\Controllers\PagamentoPublicoController::class, 'status'], [Middlewares::rateLimitIp('pay_link_status', 120, 60)]);
 $roteador->post('/pagar/{token}/cartao', [\LRV\App\Controllers\PagamentoPublicoController::class, 'cartao'], [Middlewares::rateLimitIp('pay_link_card', 10, 60)]);
+$roteador->post('/pagar/{token}/trocar', [\LRV\App\Controllers\PagamentoPublicoController::class, 'trocar'], [Middlewares::rateLimitIp('pay_link_trocar', 15, 60)]);
 
 // 2FA equipe
 $roteador->get('/equipe/2fa/configurar', [DoisFatoresController::class, 'configurar'], [Middlewares::exigirLoginEquipe()]);

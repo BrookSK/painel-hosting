@@ -67,6 +67,12 @@ final class AsaasApi
         ]);
     }
 
+    /** Cancela (remove) uma assinatura no Asaas. Também cancela cobranças pendentes dela. */
+    public function cancelarAssinatura(string $subscriptionId): array
+    {
+        return $this->request('DELETE', '/subscriptions/' . rawurlencode($subscriptionId), null);
+    }
+
     private function get(string $path): array
     {
         return $this->request('GET', $path, null);

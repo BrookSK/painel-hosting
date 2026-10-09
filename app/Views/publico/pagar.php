@@ -65,7 +65,7 @@ $boletoLinha = (string)($boletoData['identificationField'] ?? '');
     }
     .pp-wrap{width:100%;max-width:460px;margin:0 auto;}
     .pp-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:22px;}
-    .pp-brand img{height:34px;width:auto;}
+    .pp-brand img{height:30px;width:auto;background:#0f172a;padding:8px 16px;border-radius:12px;box-shadow:0 4px 14px -4px rgba(15,23,42,.4);}
     .pp-brand-name{font-size:17px;font-weight:800;color:var(--pp-ink);}
     .pp-card{
       background:#fff;border:1px solid var(--pp-line);border-radius:20px;padding:28px 26px;
@@ -316,6 +316,15 @@ $boletoLinha = (string)($boletoData['identificationField'] ?? '');
   <div class="pp-card" style="text-align:center;">
     <p class="pp-sub" style="margin:0;">Não foi possível carregar os dados de pagamento. Atualize a página ou solicite um novo link.</p>
   </div>
+  <?php endif; ?>
+
+  <?php if (!$pago && $token !== ''): ?>
+  <form method="post" action="/pagar/<?php echo View::e($token); ?>/trocar" style="margin-top:-4px;">
+    <button type="submit" class="pp-btn pp-btn-sec" onclick="return confirm('Trocar a forma de pagamento? A cobrança atual será cancelada e você poderá escolher outra opção.');">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Trocar forma de pagamento
+    </button>
+  </form>
   <?php endif; ?>
 
   <p class="pp-foot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Seus dados de cartão não são armazenados por nós</p>

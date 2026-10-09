@@ -76,6 +76,58 @@ final class PaymentLinkService
     }
 
     /**
+     * Gera um link de RENOVAÇÃO para uma assinatura já existente (PIX/boleto não têm
+     * cobrança automática no cartão, então o cliente precisa pagar a cada ciclo).
+     * O link já vem vinculado à subscription, de modo que ao abri-lo o cliente vê
+     * direto a cobrança pendente que o Asaas gerou — sem criar nova assinatura.
+     *
+     * Gera sempre um token novo (o token em claro não é recuperável, só o hash é
+     * persistido). Para não acumular lixo, expira os links de renovação pendentes
+     * anteriores da mesma assinatura antes de criar o novo.
+     *
+     * @return array{id:int, token:string, url:string}|null
+     */
+    public function gerarRenovacao(int $subscriptionId, int $expiraDias = 15): ?array
+    {
+        $pdo = BancoDeDados::pdo();
+
+        $st = $pdo->prepare('SELECT id, client_id, plan_id FROM subscriptions WHERE id = :id LIMIT 1');
+        $st->execute([':id' => $subscriptionId]);
+        $sub = $st->fetch();
+        if (!is_array($sub) || (int) ($sub['plan_id'] ?? 0) <= 0 || (int) ($sub['client_id'] ?? 0) <= 0) {
+            return null;
+        }
+
+        // Expira links de renovação pendentes anteriores desta mesma assinatura,
+        // para não deixar vários tokens válidos simultâneos apontando ao mesmo pagamento.
+        $pdo->prepare("UPDATE payment_links SET status = 'expired' WHERE subscription_id = :s AND status = 'pending'")
+            ->execute([':s' => $subscriptionId]);
+
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expiresAt = date('Y-m-d H:i:s', time() + $expiraDias * 86400);
+
+        $pdo->prepare(
+            'INSERT INTO payment_links
+               (client_id, plan_id, periodo, currency, token_hash, token_hint, status, subscription_id, expires_at, created_at)
+             VALUES (:c, :p, 1, :cur, :th, :hint, :st, :sid, :exp, :cr)'
+        )->execute([
+            ':c' => (int) $sub['client_id'],
+            ':p' => (int) ($sub['plan_id'] ?? 0),
+            ':cur' => 'BRL',
+            ':th' => $tokenHash,
+            ':hint' => substr($token, -6),
+            ':st' => 'pending',
+            ':sid' => $subscriptionId,
+            ':exp' => $expiresAt,
+            ':cr' => date('Y-m-d H:i:s'),
+        ]);
+
+        $url = rtrim(ConfiguracoesSistema::appUrlBase(), '/') . '/pagar/' . $token;
+        return ['id' => (int) $pdo->lastInsertId(), 'token' => $token, 'url' => $url];
+    }
+
+    /**
      * Resolve um link pelo token (em claro). Retorna o registro + dados do cliente/plano,
      * ou null se inválido/expirado. Não bloqueia links já pagos (para mostrar a confirmação),
      * mas sinaliza o status.
@@ -162,6 +214,17 @@ final class PaymentLinkService
     {
         BancoDeDados::pdo()
             ->prepare("UPDATE payment_links SET status = 'paid', used_at = NOW() WHERE id = :id")
+            ->execute([':id' => $linkId]);
+    }
+
+    /**
+     * Reseta o link para o estado inicial (sem assinatura, pending), permitindo que o
+     * cliente escolha outra forma de pagamento. Usado ao "trocar forma de pagamento".
+     */
+    public function desvincularAssinatura(int $linkId): void
+    {
+        BancoDeDados::pdo()
+            ->prepare("UPDATE payment_links SET subscription_id = NULL, status = 'pending' WHERE id = :id AND status <> 'paid'")
             ->execute([':id' => $linkId]);
     }
 
