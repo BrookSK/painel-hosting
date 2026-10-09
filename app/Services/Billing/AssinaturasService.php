@@ -123,7 +123,7 @@ final class AssinaturasService
         return false;
     }
 
-    public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType, array $addons = [], int $periodo = 1): array
+    public function criarAssinaturaDoPlano(int $clientId, int $planId, string $billingType, array $addons = [], int $periodo = 1, ?string $primeiroVencimento = null): array
     {
         $pdo = BancoDeDados::pdo();
 
@@ -214,7 +214,15 @@ final class AssinaturasService
 
             $vpsId = (int) $pdo->lastInsertId();
 
+            // Vencimento da 1ª cobrança: usa a data definida pelo admin (se válida e não
+            // anterior a hoje); senão, mantém o padrão (+1 dia mensal / +1 ano anual).
             $due = (new DateTimeImmutable('now'))->modify($dueDelta)->format('Y-m-d');
+            if ($primeiroVencimento !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $primeiroVencimento) === 1) {
+                $hojeStr = (new DateTimeImmutable('today'))->format('Y-m-d');
+                if ($primeiroVencimento >= $hojeStr) {
+                    $due = $primeiroVencimento;
+                }
+            }
 
             $respAss = $this->asaas->criarAssinatura([
                 'customer' => $customerId,

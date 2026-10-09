@@ -53,6 +53,7 @@ if (count($nomePartes) >= 2) {
 $erroMsg = match ($erro) {
     'link_dados' => 'Dados inválidos para gerar o link.',
     'link_falha' => 'Não foi possível gerar o link de pagamento.',
+    'link_data' => 'Data de vencimento inválida (deve ser hoje ou futura).',
     '' => '',
     default => $erro,
 };
@@ -241,6 +242,11 @@ $erroMsg = match ($erro) {
             <option value="12">Anual</option>
           </select>
         </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:13px;font-weight:500;color:#475569;margin-bottom:6px;">Vencimento do 1º pagamento <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
+        <input type="date" name="first_due_date" class="input" min="<?php echo date('Y-m-d'); ?>" />
+        <p style="font-size:12px;color:#64748b;margin-top:4px;">Data limite para o cliente pagar a primeira cobrança (BRL/Asaas). Em branco = vence no dia seguinte.</p>
       </div>
       <button type="submit" class="botao" style="width:100%;"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Gerar link</button>
     </form>

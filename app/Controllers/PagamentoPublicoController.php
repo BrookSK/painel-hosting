@@ -146,9 +146,10 @@ final class PagamentoPublicoController
         $metodo = strtoupper(trim((string) ($req->post['metodo'] ?? 'PIX')));
         $billingType = in_array($metodo, ['PIX', 'BOLETO', 'CREDIT_CARD'], true) ? $metodo : 'PIX';
 
+        $primeiroVenc = trim((string) ($link['first_due_date'] ?? '')) ?: null;
         try {
             $resultado = (new AssinaturasService(new AsaasApi(new ClienteHttp())))
-                ->criarAssinaturaDoPlano($clienteId, $planoId, $billingType, $addons, $periodo);
+                ->criarAssinaturaDoPlano($clienteId, $planoId, $billingType, $addons, $periodo, $primeiroVenc);
         } catch (\Throwable $e) {
             $service->liberarReivindicacao($linkId);
             $msg = $e instanceof \LRV\App\Services\Billing\Asaas\AsaasExcecao && is_array($e->respostaJson)

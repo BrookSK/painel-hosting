@@ -28,6 +28,7 @@ final class PaymentLinkService
         string $currency = 'BRL',
         ?int $createdBy = null,
         int $expiraDias = self::EXPIRA_PADRAO_DIAS,
+        ?string $primeiroVencimento = null,
     ): array {
         $pdo = BancoDeDados::pdo();
 
@@ -47,19 +48,28 @@ final class PaymentLinkService
         $currency = strtoupper(trim($currency)) === 'USD' ? 'USD' : 'BRL';
         $periodo = $periodo >= 12 ? 12 : ($periodo >= 6 ? 6 : 1);
 
+        // Data do primeiro vencimento (opcional). Só aceita formato Y-m-d e não anterior a hoje.
+        $firstDue = null;
+        if ($primeiroVencimento !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $primeiroVencimento) === 1) {
+            if ($primeiroVencimento >= date('Y-m-d')) {
+                $firstDue = $primeiroVencimento;
+            }
+        }
+
         $token = bin2hex(random_bytes(32)); // 64 chars hex
         $tokenHash = hash('sha256', $token);
         $expiresAt = $expiraDias > 0 ? date('Y-m-d H:i:s', time() + $expiraDias * 86400) : null;
 
         $pdo->prepare(
             'INSERT INTO payment_links
-               (client_id, plan_id, addons_json, periodo, currency, token_hash, token_hint, status, created_by, expires_at, created_at)
-             VALUES (:c, :p, :aj, :per, :cur, :th, :hint, :st, :by, :exp, :cr)'
+               (client_id, plan_id, addons_json, periodo, first_due_date, currency, token_hash, token_hint, status, created_by, expires_at, created_at)
+             VALUES (:c, :p, :aj, :per, :fdd, :cur, :th, :hint, :st, :by, :exp, :cr)'
         )->execute([
             ':c' => $clienteId,
             ':p' => $planoId,
             ':aj' => !empty($addons) ? json_encode($addons, JSON_UNESCAPED_UNICODE) : null,
             ':per' => $periodo,
+            ':fdd' => $firstDue,
             ':cur' => $currency,
             ':th' => $tokenHash,
             ':hint' => substr($token, -6),

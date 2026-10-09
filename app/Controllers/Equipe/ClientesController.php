@@ -301,6 +301,16 @@ final class ClientesController
         $currency  = strtoupper(trim((string) ($req->post['currency'] ?? 'BRL'))) === 'USD' ? 'USD' : 'BRL';
         $periodo   = (int) ($req->post['periodo'] ?? 1);
 
+        // Data limite do primeiro pagamento (opcional). Só vale para BRL (Asaas).
+        $primeiroVenc = trim((string) ($req->post['first_due_date'] ?? ''));
+        if ($primeiroVenc !== '') {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $primeiroVenc) !== 1 || $primeiroVenc < date('Y-m-d')) {
+                return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&erro=link_data');
+            }
+        } else {
+            $primeiroVenc = null;
+        }
+
         if ($clienteId <= 0 || $planoId <= 0) {
             return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&erro=link_dados');
         }
@@ -314,6 +324,8 @@ final class ClientesController
                 $periodo,
                 $currency,
                 \LRV\Core\Auth::equipeId(),
+                30,
+                $primeiroVenc,
             );
         } catch (\Throwable $e) {
             return Resposta::redirecionar('/equipe/clientes/ver?id=' . $clienteId . '&erro=link_falha');
