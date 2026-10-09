@@ -132,6 +132,9 @@ function _badgeVps(string $st): string {
               <a class="botao ghost sm" href="/cliente/assinaturas/upgrade?sub=<?php echo $subId; ?>" style="border-color:#4F46E5;color:#4F46E5;">⬆ Alterar plano</a>
               <a class="botao ghost sm" href="/cliente/assinaturas/addons?sub=<?php echo $subId; ?>" style="border-color:#16a34a;color:#16a34a;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Serviços adicionais</a>
             <?php endif; ?>
+            <?php if (in_array($status, ['ACTIVE', 'active', 'OVERDUE', 'PENDING'], true)): ?>
+              <button type="button" class="botao ghost sm" style="border-color:#dc2626;color:#dc2626;" onclick="cancelarAssinatura(<?php echo $subId; ?>)"><svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancelar assinatura</button>
+            <?php endif; ?>
             <?php
               // Mostrar botão "Renovar" se assinatura anual perto do vencimento (30 dias) ou vencida
               $diasParaVencer = null;
@@ -215,5 +218,21 @@ function _badgeVps(string $st): string {
   </div>
 
 <?php endif; ?>
+
+<script>
+function cancelarAssinatura(subId){
+  if(!confirm('Tem certeza que deseja cancelar esta assinatura?\n\nA cobrança recorrente será interrompida e o serviço será suspenso. Esta ação não pode ser desfeita por aqui — para reativar, será necessário contratar novamente.')) return;
+  var fd = new FormData();
+  fd.append('_csrf', '<?php echo View::e(\LRV\Core\Csrf::token()); ?>');
+  fd.append('subscription_id', subId);
+  fetch('/cliente/assinaturas/cancelar', { method:'POST', body:fd, credentials:'same-origin' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){ alert(d.mensagem || 'Assinatura cancelada.'); location.reload(); }
+      else { alert(d.erro || 'Não foi possível cancelar.'); }
+    })
+    .catch(function(){ alert('Erro de conexão. Tente novamente.'); });
+}
+</script>
 
 <?php require __DIR__ . '/../_partials/layout-cliente-fim.php'; ?>

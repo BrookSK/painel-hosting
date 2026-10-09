@@ -10,6 +10,22 @@ use LRV\Core\ConfiguracoesSistema;
 
 final class StripeCheckoutService
 {
+    /**
+     * Cancela imediatamente uma assinatura recorrente no Stripe.
+     */
+    public function cancelarAssinatura(string $stripeSubscriptionId): void
+    {
+        $secretKey = ConfiguracoesSistema::stripeSecretKey();
+        if ($secretKey === '') {
+            throw new \RuntimeException('Stripe não configurado (secret key ausente).');
+        }
+        if (trim($stripeSubscriptionId) === '') {
+            return;
+        }
+        $stripe = new \Stripe\StripeClient($secretKey);
+        $stripe->subscriptions->cancel($stripeSubscriptionId);
+    }
+
     public function criarCheckoutAssinaturaDoPlano(int $clientId, int $planId, array $addons = [], int $periodo = 1): array
     {
         $secretKey = ConfiguracoesSistema::stripeSecretKey();

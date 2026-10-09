@@ -320,6 +320,7 @@ $roteador->post('/cliente/assinaturas/upgrade', [\LRV\App\Controllers\Cliente\As
 $roteador->get('/cliente/assinaturas/addons', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'addons'], [Middlewares::exigirLoginCliente()]);
 $roteador->post('/cliente/assinaturas/addons/contratar', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'contratarAddon'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('addon_sub', 10, 60)]);
 $roteador->post('/cliente/assinaturas/addons/cancelar', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'cancelarAddon'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/assinaturas/cancelar', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'cancelar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('sub_cancel', 5, 60)]);
 $roteador->post('/cliente/assinaturas/reembolso', [\LRV\App\Controllers\Cliente\AssinaturasController::class, 'solicitarReembolso'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/ajuda', [\LRV\App\Controllers\Cliente\AjudaController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::bloquearClienteGerenciado()]);
 

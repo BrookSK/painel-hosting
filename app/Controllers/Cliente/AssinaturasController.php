@@ -239,6 +239,79 @@ final class AssinaturasController
         }
     }
 
+    /**
+     * Cancela uma assinatura: cancela no Asaas (interrompe a cobrança recorrente),
+     * marca a subscription local como CANCELED e agenda a suspensão da VPS.
+     * O serviço fica ativo até o fim do ciclo já pago (não há reembolso automático).
+     */
+    public function cancelar(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) {
+            return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+        }
+
+        $subscriptionId = (int) ($req->post['subscription_id'] ?? 0);
+        if ($subscriptionId <= 0) {
+            return Resposta::json(['ok' => false, 'erro' => 'Assinatura inválida.'], 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT id, status, vps_id, asaas_subscription_id, stripe_subscription_id
+             FROM subscriptions WHERE id = :id AND client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $subscriptionId, ':c' => $clienteId]);
+        $sub = $stmt->fetch();
+
+        if (!is_array($sub)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Assinatura não encontrada.'], 404);
+        }
+
+        $statusAtual = strtoupper((string) ($sub['status'] ?? ''));
+        if (in_array($statusAtual, ['CANCELED', 'EXPIRED'], true)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Esta assinatura já está encerrada.'], 400);
+        }
+
+        // Cancelar a recorrência no gateway correspondente.
+        $asaasSubId = (string) ($sub['asaas_subscription_id'] ?? '');
+        $stripeSubId = (string) ($sub['stripe_subscription_id'] ?? '');
+
+        if ($asaasSubId !== '') {
+            try {
+                (new AsaasApi(new ClienteHttp()))->cancelarAssinatura($asaasSubId);
+            } catch (\Throwable $e) {
+                return Resposta::json(['ok' => false, 'erro' => 'Não foi possível cancelar no gateway de pagamento. Tente novamente ou abra um chamado.'], 502);
+            }
+        } elseif ($stripeSubId !== '') {
+            try {
+                (new \LRV\App\Services\Billing\Stripe\StripeCheckoutService())->cancelarAssinatura($stripeSubId);
+            } catch (\Throwable $e) {
+                return Resposta::json(['ok' => false, 'erro' => 'Não foi possível cancelar no gateway de pagamento. Tente novamente ou abra um chamado.'], 502);
+            }
+        }
+
+        // Marcar como cancelada localmente (preserva histórico).
+        $pdo->prepare("UPDATE subscriptions SET status = 'CANCELED' WHERE id = :id")
+            ->execute([':id' => $subscriptionId]);
+
+        // Agendar suspensão da VPS (tira o serviço do ar). Mantém os dados para o caso
+        // de o cliente querer reativar; a remoção definitiva é decisão da equipe.
+        $vpsId = (int) ($sub['vps_id'] ?? 0);
+        if ($vpsId > 0) {
+            try {
+                (new \LRV\Core\Jobs\RepositorioJobs())->criar('suspender_vps', ['vps_id' => $vpsId]);
+            } catch (\Throwable) {}
+        }
+
+        (new \LRV\App\Services\Audit\AuditLogService())->registrar(
+            'client', $clienteId, 'billing.cancel_subscription', 'subscription', $subscriptionId,
+            ['vps_id' => $vpsId], $req,
+        );
+
+        return Resposta::json(['ok' => true, 'mensagem' => 'Assinatura cancelada. Seu serviço permanece ativo até o fim do período já pago.']);
+    }
+
     public function solicitarReembolso(Requisicao $req): Resposta
     {
         $clienteId = Auth::clienteId();
