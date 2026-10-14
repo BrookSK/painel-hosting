@@ -130,8 +130,16 @@ final class ClientesController
                 unset($_SESSION['payment_link_gerado']);
                 return $l;
             })(),
-            'ok'           => '',
-            'erro'         => '',
+            'ok'           => (function (): string {
+                $m = (string) ($_SESSION['flash_success'] ?? '');
+                unset($_SESSION['flash_success']);
+                return $m;
+            })(),
+            'erro'         => (function (): string {
+                $m = (string) ($_SESSION['flash_error'] ?? '');
+                unset($_SESSION['flash_error']);
+                return $m;
+            })(),
         ]));
     }
 
@@ -410,73 +418,64 @@ final class ClientesController
             return Resposta::texto('Cliente não encontrado.', 404);
         }
 
-        $pdo->beginTransaction();
+        // Exclusão completa em segundo plano: cancela cobranças, remove containers e
+        // dados no servidor e apaga tudo do banco. O cliente é bloqueado na hora.
         try {
-            // Deletar em ordem de dependência (filhos primeiro)
-
-            // Terminal sessions e tokens
-            $pdo->prepare('DELETE FROM client_terminal_sessions WHERE client_id = :c')->execute([':c' => $id]);
-            $pdo->prepare('DELETE FROM client_terminal_tokens WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Chat: messages → rooms → tokens
-            $pdo->exec("DELETE cm FROM chat_messages cm INNER JOIN chat_rooms cr ON cr.id = cm.room_id WHERE cr.client_id = {$id}");
-            $pdo->prepare('DELETE FROM chat_tokens WHERE client_id = :c')->execute([':c' => $id]);
-            $pdo->prepare('DELETE FROM chat_rooms WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Satisfaction surveys
-            $pdo->prepare('DELETE FROM satisfaction_surveys WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Tickets: messages → tickets
-            $pdo->exec("DELETE tm FROM ticket_messages tm INNER JOIN tickets t ON t.id = tm.ticket_id WHERE t.client_id = {$id}");
-            $pdo->prepare('DELETE FROM tickets WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Emails e domínios
-            $pdo->prepare('DELETE FROM client_emails WHERE client_id = :c')->execute([':c' => $id]);
-            $pdo->prepare('DELETE FROM client_domains WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Git deployments e databases
-            $pdo->prepare('DELETE FROM git_deployments WHERE client_id = :c')->execute([':c' => $id]);
-            $pdo->prepare('DELETE FROM client_databases WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Notificações
-            $pdo->prepare('DELETE FROM client_notifications WHERE client_id = :c')->execute([':c' => $id]);
-
-            // TOTP
-            $pdo->prepare('DELETE FROM client_totp WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Trials
-            $pdo->prepare('DELETE FROM client_trials WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Status services (nullable client_id)
-            $pdo->prepare('UPDATE status_services SET client_id = NULL WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Subscriptions (depende de vps)
-            $pdo->prepare('DELETE FROM subscriptions WHERE client_id = :c')->execute([':c' => $id]);
-
-            // VPS: applications → ports → vps
-            $vpsIds = $pdo->prepare('SELECT id FROM vps WHERE client_id = :c');
-            $vpsIds->execute([':c' => $id]);
-            $vIds = $vpsIds->fetchAll(\PDO::FETCH_COLUMN) ?: [];
-            if (!empty($vIds)) {
-                $ph = implode(',', $vIds);
-                $pdo->exec("DELETE FROM ports WHERE application_id IN (SELECT id FROM applications WHERE vps_id IN ({$ph}))");
-                $pdo->exec("DELETE FROM applications WHERE vps_id IN ({$ph})");
-            }
-            $pdo->prepare('DELETE FROM vps WHERE client_id = :c')->execute([':c' => $id]);
-
-            // Audit logs
-            $pdo->prepare("DELETE FROM audit_logs WHERE actor_type = 'client' AND actor_id = :c")->execute([':c' => $id]);
-
-            // Finalmente, o cliente
-            $pdo->prepare('DELETE FROM clients WHERE id = :c')->execute([':c' => $id]);
-
-            $pdo->commit();
+            $jobId = (new \LRV\App\Services\Clientes\ClienteExclusaoService())
+                ->agendarExclusao($id, \LRV\Core\Auth::equipeId());
         } catch (\Throwable $e) {
-            $pdo->rollBack();
-            return Resposta::texto('Erro ao deletar: ' . $e->getMessage(), 500);
+            $_SESSION['flash_error'] = $e->getMessage();
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
         }
 
-        return Resposta::redirecionar('/equipe/clientes');
+        $_SESSION['flash_success'] = 'Exclusão agendada (job #' . $jobId . '). O cliente já está bloqueado; acompanhe o andamento nesta página.';
+        return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+    }
+
+    public function inativar(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::texto('ID inválido.', 400);
+        }
+        $motivo = trim((string)($req->post['motivo'] ?? ''));
+        try {
+            $n = (new \LRV\App\Services\Clientes\ClienteExclusaoService())->inativar($id, \LRV\Core\Auth::equipeId(), $motivo);
+            $_SESSION['flash_success'] = 'Cliente inativado. ' . $n . ' VPS enviada(s) para suspensão.';
+        } catch (\Throwable $e) {
+            $_SESSION['flash_error'] = 'Erro ao inativar: ' . $e->getMessage();
+        }
+        return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+    }
+
+    public function reativar(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) {
+            return Resposta::texto('ID inválido.', 400);
+        }
+        $pdo = BancoDeDados::pdo();
+        $s = $pdo->prepare('SELECT deletion_status, deletion_requested_at FROM clients WHERE id = :id');
+        $s->execute([':id' => $id]);
+        $row = $s->fetch();
+        if (!is_array($row)) {
+            return Resposta::texto('Cliente não encontrado.', 404);
+        }
+        $emAndamento = in_array((string) ($row['deletion_status'] ?? ''), ['pending', 'running'], true)
+            && strtotime((string) ($row['deletion_requested_at'] ?? 'now')) >= time() - 7200;
+        if ($emAndamento) {
+            $_SESSION['flash_error'] = 'Este cliente está sendo excluído e não pode ser reativado.';
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+        }
+        try {
+            // Reativar também cancela uma exclusão que falhou
+            $pdo->prepare('UPDATE clients SET deletion_status = NULL, deletion_error = NULL WHERE id = :id')->execute([':id' => $id]);
+            $n = (new \LRV\App\Services\Clientes\ClienteExclusaoService())->reativar($id, \LRV\Core\Auth::equipeId());
+            $_SESSION['flash_success'] = 'Cliente reativado. ' . $n . ' VPS enviada(s) para religar.';
+        } catch (\Throwable $e) {
+            $_SESSION['flash_error'] = 'Erro ao reativar: ' . $e->getMessage();
+        }
+        return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
     }
 
     /** Equipe loga como cliente (impersonação). */

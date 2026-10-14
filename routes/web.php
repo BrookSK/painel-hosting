@@ -201,6 +201,8 @@ $roteador->get('/equipe/clientes/ver', [ClientesController::class, 'ver'], [Midd
 $roteador->post('/equipe/clientes/salvar', [ClientesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/ocultar', [ClientesController::class, 'ocultar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/deletar', [ClientesController::class, 'deletar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/inativar', [ClientesController::class, 'inativar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/reativar', [ClientesController::class, 'reativar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/assinar-plano', [ClientesController::class, 'assinarPlano'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/clientes/gerar-link-pagamento', [ClientesController::class, 'gerarLinkPagamento'], [Middlewares::exigirPermissao('manage_billing')]);
 $roteador->post('/equipe/clientes/impersonar', [ClientesController::class, 'impersonar'], [Middlewares::exigirPermissao('manage_users')]);

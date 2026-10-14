@@ -20,7 +20,9 @@ final class EntrarController
         }
 
         $html = View::renderizar(__DIR__ . '/../../Views/cliente/entrar.php', [
-            'erro' => '',
+            'erro' => (string) ($req->query['conta'] ?? '') === 'inativa'
+                ? 'Sua conta está inativa. Entre em contato com o suporte.'
+                : '',
             'email' => '',
         ]);
 
@@ -51,6 +53,13 @@ final class EntrarController
         }
 
         if (!Auth::entrarCliente($email, $senha)) {
+            if (Auth::$motivoFalhaCliente === 'inativo') {
+                $html = View::renderizar(__DIR__ . '/../../Views/cliente/entrar.php', [
+                    'erro' => 'Sua conta está inativa. Entre em contato com o suporte.',
+                    'email' => $email,
+                ]);
+                return Resposta::html($html, 403);
+            }
             LoginBlocker::registrarFalha($ip, 'client');
             $html = View::renderizar(__DIR__ . '/../../Views/cliente/entrar.php', [
                 'erro' => 'E-mail ou senha inválidos.',

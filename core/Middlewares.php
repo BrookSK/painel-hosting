@@ -42,6 +42,13 @@ final class Middlewares
                 return Resposta::redirecionar('/cliente/entrar');
             }
 
+            // Conta inativada/em exclusão: derruba sessões já abertas.
+            // A equipe impersonando continua podendo ver a conta.
+            if (!Auth::estaImpersonando() && Auth::clienteBloqueado((int) Auth::clienteId())) {
+                Auth::sairCliente();
+                return Resposta::redirecionar('/cliente/entrar?conta=inativa');
+            }
+
             // Verificar expiração de sessão por inatividade (24h)
             $lastActivity = (int) ($_SESSION['cliente_last_activity'] ?? 0);
             $timeout = 86400; // 24 horas

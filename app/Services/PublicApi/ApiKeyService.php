@@ -94,6 +94,11 @@ final class ApiKeyService
             return null;
         }
 
+        // Cliente inativado/em exclusão não usa a API
+        if (\LRV\Core\Auth::clienteBloqueado((int) ($row['client_id'] ?? 0))) {
+            return null;
+        }
+
         // Verificar expiração
         if ($row['expires_at'] !== null && strtotime($row['expires_at']) < time()) {
             // Marcar como expirada

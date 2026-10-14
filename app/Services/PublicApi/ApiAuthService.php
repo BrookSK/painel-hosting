@@ -83,6 +83,11 @@ final class ApiAuthService
             return null;
         }
 
+        // Cliente inativado/em exclusão não usa a API
+        if (\LRV\Core\Auth::clienteBloqueado((int) ($row['client_id'] ?? 0))) {
+            return null;
+        }
+
         // Verificar revogação
         if ($row['revoked_at'] !== null) {
             return null;

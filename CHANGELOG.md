@@ -5,6 +5,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [3.6.1] — 2026-10-14
+
+### Adicionado
+- **Inativar cliente**: novo botão na ficha do cliente que bloqueia o acesso dele sem apagar nada. A pessoa não consegue mais entrar no painel nem usar a API, quem já estava logado é desconectado e os servidores dela saem do ar. A cobrança continua como estava. Dá para escrever o motivo, e o botão "Reativar cliente" desfaz tudo e religa os servidores que estão com o pagamento em dia
+
+### Melhorado
+- **"Deletar cliente" agora apaga tudo de verdade**: além dos registros do painel, a exclusão cancela as assinaturas no Asaas/Stripe, remove os servidores, aplicações, bancos de dados, e-mails, arquivos e backups, e tira o acesso aos repositórios. Ela roda em segundo plano, então a tela não trava, e o cliente fica bloqueado na hora. Os registros de auditoria continuam guardados como histórico
+- **Exclusão segura**: se algum passo não der certo (por exemplo, um servidor fora do ar), a exclusão para ali, avisa o motivo na ficha do cliente e não apaga nada do painel, para nada ficar "esquecido" rodando no servidor. Depois é só tentar de novo
+
+### Corrigido
+- **Servidor que continuava ligado depois de removido**: quando o sistema não conseguia desligar um servidor, ele mesmo assim o marcava como removido. Agora, se o desligamento falhar, a remoção é interrompida e o servidor continua aparecendo no painel até ser removido de fato
+- **Segurança da API**: criar servidores, clientes e repositórios pela API agora só funciona para contas liberadas pela equipe. Antes, qualquer conta nova conseguia criar servidores sem pagar
+
+---
+
 ## [3.6.0] — 2026-10-03
 
 ### Adicionado

@@ -371,28 +371,37 @@ final class VpsProvisioningService
         }
 
         $serverId = (int) ($vps['server_id'] ?? 0);
-        $containerId = (string) ($vps['container_id'] ?? '');
+        $containerId = trim((string) ($vps['container_id'] ?? ''));
+        $clientId = (int) ($vps['client_id'] ?? 0);
 
-        // Remover containers de aplicações associadas à VPS
-        if ($serverId > 0) {
+        // Aplicações da VPS (cada uma pode ter seu próprio container no node)
+        $apps = [];
+        try {
+            $appsStmt = $pdo->prepare('SELECT id, container_id FROM applications WHERE vps_id = :vid');
+            $appsStmt->execute([':vid' => $vpsId]);
+            $apps = $appsStmt->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+            $log('Aviso ao listar aplicações: ' . $e->getMessage());
+        }
+
+        // 1) Remover containers ANTES de mexer no banco. Se falhar, abortamos o job
+        //    (exceção) sem liberar recursos, sem apagar DNS e sem soft delete — assim
+        //    a VPS não "some" do painel enquanto continua rodando no servidor.
+        $this->removerContainersObrigatorio($vpsId, $clientId, $serverId, $containerId, $apps, $log);
+
+        // 2) Limpeza no banco (containers já não existem mais)
+        if ($serverId > 0 || !empty($apps)) {
+            // Liberar subdomínios usados pelas aplicações (antes de apagar as aplicações)
             try {
-                $appsStmt = $pdo->prepare('SELECT id, container_name FROM applications WHERE vps_id = :vid');
-                $appsStmt->execute([':vid' => $vpsId]);
-                $apps = $appsStmt->fetchAll() ?: [];
-                if (!empty($apps) && $this->configurarDockerParaNode($serverId, $log)) {
-                    foreach ($apps as $app) {
-                        $appContainer = trim((string)($app['container_name'] ?? ''));
-                        if ($appContainer !== '') {
-                            try {
-                                $this->docker->removerContainer($appContainer);
-                                $log('Container de aplicação removido: ' . $appContainer);
-                            } catch (\Throwable $e) {
-                                $log('Aviso ao remover container de app: ' . $e->getMessage());
-                            }
-                        }
-                    }
+                foreach ($apps as $appRow) {
+                    $pdo->prepare("UPDATE client_subdomains SET used_by_type = NULL, used_by_id = NULL WHERE used_by_type = 'application' AND used_by_id = :eid")
+                        ->execute([':eid' => (int) $appRow['id']]);
                 }
-                // Limpar portas e aplicações do banco
+            } catch (\Throwable $e) {
+                $log('Aviso ao liberar subdomínios de aplicações: ' . $e->getMessage());
+            }
+
+            try {
                 $pdo->prepare('DELETE FROM ports WHERE application_id IN (SELECT id FROM applications WHERE vps_id = :vid)')->execute([':vid' => $vpsId]);
                 $pdo->prepare('DELETE FROM applications WHERE vps_id = :vid')->execute([':vid' => $vpsId]);
                 $log('Aplicações e portas removidas do banco.');
@@ -424,33 +433,6 @@ final class VpsProvisioningService
                 $log('Git deployments removidos.');
             } catch (\Throwable $e) {
                 $log('Aviso ao limpar git deployments: ' . $e->getMessage());
-            }
-
-            // Limpar referências de subdomínios usados por aplicações desta VPS
-            try {
-                $appIds = $pdo->prepare('SELECT id FROM applications WHERE vps_id = :vid');
-                $appIds->execute([':vid' => $vpsId]);
-                $appRows = $appIds->fetchAll() ?: [];
-                foreach ($appRows as $appRow) {
-                    $pdo->prepare("UPDATE client_subdomains SET used_by_type = NULL, used_by_id = NULL WHERE used_by_type = 'application' AND used_by_id = :eid")
-                        ->execute([':eid' => (int)$appRow['id']]);
-                }
-            } catch (\Throwable $e) {
-                $log('Aviso ao liberar subdomínios de aplicações: ' . $e->getMessage());
-            }
-        }
-
-        if ($serverId > 0 && $containerId !== '') {
-            if ($this->configurarDockerParaNode($serverId, $log)) {
-                $log('Removendo container...');
-                try {
-                    $r = $this->docker->removerContainer($containerId);
-                    $log('Saída: ' . (string) ($r['saida'] ?? ''));
-                } catch (\Throwable $e) {
-                    $log('Aviso ao remover container: ' . $e->getMessage());
-                }
-            } else {
-                $log('Docker indisponível. Container não removido remotamente.');
             }
         }
 
@@ -751,6 +733,131 @@ final class VpsProvisioningService
         } catch (\Throwable) {
             return 0;
         }
+    }
+
+    /**
+     * Garante que os containers de uma VPS (inclusive já marcada como removida) não existem
+     * mais no node. Não mexe no banco nem em recursos. Lança exceção se não conseguir.
+     */
+    public function garantirContainersRemovidos(int $vpsId, callable $log): void
+    {
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare('SELECT id, client_id, server_id, container_id FROM vps WHERE id = :id');
+        $stmt->execute([':id' => $vpsId]);
+        $vps = $stmt->fetch();
+        if (!is_array($vps)) {
+            return;
+        }
+
+        $apps = [];
+        try {
+            $a = $pdo->prepare('SELECT id, container_id FROM applications WHERE vps_id = :vid');
+            $a->execute([':vid' => $vpsId]);
+            $apps = $a->fetchAll() ?: [];
+        } catch (\Throwable) {}
+
+        $this->removerContainersObrigatorio(
+            $vpsId,
+            (int) ($vps['client_id'] ?? 0),
+            (int) ($vps['server_id'] ?? 0),
+            trim((string) ($vps['container_id'] ?? '')),
+            $apps,
+            $log
+        );
+    }
+
+    /** Remove containers das aplicações e da VPS. Qualquer falha real lança exceção. */
+    private function removerContainersObrigatorio(int $vpsId, int $clientId, int $serverId, string $containerId, array $apps, callable $log): void
+    {
+        if ($serverId <= 0) {
+            return; // VPS nunca chegou a ser alocada em um node
+        }
+
+        if ($containerId === '' && empty($apps)) {
+            return; // nada foi criado no node
+        }
+
+        // Remove pelo ID salvo e também pelo nome padrão (cobre ID desatualizado)
+        $refsVps = array_values(array_unique(array_filter([
+            $containerId,
+            $clientId > 0 ? 'vps_client_' . $clientId . '_' . $vpsId : '',
+        ])));
+
+        if (!$this->configurarDockerParaNode($serverId, $log)) {
+            throw new \RuntimeException('Não foi possível conectar ao node #' . $serverId . ' para remover os containers. Nada foi apagado; tente novamente.');
+        }
+
+        foreach ($apps as $app) {
+            $appId = (int) ($app['id'] ?? 0);
+            $refs = array_unique(array_filter([
+                trim((string) ($app['container_id'] ?? '')),
+                $appId > 0 ? 'app_' . $appId : '',
+            ]));
+            foreach ($refs as $ref) {
+                $this->removerContainerObrigatorio($ref, $log);
+            }
+        }
+
+        $log('Removendo container da VPS #' . $vpsId . '...');
+        foreach ($refsVps as $ref) {
+            $this->removerContainerObrigatorio($ref, $log);
+        }
+    }
+
+    /**
+     * Remove um container (docker rm -f). "Não existe" conta como sucesso.
+     * Qualquer outra falha lança exceção, e quem chamou não deve seguir como se tivesse removido.
+     */
+    private function removerContainerObrigatorio(string $ref, callable $log): void
+    {
+        try {
+            $r = $this->docker->removerContainer($ref);
+            $log('Container removido: ' . $ref . ' ' . trim((string) ($r['saida'] ?? '')));
+        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
+            if (stripos($msg, 'No such container') !== false) {
+                $log('Container ' . $ref . ' já não existia.');
+                return;
+            }
+            throw new \RuntimeException('Falha ao remover o container ' . $ref . ': ' . $msg, 0, $e);
+        }
+    }
+
+    /**
+     * Apaga a pasta de dados do cliente (volume) em um node.
+     * Usado na exclusão definitiva do cliente, depois que todos os containers foram removidos.
+     */
+    public function removerDadosClienteNoNode(int $clientId, int $serverId, callable $log): void
+    {
+        if ($clientId <= 0 || $serverId <= 0) {
+            return;
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $volumeBase = (string) Settings::obter('infra.volume_base', '/vps');
+        try {
+            $s = $pdo->prepare('SELECT volume_base_path FROM servers WHERE id = :id LIMIT 1');
+            $s->execute([':id' => $serverId]);
+            $row = $s->fetch();
+            $v = trim((string) ($row['volume_base_path'] ?? ''));
+            if ($v !== '') {
+                $volumeBase = $v;
+            }
+        } catch (\Throwable) {}
+
+        $volumeBase = rtrim(trim($volumeBase), '/');
+        // Proteção: nunca rodar rm -rf em caminho vazio/raiz ou com caracteres estranhos
+        if ($volumeBase === '' || preg_match('#^/[A-Za-z0-9._/-]+$#', $volumeBase) !== 1 || str_contains($volumeBase, '..')) {
+            throw new \RuntimeException('volume_base inválido para o node #' . $serverId . ': "' . $volumeBase . '".');
+        }
+
+        if (!$this->configurarDockerParaNode($serverId, $log)) {
+            throw new \RuntimeException('Não foi possível conectar ao node #' . $serverId . ' para apagar os dados do cliente.');
+        }
+
+        $dir = $volumeBase . '/client_' . $clientId;
+        $this->docker->executar('rm -rf ' . escapeshellarg($dir));
+        $log('Pasta de dados removida no node #' . $serverId . ': ' . $dir);
     }
 
     /** Verifica se o cliente dono da VPS é gerenciado. */

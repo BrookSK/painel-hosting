@@ -9,6 +9,31 @@ final class Auth
     private const SESSAO_EQUIPE_ID = 'auth_equipe_id';
     private const SESSAO_CLIENTE_ID = 'auth_cliente_id';
 
+    /** Motivo da última falha de login de cliente ('' = credenciais inválidas, 'inativo' = conta inativada). */
+    public static string $motivoFalhaCliente = '';
+
+    /**
+     * Retorna true se o cliente está inativado (disabled_at) ou com exclusão em andamento.
+     * Tolerante a banco sem a migração 0096 (colunas inexistentes → não bloqueia).
+     */
+    public static function clienteBloqueado(int $clienteId): bool
+    {
+        if ($clienteId <= 0) {
+            return false;
+        }
+        try {
+            $s = BancoDeDados::pdo()->prepare('SELECT disabled_at, deletion_status FROM clients WHERE id = :id LIMIT 1');
+            $s->execute([':id' => $clienteId]);
+            $r = $s->fetch();
+        } catch (\Throwable) {
+            return false;
+        }
+        if (!is_array($r)) {
+            return true; // cliente não existe mais
+        }
+        return ($r['disabled_at'] ?? null) !== null || trim((string) ($r['deletion_status'] ?? '')) !== '';
+    }
+
     private static function regenerarSessao(): void
     {
         if (PHP_SAPI === 'cli') {
@@ -90,6 +115,12 @@ final class Auth
 
         $hash = (string) ($c['password'] ?? '');
         if (!password_verify($senha, $hash)) {
+            return false;
+        }
+
+        // Conta inativada pela equipe (ou em exclusão): senha certa, mas acesso negado
+        if (self::clienteBloqueado((int) $c['id'])) {
+            self::$motivoFalhaCliente = 'inativo';
             return false;
         }
 

@@ -470,6 +470,18 @@ final class RegistroHandlers
             $svc->remover($vpsId, fn (string $m) => $ctx->log($m));
         });
 
+        // Exclusão definitiva de cliente (cobranças, containers, dados no servidor e banco)
+        $p->registrar('excluir_cliente', static function (array $payload, ContextoJob $ctx): void {
+            $clientId = (int) ($payload['client_id'] ?? 0);
+            if ($clientId <= 0) {
+                throw new \InvalidArgumentException('client_id inválido.');
+            }
+            $equipeId = isset($payload['equipe_id']) ? (int) $payload['equipe_id'] : null;
+
+            (new \LRV\App\Services\Clientes\ClienteExclusaoService())
+                ->executarExclusao($clientId, $equipeId, fn (string $m) => $ctx->log($m));
+        });
+
         // Resize VPS: atualiza limites de CPU/RAM do container Docker
         $p->registrar('resize_vps', static function (array $payload, ContextoJob $ctx): void {
             $vpsId = (int)($payload['vps_id'] ?? 0);

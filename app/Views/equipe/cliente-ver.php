@@ -61,6 +61,38 @@ $erroMsg = match ($erro) {
 <?php if ($erroMsg !== ''): ?>
   <div class="erro" style="margin-bottom:16px;"><?php echo View::e($erroMsg); ?></div>
 <?php endif; ?>
+<?php if ($ok !== '' && !in_array($ok, ['assinatura_criada', 'link_gerado'], true)): ?>
+  <div class="sucesso" style="margin-bottom:16px;"><?php echo View::e($ok); ?></div>
+<?php endif; ?>
+<?php
+$delStatus  = trim((string)($cliente['deletion_status'] ?? ''));
+$inativo    = ($cliente['disabled_at'] ?? null) !== null;
+// Exclusão "presa" há mais de 2h (worker caiu): trata como falha para permitir nova tentativa
+if (in_array($delStatus, ['pending', 'running'], true)
+    && strtotime((string)($cliente['deletion_requested_at'] ?? 'now')) < time() - 7200) {
+    $delStatus = 'failed';
+    $cliente['deletion_error'] = 'A exclusão não terminou em 2 horas (o processamento em segundo plano pode ter parado). Verifique a fila de jobs e tente de novo.';
+}
+?>
+<?php if (in_array($delStatus, ['pending', 'running'], true)): ?>
+  <div class="erro" style="margin-bottom:16px;background:#fef2f2;">
+    <strong>Exclusão em andamento.</strong> O cliente já está bloqueado. O sistema está cancelando cobranças, removendo servidores e apagando os dados. Atualize a página em alguns minutos; quando terminar, o cliente some da lista.
+  </div>
+<?php elseif ($delStatus === 'failed'): ?>
+  <div class="erro" style="margin-bottom:16px;">
+    <strong>A exclusão parou no meio.</strong> Nenhum registro foi apagado do banco ainda, para não deixar nada órfão no servidor. Motivo:
+    <pre style="white-space:pre-wrap;font-size:12px;margin:8px 0 0;"><?php echo View::e((string)($cliente['deletion_error'] ?? '')); ?></pre>
+    Resolva o problema e clique em "Deletar cliente" de novo para tentar outra vez, ou em "Reativar cliente" para desistir.
+  </div>
+<?php elseif ($inativo): ?>
+  <div class="erro" style="margin-bottom:16px;background:#fffbeb;color:#92400e;border-color:#fde68a;">
+    <strong>Cliente inativo</strong> desde <?php echo View::e(date('d/m/Y H:i', strtotime((string)$cliente['disabled_at']))); ?>.
+    Não consegue entrar no painel nem usar a API, e as VPS foram suspensas.
+    <?php if (trim((string)($cliente['disabled_reason'] ?? '')) !== ''): ?>
+      Motivo: <?php echo View::e((string)$cliente['disabled_reason']); ?>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 
 <!-- Header do cliente -->
 <div class="card-new" style="margin-bottom:16px;">
@@ -129,11 +161,27 @@ $erroMsg = match ($erro) {
           <?php echo ($cliente['hidden_at'] ?? null) !== null ? '<svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Mostrar cliente' : '<svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Ocultar cliente'; ?>
         </button>
       </form>
-      <form method="post" action="/equipe/clientes/deletar" style="display:inline;" onsubmit="return confirm('ATENÇÃO: Isso vai deletar o cliente e TODOS os dados relacionados (VPS, assinaturas, tickets, emails, etc). Essa ação é irreversível. Continuar?')">
+      <?php if (!in_array($delStatus, ['pending', 'running'], true)): ?>
+      <?php if ($inativo || $delStatus === 'failed'): ?>
+      <form method="post" action="/equipe/clientes/reativar" style="display:inline;" onsubmit="return confirm('Reativar este cliente? Ele volta a acessar o painel e a API, e as VPS com pagamento em dia são religadas.')">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <button class="botao sm" type="submit" style="background:#16a34a;">Reativar cliente</button>
+      </form>
+      <?php else: ?>
+      <form method="post" action="/equipe/clientes/inativar" style="display:inline;" onsubmit="var m=prompt('Inativar este cliente? Ele perde o acesso ao painel e à API e as VPS são suspensas (nada é apagado, a cobrança não muda).\n\nMotivo (opcional):','');if(m===null)return false;this.motivo.value=m;return true;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <input type="hidden" name="motivo" value="" />
+        <button class="botao sm" type="submit" style="background:#d97706;">Inativar cliente</button>
+      </form>
+      <?php endif; ?>
+      <form method="post" action="/equipe/clientes/deletar" style="display:inline;" onsubmit="return confirm('ATENÇÃO: isso apaga o cliente e TUDO dele, sem volta:\n\n• cancela as assinaturas no Asaas/Stripe\n• remove as VPS, aplicações, bancos de dados e e-mails do servidor\n• apaga os arquivos e backups\n• apaga todos os registros do painel\n\nOs logs de auditoria são mantidos. Continuar?')">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
         <button class="botao danger sm" type="submit"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Deletar cliente</button>
       </form>
+      <?php endif; ?>
     </div>
   </div>
 </div>
