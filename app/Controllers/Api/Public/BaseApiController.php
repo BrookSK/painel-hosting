@@ -241,6 +241,40 @@ abstract class BaseApiController
     }
 
     /**
+     * Trava de segurança para endpoints que geram custo ou mexem na organização
+     * (provisionar VPS, criar clientes, criar repositórios/colaboradores).
+     * Só contas marcadas pela equipe com clients.api_provisioning_enabled = 1 passam.
+     * Fail-closed: se a coluna não existir ou der erro, bloqueia.
+     *
+     * @return Resposta|null null se autorizado
+     */
+    protected function exigirProvisionamentoAutorizado(Requisicao $req): ?Resposta
+    {
+        $self = $this->clienteId($req);
+        if ($self === null) {
+            return $this->naoAutorizado();
+        }
+
+        try {
+            $stmt = \LRV\Core\BancoDeDados::pdo()->prepare('SELECT api_provisioning_enabled FROM clients WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $self]);
+            $autorizado = (int) ($stmt->fetchColumn() ?: 0) === 1;
+        } catch (\Throwable) {
+            $autorizado = false;
+        }
+
+        if (!$autorizado) {
+            return $this->erro(
+                'PROVISIONING_NOT_ENABLED',
+                'This account is not authorized to provision resources via API. Contact support to enable partner access.',
+                403
+            );
+        }
+
+        return null;
+    }
+
+    /**
      * Resolve o cliente-alvo de uma operação de escrita.
      *
      * Se o body trouxer "client_id", valida que a API key tem direito sobre ele

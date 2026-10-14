@@ -100,6 +100,11 @@ final class ClientsController extends BaseApiController
             return $this->proibido('Scope clients.write is required.');
         }
 
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
+
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['name', 'email']);
         if ($validacao !== null) {

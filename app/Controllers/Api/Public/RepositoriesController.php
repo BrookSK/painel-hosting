@@ -108,6 +108,12 @@ final class RepositoriesController extends BaseApiController
             return $this->proibido('Scope git.write is required.');
         }
 
+        // Mexe na organização GitHub da empresa: só parceiros autorizados pela equipe.
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
+
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['name']);
         if ($validacao !== null) {
@@ -210,6 +216,12 @@ final class RepositoriesController extends BaseApiController
             return $this->proibido('Scope git.write is required.');
         }
 
+        // Mexe na organização GitHub da empresa: só parceiros autorizados pela equipe.
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
+
         $dados = $req->json();
         $repoId = (int) ($dados['id'] ?? 0);
         $usernames = $this->normalizarUsernames($dados['usernames'] ?? ($dados['username'] ?? []));
@@ -301,6 +313,12 @@ final class RepositoriesController extends BaseApiController
     {
         if (!$this->temEscopo($req, 'git.write')) {
             return $this->proibido('Scope git.write is required.');
+        }
+
+        // Mexe na organização GitHub da empresa: só parceiros autorizados pela equipe.
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
         }
 
         $dados = $req->json();

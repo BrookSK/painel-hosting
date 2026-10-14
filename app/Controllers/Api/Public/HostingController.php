@@ -179,6 +179,12 @@ final class HostingController extends BaseApiController
             return $this->proibido('Scope hosting.write is required.');
         }
 
+        // Provisionar VPS cria assinatura sem cobrança: só para parceiros autorizados pela equipe.
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
+
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['plan']);
         if ($validacao !== null) {
