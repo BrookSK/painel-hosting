@@ -333,7 +333,7 @@ final class BancoDadosController
                         $containerId = (string)($db['container_id'] ?? '');
                         if ($containerId !== '') {
                             $dropCmd = 'docker stop ' . escapeshellarg($containerId) . ' 2>/dev/null;'
-                                . ' docker rm ' . escapeshellarg($containerId) . ' 2>/dev/null;'
+                                . ' docker rm -v ' . escapeshellarg($containerId) . ' 2>/dev/null;'
                                 . ' echo lrv-drop-ok';
                             $this->executarSshServidor($db, $dropCmd, 15);
                         } else {

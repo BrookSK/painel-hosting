@@ -127,11 +127,26 @@ final class ClienteExclusaoService
 
         try {
             $resumo = [];
+            // Guardar antes: remover() apaga os registros de aplicações
+            $appIds = $this->idsAplicacoes($clientId);
+            $nodesConhecidos = $this->nodesDoCliente($clientId);
+
             $resumo['assinaturas_canceladas'] = $this->cancelarCobrancas($clientId, $log);
             $resumo['emails_removidos'] = $this->removerEmails($clientId, $log);
             $resumo['bancos_removidos'] = $this->removerBancosDeDados($clientId, $log); // antes das VPS (remover() apaga os registros)
             $resumo['vps_removidas'] = $this->removerVps($clientId, $log);
-            $resumo['nodes_limpos'] = $this->removerDadosNosNodes($clientId, $log);
+
+            // Varredura por nome em todos os nodes: pega containers que não estão
+            // (ou não estão mais) registrados no painel, ex.: bancos criados pela API.
+            $log('Procurando containers restantes do cliente em todos os servidores...');
+            $nodesComSobras = (new VpsProvisioningService(new DockerCli()))
+                ->varrerContainersDoCliente($clientId, $appIds, $nodesConhecidos, $log);
+
+            $resumo['nodes_limpos'] = $this->removerDadosNosNodes(
+                $clientId,
+                array_values(array_unique(array_merge($nodesConhecidos, $nodesComSobras))),
+                $log
+            );
             $this->removerColaboradoresGit($clientId, $log);
             $this->apagarBackupsLocais($clientId, $log);
             $resumo['tabelas'] = $this->purgarBanco($clientId, $log);
@@ -252,7 +267,7 @@ final class ClienteExclusaoService
                 if (preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]+$/', $containerId) !== 1) {
                     throw new \RuntimeException('container_id inválido no banco #' . $db['id'] . '.');
                 }
-                $cmd = 'docker rm -f ' . escapeshellarg($containerId) . ' 2>&1 || true';
+                $cmd = 'docker rm -f -v ' . escapeshellarg($containerId) . ' 2>&1 || true';
             } else {
                 if (preg_match($ident, $dbName) !== 1 || ($dbUser !== '' && preg_match($ident, $dbUser) !== 1)) {
                     throw new \RuntimeException('Nome de banco/usuário inválido no banco #' . $db['id'] . '.');
@@ -316,14 +331,29 @@ final class ClienteExclusaoService
         return $total;
     }
 
-    /** Apaga a pasta de dados do cliente em cada node onde ele teve VPS. */
-    private function removerDadosNosNodes(int $clientId, callable $log): int
+    /** IDs das aplicações de todas as VPS do cliente. */
+    private function idsAplicacoes(int $clientId): array
     {
-        $pdo = BancoDeDados::pdo();
-        $s = $pdo->prepare('SELECT DISTINCT server_id FROM vps WHERE client_id = :c AND server_id IS NOT NULL AND server_id > 0');
-        $s->execute([':c' => $clientId]);
-        $nodes = array_map('intval', $s->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+        try {
+            $s = BancoDeDados::pdo()->prepare('SELECT a.id FROM applications a INNER JOIN vps v ON v.id = a.vps_id WHERE v.client_id = :c');
+            $s->execute([':c' => $clientId]);
+            return array_map('intval', $s->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
 
+    /** Nodes onde o cliente tem ou teve VPS registrada. */
+    private function nodesDoCliente(int $clientId): array
+    {
+        $s = BancoDeDados::pdo()->prepare('SELECT DISTINCT server_id FROM vps WHERE client_id = :c AND server_id IS NOT NULL AND server_id > 0');
+        $s->execute([':c' => $clientId]);
+        return array_map('intval', $s->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+    }
+
+    /** Apaga a pasta de dados do cliente em cada node informado. */
+    private function removerDadosNosNodes(int $clientId, array $nodes, callable $log): int
+    {
         foreach ($nodes as $serverId) {
             (new VpsProvisioningService(new DockerCli()))->removerDadosClienteNoNode($clientId, $serverId, $log);
         }

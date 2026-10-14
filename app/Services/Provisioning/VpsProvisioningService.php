@@ -787,13 +787,24 @@ final class VpsProvisioningService
             throw new \RuntimeException('Não foi possível conectar ao node #' . $serverId . ' para remover os containers. Nada foi apagado; tente novamente.');
         }
 
+        // Nomes existentes no node: usados para achar containers auxiliares das apps
+        // (ex.: MySQL do WordPress/Laravel) mesmo sem estarem registrados no banco.
+        $nomesNoNode = [];
+        if (!empty($apps)) {
+            try {
+                $nomesNoNode = $this->docker->listarNomesContainers();
+            } catch (\Throwable $e) {
+                throw new \RuntimeException('Não foi possível listar os containers do node #' . $serverId . ': ' . $e->getMessage(), 0, $e);
+            }
+        }
+
         foreach ($apps as $app) {
             $appId = (int) ($app['id'] ?? 0);
-            $refs = array_unique(array_filter([
-                trim((string) ($app['container_id'] ?? '')),
-                $appId > 0 ? 'app_' . $appId : '',
-            ]));
-            foreach ($refs as $ref) {
+            $refs = [trim((string) ($app['container_id'] ?? ''))];
+            if ($appId > 0) {
+                $refs = array_merge($refs, self::filtrarNomesDaAplicacao($nomesNoNode, $appId));
+            }
+            foreach (array_unique(array_filter($refs)) as $ref) {
                 $this->removerContainerObrigatorio($ref, $log);
             }
         }
@@ -804,6 +815,77 @@ final class VpsProvisioningService
         }
     }
 
+    /** Nomes de container que pertencem a uma aplicação: app_{id}, app_{slug}_{id}, app_mysql_wp_{id}... */
+    private static function filtrarNomesDaAplicacao(array $nomes, int $appId): array
+    {
+        $re = '/^app_([a-z0-9.-]+_)*' . $appId . '$/i';
+        return array_values(array_filter($nomes, fn ($n) => preg_match($re, (string) $n) === 1));
+    }
+
+    /**
+     * Varredura para exclusão de cliente: procura em TODOS os nodes ativos containers
+     * do cliente pelo nome, mesmo que não estejam mais registrados no painel
+     * (vps_client_{id}_*, db_client_{id}_*, e das aplicações informadas), e remove
+     * junto os volumes anônimos (dados do MySQL etc.).
+     *
+     * Node inacessível é só avisado (não bloqueia), exceto os de $nodesObrigatorios.
+     *
+     * @param int[] $appIds IDs das aplicações que eram do cliente
+     * @param int[] $nodesObrigatorios nodes onde o cliente sabidamente tinha recursos
+     * @return int[] IDs dos nodes onde algo do cliente foi encontrado
+     */
+    public function varrerContainersDoCliente(int $clientId, array $appIds, array $nodesObrigatorios, callable $log): array
+    {
+        if ($clientId <= 0) {
+            return [];
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $nodes = array_map('intval', $pdo->query("SELECT id FROM servers WHERE status = 'active'")->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+        $nodes = array_values(array_unique(array_merge($nodes, array_map('intval', $nodesObrigatorios))));
+
+        $reCliente = '/^(vps|db)_client_' . $clientId . '_[A-Za-z0-9_.-]+$/';
+        $encontrados = [];
+
+        foreach ($nodes as $serverId) {
+            $obrigatorio = in_array($serverId, $nodesObrigatorios, true);
+            if (!$this->configurarDockerParaNode($serverId, $log)) {
+                if ($obrigatorio) {
+                    throw new \RuntimeException('Node #' . $serverId . ' inacessível; não dá para garantir que os containers do cliente foram removidos.');
+                }
+                $log('Aviso: node #' . $serverId . ' inacessível, varredura pulada.');
+                continue;
+            }
+
+            try {
+                $nomes = $this->docker->listarNomesContainers();
+            } catch (\Throwable $e) {
+                if ($obrigatorio) {
+                    throw new \RuntimeException('Falha ao listar containers no node #' . $serverId . ': ' . $e->getMessage(), 0, $e);
+                }
+                $log('Aviso: falha ao listar containers no node #' . $serverId . ': ' . $e->getMessage());
+                continue;
+            }
+
+            $alvos = array_values(array_filter($nomes, fn ($n) => preg_match($reCliente, (string) $n) === 1));
+            foreach ($appIds as $appId) {
+                $alvos = array_merge($alvos, self::filtrarNomesDaAplicacao($nomes, (int) $appId));
+            }
+            $alvos = array_values(array_unique($alvos));
+
+            if (empty($alvos)) {
+                continue;
+            }
+            $encontrados[] = $serverId;
+            $log('Node #' . $serverId . ': ' . count($alvos) . ' container(s) do cliente encontrado(s): ' . implode(', ', $alvos));
+            foreach ($alvos as $nome) {
+                $this->removerContainerObrigatorio($nome, $log);
+            }
+        }
+
+        return $encontrados;
+    }
+
     /**
      * Remove um container (docker rm -f). "Não existe" conta como sucesso.
      * Qualquer outra falha lança exceção, e quem chamou não deve seguir como se tivesse removido.
@@ -811,7 +893,9 @@ final class VpsProvisioningService
     private function removerContainerObrigatorio(string $ref, callable $log): void
     {
         try {
-            $r = $this->docker->removerContainer($ref);
+            // -v: apaga junto os volumes anônimos (ex.: dados do MySQL); a pasta do
+            // cliente montada do host (/vps/client_X) não é afetada por isso.
+            $r = $this->docker->removerContainer($ref, true);
             $log('Container removido: ' . $ref . ' ' . trim((string) ($r['saida'] ?? '')));
         } catch (\Throwable $e) {
             $msg = $e->getMessage();

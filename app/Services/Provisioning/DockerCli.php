@@ -193,11 +193,24 @@ final class DockerCli
         return $this->executarComando($cmd);
     }
 
-    public function removerContainer(string $nome): array
+    /**
+     * @param bool $comVolumesAnonimos true = também apaga os volumes anônimos do container
+     *        (ex.: /var/lib/mysql de containers de banco). Pastas montadas do host e volumes
+     *        com nome não são afetados.
+     */
+    public function removerContainer(string $nome, bool $comVolumesAnonimos = false): array
     {
         $this->validarNome($nome);
-        $cmd = 'docker rm -f ' . escapeshellarg($nome);
+        $cmd = 'docker rm -f ' . ($comVolumesAnonimos ? '-v ' : '') . escapeshellarg($nome);
         return $this->executarComando($cmd);
+    }
+
+    /** Lista os nomes de todos os containers do node (rodando ou parados). */
+    public function listarNomesContainers(): array
+    {
+        $r = $this->executarComando("docker ps -a --format '{{.Names}}'");
+        $nomes = preg_split('/\R/', trim((string) ($r['saida'] ?? ''))) ?: [];
+        return array_values(array_filter(array_map('trim', $nomes), fn ($n) => $n !== ''));
     }
 
     private function executarComando(string $dockerCmd): array
