@@ -69,6 +69,8 @@ final class EntrarController
             if (is_array($totp)) {
                 // Suspender sessão até verificar 2FA
                 $_SESSION['2fa_pending_equipe_id'] = $equipeId;
+                $_SESSION['2fa_pending_equipe_t'] = time();
+                $_SESSION['2fa_pending_equipe_n'] = 0;
                 unset($_SESSION['auth_equipe_id']);
                 return Resposta::redirecionar('/equipe/2fa/verificar');
             }

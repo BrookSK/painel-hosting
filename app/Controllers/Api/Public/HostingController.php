@@ -261,7 +261,8 @@ final class HostingController extends BaseApiController
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
-            return $this->erro('HOSTING_CREATE_FAILED', 'Could not provision VPS: ' . $e->getMessage(), 500);
+            error_log('[api] criar hosting: ' . $e->getMessage());
+            return $this->erro('HOSTING_CREATE_FAILED', 'Could not provision VPS.', 500);
         }
 
         // Enfileirar provisionamento automático

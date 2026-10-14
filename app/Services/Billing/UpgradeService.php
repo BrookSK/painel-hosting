@@ -138,20 +138,139 @@ final class UpgradeService
             }
         }
 
-        $pdo->beginTransaction();
-        try {
-            // 1. Registrar upgrade
+        $asaasSubIdPre = trim((string)($sub['asaas_subscription_id'] ?? ''));
+        $stripeSubIdPre = trim((string)($sub['stripe_subscription_id'] ?? ''));
+
+        // Segurança: upgrade sem forma de cobrança (ex.: plano dado pela equipe) não pode
+        // ser feito pelo cliente — senão ele ganharia o plano maior de graça.
+        if ($isUpgrade && $asaasSubIdPre === '' && $stripeSubIdPre === '') {
+            throw new \RuntimeException('Este plano não tem cobrança automática. Para fazer upgrade, fale com o suporte.');
+        }
+
+        // Asaas: o upgrade só é aplicado DEPOIS que a diferença for paga (webhook).
+        if ($isUpgrade && $asaasSubIdPre !== '' && $prorationCharge > 0) {
+            // Evitar vários upgrades pendentes empilhados
+            $pend = $pdo->prepare("SELECT id FROM subscription_upgrades WHERE subscription_id = :s AND status = 'pending_payment' LIMIT 1");
+            $pend->execute([':s' => $subscriptionId]);
+            if ($pend->fetch()) {
+                throw new \RuntimeException('Já existe um upgrade aguardando pagamento nesta assinatura. Pague a cobrança pendente ou aguarde ela vencer.');
+            }
+
+            $api = new AsaasApi(new ClienteHttp());
+            $customerId = (new AssinaturasService($api))->garantirClienteAsaas($clientId);
+            $cobranca = $api->criarCobrancaAvulsa([
+                'customer' => $customerId,
+                'billingType' => 'UNDEFINED', // cliente escolhe PIX, boleto ou cartão na fatura
+                'value' => $prorationCharge,
+                'dueDate' => date('Y-m-d', strtotime('+3 days')),
+                'description' => 'Upgrade de plano — diferença proporcional (' . (string)($newPlan['name'] ?? '') . ')',
+            ]);
+            $paymentId = (string)($cobranca['id'] ?? '');
+            if ($paymentId === '') {
+                throw new \RuntimeException('Não foi possível gerar a cobrança do upgrade. Tente novamente.');
+            }
+
             $pdo->prepare(
-                'INSERT INTO subscription_upgrades (subscription_id, client_id, old_plan_id, new_plan_id, old_price, new_price, proration_credit, type, status, created_at)
-                 VALUES (:sid, :c, :op, :np, :opr, :npr, :pc, :t, :s, :cr)'
+                'INSERT INTO subscription_upgrades (subscription_id, client_id, old_plan_id, new_plan_id, old_price, new_price, proration_credit, proration_charge, asaas_payment_id, type, status, created_at)
+                 VALUES (:sid, :c, :op, :np, :opr, :npr, :pc, :pch, :pay, :t, :s, :cr)'
             )->execute([
                 ':sid' => $subscriptionId, ':c' => $clientId,
                 ':op' => $oldPlanId, ':np' => $newPlanId,
                 ':opr' => $oldPrice, ':npr' => $newPrice,
-                ':pc' => $prorationCharge, ':t' => $type,
-                ':s' => 'processing', ':cr' => $agora,
+                ':pc' => $prorationCharge, ':pch' => $prorationCharge, ':pay' => $paymentId,
+                ':t' => $type, ':s' => 'pending_payment', ':cr' => $agora,
             ]);
-            $upgradeId = (int)$pdo->lastInsertId();
+
+            return [
+                'ok' => true,
+                'type' => $type,
+                'pending_payment' => true,
+                'old_plan' => (string)$sub['old_plan_name'],
+                'new_plan' => (string)$newPlan['name'],
+                'upgrade_id' => (int)$pdo->lastInsertId(),
+                'proration_charge' => $prorationCharge,
+                'invoice_url' => (string)($cobranca['invoiceUrl'] ?? ''),
+            ];
+        }
+
+        return $this->aplicarMudancaDePlano($sub, $newPlan, $clientId, $isUpgrade, $prorationCharge, null);
+    }
+
+    /**
+     * Webhook: a cobrança do upgrade foi paga → aplica o novo plano agora.
+     */
+    public function aplicarUpgradePago(string $asaasPaymentId): bool
+    {
+        $pdo = BancoDeDados::pdo();
+        $st = $pdo->prepare("SELECT * FROM subscription_upgrades WHERE asaas_payment_id = :p AND status = 'pending_payment' LIMIT 1");
+        $st->execute([':p' => $asaasPaymentId]);
+        $up = $st->fetch();
+        if (!is_array($up)) {
+            return false;
+        }
+
+        // Trava contra webhook duplicado
+        $lock = $pdo->prepare("UPDATE subscription_upgrades SET status = 'processing' WHERE id = :id AND status = 'pending_payment'");
+        $lock->execute([':id' => (int)$up['id']]);
+        if ($lock->rowCount() === 0) {
+            return false;
+        }
+
+        $stmt = $pdo->prepare(
+            "SELECT s.id, s.plan_id, s.vps_id, s.asaas_subscription_id, s.stripe_subscription_id,
+                    p.name AS old_plan_name, p.price_monthly AS old_price, p.plan_type
+             FROM subscriptions s INNER JOIN plans p ON p.id = s.plan_id
+             WHERE s.id = :id AND s.client_id = :c LIMIT 1"
+        );
+        $stmt->execute([':id' => (int)$up['subscription_id'], ':c' => (int)$up['client_id']]);
+        $sub = $stmt->fetch();
+        $np = $pdo->prepare('SELECT id, name, cpu, ram, storage, price_monthly, price_monthly_usd, plan_type FROM plans WHERE id = :id');
+        $np->execute([':id' => (int)$up['new_plan_id']]);
+        $newPlan = $np->fetch();
+        if (!is_array($sub) || !is_array($newPlan) || (int)$sub['plan_id'] !== (int)$up['old_plan_id']) {
+            $pdo->prepare("UPDATE subscription_upgrades SET status = 'failed' WHERE id = :id")->execute([':id' => (int)$up['id']]);
+            return false;
+        }
+
+        // A diferença já foi paga: aplicar sem gerar nova cobrança
+        $this->aplicarMudancaDePlano($sub, $newPlan, (int)$up['client_id'], true, 0.0, (int)$up['id']);
+        return true;
+    }
+
+    /**
+     * Aplica a troca de plano (banco, VPS, gateway e resize). Usado no downgrade, no
+     * upgrade via Stripe (cobrança imediata no cartão) e no upgrade Asaas já pago.
+     */
+    private function aplicarMudancaDePlano(array $sub, array $newPlan, int $clientId, bool $isUpgrade, float $prorationCharge, ?int $upgradeExistenteId): array
+    {
+        $pdo = BancoDeDados::pdo();
+        $subscriptionId = (int)$sub['id'];
+        $oldPlanId = (int)$sub['plan_id'];
+        $newPlanId = (int)$newPlan['id'];
+        $vpsId = (int)($sub['vps_id'] ?? 0);
+        $oldPrice = (float)($sub['old_price'] ?? 0);
+        $newPrice = (float)($newPlan['price_monthly'] ?? 0);
+        $type = $isUpgrade ? 'upgrade' : 'downgrade';
+        $agora = date('Y-m-d H:i:s');
+
+        $pdo->beginTransaction();
+        try {
+            // 1. Registrar upgrade
+            if ($upgradeExistenteId !== null) {
+                $upgradeId = $upgradeExistenteId;
+            } else {
+                $pdo->prepare(
+                    'INSERT INTO subscription_upgrades (subscription_id, client_id, old_plan_id, new_plan_id, old_price, new_price, proration_credit, type, status, created_at)
+                     VALUES (:sid, :c, :op, :np, :opr, :npr, :pc, :t, :s, :cr)'
+                )->execute([
+                    ':sid' => $subscriptionId, ':c' => $clientId,
+                    ':op' => $oldPlanId, ':np' => $newPlanId,
+                    ':opr' => $oldPrice, ':npr' => $newPrice,
+                    ':pc' => $prorationCharge, ':t' => $type,
+                    ':s' => 'processing', ':cr' => $agora,
+                ]);
+                $upgradeId = (int)$pdo->lastInsertId();
+            }
 
             // 2. Atualizar subscription no banco
             $pdo->prepare('UPDATE subscriptions SET plan_id = :p WHERE id = :id')
@@ -465,6 +584,55 @@ final class UpgradeService
         $addonName = (string)($addon['name'] ?? '');
         $agora = date('Y-m-d H:i:s');
 
+        $asaasSubIdPre = trim((string)($sub['asaas_subscription_id'] ?? ''));
+        $stripeSubIdPre = trim((string)($sub['stripe_subscription_id'] ?? ''));
+        $temCusto = $addonPrice > 0 || $addonPriceUsd > 0;
+
+        // Segurança: serviço pago sem forma de cobrança = de graça. Não permitir.
+        if ($temCusto && $asaasSubIdPre === '' && $stripeSubIdPre === '') {
+            throw new \RuntimeException('Esta assinatura não tem cobrança automática. Para contratar este serviço, fale com o suporte.');
+        }
+
+        // Asaas: o serviço só é ativado DEPOIS do pagamento (webhook chama ativarAddonPago).
+        if ($asaasSubIdPre !== '' && $addonPrice > 0) {
+            $pend = $pdo->prepare("SELECT id FROM subscription_addon_items WHERE subscription_id = :sid AND addon_id = :aid AND client_id = :c AND status = 'pending_payment' LIMIT 1");
+            $pend->execute([':sid' => $subscriptionId, ':aid' => $addonId, ':c' => $clientId]);
+            if ($pend->fetch()) {
+                throw new \RuntimeException('Este serviço já está aguardando pagamento. Pague a cobrança pendente para ativá-lo.');
+            }
+
+            $api = new AsaasApi(new ClienteHttp());
+            $customerId = (new AssinaturasService($api))->garantirClienteAsaas($clientId);
+            $cobranca = $api->criarCobrancaAvulsa([
+                'customer' => $customerId,
+                'billingType' => 'UNDEFINED',
+                'value' => $addonPrice,
+                'dueDate' => date('Y-m-d', strtotime('+3 days')),
+                'description' => 'Serviço adicional: ' . $addonName,
+            ]);
+            $paymentId = (string)($cobranca['id'] ?? '');
+            if ($paymentId === '') {
+                throw new \RuntimeException('Não foi possível gerar a cobrança do serviço. Tente novamente.');
+            }
+
+            $pdo->prepare(
+                'INSERT INTO subscription_addon_items (subscription_id, client_id, addon_id, addon_name, price, price_usd, asaas_payment_id, status, created_at)
+                 VALUES (:sid, :c, :aid, :an, :p, :pu, :pay, :s, :cr)'
+            )->execute([
+                ':sid' => $subscriptionId, ':c' => $clientId, ':aid' => $addonId,
+                ':an' => $addonName, ':p' => $addonPrice, ':pu' => $addonPriceUsd > 0 ? $addonPriceUsd : null,
+                ':pay' => $paymentId, ':s' => 'pending_payment', ':cr' => $agora,
+            ]);
+
+            return [
+                'ok' => true,
+                'pending_payment' => true,
+                'addon_name' => $addonName,
+                'item_id' => (int)$pdo->lastInsertId(),
+                'invoice_url' => (string)($cobranca['invoiceUrl'] ?? ''),
+            ];
+        }
+
         // Registrar addon contratado
         $pdo->prepare(
             'INSERT INTO subscription_addon_items (subscription_id, client_id, addon_id, addon_name, price, price_usd, status, created_at)
@@ -480,27 +648,9 @@ final class UpgradeService
         $asaasSubId = trim((string)($sub['asaas_subscription_id'] ?? ''));
         $stripeSubId = trim((string)($sub['stripe_subscription_id'] ?? ''));
 
-        if ($asaasSubId !== '' && $addonPrice > 0) {
+        // (Asaas com custo já saiu acima como "aguardando pagamento"; aqui só addons gratuitos)
+        if ($asaasSubId !== '') {
             try {
-                $api = new AsaasApi(new ClienteHttp());
-                $svc = new AssinaturasService($api);
-                $customerId = $svc->garantirClienteAsaas($clientId);
-
-                $resp = $api->criarCobrancaAvulsa([
-                    'customer' => $customerId,
-                    'billingType' => 'PIX',
-                    'value' => $addonPrice,
-                    'dueDate' => date('Y-m-d'),
-                    'description' => 'Serviço adicional: ' . $addonName,
-                ]);
-
-                $paymentId = (string)($resp['id'] ?? '');
-                if ($paymentId !== '') {
-                    $pdo->prepare('UPDATE subscription_addon_items SET asaas_payment_id = :p WHERE id = :id')
-                        ->execute([':p' => $paymentId, ':id' => $itemId]);
-                }
-
-                // Atualizar valor da assinatura recorrente (plano + addon)
                 $this->atualizarValorAssinaturaAsaas($asaasSubId, $subscriptionId, $pdo);
             } catch (\Throwable) {}
         }
@@ -538,6 +688,49 @@ final class UpgradeService
         }
 
         return ['ok' => true, 'addon_name' => $addonName, 'item_id' => $itemId];
+    }
+
+    /**
+     * Webhook: a cobrança do serviço adicional foi paga → ativa e aplica o efeito agora.
+     */
+    public function ativarAddonPago(string $asaasPaymentId): bool
+    {
+        $pdo = BancoDeDados::pdo();
+        $st = $pdo->prepare("SELECT id, subscription_id, client_id, addon_id FROM subscription_addon_items WHERE asaas_payment_id = :p AND status = 'pending_payment' LIMIT 1");
+        $st->execute([':p' => $asaasPaymentId]);
+        $item = $st->fetch();
+        if (!is_array($item)) {
+            return false;
+        }
+        $lock = $pdo->prepare("UPDATE subscription_addon_items SET status = 'active' WHERE id = :id AND status = 'pending_payment'");
+        $lock->execute([':id' => (int)$item['id']]);
+        if ($lock->rowCount() === 0) {
+            return false;
+        }
+
+        $subId = (int)$item['subscription_id'];
+        $clientId = (int)$item['client_id'];
+
+        // Passa a cobrar o addon nas próximas mensalidades
+        try {
+            $s = $pdo->prepare('SELECT asaas_subscription_id FROM subscriptions WHERE id = :id');
+            $s->execute([':id' => $subId]);
+            $asaasSubId = trim((string)$s->fetchColumn());
+            if ($asaasSubId !== '') {
+                $this->atualizarValorAssinaturaAsaas($asaasSubId, $subId, $pdo);
+            }
+        } catch (\Throwable) {}
+
+        try {
+            $slugStmt = $pdo->prepare('SELECT slug FROM plan_addons WHERE id = :id LIMIT 1');
+            $slugStmt->execute([':id' => (int)$item['addon_id']]);
+            $slug = (string)($slugStmt->fetchColumn() ?: '');
+            if ($slug !== '') {
+                (new AddonEffectService())->aplicar($slug, $subId, $clientId);
+            }
+        } catch (\Throwable) {}
+
+        return true;
     }
 
     /**

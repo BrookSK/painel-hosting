@@ -74,6 +74,21 @@ final class CronJobsController
         if ($name === '' || $command === '' || $vpsId <= 0) {
             return Resposta::redirecionar('/cliente/cron-jobs');
         }
+        // Agenda e comando não podem ter quebra de linha (injetariam linhas no crontab do servidor)
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::cronValido($schedule) || preg_match('/[\r\n]/', $command) || strlen($command) > 2000) {
+            $_SESSION['flash_warning'] = 'Agenda ou comando inválido. Use o formato de 5 campos (ex.: */5 * * * *) e um comando em uma única linha.';
+            return Resposta::redirecionar('/cliente/cron-jobs');
+        }
+        if ($taskType === 'url') {
+            try {
+                // URL do cron não pode apontar para a rede interna do servidor
+                if (!preg_match('#^https?://#i', $command)) throw new \InvalidArgumentException('URL inválida');
+                \LRV\App\Services\Seguranca\UrlExterna::exigirHttpsPublica(preg_replace('#^http://#i', 'https://', $command));
+            } catch (\InvalidArgumentException) {
+                $_SESSION['flash_warning'] = 'URL inválida ou interna. Use um endereço público (http/https).';
+                return Resposta::redirecionar('/cliente/cron-jobs');
+            }
+        }
 
         // Verificar limite de cron jobs do plano (apenas para novos)
         if ($id <= 0) {
@@ -196,11 +211,22 @@ final class CronJobsController
         $taskType = (string)($cron['task_type'] ?? 'command');
         $command = (string)($cron['command'] ?? '');
 
-        return match($taskType) {
+        $interno = match($taskType) {
             'url' => 'curl -sS -o /dev/null -w "%{http_code}" ' . escapeshellarg($command),
             'php_script' => 'php ' . escapeshellarg($command),
             default => $command,
         };
+
+        // Segurança: o cron é instalado no crontab do SERVIDOR. Para contas sem acesso ao
+        // servidor liberado pela equipe, o comando roda DENTRO do container da VPS do
+        // cliente (docker exec) — nunca solto no servidor, onde teria acesso a tudo.
+        $clienteId = (int)($cron['client_id'] ?? 0);
+        $vpsId = (int)($cron['vps_id'] ?? 0);
+        if (!\LRV\Core\Auth::clienteTemAcessoServidor($clienteId)) {
+            $container = 'vps_client_' . $clienteId . '_' . $vpsId;
+            return 'docker exec ' . escapeshellarg($container) . ' sh -c ' . escapeshellarg($interno);
+        }
+        return $interno;
     }
 
     private function sincronizarCrontab(int $clienteId, int $vpsId): void
@@ -225,8 +251,18 @@ final class CronJobsController
         $marker = '# LRV-CRON-CLIENT-' . $clienteId;
         $lines = [$marker . '-START'];
         foreach ($crons as $c) {
+            $schedule = (string)$c['schedule'];
+            // Agenda inválida (ex.: com quebra de linha) injetaria linhas extras no crontab
+            if (!\LRV\App\Services\Seguranca\ValidadorInfra::cronValido($schedule)) {
+                continue;
+            }
             $cmd = $this->montarComando($c);
-            $lines[] = (string)$c['schedule'] . ' ' . $cmd . ' >> /tmp/lrv_cron_' . (int)$c['id'] . '.log 2>&1 ' . $marker . '-' . (int)$c['id'];
+            if (preg_match('/[\r\n]/', $cmd)) {
+                continue; // comando com quebra de linha também viraria outra linha do crontab
+            }
+            // No crontab "%" vira quebra de linha: precisa ser escapado
+            $cmd = str_replace('%', '\%', $cmd);
+            $lines[] = $schedule . ' ' . $cmd . ' >> /tmp/lrv_cron_' . (int)$c['id'] . '.log 2>&1 ' . $marker . '-' . (int)$c['id'];
         }
         $lines[] = $marker . '-END';
         $cronBlock = implode("\n", $lines);

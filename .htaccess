@@ -15,7 +15,28 @@ DirectoryIndex index.php
 </IfModule>
  
 RewriteEngine On
- 
+
+# ── Segurança: a raiz do projeto é o webroot, então bloqueamos tudo que não é público ──
+# Sem listagem de diretórios
+Options -Indexes
+
+# Pastas internas (chaves SSH, backups, logs, código, migrations, git) — 404 para não revelar
+RewriteRule ^(\.git|\.kiro|\.vscode|\.github|storage|database|config|core|app|routes|vendor|semantic-review|node_modules|docs)(/|$) - [R=404,L,NC]
+# Qualquer arquivo/pasta oculto (.env, .gitignore, .htaccess etc.)
+#   (.well-known continua liberado para a renovação do certificado SSL)
+RewriteRule (^|/)\.(?!well-known(/|$)) - [R=404,L]
+# Scripts de CLI na raiz não podem ser executados pela web
+RewriteRule ^(migrar|worker|chat-ws|terminal-ws)\.php$ - [R=404,L,NC]
+# Uploads nunca executam PHP/scripts
+RewriteRule ^(public/)?uploads/.*\.(php\d?|phtml|phar|pl|py|cgi|sh|html?|js)$ - [R=404,L,NC]
+RewriteRule ^(public/)?uploads/(?!imagens/).*\.svg$ - [R=404,L,NC]
+
+<FilesMatch "\.(md|sql|json|lock|ya?ml|env|log|ini|bak|sh|dist|example|key|pem|txt)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
+
 # Entrada da aplicação na raiz
 RewriteRule ^$ index.php [L]
 RewriteRule ^index\.html$ index.php [L]

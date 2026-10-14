@@ -78,6 +78,8 @@ final class EntrarController
                 // Suspender sessão e redirecionar para verificação 2FA
                 unset($_SESSION['auth_cliente_id']);
                 $_SESSION['2fa_pending_cliente_id'] = $clienteId;
+                $_SESSION['2fa_pending_cliente_t'] = time();
+                $_SESSION['2fa_pending_cliente_n'] = 0;
                 return Resposta::redirecionar('/cliente/2fa/verificar');
             }
         }

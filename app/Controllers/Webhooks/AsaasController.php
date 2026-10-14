@@ -17,7 +17,7 @@ final class AsaasController
         $segredo = ConfiguracoesSistema::webhookSegredoAsaas();
         $token = (string) ($req->headers['asaas-access-token'] ?? '');
 
-        if ($segredo === '' || $token !== $segredo) {
+        if ($segredo === '' || !hash_equals($segredo, $token)) {
             return Resposta::texto('Não autorizado.', 401);
         }
 

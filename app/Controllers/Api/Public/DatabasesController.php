@@ -55,6 +55,11 @@ final class DatabasesController extends BaseApiController
         if (!$this->temEscopo($req, 'databases.write')) {
             return $this->proibido('Scope databases.write is required.');
         }
+        // Cria recursos no servidor: só parceiros autorizados pela equipe
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
 
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['vps_id', 'db_name']);
@@ -75,7 +80,7 @@ final class DatabasesController extends BaseApiController
         $pdo = BancoDeDados::pdo();
 
         // Verificar VPS
-        $stmt = $pdo->prepare("SELECT id FROM vps WHERE id = :id AND client_id = :cid");
+        $stmt = $pdo->prepare("SELECT id FROM vps WHERE id = :id AND client_id = :cid AND status = 'running' AND deleted_at IS NULL");
         $stmt->execute([':id' => $vpsId, ':cid' => $clienteId]);
         if (!$stmt->fetch()) {
             return $this->naoEncontrado('VPS');
@@ -85,6 +90,11 @@ final class DatabasesController extends BaseApiController
         if (!preg_match('/^[a-z][a-z0-9_]{1,48}$/', $dbName)) {
             return $this->validacaoFalhou([['field' => 'db_name', 'message' => 'Database name must be lowercase alphanumeric (2-49 chars, start with letter).']]);
         }
+        // Usuário: sempre com o prefixo do cliente (não pode reaproveitar usuário de outra conta)
+        if (!preg_match('/^[a-z][a-z0-9_]{1,20}$/', $dbUser)) {
+            return $this->validacaoFalhou([['field' => 'db_user', 'message' => 'db_user must be lowercase alphanumeric (2-21 chars).']]);
+        }
+        $dbUser = 'u' . (int) $clienteId . '_' . $dbUser;
 
         // Verificar duplicata
         $stmt = $pdo->prepare("SELECT id FROM client_databases WHERE vps_id = :vps AND db_name = :name");
@@ -106,7 +116,7 @@ final class DatabasesController extends BaseApiController
             ':name' => $dbName,
             ':user' => $dbUser,
             ':type' => $dbType,
-            ':pass' => $dbPassword, // Em produção, encriptar
+            ':pass' => \LRV\App\Services\Infra\SshCrypto::cifrar($dbPassword),
         ]);
         $id = (int) $pdo->lastInsertId();
 

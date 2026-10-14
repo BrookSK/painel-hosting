@@ -82,6 +82,12 @@ final class BancoDadosController
         if ($name === '' || $vpsId <= 0) {
             return $this->renderizarErro($clienteId, 'Preencha o nome e selecione a VPS.');
         }
+        if ($customPass !== '' && strlen($customPass) < 12) {
+            return $this->renderizarErro($clienteId, 'A senha do banco precisa ter pelo menos 12 caracteres (ou deixe em branco para gerar uma segura).');
+        }
+        if (strlen($name) > 40) {
+            return $this->renderizarErro($clienteId, 'Nome do banco muito longo (máx. 40 caracteres).');
+        }
 
         // Verificar limite de bancos de dados do plano
         [$podeCriar, $atual, $limite] = \LRV\App\Services\Plans\PlanFeatureService::podeCriarBanco($clienteId);
@@ -90,7 +96,15 @@ final class BancoDadosController
         }
 
         $dbName = 'db_' . $clienteId . '_' . preg_replace('/[^a-z0-9_]/', '_', strtolower($name));
-        $dbUser = $customUser !== '' ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $customUser) : 'u_' . $clienteId . '_' . substr(md5($name . time()), 0, 8);
+        // Usuário SEMPRE com o prefixo do cliente: senão daria para "pegar" o usuário MySQL de
+        // outra conta no mesmo servidor (CREATE USER IF NOT EXISTS reaproveita) e depois apagá-lo.
+        $prefixoUser = 'u_' . $clienteId . '_';
+        $dbUser = $customUser !== ''
+            ? $prefixoUser . substr((string) preg_replace('/[^a-zA-Z0-9_]/', '', $customUser), 0, 32 - strlen($prefixoUser))
+            : $prefixoUser . substr(md5($name . time()), 0, 8);
+        if ($dbUser === $prefixoUser || !\LRV\App\Services\Seguranca\ValidadorInfra::identificadorMysqlValido($dbUser)) {
+            $dbUser = $prefixoUser . substr(md5($name . time()), 0, 8);
+        }
         $dbPass = $customPass !== '' ? $customPass : bin2hex(random_bytes(12));
 
         $pdo = BancoDeDados::pdo();
@@ -190,10 +204,16 @@ final class BancoDadosController
                 $port = (int)($vps['ssh_port'] ?? 22);
                 $user = (string)($vps['ssh_user'] ?? 'root');
 
-                $dockerCmd = 'docker ps -a --format "{{.Names}}" | grep -q ' . escapeshellarg($containerName) . ' && echo "already exists"'
+                // Rede isolada do cliente (lrv_c{ID}); se o Docker não conseguir criar, usa a compartilhada
+                $redeCliente = 'lrv_c' . (int) $clienteId;
+                $dockerCmd = '(docker network inspect ' . escapeshellarg($redeCliente) . ' >/dev/null 2>&1 || docker network create ' . escapeshellarg($redeCliente) . ' >/dev/null 2>&1;'
+                    . ' docker network connect ' . escapeshellarg($redeCliente) . ' lrv_phpmyadmin >/dev/null 2>&1; true);'
+                    . ' LRV_NET=$(docker network inspect ' . escapeshellarg($redeCliente) . ' >/dev/null 2>&1 && echo ' . escapeshellarg($redeCliente) . ' || echo ' . escapeshellarg($rede) . ');'
+                    . ' docker ps -a --format "{{.Names}}" | grep -qx ' . escapeshellarg($containerName) . ' && echo "already exists"'
                     . ' || docker run -d'
                     . ' --name ' . escapeshellarg($containerName)
-                    . ' --network ' . escapeshellarg($rede)
+                    . ' --network "$LRV_NET"'
+                    . ' --pids-limit 512'
                     . ' --restart unless-stopped'
                     . ' -p 127.0.0.1:' . $mysqlPort . ':3306'
                     . ' -e MYSQL_ROOT_PASSWORD=' . escapeshellarg($dbPass)
@@ -267,6 +287,17 @@ final class BancoDadosController
         $banco = $stmt->fetch();
         if (!is_array($banco)) return Resposta::json(['ok' => false, 'erro' => 'Banco não encontrado.'], 404);
 
+        // O SQL é executado pelo cliente "mysql" no SERVIDOR. Esse programa aceita comandos
+        // próprios (system, \!, source, tee...) que rodariam comandos/ler/gravar arquivos no
+        // servidor. Só deixamos passar SQL puro.
+        $motivo = $this->sqlTemComandoDoCliente($sql);
+        if ($motivo !== null) {
+            return Resposta::json(['ok' => false, 'erro' => 'Comando não permitido no console SQL: ' . $motivo . '. Use apenas comandos SQL.']);
+        }
+        if (strlen($sql) > 100000) {
+            return Resposta::json(['ok' => false, 'erro' => 'SQL muito grande (máx. 100 KB). Use o phpMyAdmin para importar arquivos.']);
+        }
+
         $dbName = (string)$banco['db_name'];
         $dbUser = (string)$banco['db_user'];
         $dbPass = SshCrypto::decifrar((string)$banco['db_password_enc']);
@@ -289,6 +320,53 @@ final class BancoDadosController
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Retorna o motivo se o texto tiver comandos do programa "mysql" (fora de aspas),
+     * ou null se for só SQL.
+     */
+    private function sqlTemComandoDoCliente(string $sql): ?string
+    {
+        $proibidos = ['system', 'source', 'tee', 'notee', 'pager', 'nopager', 'edit', 'prompt', 'connect',
+            'delimiter', 'rehash', 'charset', 'warnings', 'nowarning', 'status', 'exit', 'quit', 'print', 'ego', 'go', 'help', 'resetconnection', 'query_attributes', 'ssl_session_data_print'];
+        $len = strlen($sql);
+        $aspas = null;
+        $inicioStmt = 0;
+        $inicioLinha = 0;
+        for ($i = 0; $i <= $len; $i++) {
+            $c = $i < $len ? $sql[$i] : ';';
+            if ($aspas !== null) {
+                if ($c === '\\' && $aspas !== '`') { $i++; continue; } // escape dentro da string
+                if ($c === $aspas) { $aspas = null; }
+                continue;
+            }
+            if ($c === "'" || $c === '"' || $c === '`') { $aspas = $c; continue; }
+            if ($c === '\\') {
+                return 'comando com barra invertida (\\' . ($sql[$i + 1] ?? '') . ')';
+            }
+            if ($c === '#' || ($c === '-' && ($sql[$i + 1] ?? '') === '-')) {
+                // comentário até o fim da linha
+                $nl = strpos($sql, "\n", $i);
+                $i = $nl === false ? $len - 1 : $nl;
+                continue;
+            }
+            if ($c === ';' || $c === "\n") {
+                // primeira palavra do comando e da linha (o mysql reconhece os dois)
+                foreach ([$inicioStmt, $inicioLinha] as $ini) {
+                    $trecho = strtolower(ltrim(substr($sql, $ini, $i - $ini)));
+                    $primeira = (string) preg_replace('/[^a-z_].*$/s', '', $trecho);
+                    if ($primeira !== '' && in_array($primeira, $proibidos, true)) {
+                        return '"' . $primeira . '"';
+                    }
+                }
+                $inicioLinha = $i + 1;
+                if ($c === ';') {
+                    $inicioStmt = $i + 1;
+                }
+            }
+        }
+        return null;
     }
 
     public function excluir(Requisicao $req): Resposta

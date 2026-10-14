@@ -136,6 +136,16 @@ final class DoisFatoresController
         $pendingId = (int)($_SESSION['2fa_pending_cliente_id'] ?? 0);
         if ($pendingId <= 0) return Resposta::redirecionar('/cliente/entrar');
 
+        // Anti força bruta do código: 5 tentativas por login, 10 min de validade,
+        // e no máximo 10 tentativas a cada 15 min por conta.
+        $_SESSION['2fa_pending_cliente_t'] ??= time();
+        $_SESSION['2fa_pending_cliente_n'] = (int)($_SESSION['2fa_pending_cliente_n'] ?? 0) + 1;
+        $porConta = \LRV\Core\RateLimiter::consumir('2fa:client:' . $pendingId, 10, 900);
+        if ($_SESSION['2fa_pending_cliente_n'] > 5 || time() - (int)$_SESSION['2fa_pending_cliente_t'] > 600 || empty($porConta['ok'])) {
+            unset($_SESSION['2fa_pending_cliente_id'], $_SESSION['2fa_pending_cliente_t'], $_SESSION['2fa_pending_cliente_n']);
+            return Resposta::redirecionar('/cliente/entrar?sessao=expirada');
+        }
+
         $codigo = trim((string)($req->post['codigo'] ?? ''));
 
         $pdo = BancoDeDados::pdo();
@@ -148,7 +158,8 @@ final class DoisFatoresController
             return Resposta::html($html, 422);
         }
 
-        unset($_SESSION['2fa_pending_cliente_id']);
+        unset($_SESSION['2fa_pending_cliente_id'], $_SESSION['2fa_pending_cliente_t'], $_SESSION['2fa_pending_cliente_n']);
+        @session_regenerate_id(true);
         $_SESSION['auth_cliente_id'] = $pendingId;
 
         $url = trim((string) ($_SESSION['redirect_after_login'] ?? ''));

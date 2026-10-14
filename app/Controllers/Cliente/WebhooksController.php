@@ -83,7 +83,12 @@ final class WebhooksController
         }
 
         $service = new WebhookService();
-        $resultado = $service->criar($clienteId, $url, $validos);
+        try {
+            $resultado = $service->criar($clienteId, $url, $validos);
+        } catch (\InvalidArgumentException) {
+            // URL interna/privada ou que não resolve (proteção SSRF)
+            return Resposta::redirecionar('/cliente/webhooks/novo?erro=url');
+        }
 
         // Guardar o secret para exibir uma única vez
         $_SESSION['webhook_secret_criado'] = (string) ($resultado['secret'] ?? '');

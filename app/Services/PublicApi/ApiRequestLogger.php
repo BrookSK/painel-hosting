@@ -59,10 +59,6 @@ final class ApiRequestLogger
 
     private static function ipDoRequest(Requisicao $req): string
     {
-        $ip = (string) ($req->headers['x-forwarded-for'] ?? '');
-        if ($ip !== '') {
-            return trim(explode(',', $ip)[0]);
-        }
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        return \LRV\Core\IpCliente::obter($req->headers);
     }
 }

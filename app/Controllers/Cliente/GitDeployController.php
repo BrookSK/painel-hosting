@@ -106,11 +106,46 @@ final class GitDeployController
             return $this->renderizarErro($clienteId, $id, 'Preencha nome, repositório e VPS.');
         }
 
-        if (!preg_match('#^https?://[a-zA-Z0-9._/-]+$#', $repoUrl) && !preg_match('#^git@[a-zA-Z0-9._-]+:[a-zA-Z0-9._/-]+$#', $repoUrl)) {
-            return $this->renderizarErro($clienteId, $id, 'URL do repositório inválida.');
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::repoUrlValida($repoUrl)) {
+            return $this->renderizarErro($clienteId, $id, 'URL do repositório inválida. Use https://github.com/usuario/repositorio ou git@github.com:usuario/repositorio.git');
         }
+        if ($branch !== '' && !\LRV\App\Services\Seguranca\ValidadorInfra::branchValido($branch)) {
+            return $this->renderizarErro($clienteId, $id, 'Nome da branch inválido.');
+        }
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::phpVersionValida($phpVersion)) {
+            return $this->renderizarErro($clienteId, $id, 'Versão do PHP inválida.');
+        }
+        // Só aceita configurações de PHP conhecidas e com teto (vão para o php.ini do servidor)
+        $phpSettings = json_encode(
+            \LRV\App\Services\Seguranca\ValidadorInfra::phpSettings(json_decode($phpSettings, true) ?: []),
+            JSON_UNESCAPED_UNICODE
+        );
 
         $pdo = BancoDeDados::pdo();
+
+        // Pasta de publicação: sempre dentro de /var/www e nunca a de outro cliente.
+        // Na edição, a pasta existente é mantida (não dá para "mudar" para cima de outro site).
+        if ($id > 0) {
+            $atual = $pdo->prepare('SELECT deploy_path FROM git_deployments WHERE id = :id AND client_id = :c LIMIT 1');
+            $atual->execute([':id' => $id, ':c' => $clienteId]);
+            $pathAtual = $atual->fetchColumn();
+            if ($pathAtual === false) {
+                return $this->renderizarErro($clienteId, $id, 'Deploy não encontrado.');
+            }
+            if (rtrim($deployPath, '/') !== rtrim((string) $pathAtual, '/')) {
+                try {
+                    $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy($deployPath, $clienteId, $id);
+                } catch (\InvalidArgumentException $e) {
+                    return $this->renderizarErro($clienteId, $id, $e->getMessage());
+                }
+            }
+        } else {
+            try {
+                $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy($deployPath, $clienteId);
+            } catch (\InvalidArgumentException $e) {
+                return $this->renderizarErro($clienteId, $id, $e->getMessage());
+            }
+        }
 
         // Validar que a VPS pertence ao cliente
         $vStmt = $pdo->prepare("SELECT id FROM vps WHERE id = :v AND client_id = :c AND status = 'running' LIMIT 1");
@@ -265,7 +300,7 @@ final class GitDeployController
         $stmt = $pdo->prepare(
             'SELECT g.*, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
-             JOIN vps v ON v.id = g.vps_id
+             JOIN vps v ON v.id = g.vps_id AND v.client_id = g.client_id
              JOIN servers s ON s.id = v.server_id
              WHERE g.id = :id AND g.client_id = :c AND g.status != "inactive" LIMIT 1'
         );
@@ -277,6 +312,7 @@ final class GitDeployController
         }
 
         try {
+            $this->validarDeployAntesDeExecutar($dep); // normaliza deploy_path usado abaixo no vhost
             $result = $this->executarDeploy($dep);
         } catch (\Throwable $e) {
             $pdo->prepare('UPDATE git_deployments SET status="error", error_message=:e WHERE id=:id')
@@ -385,7 +421,11 @@ final class GitDeployController
         $dep = $stmt->fetch();
         if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
 
-        $deployPath = rtrim((string)($dep['deploy_path'] ?? '/var/www/html'), '/');
+        try {
+            $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy((string)($dep['deploy_path'] ?? ''), $clienteId, $id, true);
+        } catch (\InvalidArgumentException $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
         // Aplicar o mesmo prefixo de PHP do deploy, para que "php"/"composer" no console
         // usem a versão configurada (ex: php83 do aPanel) em vez do PHP padrão do PATH.
         $prefixoPhp = $this->montarPrefixoPhp(trim((string)($dep['php_version'] ?? '8.3')));
@@ -450,7 +490,13 @@ final class GitDeployController
             if ($apagarArquivos) {
                 $deployPath = rtrim((string)($dep['deploy_path'] ?? ''), '/');
                 // Segurança: não permitir apagar diretórios críticos
-                if ($deployPath !== '' && $deployPath !== '/' && $deployPath !== '/var' && $deployPath !== '/var/www' && str_starts_with($deployPath, '/var/www/')) {
+                $pastaSegura = false;
+                try {
+                    // dentro de /var/www, sem "..", e sem colidir com a pasta de outro cliente
+                    \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy($deployPath, $clienteId, $id, false);
+                    $pastaSegura = true;
+                } catch (\InvalidArgumentException) {}
+                if ($pastaSegura && $deployPath !== '' && $deployPath !== '/' && $deployPath !== '/var' && $deployPath !== '/var/www' && str_starts_with($deployPath, '/var/www/')) {
                     try {
                         $exec = new \LRV\App\Services\Infra\SshExecutor();
                         $host = (string)($dep['ip_address'] ?? '');
@@ -509,14 +555,17 @@ final class GitDeployController
             throw new \RuntimeException('Deployment #' . $id . ' não encontrado.');
         }
 
-        // Carregar infra (VPS/servidor)
+        $donoId = (int)($dep['client_id'] ?? 0);
+        $this->validarDeployAntesDeExecutar($dep);
+
+        // Carregar infra (VPS/servidor) — a VPS precisa ser do MESMO cliente do deploy
         $infoStmt = $pdo->prepare(
             'SELECT v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM vps v
              LEFT JOIN servers s ON s.id = v.server_id
-             WHERE v.id = :vid LIMIT 1'
+             WHERE v.id = :vid AND v.client_id = :cid AND v.deleted_at IS NULL LIMIT 1'
         );
-        $infoStmt->execute([':vid' => (int)($dep['vps_id'] ?? 0)]);
+        $infoStmt->execute([':vid' => (int)($dep['vps_id'] ?? 0), ':cid' => $donoId]);
         $info = $infoStmt->fetch();
         if (!is_array($info) || empty($info['ip_address'])) {
             throw new \RuntimeException('VPS ou servidor não configurado para o deployment #' . $id . '.');
@@ -599,8 +648,43 @@ final class GitDeployController
         return fn(string $cmd, int $t = 0) => $exec->executar($host, $port, $user, $keyPath, $cmd, $t > 0 ? $t : $timeout);
     }
 
+    /**
+     * Segurança: o deploy roda direto no servidor, então tudo é revalidado antes de
+     * executar — inclusive deploys automáticos (webhook) e registros antigos.
+     * Normaliza $dep['deploy_path'].
+     */
+    private function validarDeployAntesDeExecutar(array &$dep): void
+    {
+        $donoId = (int)($dep['client_id'] ?? 0);
+        if (!\LRV\Core\Auth::clienteTemAcessoServidor($donoId) || \LRV\Core\Auth::clienteBloqueado($donoId)) {
+            throw new \RuntimeException('Deploy bloqueado: esta conta não tem acesso liberado ao servidor (ou está inativa).');
+        }
+        $V = \LRV\App\Services\Seguranca\ValidadorInfra::class;
+        if (!$V::repoUrlValida((string)($dep['repo_url'] ?? ''))) {
+            throw new \RuntimeException('Deploy bloqueado: URL do repositório inválida. Corrija nas configurações do deploy.');
+        }
+        if (!$V::branchValido((string)($dep['branch'] ?? 'main'))) {
+            throw new \RuntimeException('Deploy bloqueado: nome da branch inválido.');
+        }
+        if (!$V::phpVersionValida((string)($dep['php_version'] ?? '8.3'))) {
+            throw new \RuntimeException('Deploy bloqueado: versão do PHP inválida.');
+        }
+        try {
+            $dep['deploy_path'] = $V::exigirCaminhoDeploy((string)($dep['deploy_path'] ?? ''), $donoId, (int)($dep['id'] ?? 0), true);
+        } catch (\InvalidArgumentException $e) {
+            throw new \RuntimeException('Deploy bloqueado: ' . $e->getMessage());
+        }
+        foreach (['subdomain', 'temp_domain'] as $campoDominio) {
+            $dom = trim((string)($dep[$campoDominio] ?? ''));
+            if ($dom !== '' && !$V::dominioValido($dom)) {
+                throw new \RuntimeException('Deploy bloqueado: domínio inválido.');
+            }
+        }
+    }
+
     private function executarDeploy(array $dep): array
     {
+        $this->validarDeployAntesDeExecutar($dep);
         $host = trim((string)($dep['ip_address'] ?? ''));
         $port = (int)($dep['ssh_port'] ?? 22);
         $user = trim((string)($dep['ssh_user'] ?? 'root'));
@@ -1047,9 +1131,10 @@ final class GitDeployController
         $dep = $stmt->fetch();
         if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Deploy não encontrado.'], 404);
 
-        $deployPath = rtrim((string)($dep['deploy_path'] ?? ''), '/');
-        if ($deployPath === '') {
-            return Resposta::json(['ok' => false, 'erro' => 'Este deploy não tem uma pasta configurada.']);
+        try {
+            $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy((string)($dep['deploy_path'] ?? ''), $clienteId, $id, true);
+        } catch (\InvalidArgumentException $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
 
         // Montar o caminho final e IMPEDIR escapar do deploy_path (path traversal).
@@ -1151,12 +1236,21 @@ final class GitDeployController
         $domain = (string)($dep['subdomain'] ?? '');
         $appType = (string)($dep['app_type'] ?? 'php');
 
-        $cmds = [];
-        if ($tipo === 'all' || $tipo === 'nginx') {
-            $cmds[] = 'echo "=== NGINX ERROR LOG ===" && tail -' . $linhas . ' /var/log/nginx/error.log 2>/dev/null || echo "(vazio)"';
+        try {
+            $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy($deployPath, $clienteId, $id, true);
+        } catch (\InvalidArgumentException $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
-        if ($tipo === 'all' || $tipo === 'php') {
-            $cmds[] = 'echo "=== PHP-FPM LOG ===" && tail -' . $linhas . ' /var/log/php*fpm*.log 2>/dev/null || echo "(vazio)"';
+
+        $cmds = [];
+        // Os logs gerais do Nginx/PHP-FPM do servidor têm dados de TODOS os sites
+        // (inclusive de outros clientes), então só mostramos as linhas deste domínio.
+        if ($tipo === 'all' || $tipo === 'nginx' || $tipo === 'php') {
+            if ($domain !== '' && \LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) {
+                $cmds[] = 'echo "=== NGINX (somente ' . $domain . ') ===" && (grep -hF ' . escapeshellarg($domain) . ' /var/log/nginx/error.log /www/wwwlogs/' . escapeshellarg($domain) . '.error.log 2>/dev/null | tail -' . $linhas . ' || echo "(vazio)")';
+            } else {
+                $cmds[] = 'echo "=== NGINX === (configure um domínio para ver os logs do site)"';
+            }
         }
         if ($tipo === 'all' || $tipo === 'app') {
             // Logs da aplicação (storage/logs, logs/, .log)
@@ -1306,14 +1400,18 @@ final class GitDeployController
             $token = (string) \LRV\Core\Settings::obter('worker.http_token', '');
             if ($token !== '') {
                 $base = rtrim(\LRV\Core\ConfiguracoesSistema::appUrlBase(), '/');
-                $url = $base . '/api/worker/run-once?token=' . urlencode($token);
+                // Token no cabeçalho (não na URL, que vai parar em logs) e TLS verificado
+                $url = $base . '/api/worker/run-once';
                 $ch = curl_init($url);
                 curl_setopt_array($ch, [
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => '',
+                    CURLOPT_HTTPHEADER => ['X-Worker-Token: ' . $token],
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_TIMEOUT => 2,
                     CURLOPT_CONNECTTIMEOUT => 2,
                     CURLOPT_NOSIGNAL => true,
-                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYPEER => true,
                 ]);
                 curl_exec($ch);
                 curl_close($ch);

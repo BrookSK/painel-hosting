@@ -1,0 +1,731 @@
+# Changelog interno (uso exclusivo da equipe)
+
+> **CONFIDENCIAL — não publicar.** Este arquivo registra TODAS as mudanças, inclusive
+> detalhes técnicos, de segurança e de funcionalidades da área da equipe. Ele é
+> bloqueado na web (`docs/` está negado no `.htaccess`).
+>
+> O changelog público, que os clientes veem em `/changelog`, é o `CHANGELOG.md` da raiz:
+> nele entram só novidades que interessam ao cliente, em linguagem simples, sem detalhes
+> internos (nomes de arquivos/tabelas, funcionamento da segurança, falhas corrigidas,
+> recursos da equipe, servidores, valores de limites etc.).
+>
+> **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
+> só o que o cliente precisa saber.
+
+### Detalhes técnicos da 3.6.2 (revisão de segurança)
+- Webroot: bloqueio de `storage/`, `database/`, `config/`, `core/`, `app/`, `routes/`, `docs/`, `.git` e scripts CLI no `.htaccess`; uploads sem execução; `public/opcache-reset.php` removido
+- `core/IpCliente.php`: X-Forwarded-For/CF-Connecting-IP só aceitos de proxy confiável (loopback, rede privada, Cloudflare, `security.trusted_proxies`)
+- `clients.host_access_enabled` (migration 0097, grandfather de quem já tinha deploy/cron) + `Middlewares::exigirAcessoServidor()` em todo `/cliente/git-deploy/*`; arquivos em modo direto presos às pastas dos deploys com `realpath` no servidor; cron sem acesso roda via `docker exec` no container
+- `app/Services/Seguranca/ValidadorInfra.php` (domínio, repo, branch, PHP, caminho de deploy, php settings, cron) e `UrlExterna.php` (anti-SSRF com IP fixado)
+- API: gate de provisionamento também em databases/emails/domains/backups/applications; anti-escalada de escopos em keys; bearer só `type='access'` e respeita validade da key
+- Cobrança: upgrade/addon Asaas só aplicados no webhook de pagamento (migration 0098); cartão da contratação só provisiona com status CONFIRMED/RECEIVED
+- Migração WP: import com usuário restrito (não root), validação de domínio e de host de origem
+- Docker: rede por cliente `lrv_c{ID}`, `--pids-limit`, `no-new-privileges`
+- 2FA: 5 tentativas por login, 10 min de validade, 10 tentativas/15 min por conta
+- Equipe: só superadmin cria superadmin e altera permissões; rotas de dev deploy/PR exigem `manage_vps`
+
+---
+
+---
+
+## [3.6.2] — 2026-10-14
+
+### Segurança
+- **Revisão completa de segurança**: verificamos todas as áreas do painel, da API e dos servidores e fechamos as brechas encontradas. Nenhum cliente consegue mais acessar dados ou arquivos de outro cliente, nem usar o painel como porta de entrada para os servidores
+- **Recursos que rodam direto no servidor agora precisam de liberação da equipe**: publicação via Git (Git Deploy), console, tarefas agendadas no servidor e arquivos do site ficam disponíveis só para contas liberadas. Quem já usava continua funcionando normalmente. Contas novas pedem a liberação pelo suporte
+- **Arquivos internos protegidos**: chaves de acesso aos servidores, backups, registros e arquivos do sistema não podem mais ser baixados pelo navegador
+- **Cada cliente isolado no servidor**: os servidores, bancos de dados e aplicações de um cliente não "enxergam" mais os de outros clientes
+- **Upgrade e serviços adicionais só depois do pagamento**: ao trocar para um plano maior ou contratar um adicional, o sistema gera a cobrança e libera o recurso assim que o pagamento é confirmado
+- **Cartão confirmado antes de liberar o servidor** na contratação pelo site
+- **Proteção extra no login e na verificação em duas etapas**: limite de tentativas que não pode mais ser burlado
+- **Avisos automáticos (webhooks) e migração de WordPress** não podem mais ser usados para acessar a rede interna dos servidores
+- **Equipe**: só superadmin pode criar outros superadmins ou mudar as permissões dos cargos
+
+---
+
+## [3.6.1] — 2026-10-14
+
+### Adicionado
+- **Inativar cliente**: novo botão na ficha do cliente que bloqueia o acesso dele sem apagar nada. A pessoa não consegue mais entrar no painel nem usar a API, quem já estava logado é desconectado e os servidores dela saem do ar. A cobrança continua como estava. Dá para escrever o motivo, e o botão "Reativar cliente" desfaz tudo e religa os servidores que estão com o pagamento em dia
+
+### Melhorado
+- **"Deletar cliente" agora apaga tudo de verdade**: além dos registros do painel, a exclusão cancela as assinaturas no Asaas/Stripe, remove os servidores, aplicações, bancos de dados, e-mails, arquivos e backups, e tira o acesso aos repositórios. Também faz uma busca em todos os servidores para achar e apagar qualquer coisa do cliente que tenha ficado para trás, mesmo que não apareça no painel. Ela roda em segundo plano, então a tela não trava, e o cliente fica bloqueado na hora. Os registros de auditoria continuam guardados como histórico
+- **Exclusão segura**: se algum passo não der certo (por exemplo, um servidor fora do ar), a exclusão para ali, avisa o motivo na ficha do cliente e não apaga nada do painel, para nada ficar "esquecido" rodando no servidor. Depois é só tentar de novo
+
+### Corrigido
+- **Servidor que continuava ligado depois de removido**: quando o sistema não conseguia desligar um servidor, ele mesmo assim o marcava como removido. Agora, se o desligamento falhar, a remoção é interrompida e o servidor continua aparecendo no painel até ser removido de fato
+- **Segurança da API**: criar servidores, clientes e repositórios pela API agora só funciona para contas liberadas pela equipe. Antes, qualquer conta nova conseguia criar servidores sem pagar
+
+---
+
+## [3.6.0] — 2026-10-03
+
+### Adicionado
+- **Integração completa por API para automação**: parceiros e sistemas externos agora conseguem fazer todo o processo de forma automática, do começo ao fim — cadastrar o cliente, criar o servidor, publicar o site a partir do repositório e deixar tudo no ar, sem ninguém precisar fazer nada manualmente no painel
+- **Cadastro de clientes pela API**: um parceiro pode registrar os próprios clientes finais e continuar gerenciando cada um deles de forma separada e organizada
+- **Criação de servidores pela API**: dá para pedir um servidor novo para um cliente escolhendo o plano, e acompanhar sozinho quando ele fica pronto. Também é possível suspender ou desligar um servidor pela API quando necessário
+- **Publicação de sites via repositório pela API**: dá para conectar um repositório (GitHub, GitLab, etc.) e publicar o site automaticamente, inclusive escolhendo a tecnologia (PHP, Node.js, Python)
+- **Ambiente de testes com endereço temporário**: ao publicar, é possível pedir um endereço provisório de homologação já com cadeado de segurança (https), para o cliente ver o site antes de usar o domínio definitivo
+- **Avisos automáticos (webhooks) para cada etapa**: o sistema externo recebe uma notificação na hora em que um cliente é criado, um servidor fica pronto ou um site é publicado, sem precisar ficar consultando o tempo todo
+- **Tela de Webhooks no painel**: nova área no menu lateral onde você cria webhooks pelo navegador — informa o endereço do seu sistema, escolhe os eventos que quer receber e copia o código de segurança (secret). Também mostra o histórico de entregas de cada webhook, sem precisar programar nada
+- **Criação de repositórios Git pela API**: parceiros podem criar o repositório do projeto direto na organização e liberar o acesso dos desenvolvedores automaticamente, sem precisar entrar no GitHub manualmente. O endereço do repositório já volta pronto para publicar o site
+- **Link de pagamento (sem precisar logar)**: a equipe agora gera um link exclusivo para cada cliente pagar o plano direto pelo navegador — a pessoa só abre o link, escolhe cartão, boleto ou PIX e paga, sem precisar entrar no painel. Ideal para clientes que não vão usar o sistema no dia a dia. O pagamento é confirmado automaticamente e libera o serviço na sequência
+
+### Melhorado
+- **Documentação da API ampliada**: todos os novos recursos entraram na documentação para desenvolvedores, com exemplos de uso de cada chamada
+
+---
+
+## [3.5.1] — 2026-09-04
+
+### Adicionado
+- **Botão "Regerar SSL"**: se o cadeado de segurança (https) do seu site cair por algum motivo, agora basta clicar em um botão no painel que o sistema reemite o certificado e reativa a conexão segura sozinho — sem precisar abrir chamado nem mexer em nada técnico
+
+### Corrigido
+- **Publicação automática que não completava em sites maiores**: quando você enviava uma atualização grande para o seu repositório, o site às vezes não terminava de publicar. Agora a publicação sempre é iniciada na hora e roda por completo em segundo plano, sem falhar por demora
+- **Aviso de "Publicando..."**: enquanto uma atualização está sendo colocada no ar, o painel agora mostra o status "Publicando..." para você acompanhar, ao invés de parecer que nada está acontecendo
+
+---
+
+## [3.5.0] — 2026-09-04
+
+### Adicionado
+- **Área de projetos da equipe (Dev Workflow)**: novo espaço para a equipe de desenvolvimento cadastrar projetos, criar demandas, gerar sites de teste e acompanhar o fluxo de aprovação de cada tarefa em um só lugar
+- **Fluxo de demandas com aprovação**: o desenvolvedor cria a demanda, testa no ambiente de teste e envia para aprovação; quem revisa recebe um aviso e aprova ou devolve com um comentário, tudo pelo painel
+- **VPS da equipe**: agora dá para criar servidores internos da empresa (para testes e desenvolvimento) direto pelo painel, separados dos servidores dos clientes
+- **Aviso de site em manutenção**: quando um site precisa ficar temporariamente indisponível, o visitante passa a ver uma página amigável de "em manutenção" no lugar de um erro, sem expor motivos internos
+
+### Melhorado
+- **Deploy mais confiável**: o histórico de cada publicação agora mostra o título e o código da alteração enviada, para você saber exatamente o que foi para o ar
+- **Publicação automática ao salvar no seu repositório**: a conexão com GitHub ficou mais estável, com instruções passo a passo mais claras dentro do painel
+- **Reativação automática após pagamento**: quando um cliente regulariza o pagamento, o site volta ao ar sozinho, sem precisar de ação manual da equipe
+
+### Corrigido
+- Sites que ficavam com o endereço apontando para o lugar errado após a publicação
+- Cadeado de segurança (SSL) que, em alguns casos, não era ativado automaticamente no site
+- Situações em que um site aparecia como suspenso no painel mas continuava acessível
+
+---
+
+## [3.4.0] — 2026-07-29
+
+### Adicionado
+- **Auto Deploy no Git Deploy**: agora você pode ativar o deploy automático para que, sempre que fizer um push na branch configurada, o servidor atualize sozinho — sem precisar clicar em nada
+- **Webhook para GitHub, GitLab e Bitbucket**: ao ativar o Auto Deploy, o sistema gera uma URL única de webhook para você configurar no seu repositório
+- **Instruções de configuração**: o painel mostra o passo a passo para adicionar o webhook no GitHub, GitLab ou Bitbucket
+- **Indicador visual na listagem**: badge "Auto Deploy" aparece nos repositórios que têm a funcionalidade ativada
+- **Gerenciamento de Armazenamento**: nova tela no menu lateral (tanto para clientes quanto para a equipe) que mostra quanto espaço cada aplicação, deploy, banco de dados e arquivo ocupa no servidor — com opção de limpar itens individualmente ou em lote
+- **Escaneamento de disco em tempo real**: clique em "Escanear disco" para ver o uso atualizado de cada item no servidor, com barra visual colorida (verde, amarelo ou vermelho conforme o uso)
+- **Limpeza seletiva**: apague arquivos temporários, logs antigos, caches (npm/composer/pip) ou pastas específicas direto pelo painel, sem precisar de terminal
+- **Opção de apagar arquivos ao remover integração Git Deploy**: ao remover um repositório, agora aparece um diálogo perguntando se deseja também apagar os arquivos do servidor (com aviso de que é irreversível)
+- **Opção de apagar arquivos e banco ao remover aplicação**: ao deletar uma aplicação, você pode escolher se quer apagar os arquivos do servidor e/ou o banco de dados vinculado — liberando espaço em disco
+- **Verificação de espaço antes de migrar WordPress**: o sistema verifica se o servidor tem espaço suficiente antes de iniciar a cópia. Se não couber, cancela com uma mensagem clara informando os tamanhos
+- **Limpeza automática em caso de disco cheio durante migração**: se o disco encher no meio da cópia, o sistema apaga os arquivos parciais automaticamente e avisa o que fazer
+- **Plano sob consulta (custom)**: novo campo na edição de planos que marca o plano como "sob consulta" — exibe "Fale conosco" ao invés do botão de compra
+- **Atividade em tempo real na migração WordPress**: mostra o tamanho transferido e número de arquivos copiados, atualizado a cada 10 segundos durante a migração
+- **Mensagens tranquilizadoras na migração**: bloco verde com status "Tudo está funcionando normalmente" que muda conforme a etapa, com timer de tempo decorrido
+- **Dados da migração visíveis**: seção colapsável mostrando todos os campos preenchidos (host, usuário, caminho, banco) com botão de copiar e olhinho para revelar senhas
+- **Tutoriais completos na Central de Ajuda**: guias passo a passo detalhados para leigos cobrindo Git Deploy, Auto Deploy, domínios, bancos de dados, arquivos, terminal, cron jobs, backups, aplicações, e-mails, tickets, monitoramento, conta, segurança, migração WordPress e armazenamento
+- **Guia "O que você quer fazer?"**: seção no topo da ajuda com cenários comuns (publicar site, criar e-mail, ativar auto deploy, instalar WordPress, etc.)
+- **Troubleshooting expandido**: seções de problemas comuns com soluções detalhadas para Git Deploy (Permission denied, Branch not found, site não abre), domínios (DNS não propaga, onde fica o painel DNS), e-mails (spam, SMTP) e aplicações
+
+### Corrigido
+- Ícones SVG dos canais de suporte na página de planos apareciam como código em vez de renderizar
+- Campo "Tipo de produto" na edição de planos mostrava código SVG no select
+
+---
+
+## [3.3.0] — 2026-07-28
+
+### Adicionado
+- **Migração de WordPress via SSH**: ferramenta completa para migrar WordPress de servidores externos (AAPanel, cPanel, etc.) diretamente via rsync + mysqldump, sem necessidade de backup manual
+- **Self-service para clientes**: clientes podem iniciar migrações pelo próprio painel, sem depender da equipe
+- **Domínio temporário automático**: sites migrados recebem um subdomínio temporário para testes antes de ativar o domínio real
+- **Ativação de domínio real**: após testar, o cliente ativa o domínio definitivo com um clique — o sistema atualiza banco (siteurl/home), wp-config.php e Nginx automaticamente
+- **Opção de sudo no servidor de origem**: suporte a servidores onde o usuário SSH não é root
+- **Botão "Testar domínio temporário"** nas configurações da equipe: valida a integração Cloudflare DNS criando e removendo um registro de teste
+- **Migração no chat bot (FAQ)**: opção "Migrar WordPress" no assistente virtual com explicação do processo
+- **Destaque institucional**: migração automática como feature na landing page WordPress Gerenciado e nas FAQs
+
+### Melhorado
+- **Rsync com retry automático**: 3 tentativas com SSH keepalive (ServerAliveInterval + TCPKeepAlive) para sites pesados
+- **Timeout de transferência**: aumentado para 2h com reconexão automática em caso de queda
+- **FAQ de migração atualizado**: respostas nas páginas públicas agora mencionam o migrador automático
+
+### Corrigido
+- Espaço em branco abaixo do footer nas páginas de soluções (include duplicado do chat-widget)
+- Chaves i18n faltantes nas landing pages
+
+---
+
+## [3.2.0] — 2026-07-09
+
+### Adicionado
+- Notificações por e-mail para respostas em tickets e mensagens no chat
+
+### Melhorado
+- Git Deploy: deploy key exibida imediatamente após criar a integração
+- Terminal: tela amigável quando não há VPS ativa
+- Remoção de VPS limpa recursos associados (bancos, deploys, referências de domínios)
+
+### Corrigido
+- Sidebar da equipe não expandia ao clicar no botão após ser recolhida
+
+---
+
+## [3.1.0] — 2026-07-08
+
+### Adicionado
+- **Configuração de alertas para servidores gerenciados**: opção nas configurações da equipe para ativar/desativar e-mails de uso alto em servidores gerenciados
+- **Polling automático de instalação**: tela de aplicações atualiza automaticamente o status quando uma app está sendo instalada
+- **Timeout de instalação**: aplicações presas em "Instalando" por mais de 10 minutos são marcadas como erro automaticamente
+
+### Melhorado
+- **SSL automático em servidores gerenciados**: instalação de aplicações agora configura HTTPS automaticamente sem intervenção manual
+- **Compatibilidade com painéis de controle**: vhosts e reload funcionam corretamente em servidores com aaPanel, cPanel ou similar
+- **Frequência de alertas de uso alto**: reduzido para no máximo 1 alerta por dia por servidor/VPS
+
+---
+
+## [3.0.0] — 2026-04-16
+
+### Adicionado
+
+#### Planos por Tipo de Produto
+- **8 tipos de plano**: VPS, WordPress Gerenciado, Web Hosting, Node.js, PHP/Laravel, Python, C/C++, App Genérico
+- **Limites por plano**: sites, bancos de dados, cron jobs, armazenamento e features configuráveis por plano
+- **Sidebar adaptativa**: menu do cliente mostra apenas features permitidas pelo plano contratado
+- **Middleware de acesso**: bloqueia rotas não permitidas pelo plano, aplicado em 50+ rotas
+- **Enforcement de limites**: verificação antes de criar sites, bancos de dados e cron jobs com mensagens claras
+- **Painel com uso vs limites**: barras de progresso mostrando sites, bancos e cron jobs (atual/limite)
+- **28 planos pré-configurados**: 4 por tipo de produto com preços BRL e USD
+- **Plano Sob Medida**: card especial em todas as landing pages com WhatsApp e e-mail
+
+#### Landing Pages de Produto (12 páginas únicas)
+- `/solucoes/vps` — VPS Gerenciada (indigo, mock de dashboard com gauges)
+- `/solucoes/wordpress` — WordPress Gerenciado (azul, mock de painel WordPress)
+- `/solucoes/webhosting` — Web Hosting (verde, mock de gerenciador de arquivos)
+- `/solucoes/nodejs` — Node.js App (amber, mock de terminal com git push)
+- `/solucoes/php` — PHP/Laravel (laranja, mock de composer install)
+- `/solucoes/python` — Python App (teal, mock de pip install + gunicorn)
+- `/solucoes/cpp` — C/C++ App (magenta, mock de cmake + g++ build)
+- `/solucoes/aplicacoes` — Deploy Automático (violet, mock de pipeline CI/CD)
+- `/solucoes/devops` — DevOps & Ferramentas (emerald, mock de monitoring)
+- `/solucoes/email` — Comunicação (rose, mock de inbox + chat)
+- `/solucoes/seguranca` — Segurança (slate, mock de shield + threat counter)
+- Cada página com: hero visual, stats, comparação, 9 features, 3 passos, planos com carousel, 6 FAQs, CTA
+
+#### Carousel de Planos com Addons
+- Seção de planos com slide horizontal (setas + dots + swipe mobile)
+- Addons selecionáveis em cada card com recálculo de preço em tempo real
+- Card "Sob Medida" sempre no final do carousel
+- Botão "Contratar agora" leva direto pro checkout com addons pré-selecionados
+- Respeita moeda do visitante (R$ ou US$) automaticamente
+
+#### Upgrade e Downgrade de Plano
+- Botão "⬆ Alterar plano" na tela de assinaturas
+- Tela com planos do mesmo tipo, mostrando diferença de preço e recursos
+- **Upgrade**: cobrança imediata da diferença proporcional (pro-rata) + atualização do gateway
+- **Downgrade**: validação de uso (bloqueia se exceder limites do novo plano)
+- Resize automático da VPS (CPU/RAM sem downtime)
+- Atualização automática no gateway de pagamento (Asaas e Stripe)
+
+#### Contratação de Addons Separados
+- Botão "📦 Serviços adicionais" na tela de assinaturas
+- Tela com addons disponíveis e contratados, com contratar/cancelar
+- Cobrança imediata ao contratar (Asaas PIX avulso / Stripe proration)
+- Valor da assinatura recorrente atualizado automaticamente (plano + addons)
+
+#### Efeitos Reais dos Addons
+- **Storage +10GB**: incrementa o armazenamento da VPS em 10GB
+- **Backup Extra**: soma +1 slot de backup disponível
+- **E-mail Profissional**: soma +5 contas ao limite de e-mail
+- **Suporte Prioritário**: soma +1 ao limite de domínios
+- **Suporte Prioritário**: tickets criados com prioridade alta
+- Efeitos aplicados/revertidos automaticamente ao contratar/cancelar addons
+
+#### Planos Anuais Recorrentes
+- Novas contratações anuais usam assinatura recorrente (cobrança automática no Asaas e Stripe)
+- Cobrança automática todo ano sem intervenção do cliente
+- Botão "🔄 Renovar" para clientes existentes com plano anual perto do vencimento
+
+#### Catálogo de Apps
+- Template C/C++ App com build automático (CMake/Makefile/compilação direta)
+- Git Deploy aceita tipo C/C++ com reverse proxy e porta configurável
+
+#### Chat Bot
+- Novos produtos no menu do bot (WordPress, Web Hosting, Node.js, C/C++, PHP, Python)
+- Flows de FAQ dedicados para cada produto com links para landing pages
+
+#### Infraestrutura
+- Página `/infraestrutura` com carousel de planos VPS e seção "Nossos Produtos" (11 cards)
+- Mega menu "Ver todos os produtos" leva para `/infraestrutura#produtos`
+
+### Alterado
+- Home mostra apenas planos VPS na listagem principal
+- Mega menu: links corrigidos para páginas dedicadas (Node.js, PHP, Python)
+- Assinaturas: badge de tipo de produto (VPS, WordPress, etc.) nos cards
+- Assinaturas: seletor de tipo de produto no "Contratar nova"
+- Admin: seletor de tipo de produto no form de planos com limites condicionais
+- Admin: coluna "Tipo" na listagem de planos com badges coloridos
+
+---
+
+## [2.4.0] — 2026-03-27
+
+### Adicionado
+- **Clientes gerenciados** — novo tipo de cliente (`is_managed`) com acesso restrito ao painel: VPS, Monitoramento, Tickets, Assinaturas, Minha Conta e Segurança. Ideal para clientes com hospedagem gerenciada onde a equipe cuida da infraestrutura
+- **Impersonação de clientes** — equipe pode "Logar como cliente" na tela de detalhes do cliente, com acesso completo a todas as funcionalidades. Botão "Voltar para equipe" na sidebar. Auditoria registrada
+- **Planos exclusivos por cliente** — permite vincular um plano a um cliente específico. Planos exclusivos não aparecem na página pública nem para outros clientes
+- **Servidores para clientes gerenciados** — servidores dedicados para clientes gerenciados. VPS são provisionadas sem limites de CPU/RAM (overselling). Recursos não são contabilizados no servidor
+- **Overselling com visibilidade** — listagem de servidores mostra "vendido vs real" para servidores gerenciados (ex: "480 GB vendido / 128 GB real · 16 VPS")
+- **Alertas de uso alto em servidores gerenciados** — quando uso real do host atinge CPU 80%, RAM 75% ou Disco 85%, admin recebe alerta por email + WhatsApp + notificação interna com detalhes do overselling
+- **Alertas de uso alto por VPS gerenciada** — quando um cliente gerenciado usa mais de 80% da RAM do plano, admin é notificado (rate limit 2h por VPS)
+- **Monitoramento relativo ao plano** — para clientes gerenciados, percentuais de uso são calculados relativos ao plano contratado (não ao host). Ex: "15 GB / 30 GB = 50%"
+- **Domínios raiz para VPS** — clientes agora podem adicionar domínios raiz (ex: meudominio.com.br) apontando direto para a VPS via registro A. IP do servidor exibido na tela de domínios com botão de copiar
+- **Verificação de registro A** — novo fluxo de verificação DNS para domínios raiz, checando se o registro A aponta para o IP correto do servidor
+- **Card "Plano Sob Medida"** — na home e na página de planos do cliente, card visual para hospedagem gerenciada com botões de WhatsApp Vendas e E-mail
+- **Banner de plano exclusivo no painel** — cliente gerenciado sem assinatura vê banner destacado com detalhes do plano e botão "Assinar agora"
+- Validação de segurança: servidor não pode ser marcado como gerenciado se já tem VPS de clientes normais (e vice-versa)
+- Validação de segurança: cliente gerenciado não pode assinar planos públicos; ninguém pode assinar plano exclusivo de outro cliente
+
+### Alterado
+- Sidebar do cliente gerenciado mostra apenas: Painel, VPS, Monitoramento, Tickets, Assinaturas, Minha Conta, Segurança
+- Botão de Terminal escondido na tela de VPS para clientes gerenciados
+- Tela de planos do cliente gerenciado mostra "✓ Seu plano personalizado" + card de contato para alterações
+- Servidores normais excluem servidores gerenciados da seleção automática de node
+- Containers de clientes gerenciados podem ser criados sem limites de CPU/RAM
+- Listagem de planos da equipe mostra badge 🔒 com nome do cliente para planos exclusivos
+- Formulário de edição de plano tem dropdown "Cliente exclusivo"
+- Formulário de edição de servidor tem checkbox "🔧 Servidor para clientes gerenciados"
+- Domínios: formulário de adicionar subdomínio agora aceita domínios raiz também
+- Todas as listagens públicas de planos filtram planos exclusivos automaticamente
+
+---
+
+## [2.3.0] — 2026-03-26
+
+### Adicionado
+- **Gerenciamento centralizado de domínios** (`/cliente/dominios`) — tela única para domínios raiz (email) e subdomínios (apps/deploy), com fluxo de verificação TXT + CNAME
+- **Verificação de subdomínio em 2 passos** — passo 1: registro TXT `_lrv-verify.sub.dominio.com` para provar propriedade; passo 2: CNAME apontando para subdomínio do sistema com proxy Cloudflare. IP nunca exposto
+- **Subdomínio automático da VPS** — ao provisionar, o sistema cria um subdomínio temporário no Cloudflare com proxy ativado
+- **Select de subdomínios** — catálogo de aplicações e Git Deploy agora usam select de subdomínios verificados ao invés de campo de texto livre
+- **Bind em localhost** — containers agora bindam portas em localhost, impedindo acesso direto via IP:porta sem SSL
+- Tabela de subdomínios com verificação TXT/CNAME, controle de uso e listagem de disponíveis
+- Item "Domínios" na sidebar do cliente entre E-mails e Aplicações
+- FAQ de domínios na ajuda do cliente
+- Migration: `0047_client_subdomains`
+
+### Alterado
+- Aplicações e Git Deploy não aceitam mais domínio raiz — apenas subdomínios verificados
+- Links de "Domínios de E-mail" redirecionam para a tela centralizada `/cliente/dominios`
+- Aplicações e Git Deploy bindam em localhost ao invés de expor portas publicamente
+
+---
+
+## [2.2.0] — 2026-03-26
+
+### Adicionado
+- **Wizard de contratação** (`/contratar?plan_id=X`) — fluxo completo em 4 passos sem precisar de login: landing do plano com upsell, configuração (quantidade de servidores, período mensal/semestral/anual, addons), criação de conta, pagamento. Tudo numa única página com stepper visual
+- **Múltiplas assinaturas por cliente** — cada assinatura corresponde a 1 VPS; cliente pode contratar quantas quiser
+- **Descontos por período** — 5% semestral e 10% anual (configuráveis pelo admin em Configurações); addons acompanham o desconto do período
+- **Pagamento inline no wizard** — PIX mostra QR code e copia-cola, Boleto mostra linha digitável e botão de download, Cartão de crédito com campos inline (Asaas), tudo sem sair da página
+- **Seletor de moeda independente** — dropdown R$/$ ao lado do seletor de idioma; moeda e idioma são independentes
+- **Tela de assinaturas reestruturada** — cards por assinatura ativa mostrando VPS vinculada (specs, status), assinaturas encerradas em tabela, botão "Contratar nova VPS"
+- **Histórico de cobranças** — tela separada `/cliente/assinaturas/historico` com todas as faturas e cobranças do Asaas
+- **Dar plano grátis** — na página de detalhes do cliente (equipe), botão "🎁 Dar plano grátis" cria VPS + assinatura ativa sem cobrança
+- **Ocultar/deletar clientes** — botão para ocultar e deletar (cascade completo de todos os dados relacionados) na página de detalhes do cliente
+- **Ordenação na listagem de clientes** — por nome, cadastro, última atividade, VPS, assinaturas, uso de recursos
+- **Última atividade do cliente** — registrada automaticamente a cada login
+- **Máscaras visuais** — CPF/CNPJ, celular, CEP, número do cartão e validade com formatação automática no wizard e em Minha Conta
+- **Addons pré-selecionados** — addons escolhidos na home são passados para o wizard via query string e já vêm marcados
+- **Pop-up de upsell** — entre configuração e dados pessoais, oferece desconto anual ou plano superior
+
+### Corrigido
+- **Domínio do sistema no campo de e-mail** — campo de domínio na criação de e-mail agora prioriza domínios do cliente
+- **Nome do cliente no header** — todas as telas mostravam "Área do cliente" ao invés do nome; layout agora busca do banco quando não passado pelo controller
+- **Badge de status** — status de VPS traduzidos corretamente
+- **Reembolso escondido** — botão de solicitar reembolso movido para dentro do histórico de cobranças (discreto)
+- Coluna "Telefone" trocada por "Celular" na listagem de clientes
+
+### Alterado
+- Moeda agora é decidida pelo seletor de moeda (independente do idioma); gateway de pagamento (Asaas/Stripe) segue a moeda
+- Wizard de contratação usa navbar pública, footer e estilos do site (mesma tipografia, cores, border-radius)
+- Resumo do pedido mostra valores por período (`/mês`, `/sem`, `/ano`) com equivalente mensal e valor total cobrado
+
+---
+
+## [2.1.0] — 2026-03-25
+
+### Adicionado
+- **Sistema de planos completo** — 5 planos pré-cadastrados (Startup R$90, Essential R$297, Professional R$697, Business R$957, Enterprise R$1.497) com addons (Backup diário R$90, Suporte WhatsApp R$290)
+- **Badge "Popular/Destaque"** — campo `is_featured` nos planos; plano marcado aparece com badge "POPULAR" e borda destacada na landing page e na área do cliente
+- **Checkout com addons selecionáveis** — nova tela `/cliente/planos/checkout` onde o cliente seleciona addons antes de pagar; preço total atualiza em tempo real; addons cobrados no Asaas e Stripe
+- **Stripe Price ID automático** — ao salvar um plano, o sistema cria produto e preço no Stripe automaticamente via API (sem precisar copiar IDs manualmente)
+- **Specs do plano como campos visuais** — substituído JSON livre por campos com labels claros: contas de e-mail, cota de e-mail, banda, domínios, aplicações, SLA
+- **Inicialização parcial de servidores** — tela de edição do servidor mostra todos os 20 passos individualmente com badges de risco (Sem risco / Risco baixo / Risco alto) e botão "Executar" por passo
+- **Role de servidor** — coluna `role` na tabela `servers` (vps/email); servidores de e-mail não entram no pool de provisionamento de VPS
+- **Gráficos de monitoramento** — tela de monitoramento da equipe reescrita com gauges circulares, gráficos de linha (Canvas puro) e tabela limitada às últimas 12 coletas
+- **Botão instalar agente de monitoramento** — nas configurações, botão que conecta via SSH no servidor de e-mail e instala o agente automaticamente
+
+### Corrigido
+- Logo + nome do sistema apareciam juntos nas telas de login (cliente e equipe) e na navbar pública — agora só mostra o texto quando não há logo configurada
+- Badge "Popular" não aparecia na landing page — `InicialController` agora usa `is_featured` em vez da coluna `badge` inexistente
+- Dados de vCPU/RAM/disco nos cards de plano da landing page agora vêm das colunas reais da tabela `plans`
+- `I18n` não encontrado em `plano-editar.php` — adicionado `use LRV\Core\I18n`
+
+---
+
+## [2.0.0] — 2026-03-24
+
+### Adicionado
+- **Integração completa com Mailcow** — servidor de e-mail instalado e configurado em `correio.lrvweb.com.br`
+- **Webmail SOGo funcional** — clientes criam domínios, verificam DNS (MX, SPF, DKIM) e criam contas de e-mail pelo painel
+- **Webmail personalizado** — clientes podem ativar `webmail.seudominio.com` via CNAME, com verificação automática
+- **Roundcube como alternativa** — disponível no catálogo de aplicações, substitui o SOGo ao instalar na VPS do cliente (com aviso de consumo de recursos)
+- **Tutoriais de configuração de e-mail** — seção expansível na tela de e-mails com instruções para Outlook, Gmail, Apple Mail e Thunderbird (PC e celular), nos 3 idiomas
+- **Cota de armazenamento por e-mail** — campo de quota (MB/GB) na criação de e-mail, barra de progresso de cota usada/total, validação contra limite do plano (`email_quota_mb` no `specs_json`)
+- **Monitoramento do servidor de e-mail** — campos de configuração (IP, SSH, limites de alerta) nas configurações do admin, alertas automáticos via e-mail e WhatsApp quando CPU/RAM/disco ultrapassam os limites (rate limit de 30 min)
+- **Sandbox/Produção para Asaas e Stripe** — campos separados para tokens e webhooks de sandbox e produção, com seletor de ambiente ativo; keys legadas atualizadas automaticamente
+- **Redirect pós-login** — ao acessar uma URL protegida sem login, o sistema salva a URL e redireciona de volta após autenticação (funciona com 2FA)
+- Categoria "E-mail" no catálogo de aplicações
+- Rota `POST /api/metrics/servers` para receber métricas de monitoramento dos servidores
+
+### Corrigido
+- **Monitoramento não recebia métricas** — rota `/api/metrics/servers` não existia no `routes/web.php`; adicionada
+- **URL do monitoramento vazia** — `ServerSetupService` lia `app.base_url` em vez de `app.url_base`; corrigido
+- **sshd restart falhava no Debian/Ubuntu** — fallback de `systemctl restart sshd` para `systemctl restart ssh`
+- **Chaves i18n faltantes na tela de VPS** — `eq_vps.status` e `eq_vps.acoes` adicionadas nos 3 idiomas
+- **MX nas instruções DNS apontava para hostname errado** — view atualizada para usar o hostname real do Mailcow
+
+### Alterado
+- **Sessão aumentada para 24 horas** — cookie lifetime, gc_maxlifetime e timeout de inatividade (equipe e cliente) de 30-60 min para 86400 segundos
+- **Backup com suporte a senha SSH** — `VpsBackupService` detecta `ssh_auth_type` e usa método adequado
+- **Backup limitado por plano** — coluna `backup_slots` (0/1/2) na tabela `plans`, rotação automática do backup mais antigo
+- Catálogo de templates visível também na tela admin de aplicações
+
+---
+
+## [1.9.0] — 2026-03-24
+
+### Adicionado
+- **Upload de chave SSH no formulário de servidores** — campo de upload de arquivo substitui o input de texto para chaves SSH (principal e terminal seguro)
+- Validação de conteúdo do arquivo (aceita chaves privadas e públicas: RSA, OPENSSH, EC)
+- Indicador visual de chave já configurada com opção de substituir
+- Arquivo salvo automaticamente no diretório `sshKeyDir` com permissão 600
+- Chaves i18n `eq_srv_edit.upload_chave*` nos 3 idiomas
+
+### Alterado
+- **SSH com senha sem sshpass** — `SshExecutor::executarComSenha()` reescrito com prioridade: ext-ssh2 → proc_open com pseudo-terminal (pty)
+- Removida dependência do binário `sshpass` — não é mais necessário instalar no servidor do painel
+- `ServidoresController::salvar()` processa upload de arquivo via `$_FILES` em vez de texto
+- `ServidoresController::testarConexao()` busca chave do banco para testes em servidores existentes
+- Formulário de servidores usa `enctype="multipart/form-data"`
+
+---
+
+## [1.8.0] — 2026-03-22
+
+### Adicionado
+- **Mega menu estilo DigitalOcean na navbar pública** — menus "Produtos" e "Recursos" com 4 colunas cada, hover com fade-in no desktop, drawer com accordion no mobile
+- **5 landing pages dedicadas em `/solucoes/`** — VPS, Aplicações, DevOps, E-mail, Segurança com layout de alta conversão (8 seções: hero, problema, solução, benefícios, como funciona, prova social, CTA, FAQ)
+- `SolucoesController` com 5 métodos e rotas públicas
+- Layout compartilhado `app/Views/solucoes/_layout.php` com design gradiente azul→roxo, cards responsivos e FAQ accordion
+- **Sistema de cookies e consentimento (LGPD)** — banner fixo no rodapé com 3 opções (aceitar todos, rejeitar opcionais, configurar)
+- Modal de configuração granular com toggles por categoria: necessários (sempre ativo), analytics, marketing, preferências
+- Tabela `cookie_consents` (migration `0029_cookie_consents.sql`) com user_id, session_id, IP, user_agent, preferences JSON
+- `CookieConsentService` com `salvarConsentimento()`, `obterConsentimento()`, `verificarPermissao()`
+- `CookieConsentController` com endpoints `POST /cookies/consent` (CSRF + rate limit) e `GET /cookies/consent`
+- Cookie `cookie_consent` no navegador com validade de 12 meses, `Secure`, `SameSite=Lax`
+- Função JS `ckTemPermissao('categoria')` para bloqueio condicional de scripts
+- Evento `cookieConsentUpdated` disparado ao salvar preferências
+- Link "Cookies" no footer público abre modal de preferências
+- Seção de cookies adicionada à página `/privacidade` com lista de categorias e link para configurar
+- Chaves i18n `cookies.*` nos 3 idiomas (pt-BR, en-US, es-ES)
+
+### Alterado
+- **Copywriting das landing pages refinado** — tom profissional para decisores (CEOs, gestores), sem linguagem informal, com mais autoridade e profundidade nos 3 idiomas
+- Emojis excessivos removidos do layout das landing pages (😩, ✅, ✔) — substituídos por ícones SVG discretos
+- Espaçamento entre seções das landing pages aumentado (80px → 100px)
+- Mega menu usa `position: fixed` para funcionar com scroll
+- Navbar pública reescrita com mega menus: Início, Produtos▾, Infraestrutura, Recursos▾, Planos, Status, Contato
+- Chaves `mega.*` adicionadas nos 3 idiomas (~50 chaves cada)
+- Chaves `sol.*` reescritas nos 3 idiomas com copy profissional focado em conversão
+
+---
+
+## [1.7.0] — 2026-03-21
+
+### Adicionado
+- **Aplicações pré-configuradas (One-Click Install)** — catálogo visual em `/cliente/aplicacoes/catalogo` com 7 templates prontos (WordPress, Node.js, PHP Laravel, MySQL, Redis, Nginx, Site Estático)
+- Tabela `app_templates` com seed de templates padrão (migration `0028_app_templates.sql`)
+- Colunas `template_id`, `container_id`, `environment_json`, `logs` na tabela `applications`
+- `AppInstallService` — provisionamento automático: pull de imagem, configuração de env vars, clone de repo, criação de container com labels, auto-assign de porta
+- Job handler `install_app_template` para instalação assíncrona via fila
+- Modal de instalação com seleção de VPS, domínio, repositório e variáveis de ambiente
+- Status badges nas aplicações: `installing`, `running`, `stopped`, `error`
+- Link "Catálogo" como sub-item na sidebar do cliente
+- **Chat — emojis, upload de arquivos e polling fallback** em todos os 3 locais de chat (widget FAB, `/cliente/chat`, `/equipe/chat/ver`)
+- Emoji picker inline com categorias (smileys, gestos, corações, objetos, natureza)
+- Upload de arquivos no chat (imagens, PDF, DOC, TXT até 5 MB) com preview inline
+- Polling HTTP fallback: tenta WebSocket 2x, depois cai para polling a cada 3s
+- Endpoints de polling e envio HTTP para cliente e equipe (`/cliente/chat/poll`, `/cliente/chat/enviar`, `/equipe/chat/poll`, `/equipe/chat/enviar`)
+- Tabela `chat_files` (migration `0027_chat_files.sql`)
+- `ChatUploadController` para upload de arquivos no chat
+- **Pesquisa de satisfação ao encerrar chat** — ao fechar um chat, e-mail automático é enviado ao cliente com link para `/cliente/avaliar?type=chat&id=X`
+- **Nome do agente nas respostas do chat** — mensagens da equipe exibem "Nome · HH:MM" em vez de apenas "Equipe"
+- **Separadores de dia no chat** — linha visual com data dd/mm/aaaa entre mensagens de dias diferentes
+- **Histórico de chats da equipe** — `/equipe/chat` agora exibe chats abertos e encerrados em seções separadas; chats encerrados renderizam histórico completo server-side
+- **WebSocket URL configurável** — campo `chat.ws_url` nas configurações; fallback automático para `ws://host:porta`
+- **Auditoria de segurança (GitGuardian)** — correções aplicadas:
+  - `config/instalacao.php` removido do Git (`.gitignore` ativado, `git rm --cached`)
+  - `config/instalacao.exemplo.php` criado como template
+  - `SshCrypto` — fallback de chave hardcoded removido; agora lança exceção se `app.secret_key` não configurado
+  - `InicializacaoService` — `app.secret_key` gerado automaticamente na inicialização
+
+### Corrigido
+- Header do painel do cliente exibia "Cliente" genérico nas telas de aplicações — controllers `listar()` e `catalogo()` agora passam `$cliente` com `name`/`email`
+- SQL no `ChatRoomService` referenciava `hostname` inexistente — corrigido para `ip_address`
+- `aplicacoes-listar.php` referenciava `$cliente['name']` e `$cliente['email']` sem receber do controller
+
+### Alterado
+- `ChatRoomService` refatorado com `listarAbertas()` e `listarEncerradas()` usando método privado `listarPorStatus()`
+- `ChatMessageService::historico()` faz JOIN com `users` para retornar `sender_name`
+- `ChatWsApp::onMessage()` busca nome do admin no banco e inclui `sender_name` no broadcast
+
+---
+
+## [1.6.0] — 2026-03-21
+
+### Adicionado
+- **2FA (TOTP) para clientes** — configuração em `/cliente/2fa/configurar` com QR code e chave manual; verificação em `/cliente/2fa/verificar` (tela standalone dark); desativação com confirmação de senha
+- Tabela `client_totp` (migration `0025_client_totp.sql`) com `secret`, `enabled`, `created_at`
+- Item "Segurança" na sidebar do cliente com link para `/cliente/2fa/configurar`
+- Card de segurança em `/cliente/minha-conta` com link para configurar 2FA
+- **Endereço do cliente** — campos `address_street`, `address_number`, `address_complement`, `address_city`, `address_state`, `address_zip`, `address_country` em `clients` (migration `0024_client_address.sql`)
+- Formulário de endereço em `/cliente/minha-conta`
+- **Migração completa do painel do cliente para o novo layout** — sidebar dark, header com avatar/dropdown, design system unificado com o painel da equipe
+- Todas as views do cliente migradas: `vps-listar`, `monitoramento-listar`, `monitoramento-ver`, `tickets-listar`, `ticket-novo`, `ticket-ver`, `chat`, `emails-listar`, `emails-dominios`, `emails-dominios-instrucoes`, `aplicacoes-listar`, `assinaturas-listar`, `ajuda`, `avaliar`, `assinatura-criada`, `status-listar`, `vps-terminal`, `planos`, `minha-conta`, `painel`
+- Partials `layout-cliente-inicio.php` e `layout-cliente-fim.php` com sidebar, header, avatar dropdown e scripts de toggle
+- `sidebar-cliente.php` com todos os itens de navegação e suporte a collapse
+
+### Corrigido
+- `AssinaturasController` (cliente) referenciava colunas inexistentes `s.billing_type`, `s.gateway`, `s.gateway_subscription_id` — query corrigida para usar apenas colunas reais da tabela `subscriptions`
+- `PlanosController` não passava `$cliente` para a view — adicionada busca de `name`/`email` do cliente logado
+- `a:hover` com `text-decoration:underline` removido do design system (CSP e consistência visual)
+- `overflow-x:hidden` movido de `body` para `html` no `estilo.php`
+- Google Fonts removido do CSP e substituído por `system-ui` em todo o design system
+
+### Alterado
+- Design system do cliente (`estilo.php`) unificado com o da equipe (`estilo-equipe.php`): `.card-new`, `.badge-new`, `.botao`, `.sucesso`, `.erro`, `.page-title`, `.page-subtitle`, `.page-header`
+- `layout-cliente-fim.php` já inclui `chat-widget.php` — removida inclusão duplicada das views individuais
+
+---
+
+## [1.5.0] — 2026-03-21
+
+### Adicionado
+- **Minha Conta** (`/equipe/minha-conta`): tela para cada membro da equipe editar nome, e-mail, senha e foto de perfil
+- Upload de avatar de perfil (PNG, JPG, WEBP, GIF · máx. 2 MB) salvo em `public/uploads/avatars/`
+- Coluna `avatar_url` na tabela `users` (migration `0013_user_avatar.sql`)
+- **Reset de senha** para equipe (`/equipe/reset-senha`) e cliente (`/cliente/reset-senha`) — fluxo em 2 etapas: solicitar e-mail → link com token → nova senha
+- Tabela `password_resets` com token único, tipo (equipe/cliente), expiração de 1 hora e controle de uso (migration `0014_password_resets.sql`)
+- Link "Esqueci minha senha" nas telas de login da equipe e do cliente
+- Link "Minha Conta" no dropdown do avatar do header e no footer da sidebar da equipe
+- Rate limit nas rotas de reset de senha (5 req/5min para solicitar, 10 req/5min para salvar)
+
+### Corrigido
+- Header da equipe não exibia nome, role e avatar em telas que não passavam `$usuario` pelo controller — agora busca diretamente do banco via `Auth::equipeId()`
+- Tela de permissões por role (`/equipe/permissoes`) com layout quebrado — reescrita com estilos inline consistentes com o restante do painel
+- View `minha-conta.php` usava classes CSS inexistentes (`form-group`, `form-label`, `btn btn-primary`) — corrigida para usar `.botao`, `.input`, `.sucesso`, `.erro` do design system
+
+### Alterado
+- `header-equipe.php` agora é autossuficiente: busca `name`, `email`, `role` e `avatar_url` do usuário logado diretamente do banco em uma única query junto com a contagem de notificações
+- Avatar no header exibe foto de perfil quando disponível, com fallback para iniciais
+
+---
+
+## [1.4.0] — 2026-03-20
+
+### Adicionado
+- **Branding dinâmico**: `system.name`, `system.logo_url`, `system.favicon_url`, `system.company_name`, `system.copyright_text` configuráveis via `/equipe/configuracoes`
+- Helper `core/SistemaConfig.php` com métodos estáticos (`nome()`, `logoUrl()`, `faviconUrl()`, `empresaNome()`, `copyrightText()`, `termsHtml()`, `privacyHtml()`)
+- **Páginas legais públicas**: `/termos` e `/privacidade` com conteúdo HTML editável pelo admin (`legal.terms_html`, `legal.privacy_html`)
+- **Changelog público** em `/changelog` — lê `CHANGELOG.md` e converte Markdown → HTML com parser regex próprio (sem dependência externa)
+- Seções "Identidade Visual" e "Páginas Legais" em `/equipe/configuracoes`
+- Footer global atualizado com copyright dinâmico, links para Termos, Privacidade, Changelog, Status e Contato
+- Favicon dinâmico via `<link rel="icon">` em `estilo.php` (usa `system.favicon_url` se configurado)
+- Migration `0008_branding_legal.sql` com defaults para todas as novas chaves de settings
+- **Chat em tempo real** via WebSocket (Ratchet) — processo separado `chat-ws.php` na porta configurável (`chat.ws_port`, padrão 8082)
+- Módulo `app/Services/Chat/` com `ChatWsApp`, `ChatRoomService`, `ChatMessageService`, `ChatTokensService`
+- Tabelas `chat_rooms`, `chat_messages`, `chat_tokens` (migration `0007_chat_email.sql`)
+- Tokens de chat de uso único com TTL 120s e proteção contra replay (`FOR UPDATE` + `used_at`)
+- Rate limit no WebSocket (30 msgs/10s por IP) e no endpoint HTTP de token (10 req/60s)
+- Isolamento por room: cliente só acessa a própria room (validação de `client_id` no `onOpen`)
+- Atribuição automática de agente ao entrar na room
+- Histórico de mensagens enviado no `onOpen` (últimas 100)
+- Painel da equipe: listagem de rooms abertas (`/equipe/chat`) e interface de atendimento (`/equipe/chat/ver`)
+- Botão "Encerrar chat" com confirmação
+- **Sistema de e-mail via Mailcow** — integração com API REST (`/api/v1/add/mailbox`, `/api/v1/delete/mailbox`, `/api/v1/edit/mailbox`)
+- Módulo `app/Services/Email/MailcowService` com `criarEmail()`, `removerEmail()`, `alterarSenha()`, `listar()`, `webmailUrl()`
+- Tabela `client_emails` (migration `0007_chat_email.sql`)
+- Rotas `/cliente/emails` (listar, criar, remover, alterar-senha)
+- Link de webmail dinâmico por domínio (`https://webmail.{domain}`) com fallback para URL global
+- Modal de alteração de senha com validação JS de confirmação
+- Configurações Mailcow e Chat WS em `/equipe/configuracoes` (`email.mailcow_url`, `email.mailcow_key`, `email.webmail_url`, `chat.ws_port`)
+- **Dashboard do cliente** reformulado: stat-cards com dados reais (total VPS, VPS running, tickets abertos, plano ativo)
+- Nav-cards com ícones para todas as seções do painel
+- **Onboarding modal** para novos clientes (`onboarding_done = 0`): guia de 4 passos, marcado como concluído via `POST /cliente/onboarding/concluir`
+- Coluna `onboarding_done` em `clients` (migration `0007_chat_email.sql`)
+- **VPS do cliente** reformulada: cards responsivos com dots de status coloridos (verde/amarelo/vermelho), specs em grid, ações contextuais por status
+- **Monitoramento** melhorado: cards de resumo da última coleta com cores por threshold (verde < 70%, amarelo 70–90%, vermelho ≥ 90%), auto-refresh a cada 30s
+- Versão do sistema exibida no footer de todas as páginas
+- Responsividade completa: media queries 768px e 480px em `estilo.php`
+
+### Corrigido
+- Bug crítico: form de remoção de email enviava `local_part`/`domain` mas controller esperava `email_id`
+- Bug: campo `senha` no form de criação de email enviava `name="password"` mas controller lia `$req->post['senha']`
+- Bug: CSRF no chat do cliente era lido via `document.cookie` (frágil) — substituído por `json_encode(Csrf::token())` embutido no PHP
+- Bug: `MailcowService` chamava `$this->http->post()` inexistente — corrigido para `requestJson('POST', ...)` e `requestJson('DELETE', ...)`
+- Onboarding modal iniciava com `display:flex` no CSS — corrigido para `display:none` + ativação via JS (não trava interface se JS falhar)
+- Double-submit em forms de ação de VPS: botão desabilitado após primeiro clique com feedback "Processando..."
+- Reconexão do chat do cliente não chamava `setTimeout` em caso de erro no token — corrigido
+
+### Alterado
+- `PainelController` agora busca dados reais: contagem de VPS, VPS running, tickets abertos, assinatura ativa, `onboarding_done`
+- `ConfiguracoesController` e view de configurações expandidos com seções Mailcow, Chat WS, Identidade Visual e Páginas Legais
+- Footer global (`_partials/footer.php`) usa `SistemaConfig` para copyright e nome dinâmicos
+- Módulo `app/Services/Chat/` com `ChatWsApp`, `ChatRoomService`, `ChatMessageService`, `ChatTokensService`
+- Tabelas `chat_rooms`, `chat_messages`, `chat_tokens` (migration `0007_chat_email.sql`)
+- Tokens de chat de uso único com TTL 120s e proteção contra replay (`FOR UPDATE` + `used_at`)
+- Rate limit no WebSocket (30 msgs/10s por IP) e no endpoint HTTP de token (10 req/60s)
+- Isolamento por room: cliente só acessa a própria room (validação de `client_id` no `onOpen`)
+- Atribuição automática de agente ao entrar na room
+- Histórico de mensagens enviado no `onOpen` (últimas 100)
+- Painel da equipe: listagem de rooms abertas (`/equipe/chat`) e interface de atendimento (`/equipe/chat/ver`)
+- Botão "Encerrar chat" com confirmação
+- **Sistema de e-mail via Mailcow** — integração com API REST (`/api/v1/add/mailbox`, `/api/v1/delete/mailbox`, `/api/v1/edit/mailbox`)
+- Módulo `app/Services/Email/MailcowService` com `criarEmail()`, `removerEmail()`, `alterarSenha()`, `listar()`, `webmailUrl()`
+- Tabela `client_emails` (migration `0007_chat_email.sql`)
+- Rotas `/cliente/emails` (listar, criar, remover, alterar-senha)
+- Link de webmail dinâmico por domínio (`https://webmail.{domain}`) com fallback para URL global
+- Modal de alteração de senha com validação JS de confirmação
+- Configurações Mailcow e Chat WS em `/equipe/configuracoes` (`email.mailcow_url`, `email.mailcow_key`, `email.webmail_url`, `chat.ws_port`)
+- **Dashboard do cliente** reformulado: stat-cards com dados reais (total VPS, VPS running, tickets abertos, plano ativo)
+- Nav-cards com ícones para todas as seções do painel
+- **Onboarding modal** para novos clientes (`onboarding_done = 0`): guia de 4 passos, marcado como concluído via `POST /cliente/onboarding/concluir`
+- Coluna `onboarding_done` em `clients` (migration `0007_chat_email.sql`)
+- **VPS do cliente** reformulada: cards responsivos com dots de status coloridos (verde/amarelo/vermelho), specs em grid, ações contextuais por status
+- **Monitoramento** melhorado: cards de resumo da última coleta com cores por threshold (verde < 70%, amarelo 70–90%, vermelho ≥ 90%), auto-refresh a cada 30s
+- Versão do sistema exibida no footer de todas as páginas
+- Responsividade completa: media queries 768px e 480px em `estilo.php`
+
+### Corrigido
+- Bug crítico: form de remoção de email enviava `local_part`/`domain` mas controller esperava `email_id`
+- Bug: campo `senha` no form de criação de email enviava `name="password"` mas controller lia `$req->post['senha']`
+- Bug: CSRF no chat do cliente era lido via `document.cookie` (frágil) — substituído por `json_encode(Csrf::token())` embutido no PHP
+- Bug: `MailcowService` chamava `$this->http->post()` inexistente — corrigido para `requestJson('POST', ...)` e `requestJson('DELETE', ...)`
+- Onboarding modal iniciava com `display:flex` no CSS — corrigido para `display:none` + ativação via JS (não trava interface se JS falhar)
+- Double-submit em forms de ação de VPS: botão desabilitado após primeiro clique com feedback "Processando..."
+- Reconexão do chat do cliente não chamava `setTimeout` em caso de erro no token — corrigido
+
+### Alterado
+- `PainelController` agora busca dados reais: contagem de VPS, VPS running, tickets abertos, assinatura ativa, `onboarding_done`
+- `ConfiguracoesController` e view de configurações expandidos com seções Mailcow e Chat WS
+
+---
+
+## [Unreleased]
+
+### Adicionado
+- Upload e download de arquivos via terminal (SCP + docker cp para VPS de clientes)
+- Swagger/OpenAPI em `public/api/openapi.yaml` com UI em `public/api/docs.html`
+- Resize de terminal via `ResizeObserver` (envia `{"type":"resize","cols":X,"rows":Y}` ao backend)
+- Notificações internas para clientes quando a equipe responde a um ticket (`client_notifications`)
+- Exibição de notificações não lidas no painel do cliente
+- Bloqueio de IP por excesso de tentativas de login no portal do cliente (`LoginBlocker`)
+- Rota `POST /cliente/assinaturas/reembolso` adicionada
+- View de sucesso do Stripe melhorada com detalhes do plano, VPS e próximos passos
+
+---
+
+## [1.3.0] — 2026-03-20
+
+### Adicionado
+- 2FA (TOTP RFC 6238) para usuários da equipe
+- Log de login/logout da equipe com `auth_logs`
+- Expiração de sessão por inatividade (30 min equipe, 60 min cliente)
+- Interface de permissões por role (`/equipe/permissoes`)
+- Filtros e busca na listagem de tickets da equipe
+- Atribuição manual de ticket para usuário específico
+- Status intermediários de ticket: `in_progress`, `waiting_client`
+- Suporte a anexos em respostas de ticket (upload de arquivo)
+- Dashboard da equipe com métricas reais (VPS, clientes, tickets, jobs, nodes, receita)
+- Página pública de histórico de incidentes (`/status/incidentes`)
+- Gráficos de métricas históricas no painel do cliente (Chart.js)
+- Página de contato pública (`/contato`)
+- Exibição de canais de suporte por plano
+- Campo `support_channels` em planos
+- Listagem de assinaturas e cobranças Asaas para o cliente
+- Solicitação de reembolso via ticket automático
+- Página de ajuda/FAQ para clientes
+- README detalhado do projeto
+
+### Corrigido
+- IDOR em todos os endpoints de VPS, tickets, assinaturas e terminal
+- Prevenção de replay attack no webhook do Stripe (`stripe_processed_events`)
+- Path traversal no download de backups
+- HTTPS forçado via `Settings::obter('app.force_https')`
+
+---
+
+## [1.2.0] — 2026-03-15
+
+### Adicionado
+- Jobs `reiniciar_vps` e `remover_vps` implementados
+- Botões de reiniciar e remover VPS no painel da equipe
+- Suporte a resize de terminal via JSON `{"type":"resize",...}` no `TerminalWsApp`
+- `AppLogger` com logs em `storage/logs/app-YYYY-MM-DD.log`
+- `LoginBlocker` para bloqueio de IP após 10 falhas em 30 min (equipe)
+- `core/Totp.php` — implementação TOTP RFC 6238
+
+### Alterado
+- `Bootstrap.php` integrado com `AppLogger` no exception handler
+- `Middlewares.php` com expiração de sessão por inatividade
+
+---
+
+## [1.1.0] — 2026-03-10
+
+### Adicionado
+- Sistema de terminal SSH via WebSocket (Ratchet)
+- Auditoria de sessões de terminal
+- Tokens de terminal de uso único com TTL configurável
+- Terminal seguro para clientes (isolado no contêiner Docker)
+- Monitoramento de nodes com `NodeHealthService`
+- Coleta de status de serviços com `StatusCollectorService`
+- Backups de VPS com `VpsBackupService`
+- Deploy de aplicações com `AplicacaoDeployService`
+- Webhooks Stripe e Asaas
+- Sistema de notificações internas para equipe
+
+---
+
+## [1.0.0] — 2026-03-01
+
+### Adicionado
+- Estrutura inicial do projeto (PHP MVC próprio, sem framework)
+- Autenticação de equipe e cliente com sessão PHP
+- RBAC com roles e permissões
+- Gerenciamento de VPS (provisionar, suspender, reativar)
+- Sistema de tickets de suporte
+- Planos e assinaturas (Asaas + Stripe)
+- Gerenciamento de servidores/nodes
+- Aplicações e deploy
+- Monitoramento básico
+- Página de status pública
+- Migrations SQL incrementais
+- Rate limiting por IP, cliente e equipe
+- CSRF em todos os formulários POST
+- Prepared statements em todas as queries
+- Saída HTML sempre escapada com `View::e()`

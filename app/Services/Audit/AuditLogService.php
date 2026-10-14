@@ -84,21 +84,8 @@ final class AuditLogService
 
     private function extrairIp(Requisicao $req): ?string
     {
-        $xff = trim((string) ($req->headers['x-forwarded-for'] ?? ''));
-        if ($xff !== '') {
-            $partes = array_map('trim', explode(',', $xff));
-            $ip = (string) ($partes[0] ?? '');
-            if ($ip !== '') {
-                return $ip;
-            }
-        }
-
-        if (isset($_SERVER['REMOTE_ADDR'])) {
-            $ip = trim((string) $_SERVER['REMOTE_ADDR']);
-            return $ip !== '' ? $ip : null;
-        }
-
-        return null;
+        $ip = \LRV\Core\IpCliente::obter($req->headers);
+        return $ip !== '0.0.0.0' ? $ip : null;
     }
 
     private function normalizarUa(string $ua): ?string

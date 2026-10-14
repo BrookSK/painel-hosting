@@ -51,9 +51,15 @@ final class ConfiguracoesSistema
             return rtrim($url, '/');
         }
 
-        // Fallback automático: deriva da requisição atual
+        // Fallback automático: deriva da requisição atual.
+        // ATENÇÃO: configure app.url_base — o cabeçalho Host vem do visitante e poderia ser
+        // usado para gerar links (ex.: reset de senha) apontando para outro site.
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host   = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+        $host   = strtolower((string) ($_SERVER['SERVER_NAME'] ?? ''));
+        if ($host === '' || preg_match('/^[a-z0-9.-]+$/', $host) !== 1) {
+            $h = strtolower((string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+            $host = preg_match('/^[a-z0-9.-]+(:\d{1,5})?$/', $h) === 1 ? $h : 'localhost';
+        }
         return $scheme . '://' . $host;
     }
 

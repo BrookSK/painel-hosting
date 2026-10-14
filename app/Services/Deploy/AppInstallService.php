@@ -78,7 +78,11 @@ final class AppInstallService
             throw new \RuntimeException('Falha SSH/Docker: ' . trim((string) ($t['saida'] ?? '')));
         }
 
-        $rede = (string) Settings::obter('infra.docker_rede', 'lrvcloud_network');
+        // Rede isolada do cliente (app + banco dele conversam; outros clientes não enxergam)
+        $rede = $this->docker->garantirRedeCliente(
+            (int) ($app['client_id'] ?? 0),
+            (string) Settings::obter('infra.docker_rede', 'lrvcloud_network')
+        );
         $slug = (string) ($app['slug'] ?? 'app');
         $nomeContainer = 'app_' . $slug . '_' . $applicationId;
 

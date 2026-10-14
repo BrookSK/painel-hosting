@@ -153,7 +153,6 @@ $roteador->post('/equipe/vps/reativar', [EquipeVpsController::class, 'reativar']
 $roteador->post('/equipe/vps/reiniciar', [EquipeVpsController::class, 'reiniciar'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 30, 60)]);
 $roteador->post('/equipe/vps/remover', [EquipeVpsController::class, 'remover'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 10, 60)]);
 $roteador->get('/equipe/vps/logs', [EquipeVpsController::class, 'logs'], [Middlewares::exigirPermissao('manage_vps')]);
-$roteador->get('/equipe/vps/atualizar-pagina-manutencao', [EquipeVpsController::class, 'atualizarPaginaManutencao'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/vps/atualizar-pagina-manutencao', [EquipeVpsController::class, 'atualizarPaginaManutencao'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/terminal', [TerminalController::class, 'index'], [Middlewares::exigirPermissao('manage_terminal')]);
 $roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_token', 60, 60)]);
@@ -176,8 +175,8 @@ $roteador->post('/equipe/dev/projeto/clonar', [\LRV\App\Controllers\Equipe\Proje
 $roteador->get('/equipe/dev/demandas', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'demandas'], [Middlewares::exigirLoginEquipe()]);
 $roteador->post('/equipe/dev/demanda/criar', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'criarDemanda'], [Middlewares::exigirLoginEquipe(), Middlewares::rateLimitEquipe('dev_demand', 20, 60)]);
 $roteador->get('/equipe/dev/demanda', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'verDemanda'], [Middlewares::exigirLoginEquipe()]);
-$roteador->post('/equipe/dev/demanda/deploy', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'deployDemanda'], [Middlewares::exigirLoginEquipe(), Middlewares::rateLimitEquipe('dev_deploy', 10, 60)]);
-$roteador->post('/equipe/dev/demanda/pr', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'criarPR'], [Middlewares::exigirLoginEquipe()]);
+$roteador->post('/equipe/dev/demanda/deploy', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'deployDemanda'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('dev_deploy', 10, 60)]);
+$roteador->post('/equipe/dev/demanda/pr', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'criarPR'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/dev/demanda/aprovar', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'aprovarPR'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/dev/demanda/rejeitar', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'rejeitarPR'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/dev/demanda/diff', [\LRV\App\Controllers\Equipe\ProjetosDevController::class, 'diffPR'], [Middlewares::exigirLoginEquipe()]);
@@ -220,9 +219,9 @@ $roteador->post('/equipe/reset-senha/salvar', [EquipeResetSenhaController::class
 $roteador->get('/cliente/entrar', [ClienteEntrarController::class, 'formulario']);
 $roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_client', 10, 60)]);
 $roteador->get('/cliente/criar-conta', [CriarContaController::class, 'formulario']);
-$roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar']);
+$roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar'], [Middlewares::rateLimitIp('signup', 5, 3600)]);
 $roteador->get('/contratar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'wizard']);
-$roteador->post('/contratar/finalizar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'finalizar'], [Middlewares::rateLimitIp('contratar', 5, 60)]);
+$roteador->post('/contratar/finalizar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'finalizar'], [Middlewares::rateLimitIp('contratar', 5, 60), Middlewares::rateLimitIp('signup_contratar', 10, 3600)]);
 $roteador->get('/cliente/painel', [ClientePainelController::class, 'index'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos', [ClientePlanosController::class, 'listar'], [Middlewares::exigirLoginCliente()]);
 $roteador->get('/cliente/planos/checkout', [ClientePlanosController::class, 'checkout'], [Middlewares::exigirLoginCliente()]);
@@ -391,18 +390,18 @@ $roteador->get('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, '
 $roteador->post('/cliente/2fa/verificar', [ClienteDoisFatoresController::class, 'verificar'], [Middlewares::rateLimitIp('2fa_verify_cli', 10, 60)]);
 
 // Git Deploy
-$roteador->get('/cliente/git-deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/git-deploy/novo', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'novo'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->get('/cliente/git-deploy/editar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'editar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
-$roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regenerarChave'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
-$roteador->post('/cliente/git-deploy/regerar-ssl', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regerarSsl'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_ssl', 5, 300)]);
-$roteador->post('/cliente/git-deploy/ajustar-permissoes', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'ajustarPermissoes'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_perms', 10, 300)]);
-$roteador->post('/cliente/git-deploy/console', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'console'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_console', 60, 60)]);
-$roteador->get('/cliente/git-deploy/server-logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'serverLogs'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/git-deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/git-deploy/novo', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'novo'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->get('/cliente/git-deploy/editar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'editar'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/salvar', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'salvar'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/deploy', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'deploy'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_deploy', 10, 60)]);
+$roteador->get('/cliente/git-deploy/logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'logs'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/excluir', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'excluir'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regenerarChave'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
+$roteador->post('/cliente/git-deploy/regerar-ssl', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regerarSsl'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_ssl', 5, 300)]);
+$roteador->post('/cliente/git-deploy/ajustar-permissoes', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'ajustarPermissoes'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_perms', 10, 300)]);
+$roteador->post('/cliente/git-deploy/console', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'console'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_console', 60, 60)]);
+$roteador->get('/cliente/git-deploy/server-logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'serverLogs'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 
 // Cron Jobs
 $roteador->get('/cliente/cron-jobs', [\LRV\App\Controllers\Cliente\CronJobsController::class, 'listar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);

@@ -96,7 +96,11 @@ final class AplicacaoDeployService
             throw new \RuntimeException('Falha ao validar SSH/Docker.' . ($saida !== '' ? "\n\n" . $saida : ''));
         }
 
-        $rede = (string) Settings::obter('infra.docker_rede', 'lrvcloud_network');
+        // Rede isolada do cliente
+        $rede = $this->docker->garantirRedeCliente(
+            (int) ($app['client_id'] ?? 0),
+            (string) Settings::obter('infra.docker_rede', 'lrvcloud_network')
+        );
         $nomeContainer = 'app_' . $applicationId;
 
         $log('Removendo container anterior (se existir)...');

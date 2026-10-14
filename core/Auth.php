@@ -13,6 +13,24 @@ final class Auth
     public static string $motivoFalhaCliente = '';
 
     /**
+     * O cliente pode usar recursos que rodam comandos direto no SERVIDOR (fora do container)?
+     * Liberado só pela equipe (clients.host_access_enabled). Fail-closed: erro/coluna ausente = não.
+     */
+    public static function clienteTemAcessoServidor(int $clienteId): bool
+    {
+        if ($clienteId <= 0) {
+            return false;
+        }
+        try {
+            $s = BancoDeDados::pdo()->prepare('SELECT host_access_enabled FROM clients WHERE id = :id LIMIT 1');
+            $s->execute([':id' => $clienteId]);
+            return (int) $s->fetchColumn() === 1;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
      * Retorna true se o cliente está inativado (disabled_at) ou com exclusão em andamento.
      * Tolerante a banco sem a migração 0096 (colunas inexistentes → não bloqueia).
      */

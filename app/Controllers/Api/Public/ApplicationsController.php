@@ -71,6 +71,11 @@ final class ApplicationsController extends BaseApiController
         if (!$this->temEscopo($req, 'applications.write')) {
             return $this->proibido('Scope applications.write is required.');
         }
+        // Cria recursos no servidor: só parceiros autorizados
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
 
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['template_id', 'vps_id']);
@@ -184,6 +189,12 @@ final class ApplicationsController extends BaseApiController
             return $this->proibido('Scope applications.write is required.');
         }
 
+        // O deploy Git roda direto no servidor: só para parceiros autorizados pela equipe.
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
+
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['vps_id', 'name', 'git_repo']);
         if ($validacao !== null) {
@@ -194,6 +205,28 @@ final class ApplicationsController extends BaseApiController
         [$clienteId, $erroCliente] = $this->resolverClienteAlvo($req, $dados);
         if ($erroCliente !== null) {
             return $erroCliente;
+        }
+        if (!\LRV\Core\Auth::clienteTemAcessoServidor((int) $clienteId) && !\LRV\Core\Auth::clienteTemAcessoServidor((int) $this->clienteId($req))) {
+            return $this->proibido('Git deploy is not enabled for this account. Contact support.');
+        }
+
+        // Tudo isto vira comando no servidor: validar estritamente
+        $V = \LRV\App\Services\Seguranca\ValidadorInfra::class;
+        $erros = [];
+        if (!$V::repoUrlValida((string) ($dados['git_repo'] ?? ''))) {
+            $erros[] = ['field' => 'git_repo', 'message' => 'Use https://host/owner/repo or git@host:owner/repo.git (public hosts only).'];
+        }
+        if (isset($dados['git_branch']) && trim((string) $dados['git_branch']) !== '' && !$V::branchValido((string) $dados['git_branch'])) {
+            $erros[] = ['field' => 'git_branch', 'message' => 'Invalid branch name.'];
+        }
+        if (isset($dados['php_version']) && !$V::phpVersionValida((string) $dados['php_version'])) {
+            $erros[] = ['field' => 'php_version', 'message' => 'Use the X.Y format (e.g. 8.3).'];
+        }
+        if (isset($dados['domain']) && trim((string) $dados['domain']) !== '' && !$V::dominioValido((string) $dados['domain'])) {
+            $erros[] = ['field' => 'domain', 'message' => 'Invalid domain.'];
+        }
+        if ($erros !== []) {
+            return $this->validacaoFalhou($erros);
         }
 
         if ($this->isSandbox($req)) {
@@ -206,19 +239,52 @@ final class ApplicationsController extends BaseApiController
         $branch = trim((string) ($dados['git_branch'] ?? 'main')) ?: 'main';
         $runtime = in_array($dados['runtime'] ?? '', ['php', 'nodejs', 'python', 'cpp'], true) ? (string) $dados['runtime'] : 'php';
         $domain = strtolower(trim((string) ($dados['domain'] ?? '')));
-        $deployPath = rtrim(trim((string) ($dados['deploy_path'] ?? '/var/www/html')), '/') ?: '/var/www/html';
+        // Pasta: sempre dentro de /var/www, nunca a de outro cliente. Sem informar, gera uma única.
+        $deployPath = trim((string) ($dados['deploy_path'] ?? ''));
+        if ($deployPath === '' || rtrim($deployPath, '/') === '/var/www/html') {
+            $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower((string) ($dados['name'] ?? 'app'))), '-');
+            $deployPath = '/var/www/c' . (int) $clienteId . '-' . ($slug !== '' ? substr($slug, 0, 40) : 'app') . '-' . bin2hex(random_bytes(2));
+        }
         $phpVersion = trim((string) ($dados['php_version'] ?? '8.3')) ?: '8.3';
-        $appPort = (int) ($dados['app_port'] ?? 3000);
+        $appPort = max(1024, min(65535, (int) ($dados['app_port'] ?? 3000)));
         $authToken = trim((string) ($dados['auth_token'] ?? ''));
         $staging = (bool) ($dados['staging_subdomain'] ?? false);
 
         $pdo = BancoDeDados::pdo();
 
-        // Ownership da VPS (precisa pertencer ao cliente-alvo)
-        $stmt = $pdo->prepare("SELECT id FROM vps WHERE id = :id AND client_id = :cid LIMIT 1");
+        // Ownership da VPS (precisa pertencer ao cliente-alvo e estar ativa)
+        $stmt = $pdo->prepare("SELECT id FROM vps WHERE id = :id AND client_id = :cid AND status = 'running' AND deleted_at IS NULL LIMIT 1");
         $stmt->execute([':id' => $vpsId, ':cid' => $clienteId]);
         if (!$stmt->fetch()) {
             return $this->naoEncontrado('VPS');
+        }
+
+        try {
+            $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy($deployPath, (int) $clienteId);
+        } catch (\InvalidArgumentException $e) {
+            return $this->validacaoFalhou([['field' => 'deploy_path', 'message' => 'Invalid or already used folder. Use /var/www/<name> or omit it.']]);
+        }
+
+        // Domínio não pode ser de outro cliente (o vhost dele seria sobrescrito)
+        if ($domain !== '') {
+            $donos = [];
+            foreach ([
+                'SELECT client_id FROM git_deployments WHERE subdomain = :d OR temp_domain = :d2',
+                'SELECT client_id FROM client_subdomains WHERE subdomain = :d OR subdomain = :d2',
+                'SELECT client_id FROM client_domains WHERE domain = :d OR domain = :d2',
+            ] as $sqlDono) {
+                try {
+                    $q = $pdo->prepare($sqlDono);
+                    $q->execute([':d' => $domain, ':d2' => $domain]);
+                    $donos = array_merge($donos, array_map('intval', $q->fetchAll(\PDO::FETCH_COLUMN) ?: []));
+                } catch (\Throwable) {}
+            }
+            $permitidos = $this->clienteIdsGerenciados($req);
+            foreach (array_unique($donos) as $dono) {
+                if (!in_array($dono, $permitidos, true)) {
+                    return $this->erro('DOMAIN_IN_USE', 'This domain belongs to another account.', 409);
+                }
+            }
         }
 
         // Domínio de homologação (staging) opcional — subdomínio temporário .lrvweb
@@ -254,7 +320,8 @@ final class ApplicationsController extends BaseApiController
                 ':cr' => $agora,
             ]);
         } catch (\Throwable $e) {
-            return $this->erro('APP_CREATE_FAILED', 'Could not create the git application: ' . $e->getMessage(), 500);
+            error_log('[api] criarGitDeploy: ' . $e->getMessage());
+            return $this->erro('APP_CREATE_FAILED', 'Could not create the git application.', 500);
         }
 
         $deployId = (int) $pdo->lastInsertId();
@@ -369,7 +436,8 @@ final class ApplicationsController extends BaseApiController
         try {
             (new \LRV\Core\Jobs\RepositorioJobs())->criar('git_deploy', ['deployment_id' => $id]);
         } catch (\Throwable $e) {
-            return $this->erro('DEPLOY_QUEUE_FAILED', 'Could not queue the deploy: ' . $e->getMessage(), 500);
+            error_log('[api] redeployGitDeploy: ' . $e->getMessage());
+            return $this->erro('DEPLOY_QUEUE_FAILED', 'Could not queue the deploy.', 500);
         }
 
         // Webhook application.deployed

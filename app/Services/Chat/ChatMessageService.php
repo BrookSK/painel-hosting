@@ -10,6 +10,16 @@ final class ChatMessageService
 {
     public function salvar(int $roomId, string $senderType, int $senderId, string $message, ?string $fileUrl = null, ?string $fileName = null): array
     {
+        // Anexo só pode ser um arquivo enviado pelo nosso upload do chat (evita link
+        // javascript:, phishing ou apontar para arquivo de outro lugar)
+        if ($fileUrl !== null && $fileUrl !== ''
+            && preg_match('#^/uploads/chat/[a-f0-9]{24}\.(png|jpe?g|gif|webp|pdf|docx?|txt)$#', $fileUrl) !== 1) {
+            $fileUrl = null;
+            $fileName = null;
+        }
+        if ($fileName !== null) {
+            $fileName = mb_substr((string) preg_replace('/[\x00-\x1f<>"\']/u', '', $fileName), 0, 120);
+        }
         $message = trim($message);
         if ($message === '' && ($fileUrl === null || $fileUrl === '')) {
             throw new \InvalidArgumentException('Mensagem inválida.');

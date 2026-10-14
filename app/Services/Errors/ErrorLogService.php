@@ -171,13 +171,8 @@ final class ErrorLogService
 
     private static function ip(): ?string
     {
-        $xff = trim((string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''));
-        if ($xff !== '') {
-            $partes = array_map('trim', explode(',', $xff));
-            $ip = (string) ($partes[0] ?? '');
-            if ($ip !== '') return $ip;
-        }
-        $ip = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
-        return $ip !== '' ? $ip : null;
+        if (!isset($_SERVER['REMOTE_ADDR'])) return null;
+        $ip = \LRV\Core\IpCliente::obter();
+        return $ip !== '0.0.0.0' ? $ip : null;
     }
 }

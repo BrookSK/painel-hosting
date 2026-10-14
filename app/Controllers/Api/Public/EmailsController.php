@@ -55,6 +55,11 @@ final class EmailsController extends BaseApiController
         if (!$this->temEscopo($req, 'emails.write')) {
             return $this->proibido('Scope emails.write is required.');
         }
+        // Cria recursos no servidor: só parceiros autorizados pela equipe
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
 
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['email_address', 'password']);
@@ -68,7 +73,7 @@ final class EmailsController extends BaseApiController
 
         $email = strtolower(trim((string) ($dados['email_address'] ?? '')));
         $password = (string) ($dados['password'] ?? '');
-        $quotaMb = (int) ($dados['quota_mb'] ?? 1024);
+        $quotaMb = max(1, min(10240, (int) ($dados['quota_mb'] ?? 1024)));
         $clienteId = $this->clienteId($req);
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -83,10 +88,11 @@ final class EmailsController extends BaseApiController
         $pdo = BancoDeDados::pdo();
 
         // Verificar domínio pertence ao cliente
-        $stmt = $pdo->prepare("SELECT id FROM client_domains WHERE client_id = :cid AND domain = :domain");
+        // ...e já verificado (DNS confirmado) — senão daria para criar e-mail em domínio de terceiros
+        $stmt = $pdo->prepare("SELECT id FROM client_domains WHERE client_id = :cid AND domain = :domain AND status = 'active'");
         $stmt->execute([':cid' => $clienteId, ':domain' => $domain]);
         if (!$stmt->fetch()) {
-            return $this->erro('DOMAIN_NOT_FOUND', 'Domain does not belong to this client.', 403);
+            return $this->erro('DOMAIN_NOT_FOUND', 'Domain does not belong to this client or is not verified yet.', 403);
         }
 
         // Verificar duplicata
@@ -111,7 +117,7 @@ final class EmailsController extends BaseApiController
         // Enfileirar criação no Mailcow
         $pdo->prepare(
             "INSERT INTO jobs (type, payload, status, created_at) VALUES ('email_create', :payload, 'pending', NOW())"
-        )->execute([':payload' => json_encode(['email_id' => $id, 'email' => $email, 'password' => $password, 'quota_mb' => $quotaMb])]);
+        )->execute([':payload' => json_encode(['email_id' => $id, 'email' => $email, 'password_enc' => \LRV\App\Services\Infra\SshCrypto::cifrar($password), 'quota_mb' => $quotaMb])]);
 
         return $this->criado([
             'id' => $id,

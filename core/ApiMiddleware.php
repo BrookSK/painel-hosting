@@ -254,15 +254,6 @@ final class ApiMiddleware
 
     private static function ipDoRequest(Requisicao $req): string
     {
-        $ip = (string) ($req->headers['x-forwarded-for'] ?? '');
-        if ($ip !== '') {
-            $parts = explode(',', $ip);
-            return trim($parts[0]);
-        }
-        $ip = (string) ($req->headers['x-real-ip'] ?? '');
-        if ($ip !== '') {
-            return trim($ip);
-        }
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        return IpCliente::obter($req->headers);
     }
 }

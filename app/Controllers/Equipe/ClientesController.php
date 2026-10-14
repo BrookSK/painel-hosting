@@ -154,6 +154,19 @@ final class ClientesController
             return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
         }
 
+        // Segurança: liberar/bloquear provisionamento pela API e acesso direto ao servidor
+        foreach (['toggle_api_provisioning' => 'api_provisioning_enabled', 'toggle_host_access' => 'host_access_enabled'] as $campoPost => $coluna) {
+            if (!empty($req->post[$campoPost]) && $id > 0) {
+                $pdo = BancoDeDados::pdo();
+                $pdo->prepare("UPDATE clients SET {$coluna} = IF({$coluna} = 1, 0, 1) WHERE id = :id")->execute([':id' => $id]);
+                $novo = $pdo->prepare("SELECT {$coluna} FROM clients WHERE id = :id");
+                $novo->execute([':id' => $id]);
+                (new AuditLogService())->registrar('team', \LRV\Core\Auth::equipeId(), 'client.' . $coluna, 'client', $id,
+                    ['valor' => (int) $novo->fetchColumn()], $req);
+                return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+            }
+        }
+
         // Toggle managed flag (cliente gerenciado)
         if (!empty($req->post['toggle_managed']) && $id > 0) {
             $pdo = BancoDeDados::pdo();

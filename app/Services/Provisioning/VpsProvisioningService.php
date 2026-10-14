@@ -140,6 +140,13 @@ final class VpsProvisioningService
         // Cliente gerenciado → overselling: container sem limites de CPU/RAM
         $clienteManaged = $this->clienteEhGerenciado((int)($vps['client_id'] ?? 0));
 
+        // Isolamento entre clientes: cada cliente tem sua própria rede Docker
+        $redeCompartilhada = $rede;
+        $rede = $this->docker->garantirRedeCliente((int) ($vps['client_id'] ?? 0), $redeCompartilhada);
+        if ($rede === $redeCompartilhada && (int) ($vps['client_id'] ?? 0) > 0) {
+            $log('AVISO: não foi possível criar a rede isolada do cliente; usando a rede compartilhada ' . $rede . '. Verifique as faixas de IP do Docker (default-address-pools).');
+        }
+
         $resp = $this->docker->criarEIniciarContainer(
             $nomeContainer,
             $clienteManaged ? 0 : (int) $vps['cpu'],

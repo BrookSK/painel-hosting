@@ -12,9 +12,9 @@ use LRV\Core\Middlewares;
 
 $roteador->get('/api/saude', [SaudeController::class, 'status']);
 
-$roteador->post('/api/jobs/teste/enfileirar', [JobsTesteController::class, 'enfileirar'], [Middlewares::exigirLoginEquipe()]);
+$roteador->post('/api/jobs/teste/enfileirar', [JobsTesteController::class, 'enfileirar'], [Middlewares::exigirPermissao('manage_servers')]);
 
-$roteador->post('/api/alertas/teste/enfileirar', [AlertasTesteController::class, 'enfileirar'], [Middlewares::exigirLoginEquipe()]);
+$roteador->post('/api/alertas/teste/enfileirar', [AlertasTesteController::class, 'enfileirar'], [Middlewares::exigirPermissao('manage_servers')]);
 
 $roteador->post('/api/metrics/servers', [MetricsController::class, 'registrarServidor'], [Middlewares::rateLimitIp('api_metrics', 60, 60)]);
 

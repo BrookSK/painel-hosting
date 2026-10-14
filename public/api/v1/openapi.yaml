@@ -934,7 +934,7 @@ paths:
       summary: Criar aplicação conectada a Git e disparar deploy
       description: |
         Cria uma aplicação apontando um repositório Git numa VPS e enfileira o deploy
-        (git fetch + build), executado em background pelo worker. Retorna 202.
+        (git fetch + build), executado em segundo plano. Retorna 202.
         Com `staging_subdomain: true`, gera um subdomínio temporário de homologação
         com SSL automático e retorna `staging_url`. Dispara `application.installed`.
         Requer escopo `applications.write`.
@@ -968,7 +968,7 @@ paths:
                   description: Domínio próprio (opcional)
                 deploy_path:
                   type: string
-                  default: /var/www/html
+                  description: "Pasta do site (opcional). Se omitida, uma pasta exclusiva é gerada automaticamente."
                 php_version:
                   type: string
                   default: "8.3"

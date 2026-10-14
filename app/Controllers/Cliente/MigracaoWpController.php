@@ -105,6 +105,16 @@ final class MigracaoWpController
         if ($sourcePassword === '') {
             return $this->erroForm($clienteId, 'Senha SSH do servidor de origem é obrigatória.');
         }
+        // Segurança: domínio vai para o Nginx/SQL do servidor; origem não pode ser rede interna
+        $destDomain = strtolower($destDomain);
+        if ($destDomain !== '' && !\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($destDomain)) {
+            return $this->erroForm($clienteId, 'Domínio de destino inválido.');
+        }
+        try {
+            \LRV\App\Services\Seguranca\UrlExterna::exigirHostPublico($sourceHost);
+        } catch (\InvalidArgumentException $e) {
+            return $this->erroForm($clienteId, 'Servidor de origem inválido: ' . $e->getMessage());
+        }
 
         // Validar VPS pertence ao cliente
         $pdo = BancoDeDados::pdo();

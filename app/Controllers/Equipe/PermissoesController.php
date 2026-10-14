@@ -55,6 +55,14 @@ final class PermissoesController
     {
         $pdo = BancoDeDados::pdo();
 
+        // Mudar o que cada cargo pode fazer é privilégio de superadmin (senão quem tem
+        // "gerenciar usuários" daria a si mesmo todas as permissões).
+        $me = $pdo->prepare('SELECT role FROM users WHERE id = :id');
+        $me->execute([':id' => (int) \LRV\Core\Auth::equipeId()]);
+        if ((string) $me->fetchColumn() !== 'superadmin') {
+            return Resposta::texto('Somente superadmin pode alterar permissões dos cargos.', 403);
+        }
+
         $stmt = $pdo->query('SELECT id, `key` FROM permissions');
         $permissoes = $stmt->fetchAll();
         $permissoes = is_array($permissoes) ? $permissoes : [];

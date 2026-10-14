@@ -127,6 +127,13 @@ final class DockerCli
         }
         $args[] = '-v ' . escapeshellarg($volumeHost . ':/data');
         $args[] = '--network ' . escapeshellarg($rede);
+        // Proteção do servidor: limite de processos (evita "fork bomb" derrubar o node)
+        // e impede ganho de privilégio via binários setuid dentro do container.
+        $args[] = '--pids-limit 1024';
+        $args[] = '--security-opt no-new-privileges';
+        if ($ramMb > 0) {
+            $args[] = '--memory-swap ' . escapeshellarg((string) $ramMb . 'm');
+        }
 
         foreach ($labels as $k => $v) {
             $k = trim((string) $k);
@@ -203,6 +210,34 @@ final class DockerCli
         $this->validarNome($nome);
         $cmd = 'docker rm -f ' . ($comVolumesAnonimos ? '-v ' : '') . escapeshellarg($nome);
         return $this->executarComando($cmd);
+    }
+
+    /**
+     * Rede Docker exclusiva do cliente (lrv_c{ID}). Com ela, os containers de um cliente
+     * (VPS, bancos, aplicações) não enxergam os de outros clientes no mesmo servidor.
+     * O phpMyAdmin compartilhado é conectado à rede para continuar funcionando.
+     *
+     * Se não for possível criar (ex.: Docker sem faixas de IP livres), devolve $fallback
+     * e quem chamou registra o aviso — melhor do que travar o provisionamento.
+     */
+    public function garantirRedeCliente(int $clientId, string $fallback): string
+    {
+        if ($clientId <= 0) {
+            return $fallback;
+        }
+        $rede = 'lrv_c' . $clientId;
+        try {
+            $r = $this->executarComando(
+                'docker network inspect ' . escapeshellarg($rede) . ' >/dev/null 2>&1'
+                . ' || docker network create --label lrv.client_id=' . (int) $clientId . ' ' . escapeshellarg($rede) . ' >/dev/null 2>&1;'
+                . ' docker network inspect ' . escapeshellarg($rede) . ' >/dev/null 2>&1 && echo LRV_NET_OK;'
+                . ' docker network connect ' . escapeshellarg($rede) . ' lrv_phpmyadmin >/dev/null 2>&1; true'
+            );
+            if (str_contains((string) ($r['saida'] ?? ''), 'LRV_NET_OK')) {
+                return $rede;
+            }
+        } catch (\Throwable) {}
+        return $fallback;
     }
 
     /** Lista os nomes de todos os containers do node (rodando ou parados). */

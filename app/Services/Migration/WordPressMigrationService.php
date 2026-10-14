@@ -95,6 +95,12 @@ final class WordPressMigrationService
         $user = (string)$migration['source_user'];
         $password = SshCrypto::decifrar((string)$migration['source_password_enc']);
 
+        try {
+            \LRV\App\Services\Seguranca\UrlExterna::exigirHostPublico($host);
+        } catch (\InvalidArgumentException $e) {
+            return ['ok' => false, 'erro' => 'Servidor de origem inválido: ' . $e->getMessage()];
+        }
+
         if ($password === '') {
             return ['ok' => false, 'erro' => 'Senha SSH do servidor de origem não configurada.'];
         }
@@ -146,7 +152,20 @@ final class WordPressMigrationService
         // Dados do DESTINO (nosso servidor)
         $vpsId = (int)$migration['vps_id'];
         $clientId = (int)$migration['client_id'];
-        $destDomain = (string)$migration['dest_domain'];
+        $destDomain = strtolower(trim((string)$migration['dest_domain']));
+
+        // Segurança: o domínio vai para o vhost do Nginx e para SQL executado como root.
+        if ($destDomain !== '' && !\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($destDomain)) {
+            $this->falhar($migrationId, 'Domínio de destino inválido.');
+            return;
+        }
+        // Servidor de origem não pode ser endereço interno (nosso servidor/rede privada)
+        try {
+            \LRV\App\Services\Seguranca\UrlExterna::exigirHostPublico((string)$migration['source_host']);
+        } catch (\InvalidArgumentException $e) {
+            $this->falhar($migrationId, 'Servidor de origem inválido: ' . $e->getMessage());
+            return;
+        }
 
         // Se não informou domínio, gerar domínio temporário automaticamente
         if ($destDomain === '') {
@@ -496,9 +515,13 @@ final class WordPressMigrationService
             $this->appendLog($migrationId, "Banco '{$destDbName}' criado. Importando dump...");
             $this->atualizarStatus($migrationId, 'importing_db', 75, 'import_sql');
 
-            // Importar dump
+            // Importar dump — com o usuário RESTRITO do banco novo (só tem acesso a este banco),
+            // nunca como root: o dump vem do servidor do cliente e poderia conter comandos
+            // (USE mysql; GRANT ...; DROP DATABASE de outro cliente) que o root executaria.
+            // Os filtros removem DEFINER/GTID, que exigem privilégio de administrador.
             $importCmd = 'gunzip -c ' . escapeshellarg($destDumpFile)
-                . ' | mysql ' . $mysqlAuth . ' ' . escapeshellarg($destDbName)
+                . " | sed -e '/GTID_PURGED/d' -e 's/DEFINER=[^ ]*//g'"
+                . ' | mysql -u ' . escapeshellarg($destDbUser) . ' -p' . escapeshellarg($destDbPass) . ' ' . escapeshellarg($destDbName)
                 . ' 2>&1 && echo import-ok';
             $importOutput = $this->execDest($destSrv, $importCmd, 900);
 

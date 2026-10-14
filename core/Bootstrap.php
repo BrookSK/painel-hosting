@@ -27,8 +27,17 @@ final class Bootstrap
             try {
                 $forceHttps = \LRV\Core\Settings::obter('app.force_https', '0');
                 if ($forceHttps === '1' && !$https) {
-                    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+                    // Host do redirect vem da URL configurada (o cabeçalho Host é do visitante)
+                    $base = (string) \LRV\Core\Settings::obter('app.url_base', '');
+                    $host = (string) (parse_url($base, PHP_URL_HOST) ?: '');
+                    if ($host === '') {
+                        $h = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+                        $host = preg_match('/^[a-z0-9.-]+(:\d{1,5})?$/', $h) === 1 ? $h : '';
+                    }
                     $uri  = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+                    if (!str_starts_with($uri, '/') || str_starts_with($uri, '//')) {
+                        $uri = '/';
+                    }
                     if ($host !== '') {
                         header('Location: https://' . $host . $uri, true, 301);
                         exit;

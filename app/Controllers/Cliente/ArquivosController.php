@@ -61,7 +61,7 @@ final class ArquivosController
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd, $path);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -119,7 +119,7 @@ final class ArquivosController
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd, $path);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -145,7 +145,7 @@ final class ArquivosController
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd, $path);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -167,7 +167,7 @@ final class ArquivosController
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd, $path);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -189,7 +189,7 @@ final class ArquivosController
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd, $path);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -215,7 +215,7 @@ final class ArquivosController
         if ($appId > 0) {
             $sizeResult = $this->execInAppContainer($clienteId, $appId, $checkCmd);
         } elseif ($direct === 1) {
-            $sizeResult = $this->execDirectOnServer($clienteId, $vpsId, $checkCmd);
+            $sizeResult = $this->execDirectOnServer($clienteId, $vpsId, $checkCmd, $path);
         } else {
             $sizeResult = $this->execInContainer($clienteId, $vpsId, $checkCmd);
         }
@@ -228,7 +228,7 @@ final class ArquivosController
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
-            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd);
+            $result = $this->execDirectOnServer($clienteId, $vpsId, $cmd, $path);
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
@@ -303,7 +303,11 @@ final class ArquivosController
         $ssh = new SshExecutor();
 
         if ($direct === 1) {
-            // Upload direto no servidor (Git Deploy)
+            // Upload direto no servidor (Git Deploy): só dentro da pasta de um site do cliente
+            $check = $this->execDirectOnServer($clienteId, $vpsId, 'test -d ' . escapeshellarg($destPath) . ' && echo LRV_DEST_OK', $destPath);
+            if (!($check['ok'] ?? false) || !str_contains((string) ($check['output'] ?? ''), 'LRV_DEST_OK')) {
+                return Resposta::json(['ok' => false, 'erro' => $check['erro'] ?? 'Pasta de destino inválida ou fora da pasta do site.']);
+            }
             $stmt = $pdo->prepare("SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
             $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
             $row = $stmt->fetch();
@@ -450,13 +454,8 @@ final class ArquivosController
             $sshCmd = 'docker exec ' . escapeshellarg($containerName) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
             if ($containerId !== '') $sshCmd .= ' || docker exec ' . escapeshellarg($containerId) . ' sh -c ' . escapeshellarg($cmd) . ' 2>&1';
         } elseif ($direct === 1) {
-            // Direct on server
-            $pdo = BancoDeDados::pdo();
-            $stmt = $pdo->prepare("SELECT s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
-            $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
-            $row = $stmt->fetch();
-            if (!is_array($row)) return ['ok' => false, 'erro' => 'VPS não encontrada.'];
-            $sshCmd = $cmd;
+            // Modo "direto no servidor" só via execDirectOnServer (que restringe à pasta do site)
+            return ['ok' => false, 'erro' => 'Operação não permitida.'];
         } else {
             // Docker container
             $pdo = BancoDeDados::pdo();
@@ -553,9 +552,57 @@ final class ArquivosController
      * Executa comando diretamente no servidor (sem docker exec).
      * Usado para Git Deploy onde os arquivos ficam no filesystem do host.
      */
-    private function execDirectOnServer(int $clienteId, int $vpsId, string $cmd): array
+    /**
+     * Modo "direto no servidor" (arquivos do Git Deploy): só para contas com acesso ao
+     * servidor liberado pela equipe e SEMPRE preso dentro da pasta de um site do próprio
+     * cliente. A checagem final é feita no servidor com realpath (pega links simbólicos
+     * que apontem para fora, ex.: um symlink para /etc no repositório).
+     *
+     * @return array{ok:bool, erro?:string, prefixo?:string}
+     */
+    private function guardaDireto(int $clienteId, int $vpsId, string $path): array
+    {
+        if (!Auth::estaImpersonando() && !Auth::clienteTemAcessoServidor($clienteId)) {
+            return ['ok' => false, 'erro' => 'O acesso aos arquivos do servidor precisa ser liberado pela nossa equipe.'];
+        }
+        $path = str_replace('\\', '/', trim($path));
+        if ($path === '' || $path[0] !== '/' || preg_match('/[\x00-\x1f]/', $path) || preg_match('#(^|/)\.\.(/|$)#', $path)) {
+            return ['ok' => false, 'erro' => 'Caminho inválido.'];
+        }
+        $path = rtrim($path, '/') ?: '/';
+
+        $st = BancoDeDados::pdo()->prepare('SELECT id, deploy_path FROM git_deployments WHERE client_id = :c AND vps_id = :v');
+        $st->execute([':c' => $clienteId, ':v' => $vpsId]);
+        $base = null;
+        foreach ($st->fetchAll() ?: [] as $d) {
+            try {
+                $b = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy((string) $d['deploy_path'], $clienteId, (int) $d['id'], true);
+            } catch (\InvalidArgumentException) {
+                continue;
+            }
+            if ($path === $b || str_starts_with($path . '/', $b . '/')) {
+                $base = $b;
+                break;
+            }
+        }
+        if ($base === null) {
+            return ['ok' => false, 'erro' => 'Você só pode acessar arquivos dentro da pasta dos seus sites.'];
+        }
+
+        $prefixo = '__b=$(realpath -m -- ' . escapeshellarg($base) . '); __p=$(realpath -m -- ' . escapeshellarg($path) . '); '
+            . 'case "$__p" in "$__b"|"$__b"/*) ;; *) echo "Acesso negado: fora da pasta do site."; exit 1;; esac; ';
+        return ['ok' => true, 'prefixo' => $prefixo];
+    }
+
+    private function execDirectOnServer(int $clienteId, int $vpsId, string $cmd, string $path = ''): array
     {
         if ($vpsId <= 0) return ['ok' => false, 'erro' => 'VPS inválida.'];
+
+        $guarda = $this->guardaDireto($clienteId, $vpsId, $path);
+        if (!$guarda['ok']) {
+            return ['ok' => false, 'erro' => $guarda['erro']];
+        }
+        $cmd = $guarda['prefixo'] . $cmd;
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare("SELECT v.id, v.status, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");

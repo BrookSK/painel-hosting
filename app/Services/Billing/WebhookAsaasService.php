@@ -84,6 +84,19 @@ final class WebhookAsaasService
 
             if ($subscriptionId === '') {
                 $pdo->commit();
+                // Cobrança avulsa (sem assinatura): pode ser a diferença de um upgrade ou um
+                // serviço adicional. Só agora, pago, é que liberamos o recurso.
+                if (($tipo === 'PAYMENT_CONFIRMED' || $tipo === 'PAYMENT_RECEIVED') && is_array($payment)) {
+                    $paymentIdAvulso = (string) ($payment['id'] ?? '');
+                    if ($paymentIdAvulso !== '') {
+                        try {
+                            $up = new UpgradeService();
+                            $up->aplicarUpgradePago($paymentIdAvulso) || $up->ativarAddonPago($paymentIdAvulso);
+                        } catch (\Throwable $e) {
+                            error_log('[asaas] falha ao liberar upgrade/addon pago ' . $paymentIdAvulso . ': ' . $e->getMessage());
+                        }
+                    }
+                }
                 return;
             }
 

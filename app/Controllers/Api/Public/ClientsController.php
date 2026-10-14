@@ -163,7 +163,8 @@ final class ClientsController extends BaseApiController
                 ':cr' => date('Y-m-d H:i:s'),
             ]);
         } catch (\Throwable $e) {
-            return $this->erro('CLIENT_CREATE_FAILED', 'Could not create the client: ' . $e->getMessage(), 500);
+            error_log('[api] criar cliente: ' . $e->getMessage());
+            return $this->erro('CLIENT_CREATE_FAILED', 'Could not create the client.', 500);
         }
 
         $id = (int) $pdo->lastInsertId();

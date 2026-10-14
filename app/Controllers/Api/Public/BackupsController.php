@@ -68,6 +68,11 @@ final class BackupsController extends BaseApiController
         if (!$this->temEscopo($req, 'backups.write')) {
             return $this->proibido('Scope backups.write is required.');
         }
+        // Cria recursos no servidor: só parceiros autorizados pela equipe
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
 
         $dados = $req->json();
         $vpsId = (int) ($dados['vps_id'] ?? 0);
@@ -102,6 +107,11 @@ final class BackupsController extends BaseApiController
     {
         if (!$this->temEscopo($req, 'backups.write')) {
             return $this->proibido('Scope backups.write is required.');
+        }
+        // Cria recursos no servidor: só parceiros autorizados pela equipe
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
         }
 
         $dados = $req->json();

@@ -154,6 +154,23 @@ if (in_array($delStatus, ['pending', 'running'], true)
           <?php echo !empty($cliente['is_tester']) ? '✕ Remover tester' : '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l6 0"/><path d="M12 11l0-9"/><path d="M6 18a6 6 0 0 0 12 0L12 8 6 18z"/></svg> Marcar como tester'; ?>
         </button>
       </form>
+      <?php $apiProv = !empty($cliente['api_provisioning_enabled']); $hostAcc = !empty($cliente['host_access_enabled']); ?>
+      <form method="post" action="/equipe/clientes/salvar" style="display:inline;" onsubmit="return confirm('<?php echo $apiProv ? 'Bloquear' : 'Liberar'; ?> a criação de servidores, clientes e recursos pela API para esta conta?<?php echo $apiProv ? '' : '\n\nSó libere para parceiros de confiança: a API cria recursos sem passar pelo pagamento.'; ?>')">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <input type="hidden" name="toggle_api_provisioning" value="1" />
+        <button class="botao sm <?php echo $apiProv ? 'ghost' : ''; ?>" type="submit" style="<?php echo $apiProv ? '' : 'background:#475569;'; ?>">
+          <?php echo $apiProv ? '✕ Bloquear provisionamento via API' : 'Liberar provisionamento via API'; ?>
+        </button>
+      </form>
+      <form method="post" action="/equipe/clientes/salvar" style="display:inline;" onsubmit="return confirm('<?php echo $hostAcc ? 'Bloquear' : 'Liberar'; ?> o acesso ao servidor (Git Deploy, console, cron e arquivos direto no servidor)?<?php echo $hostAcc ? '' : '\n\nATENÇÃO: esses recursos rodam comandos direto no servidor compartilhado. Só libere para clientes de confiança.'; ?>')">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+        <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+        <input type="hidden" name="toggle_host_access" value="1" />
+        <button class="botao sm <?php echo $hostAcc ? 'ghost' : ''; ?>" type="submit" style="<?php echo $hostAcc ? '' : 'background:#475569;'; ?>">
+          <?php echo $hostAcc ? '✕ Bloquear acesso ao servidor' : 'Liberar acesso ao servidor (Git Deploy)'; ?>
+        </button>
+      </form>
       <form method="post" action="/equipe/clientes/ocultar" style="display:inline;">
         <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
         <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />

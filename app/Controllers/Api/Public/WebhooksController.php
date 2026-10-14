@@ -80,7 +80,11 @@ final class WebhooksController extends BaseApiController
         $timeout = (int) ($dados['timeout_seconds'] ?? 30);
 
         $service = new WebhookService();
-        $result = $service->criar($this->clienteId($req), $url, $events, $maxRetries, $timeout);
+        try {
+            $result = $service->criar($this->clienteId($req), $url, $events, $maxRetries, $timeout);
+        } catch (\InvalidArgumentException $e) {
+            return $this->validacaoFalhou([['field' => 'url', 'message' => 'URL not allowed: must be a public HTTPS address.']]);
+        }
 
         return $this->criado([
             'id' => $result['id'],
@@ -107,7 +111,11 @@ final class WebhooksController extends BaseApiController
 
         $dados = $req->json();
         $service = new WebhookService();
-        $updated = $service->atualizar($webhookId, $this->clienteId($req), $dados);
+        try {
+            $updated = $service->atualizar($webhookId, $this->clienteId($req), $dados);
+        } catch (\InvalidArgumentException $e) {
+            return $this->validacaoFalhou([['field' => 'url', 'message' => $e->getMessage() === 'status deve ser active ou disabled.' ? 'status must be active or disabled.' : 'URL not allowed: must be a public HTTPS address.']]);
+        }
 
         if (!$updated) {
             return $this->naoEncontrado('Webhook');

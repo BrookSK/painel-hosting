@@ -1,5 +1,11 @@
 RewriteEngine On
- 
+Options -Indexes
+
+ # Uploads nunca executam código (PHP/scripts) nem servem HTML/SVG
+ #  (SVG só é permitido nas imagens enviadas pela equipe, nunca em anexos de clientes)
+ RewriteRule ^uploads/.*\.(php\d?|phtml|phar|pl|py|cgi|sh|html?|js)$ - [R=404,L,NC]
+ RewriteRule ^uploads/(?!imagens/).*\.svg$ - [R=404,L,NC]
+
  # Se o arquivo ou diretório físico existir, entrega direto
  RewriteCond %{REQUEST_FILENAME} -f [OR]
  RewriteCond %{REQUEST_FILENAME} -d

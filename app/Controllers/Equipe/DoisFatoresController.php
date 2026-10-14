@@ -160,6 +160,17 @@ final class DoisFatoresController
             return Resposta::redirecionar('/equipe/entrar');
         }
 
+        // Anti força bruta do código: 5 tentativas por login, 10 minutos de validade,
+        // e no máximo 10 tentativas a cada 15 minutos por conta (independente de IP/sessão).
+        $_SESSION['2fa_pending_equipe_t'] ??= time();
+        $_SESSION['2fa_pending_equipe_n'] = (int) ($_SESSION['2fa_pending_equipe_n'] ?? 0) + 1;
+        $porConta = \LRV\Core\RateLimiter::consumir('2fa:team:' . $pendingId, 10, 900);
+        if ($_SESSION['2fa_pending_equipe_n'] > 5 || time() - (int) $_SESSION['2fa_pending_equipe_t'] > 600 || empty($porConta['ok'])) {
+            unset($_SESSION['2fa_pending_equipe_id'], $_SESSION['2fa_pending_equipe_t'], $_SESSION['2fa_pending_equipe_n']);
+            $this->registrarAuthLog('team', $pendingId, '2fa_locked', $req);
+            return Resposta::redirecionar('/equipe/entrar?sessao=expirada');
+        }
+
         $codigo = trim((string) ($req->post['codigo'] ?? ''));
 
         $pdo = BancoDeDados::pdo();
@@ -173,7 +184,8 @@ final class DoisFatoresController
             return Resposta::html($html, 422);
         }
 
-        unset($_SESSION['2fa_pending_equipe_id']);
+        unset($_SESSION['2fa_pending_equipe_id'], $_SESSION['2fa_pending_equipe_t'], $_SESSION['2fa_pending_equipe_n']);
+        @session_regenerate_id(true);
         $_SESSION['auth_equipe_id'] = $pendingId;
 
         $this->registrarAuthLog('team', $pendingId, 'login', $req);

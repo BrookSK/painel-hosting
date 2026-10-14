@@ -92,6 +92,34 @@ final class Middlewares
     }
 
     /**
+     * Recursos que executam comandos direto no servidor compartilhado (Git Deploy etc.).
+     * Só para contas liberadas pela equipe — senão um cliente vira porta de entrada
+     * para o servidor inteiro (outros clientes e sites hospedados manualmente).
+     * A equipe impersonando continua com acesso.
+     */
+    public static function exigirAcessoServidor(): callable
+    {
+        return static function (Requisicao $req): ?Resposta {
+            $id = Auth::clienteId();
+            if ($id === null) {
+                return null; // exigirLoginCliente cuida
+            }
+            if (Auth::estaImpersonando() || Auth::clienteTemAcessoServidor($id)) {
+                return null;
+            }
+            $msg = 'Este recurso roda direto no servidor e precisa ser liberado pela nossa equipe. Abra um chamado para solicitar.';
+            $accept = strtolower((string) ($req->headers['accept'] ?? ''));
+            $ajax = strtolower((string) ($req->headers['x-requested-with'] ?? '')) === 'xmlhttprequest';
+            $fetchJs = $req->metodo !== 'GET' && !str_contains($accept, 'text/html');
+            if ($ajax || str_contains($accept, 'application/json') || $fetchJs) {
+                return Resposta::json(['ok' => false, 'erro' => $msg], 403);
+            }
+            $_SESSION['flash_warning'] = $msg;
+            return Resposta::redirecionar('/cliente/painel');
+        };
+    }
+
+    /**
      * Verifica se o cliente tem acesso à rota com base no tipo de plano.
      * Redireciona para o painel se a feature não é permitida.
      */
@@ -208,16 +236,7 @@ final class Middlewares
 
     private static function ipDoRequest(Requisicao $req): string
     {
-        $xff = trim((string) ($req->headers['x-forwarded-for'] ?? ''));
-        if ($xff !== '') {
-            $partes = array_map('trim', explode(',', $xff));
-            $ip = trim((string) ($partes[0] ?? ''));
-            if ($ip !== '') {
-                return $ip;
-            }
-        }
-
-        $ip = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
-        return $ip !== '' ? $ip : '0.0.0.0';
+        // Só confia em X-Forwarded-For vindo de proxy confiável (senão o rate limit é burlável)
+        return IpCliente::obter($req->headers);
     }
 }

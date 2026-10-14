@@ -86,7 +86,7 @@ final class ContratarController
         $celular    = $in->postString('celular', 20, false);
         $gateway    = trim((string)($req->post['gateway'] ?? 'PIX'));
         $periodo    = (int)($req->post['periodo'] ?? 1);
-        $quantidade = max(1, (int)($req->post['quantidade'] ?? 1));
+        $quantidade = max(1, min(5, (int)($req->post['quantidade'] ?? 1)));
         $addonsIds  = trim((string)($req->post['addons_ids'] ?? ''));
         $country    = trim((string)($req->post['country'] ?? ''));
         $prefLang   = trim((string)($req->post['preferred_lang'] ?? ''));
@@ -188,7 +188,8 @@ final class ContratarController
         $ccCvv     = trim((string)($req->post['cc_cvv'] ?? ''));
 
         // Criar assinaturas (uma por servidor)
-        $isBrl = \LRV\Core\I18n::moedaCodigo() === 'BRL';
+        // Usa a moeda que foi VALIDADA acima (não o cookie), para o gateway bater com a validação
+        $isBrl = $currency === 'BRL';
         $redirectUrl = '/cliente/painel';
 
         for ($i = 0; $i < $quantidade; $i++) {
@@ -224,7 +225,7 @@ final class ContratarController
                             if (strlen($ccAno) === 2) $ccAno = '20' . $ccAno;
 
                             try {
-                                $asaasApi->pagarComCartao($firstPaymentId, [
+                                $respCartao = $asaasApi->pagarComCartao($firstPaymentId, [
                                     'holderName' => $ccNome,
                                     'number' => $ccNumero,
                                     'expiryMonth' => $ccMes,
@@ -242,7 +243,14 @@ final class ContratarController
                                 }
                             }
                         }
-                        if ($i === 0) {
+                        // Só libera o servidor se o Asaas CONFIRMOU o pagamento do cartão.
+                        // Qualquer outro caso (sem cobrança, pendente, recusado) espera o webhook.
+                        $statusCartao = strtoupper((string)(($respCartao ?? [])['status'] ?? ''));
+                        $cartaoConfirmado = $firstPaymentId !== '' && in_array($statusCartao, ['CONFIRMED', 'RECEIVED'], true);
+                        if ($i === 0 && !$cartaoConfirmado) {
+                            $redirectUrl = '/cliente/assinaturas';
+                        }
+                        if ($i === 0 && $cartaoConfirmado) {
                             // Cartão pago inline — enfileirar provisionamento direto
                             $vpsIdLocal = (int)($resultado['local_subscription_id'] ?? 0);
                             try {

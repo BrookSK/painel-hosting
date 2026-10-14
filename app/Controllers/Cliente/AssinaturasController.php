@@ -150,6 +150,18 @@ final class AssinaturasController
                 ['subscription_id' => $subId, 'new_plan_id' => $newPlanId, 'type' => $result['type'] ?? 'upgrade'], $req
             );
 
+            if (!empty($result['pending_payment'])) {
+                return Resposta::json([
+                    'ok' => true,
+                    'type' => 'upgrade',
+                    'pending_payment' => true,
+                    'invoice_url' => (string) ($result['invoice_url'] ?? ''),
+                    'mensagem' => 'Geramos a cobrança da diferença (R$ ' . number_format((float) ($result['proration_charge'] ?? 0), 2, ',', '.') . '). '
+                        . 'Assim que o pagamento for confirmado, seu plano muda para ' . ($result['new_plan'] ?? '') . ' automaticamente.'
+                        . (!empty($result['invoice_url']) ? ' Pague em: ' . $result['invoice_url'] : ' Veja a cobrança em Faturas.'),
+                ]);
+            }
+
             return Resposta::json([
                 'ok' => true,
                 'type' => $result['type'],
@@ -211,6 +223,16 @@ final class AssinaturasController
                 'client', $clienteId, 'billing.addon_subscribe', 'subscription', $subId,
                 ['subscription_id' => $subId, 'addon_id' => $addonId, 'addon_name' => $result['addon_name'] ?? ''], $req
             );
+
+            if (!empty($result['pending_payment'])) {
+                return Resposta::json([
+                    'ok' => true,
+                    'pending_payment' => true,
+                    'invoice_url' => (string) ($result['invoice_url'] ?? ''),
+                    'mensagem' => 'Geramos a cobrança do serviço "' . ($result['addon_name'] ?? '') . '". Ele será ativado assim que o pagamento for confirmado.'
+                        . (!empty($result['invoice_url']) ? ' Pague em: ' . $result['invoice_url'] : ' Veja a cobrança em Faturas.'),
+                ]);
+            }
 
             return Resposta::json(['ok' => true, 'mensagem' => 'Serviço adicional "' . ($result['addon_name'] ?? '') . '" contratado com sucesso!']);
         } catch (\Throwable $e) {

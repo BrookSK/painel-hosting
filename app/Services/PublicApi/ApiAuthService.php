@@ -70,10 +70,10 @@ final class ApiAuthService
         $stmt = $pdo->prepare(
             "SELECT t.id, t.api_key_id, t.type, t.scopes, t.expires_at, t.revoked_at,
                     k.client_id, k.name, k.environment, k.scopes AS key_scopes,
-                    k.status AS key_status, k.rate_limit_per_minute
+                    k.status AS key_status, k.rate_limit_per_minute, k.expires_at AS key_expires_at
              FROM api_tokens t
              INNER JOIN api_keys k ON k.id = t.api_key_id
-             WHERE t.token_hash = :hash
+             WHERE t.token_hash = :hash AND t.type = 'access'
              LIMIT 1"
         );
         $stmt->execute([':hash' => $hash]);
@@ -98,8 +98,11 @@ final class ApiAuthService
             return null;
         }
 
-        // Verificar key status
+        // Verificar key status e validade da key (o token não pode durar mais que a key)
         if ($row['key_status'] !== 'active') {
+            return null;
+        }
+        if ($row['key_expires_at'] !== null && strtotime((string) $row['key_expires_at']) < time()) {
             return null;
         }
 
@@ -182,8 +185,10 @@ final class ApiAuthService
         $pdo = BancoDeDados::pdo();
 
         $stmt = $pdo->prepare(
-            "SELECT t.id, t.api_key_id, t.scopes, t.expires_at, t.revoked_at
+            "SELECT t.id, t.api_key_id, t.scopes, t.expires_at, t.revoked_at,
+                    k.client_id, k.status AS key_status, k.expires_at AS key_expires_at
              FROM api_tokens t
+             INNER JOIN api_keys k ON k.id = t.api_key_id
              WHERE t.token_hash = :hash AND t.type = 'refresh'
              LIMIT 1"
         );
@@ -191,6 +196,13 @@ final class ApiAuthService
         $row = $stmt->fetch();
 
         if (!is_array($row)) {
+            return null;
+        }
+
+        // Key revogada/expirada ou cliente bloqueado: não renova
+        if ($row['key_status'] !== 'active'
+            || ($row['key_expires_at'] !== null && strtotime((string) $row['key_expires_at']) < time())
+            || \LRV\Core\Auth::clienteBloqueado((int) $row['client_id'])) {
             return null;
         }
 

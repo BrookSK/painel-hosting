@@ -99,6 +99,26 @@ final class UsuariosController
         }
 
         $meuId = Auth::equipeId();
+
+        // Anti escalada de privilégio: só superadmin cria/edita superadmin, e ninguém
+        // altera o próprio cargo (evita alguém com "gerenciar usuários" virar superadmin).
+        $pdoRole = BancoDeDados::pdo();
+        $rs = $pdoRole->prepare('SELECT role FROM users WHERE id = :id');
+        $rs->execute([':id' => (int) $meuId]);
+        $meuRole = (string) ($rs->fetchColumn() ?: '');
+        $roleAtualAlvo = '';
+        if ($id > 0) {
+            $ra = $pdoRole->prepare('SELECT role FROM users WHERE id = :id');
+            $ra->execute([':id' => $id]);
+            $roleAtualAlvo = (string) ($ra->fetchColumn() ?: '');
+        }
+        if ($meuRole !== 'superadmin' && ($role === 'superadmin' || $roleAtualAlvo === 'superadmin')) {
+            return $this->renderizarErro($id, $nome, $email, $roleAtualAlvo !== '' ? $roleAtualAlvo : 'admin', $status, 'Somente um superadmin pode criar ou alterar usuários superadmin.');
+        }
+        if ($meuId !== null && $id > 0 && $id === $meuId && $roleAtualAlvo !== '' && $role !== $roleAtualAlvo) {
+            return $this->renderizarErro($id, $nome, $email, $roleAtualAlvo, $status, 'Você não pode alterar o seu próprio cargo.');
+        }
+
         if ($meuId !== null && $id > 0 && $id === $meuId && $status !== 'active') {
             return $this->renderizarErro($id, $nome, $email, $role, 'active', 'Você não pode desativar seu próprio usuário.');
         }

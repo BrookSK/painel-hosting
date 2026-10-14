@@ -64,14 +64,6 @@ final class LoginBlocker
 
     public static function extrairIp(): string
     {
-        $xff = trim((string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''));
-        if ($xff !== '') {
-            $partes = array_map('trim', explode(',', $xff));
-            $ip = (string) ($partes[0] ?? '');
-            if ($ip !== '') {
-                return $ip;
-            }
-        }
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        return IpCliente::obter();
     }
 }

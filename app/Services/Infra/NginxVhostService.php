@@ -70,6 +70,11 @@ final class NginxVhostService
 
     public function criarVhost(int $serverId, string $domain, int $port, bool $ssl = true): array
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return ['ok' => false, 'erro' => 'Domínio inválido.'];
+        $domain = strtolower(trim($domain));
+        if ($port < 1 || $port > 65535) return ['ok' => false, 'erro' => 'Porta inválida.'];
+
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
@@ -119,6 +124,9 @@ final class NginxVhostService
 
     public function removerVhost(int $serverId, string $domain): void
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return;
+        $domain = strtolower(trim($domain));
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return;
@@ -385,6 +393,14 @@ final class NginxVhostService
      */
     public function criarVhostStaticSite(int $serverId, string $domain, string $rootPath, bool $ssl = true, string $phpVersion = '8.3', array $phpSettings = []): array
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return ['ok' => false, 'erro' => 'Domínio inválido.'];
+        $domain = strtolower(trim($domain));
+        // Versão do PHP e pasta viram parte de comandos/arquivos no servidor: validar sempre
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::phpVersionValida($phpVersion)) return ['ok' => false, 'erro' => 'Versão do PHP inválida.'];
+        if (!preg_match('#^/(var/www|www/wwwroot)(/[A-Za-z0-9][A-Za-z0-9._-]{0,80}){1,4}$#', rtrim($rootPath, '/'))) return ['ok' => false, 'erro' => 'Pasta do site inválida.'];
+        $phpSettings = \LRV\App\Services\Seguranca\ValidadorInfra::phpSettings($phpSettings);
+
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
@@ -501,6 +517,11 @@ final class NginxVhostService
      */
     public function criarVhostProxy(int $serverId, string $domain, int $appPort, bool $ssl = true): array
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return ['ok' => false, 'erro' => 'Domínio inválido.'];
+        $domain = strtolower(trim($domain));
+        if ($appPort < 1 || $appPort > 65535) return ['ok' => false, 'erro' => 'Porta inválida.'];
+
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
@@ -562,6 +583,9 @@ final class NginxVhostService
      */
     public function suspenderVhost(int $serverId, string $domain): array
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return ['ok' => false, 'erro' => 'Domínio inválido.'];
+        $domain = strtolower(trim($domain));
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
@@ -669,6 +693,9 @@ final class NginxVhostService
      */
     public function reativarVhost(int $serverId, string $domain): array
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return ['ok' => false, 'erro' => 'Domínio inválido.'];
+        $domain = strtolower(trim($domain));
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];
@@ -755,6 +782,9 @@ final class NginxVhostService
      */
     public function regerarSSL(int $serverId, string $domain, string $webroot = ''): array
     {
+        // Domínio vai para o vhost e para comandos SSH: só aceita nome de domínio válido
+        if (!\LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain)) return ['ok' => false, 'erro' => 'Domínio inválido.'];
+        $domain = strtolower(trim($domain));
         $pdo = BancoDeDados::pdo();
         $srv = $this->getServer($pdo, $serverId);
         if (!$srv) return ['ok' => false, 'erro' => 'Servidor não encontrado.'];

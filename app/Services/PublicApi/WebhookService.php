@@ -48,6 +48,12 @@ final class WebhookService
      */
     public function criar(int $clienteId, string $url, array $eventos, int $maxRetries = 5, int $timeout = 30): array
     {
+        // SSRF: só https público (nunca rede interna, metadados de nuvem ou nossos nodes)
+        \LRV\App\Services\Seguranca\UrlExterna::exigirHttpsPublica($url);
+        $maxRetries = max(0, min(10, $maxRetries));
+        $timeout = max(1, min(10, $timeout));
+        $eventos = array_values(array_intersect($eventos, array_merge(self::EVENTS, ['*'])));
+
         $secret = bin2hex(random_bytes(32));
 
         $pdo = BancoDeDados::pdo();
@@ -139,13 +145,24 @@ final class WebhookService
         $success = false;
 
         try {
+            // Revalida no envio (URL antiga pode ser inválida) e fixa o IP resolvido
+            // para impedir DNS rebinding apontando para a rede interna.
+            $alvo = \LRV\App\Services\Seguranca\UrlExterna::exigirHttpsPublica($url);
+            $timeout = max(1, min(10, $timeout));
+
             $ch = curl_init($url);
             curl_setopt_array($ch, [
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => $body,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_TIMEOUT => $timeout,
-                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
+                CURLOPT_RESOLVE => [$alvo['host'] . ':' . $alvo['porta'] . ':' . (str_contains($alvo['ip'], ':') ? '[' . $alvo['ip'] . ']' : $alvo['ip'])],
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_HTTPHEADER => [
                     'Content-Type: application/json',
                     'X-Webhook-Event: ' . $evento,
@@ -157,15 +174,18 @@ final class WebhookService
 
             $responseBody = curl_exec($ch);
             if ($responseBody === false) {
-                $error = curl_error($ch);
+                // Mensagem genérica: o erro detalhado do cURL vira "scanner de portas"
+                $error = 'Falha de conexão (código ' . curl_errno($ch) . ').';
                 $responseBody = null;
             } else {
                 $responseStatus = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $success = $responseStatus >= 200 && $responseStatus < 300;
             }
             curl_close($ch);
+        } catch (\InvalidArgumentException $e) {
+            $error = 'URL bloqueada: ' . $e->getMessage();
         } catch (\Throwable $e) {
-            $error = $e->getMessage();
+            $error = 'Falha ao enviar.';
         }
 
         $durationMs = (int) ((microtime(true) - $startTime) * 1000);
@@ -244,20 +264,25 @@ final class WebhookService
         $params = [':id' => $webhookId, ':client_id' => $clienteId];
 
         if (isset($dados['url'])) {
+            \LRV\App\Services\Seguranca\UrlExterna::exigirHttpsPublica((string) $dados['url']);
             $sets[] = 'url = :url';
-            $params[':url'] = $dados['url'];
+            $params[':url'] = (string) $dados['url'];
         }
         if (isset($dados['events'])) {
+            $ev = is_array($dados['events']) ? array_values(array_intersect($dados['events'], array_merge(self::EVENTS, ['*']))) : [];
             $sets[] = 'events = :events';
-            $params[':events'] = json_encode($dados['events']);
+            $params[':events'] = json_encode($ev);
         }
         if (isset($dados['status'])) {
+            if (!in_array($dados['status'], ['active', 'disabled'], true)) {
+                throw new \InvalidArgumentException('status deve ser active ou disabled.');
+            }
             $sets[] = 'status = :status';
             $params[':status'] = $dados['status'];
         }
         if (isset($dados['max_retries'])) {
             $sets[] = 'max_retries = :max_retries';
-            $params[':max_retries'] = (int) $dados['max_retries'];
+            $params[':max_retries'] = max(0, min(10, (int) $dados['max_retries']));
         }
 
         if (empty($sets)) {

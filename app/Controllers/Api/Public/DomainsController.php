@@ -99,6 +99,11 @@ final class DomainsController extends BaseApiController
         if (!$this->temEscopo($req, 'domains.write')) {
             return $this->proibido('Scope domains.write is required.');
         }
+        // Cria recursos no servidor: só parceiros autorizados pela equipe
+        $bloqueio = $this->exigirProvisionamentoAutorizado($req);
+        if ($bloqueio !== null) {
+            return $bloqueio;
+        }
 
         $dados = $req->json();
         $validacao = $this->validarObrigatorios($dados, ['domain', 'vps_id']);
@@ -124,7 +129,7 @@ final class DomainsController extends BaseApiController
         $pdo = BancoDeDados::pdo();
 
         // Verificar VPS pertence ao cliente
-        $stmt = $pdo->prepare("SELECT id FROM vps WHERE id = :id AND client_id = :cid");
+        $stmt = $pdo->prepare("SELECT id FROM vps WHERE id = :id AND client_id = :cid AND status = 'running' AND deleted_at IS NULL");
         $stmt->execute([':id' => $vpsId, ':cid' => $clienteId]);
         if (!$stmt->fetch()) {
             return $this->erro('VPS_NOT_FOUND', 'VPS not found or does not belong to this client.', 404);
