@@ -12,6 +12,11 @@
 > **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
 > só o que o cliente precisa saber.
 
+### Correção: "Liberar pasta de arquivos" perdia efeito (3.6.2)
+- Causa: todo deploy (inclusive o Auto Deploy a cada push) rodava `chown -R www-data` + `chmod 755` no site inteiro. No aPanel o PHP-FPM roda como `www`, então a pasta liberada voltava a não ser gravável. O console também trocava o dono para o usuário do SSH
+- Correção: `git_deployments.writable_dirs` (migration 0099) guarda as pastas liberadas; `reaplicarPermissoes()` detecta o usuário real do PHP-FPM, usa ele como dono e reaplica 775 nas pastas liberadas após cada deploy e após o console
+- Pastas liberadas antes desta versão não estão registradas: o cliente precisa clicar em "Liberar pasta de arquivos" mais uma vez
+
 ### Detalhes técnicos da 3.6.2 (revisão de segurança)
 - Webroot: bloqueio de `storage/`, `database/`, `config/`, `core/`, `app/`, `routes/`, `docs/`, `.git` e scripts CLI no `.htaccess`; uploads sem execução; `public/opcache-reset.php` removido
 - `core/IpCliente.php`: X-Forwarded-For/CF-Connecting-IP só aceitos de proxy confiável (loopback, rede privada, Cloudflare, `security.trusted_proxies`)

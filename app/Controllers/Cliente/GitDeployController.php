@@ -411,7 +411,7 @@ final class GitDeployController
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT g.deploy_path, g.php_version, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+            'SELECT g.deploy_path, g.php_version, g.writable_dirs, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
              JOIN servers s ON s.id = v.server_id
@@ -454,6 +454,13 @@ final class GitDeployController
         }
 
         $output = $this->filtrarOutputSsh((string)($result['saida'] ?? ''));
+
+        // O console troca o dono da pasta para o usuário do SSH antes do comando; devolver
+        // ao usuário do PHP e reaplicar as pastas liberadas para gravação.
+        try {
+            $this->reaplicarPermissoes($this->abrirSshDoServidor($dep, 120), $dep, $deployPath);
+        } catch (\Throwable) {}
+
         return Resposta::json(['ok' => true, 'output' => $output]);
     }
 
@@ -682,6 +689,69 @@ final class GitDeployController
         }
     }
 
+    /**
+     * Descobre o usuário que roda o PHP-FPM no servidor (no aPanel costuma ser "www";
+     * em instalação padrão, "www-data"). É ele quem precisa ser dono dos arquivos.
+     */
+    private function detectarDonoPhp(callable $runCmd): string
+    {
+        try {
+            $r = $runCmd(
+                "ps -o user= -C php-fpm 2>/dev/null | sort -u | grep -v '^root$' | head -1"
+                . " || ps aux | grep -E '[p]hp-fpm|[p]hp-cgi' | awk '{print $1}' | grep -v '^root$' | sort -u | head -1"
+            );
+            $dono = trim((string)($r['saida'] ?? ''));
+            $dono = trim((string) (preg_split('/\R/', $dono)[0] ?? ''));
+            if ($dono !== '' && preg_match('/^[A-Za-z0-9._-]{1,32}$/', $dono) === 1) {
+                return $dono;
+            }
+        } catch (\Throwable) {}
+        // Fallback: usuário "www" (aPanel) se existir, senão www-data
+        try {
+            $r = $runCmd('id -u www >/dev/null 2>&1 && echo www || echo www-data');
+            $u = trim((string)($r['saida'] ?? ''));
+            if ($u === 'www' || $u === 'www-data') return $u;
+        } catch (\Throwable) {}
+        return 'www-data';
+    }
+
+    /** Pastas que o cliente liberou para gravação (relativas ao deploy_path). */
+    private function pastasGravaveis(array $dep): array
+    {
+        $lista = json_decode((string)($dep['writable_dirs'] ?? ''), true);
+        if (!is_array($lista)) return [];
+        $ok = [];
+        foreach ($lista as $p) {
+            $p = trim((string)$p, '/');
+            // mesma regra do botão: só nomes simples, sem ".."
+            if ($p === '' || preg_match('#^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$#', $p) !== 1 || str_contains($p, '..')) continue;
+            $ok[] = $p;
+        }
+        return array_values(array_unique($ok));
+    }
+
+    /**
+     * Ajusta dono/permissões do site depois de um deploy (ou do console) SEM desfazer
+     * as pastas que o cliente liberou para gravação (uploads, imagens etc.).
+     */
+    private function reaplicarPermissoes(callable $runCmd, array $dep, string $deployPath): void
+    {
+        $dono = $this->detectarDonoPhp($runCmd);
+        $d = escapeshellarg($dono);
+        $p = escapeshellarg($deployPath);
+
+        $cmd = '(sudo chown -R ' . $d . ':' . $d . ' ' . $p . ' 2>/dev/null || chown -R ' . $d . ':' . $d . ' ' . $p . ' 2>/dev/null || true)'
+            . ' && (sudo find ' . $p . ' -not -path "*/storage/*" -exec chmod 755 {} + 2>/dev/null || chmod -R 755 ' . $p . ' 2>/dev/null || true)'
+            . ' && (sudo chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || true)';
+
+        // Reaplicar as pastas liberadas pelo cliente (antes o deploy apagava essa liberação)
+        foreach ($this->pastasGravaveis($dep) as $rel) {
+            $alvo = escapeshellarg($deployPath . '/' . $rel);
+            $cmd .= ' ; (sudo mkdir -p ' . $alvo . ' && sudo chown -R ' . $d . ':' . $d . ' ' . $alvo . ' && sudo chmod -R 775 ' . $alvo . ') 2>/dev/null || true';
+        }
+        $runCmd($cmd);
+    }
+
     private function executarDeploy(array $dep): array
     {
         $this->validarDeployAntesDeExecutar($dep);
@@ -857,10 +927,7 @@ final class GitDeployController
 
         // Corrigir permissões DEPOIS de capturar o commit — numa conexão separada.
         // Excluir storage/ do chmod 755 para preservar permissões de escrita
-        $permCmd = '(sudo chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || chown -R www-data:www-data ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
-            . ' && (sudo find ' . escapeshellarg($deployPath) . ' -not -path "*/storage/*" -exec chmod 755 {} + 2>/dev/null || chmod -R 755 ' . escapeshellarg($deployPath) . ' 2>/dev/null || true)'
-            . ' && (sudo chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || chmod -R 777 ' . escapeshellarg($deployPath . '/storage') . ' 2>/dev/null || true)';
-        $runCmd($permCmd);
+        $this->reaplicarPermissoes($runCmd, $dep, $deployPath);
         // Limpar warnings SSH antes de parsear
         $cleanLines = [];
         foreach (explode("\n", $finalOutput) as $l) {
@@ -1193,6 +1260,22 @@ final class GitDeployController
             }
 
             $gravavel = str_contains($saida, 'GRAVAVEL_SIM');
+
+            // Lembrar a pasta: cada novo deploy reaplica a liberação (senão ela "some")
+            try {
+                $rel = trim(substr($alvo, strlen($deployPath)), '/');
+                $relGuardar = $rel === '' ? '.' : $rel;
+                $st = $pdo->prepare('SELECT writable_dirs FROM git_deployments WHERE id = :id AND client_id = :c');
+                $st->execute([':id' => $id, ':c' => $clienteId]);
+                $lista = json_decode((string)($st->fetchColumn() ?: ''), true);
+                $lista = is_array($lista) ? $lista : [];
+                if (!in_array($relGuardar, $lista, true) && count($lista) < 30) {
+                    $lista[] = $relGuardar;
+                    $pdo->prepare('UPDATE git_deployments SET writable_dirs = :w WHERE id = :id AND client_id = :c')
+                        ->execute([':w' => json_encode(array_values($lista)), ':id' => $id, ':c' => $clienteId]);
+                }
+            } catch (\Throwable) {}
+
             return Resposta::json([
                 'ok' => true,
                 'mensagem' => 'Pasta liberada para gravação: ' . $alvo

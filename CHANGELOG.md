@@ -10,6 +10,9 @@ Acompanhe aqui as novidades, melhorias e correções do painel.
 - **Mais segurança para a sua conta e os seus serviços**: fizemos uma revisão completa de segurança no painel, na API e nos servidores, reforçando a proteção dos seus dados, arquivos e sites
 - **Upgrade de plano e serviços adicionais**: ao mudar para um plano maior ou contratar um serviço adicional, geramos a cobrança na hora e o recurso é liberado automaticamente assim que o pagamento é confirmado
 - **Proteção extra no login e na verificação em duas etapas**
+
+### Corrigido
+- **Pasta liberada para gravação voltava a ficar bloqueada**: depois de usar "Liberar pasta de arquivos", a liberação se perdia na próxima publicação do site e os uploads paravam de funcionar. Agora o painel lembra das pastas liberadas e mantém a permissão a cada publicação
 - **Publicação via Git (Git Deploy) e tarefas no servidor**: para contas novas, esses recursos passam a ser liberados pelo nosso suporte. Se você já usa, nada muda. Se quiser começar a usar, é só abrir um chamado
 
 ---
