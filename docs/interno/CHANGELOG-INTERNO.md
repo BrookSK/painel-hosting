@@ -12,6 +12,13 @@
 > **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
 > só o que o cliente precisa saber.
 
+### Proteções adicionais (3.6.2) — migration 0100
+- **Cadastro**: captcha Cloudflare Turnstile (`app/Services/Seguranca/Captcha.php`) em `/cliente/criar-conta` e no wizard `/contratar`. Chaves em Equipe → Configurações → Proteção do cadastro (`captcha.turnstile_site_key` / `captcha.turnstile_secret`). Sem chaves = captcha desligado. CSP liberando `challenges.cloudflare.com`
+- **Confirmação de e-mail** (`ConfirmacaoEmailService`, `ConfirmarEmailController`): só contas criadas pelo próprio cliente ficam com `email_verification_pending = 1`. Enquanto pendente, o `exigirLoginCliente` só libera pagamento, assinaturas, faturas, planos, tickets, chat e sair; o resto redireciona para `/cliente/confirmar-email/pendente`. Token de 48h guardado como SHA-256. Desliga em `signup.exigir_confirmacao_email`
+- **Webhook do Git Deploy com assinatura**: `webhook_hmac_secret` (gerado ao abrir a edição) validado via `X-Hub-Signature-256` (GitHub/Bitbucket) ou `X-Gitlab-Token`. Webhooks antigos ficam com `webhook_hmac_required = 0` até a 1ª entrega assinada, que passa a exigir assinatura automaticamente. Novos exigem desde o início
+- **Reset de senha**: `password_resets.token` passa a guardar o SHA-256 do token (equipe e cliente). A migration apaga os tokens pendentes antigos
+- **Anexos do chat** fora da pasta pública: `storage/uploads/chat`, entregues por `ChatUploadController::baixar` (`/chat/arquivo/{nome}` e o endereço antigo `/uploads/chat/{nome}`). Equipe logada vê todos; cliente só os da própria sala (ou os que acabou de enviar). Arquivos antigos em `public/uploads/chat` continuam sendo lidos, mas só pelo controller
+
 ### Correção: "Liberar pasta de arquivos" perdia efeito (3.6.2)
 - Causa: todo deploy (inclusive o Auto Deploy a cada push) rodava `chown -R www-data` + `chmod 755` no site inteiro. No aPanel o PHP-FPM roda como `www`, então a pasta liberada voltava a não ser gravável. O console também trocava o dono para o usuário do SSH
 - Correção: `git_deployments.writable_dirs` (migration 0099) guarda as pastas liberadas; `reaplicarPermissoes()` detecta o usuário real do PHP-FPM, usa ele como dono e reaplica 775 nas pastas liberadas após cada deploy e após o console

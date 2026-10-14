@@ -49,7 +49,7 @@ final class ResetSenhaController
                 ->execute([':t' => self::TIPO, ':u' => (int)$user['id']]);
 
             $pdo->prepare('INSERT INTO password_resets (tipo, user_id, token, expires_at) VALUES (:t, :u, :tk, :e)')
-                ->execute([':t' => self::TIPO, ':u' => (int)$user['id'], ':tk' => $token, ':e' => $expires]);
+                ->execute([':t' => self::TIPO, ':u' => (int)$user['id'], ':tk' => hash('sha256', $token), ':e' => $expires]);
 
             $this->enviarEmail($email, $token);
         }
@@ -89,7 +89,7 @@ final class ResetSenhaController
         $pdo = BancoDeDados::pdo();
         $agora = date('Y-m-d H:i:s');
         $s   = $pdo->prepare('SELECT user_id FROM password_resets WHERE token = :t AND tipo = :tp AND used_at IS NULL AND expires_at > :now LIMIT 1');
-        $s->execute([':t' => $token, ':tp' => self::TIPO, ':now' => $agora]);
+        $s->execute([':t' => hash('sha256', $token), ':tp' => self::TIPO, ':now' => $agora]);
         $row = $s->fetch();
 
         if (!is_array($row)) {
@@ -101,7 +101,7 @@ final class ResetSenhaController
             ->execute([':p' => $hash, ':id' => (int)$row['user_id']]);
 
         $pdo->prepare('UPDATE password_resets SET used_at = NOW() WHERE token = :t')
-            ->execute([':t' => $token]);
+            ->execute([':t' => hash('sha256', $token)]);
 
         return $this->render('solicitar', 'Senha alterada com sucesso. Você já pode fazer login.', '');
     }
@@ -113,7 +113,7 @@ final class ResetSenhaController
         $pdo = BancoDeDados::pdo();
         $agora = date('Y-m-d H:i:s');
         $s   = $pdo->prepare('SELECT id FROM password_resets WHERE token = :t AND tipo = :tp AND used_at IS NULL AND expires_at > :now LIMIT 1');
-        $s->execute([':t' => $token, ':tp' => self::TIPO, ':now' => $agora]);
+        $s->execute([':t' => hash('sha256', $token), ':tp' => self::TIPO, ':now' => $agora]);
         return (bool)$s->fetch();
     }
 

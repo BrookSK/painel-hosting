@@ -162,7 +162,7 @@ final class ChatWsApp implements MessageComponentInterface
 
         // Validar file_url se presente (deve ser path interno)
         if ($fileUrl !== null && $fileUrl !== '') {
-            if (!str_starts_with($fileUrl, '/uploads/chat/')) {
+            if (!str_starts_with($fileUrl, '/chat/arquivo/') && !str_starts_with($fileUrl, '/uploads/chat/')) {
                 $fileUrl = null;
                 $fileName = null;
             }

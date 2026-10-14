@@ -264,6 +264,16 @@ final class GitDeployController
         $deployment = $stmt->fetch();
         if (!is_array($deployment)) return Resposta::texto('Não encontrado.', 404);
 
+        // Gerar o código secreto (HMAC) do webhook se ainda não existir
+        if ((int)($deployment['auto_deploy'] ?? 0) === 1 && empty($deployment['webhook_hmac_secret'])) {
+            try {
+                $hmac = bin2hex(random_bytes(24));
+                $pdo->prepare('UPDATE git_deployments SET webhook_hmac_secret = :h WHERE id = :id AND client_id = :c')
+                    ->execute([':h' => $hmac, ':id' => $id, ':c' => $clienteId]);
+                $deployment['webhook_hmac_secret'] = $hmac;
+            } catch (\Throwable) {}
+        }
+
         // Gerar deploy key se não existir
         if (empty($deployment['deploy_key_public'])) {
             try {
@@ -1407,6 +1417,35 @@ final class GitDeployController
             return Resposta::json(['ok' => false, 'erro' => 'Deployment inativo.'], 409);
         }
 
+        // 2.1) Assinatura: prova que o aviso veio mesmo do GitHub/GitLab/Bitbucket (e não de
+        // alguém que descobriu a URL). GitHub/Bitbucket mandam HMAC-SHA256 do corpo; GitLab
+        // manda o código no X-Gitlab-Token.
+        $hmacSecret = (string)($dep['webhook_hmac_secret'] ?? '');
+        $sigHeader = (string)($req->headers['x-hub-signature-256'] ?? ($req->headers['x-hub-signature'] ?? ''));
+        $gitlabToken = (string)($req->headers['x-gitlab-token'] ?? '');
+        $assinado = $sigHeader !== '' || $gitlabToken !== '';
+        if ($assinado) {
+            $valida = false;
+            if ($hmacSecret !== '') {
+                if ($sigHeader !== '' && str_starts_with($sigHeader, 'sha256=')) {
+                    $valida = hash_equals('sha256=' . hash_hmac('sha256', $req->corpoRaw, $hmacSecret), $sigHeader);
+                } elseif ($gitlabToken !== '') {
+                    $valida = hash_equals($hmacSecret, $gitlabToken);
+                }
+            }
+            if (!$valida) {
+                return Resposta::json(['ok' => false, 'erro' => 'Assinatura do webhook inválida. Confira o campo Secret no repositório.'], 403);
+            }
+            // Primeira entrega assinada: a partir de agora só aceita avisos assinados
+            if ((int)($dep['webhook_hmac_required'] ?? 0) !== 1) {
+                try {
+                    $pdo->prepare('UPDATE git_deployments SET webhook_hmac_required = 1 WHERE id = :id')->execute([':id' => (int)$dep['id']]);
+                } catch (\Throwable) {}
+            }
+        } elseif ((int)($dep['webhook_hmac_required'] ?? 1) === 1) {
+            return Resposta::json(['ok' => false, 'erro' => 'Webhook sem assinatura. Preencha o campo Secret no repositório com o código secreto mostrado no painel.'], 403);
+        }
+
         // 3) Tratar evento "ping" do GitHub (enviado ao criar/testar o webhook)
         $githubEvent = strtolower((string)($req->headers['x-github-event'] ?? ''));
         if ($githubEvent === 'ping') {
@@ -1431,7 +1470,7 @@ final class GitDeployController
         $dep = array_merge($dep, $info);
 
         // Verificar se o push é para a branch configurada
-        $body = file_get_contents('php://input');
+        $body = $req->corpoRaw !== '' ? $req->corpoRaw : (string) file_get_contents('php://input');
         $payload = json_decode($body, true);
         $branch = (string)($dep['branch'] ?? 'main');
 

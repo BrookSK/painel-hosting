@@ -13,7 +13,7 @@ final class ChatMessageService
         // Anexo só pode ser um arquivo enviado pelo nosso upload do chat (evita link
         // javascript:, phishing ou apontar para arquivo de outro lugar)
         if ($fileUrl !== null && $fileUrl !== ''
-            && preg_match('#^/uploads/chat/[a-f0-9]{24}\.(png|jpe?g|gif|webp|pdf|docx?|txt)$#', $fileUrl) !== 1) {
+            && preg_match('#^/(chat/arquivo|uploads/chat)/[a-f0-9]{24}\.(png|jpe?g|gif|webp|pdf|docx?|txt)$#', $fileUrl) !== 1) {
             $fileUrl = null;
             $fileName = null;
         }

@@ -305,6 +305,7 @@ $moedaJs = I18n::moedaCodigo();
       <label class="wz-label"><?php echo View::e(I18n::t('wz.senha')); ?> * <span style="font-size:11px;color:#94a3b8;">(<?php echo View::e(I18n::t('wz.senha_min')); ?>)</span></label>
       <input class="input" type="password" id="cSenha" required minlength="8" placeholder="••••••••"/>
     </div>
+    <?php echo \LRV\App\Services\Seguranca\Captcha::widget(); ?>
     <div class="wz-field">
       <label class="wz-label"><?php echo View::e(I18n::t('wz.confirmar_senha')); ?> *</label>
       <input class="input" type="password" id="cSenha2" required minlength="8" placeholder="••••••••"/>
@@ -664,6 +665,9 @@ $moedaJs = I18n::moedaCodigo();
     body.append('quantidade',document.getElementById('qtdServidores').value);
     body.append('addons_ids',addonsIds.join(','));
     body.append('currency',selectedCurrency);
+    // Captcha (se ativo): token gerado pelo widget do formulário de dados
+    var capEl=document.querySelector('[name="cf-turnstile-response"]');
+    if(capEl){body.append('cf-turnstile-response',capEl.value);}
 
     if(gateway==='CREDIT_CARD'){
       body.append('cc_nome',document.getElementById('ccNome').value.trim());
@@ -675,6 +679,8 @@ $moedaJs = I18n::moedaCodigo();
     fetch('/contratar/finalizar',{method:'POST',body:body,credentials:'same-origin'})
       .then(function(r){return r.json();})
       .then(function(data){
+        // o token do captcha vale uma vez só: renovar para uma nova tentativa
+        if(window.turnstile){try{window.turnstile.reset();}catch(e){}}
         if(data.ok&&data.payment_type==='pix'){
           // Mostrar PIX inline
           var html='<div class="card" style="text-align:center;padding:28px;">';

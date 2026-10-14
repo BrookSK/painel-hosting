@@ -47,6 +47,24 @@ final class CriarContaController
         $phone = $in->postString('phone', 20, false);
         $mobilePhone = $in->postString('mobile_phone', 20, false);
 
+        // Captcha contra cadastro automático por robôs
+        if (!\LRV\App\Services\Seguranca\Captcha::validar((string) ($req->post[\LRV\App\Services\Seguranca\Captcha::CAMPO] ?? ''), \LRV\Core\IpCliente::obter($req->headers))) {
+            $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
+                'erro' => 'Confirme que você não é um robô e tente novamente.',
+                'nome' => $nome, 'email' => $email, 'cpf_cnpj' => $cpfCnpj,
+                'phone' => $phone, 'mobile_phone' => $mobilePhone,
+            ]);
+            return Resposta::html($html, 422);
+        }
+        if (strlen($senha) > 0 && strlen($senha) < 8) {
+            $html = View::renderizar(__DIR__ . '/../../Views/cliente/criar-conta.php', [
+                'erro' => 'A senha precisa ter pelo menos 8 caracteres.',
+                'nome' => $nome, 'email' => $email, 'cpf_cnpj' => $cpfCnpj,
+                'phone' => $phone, 'mobile_phone' => $mobilePhone,
+            ]);
+            return Resposta::html($html, 422);
+        }
+
         // CPF/CNPJ é opcional aqui, mas se informado precisa ser válido (CPF ou CNPJ).
         if ($cpfCnpj !== '') {
             if (!\LRV\Core\Documento::valido($cpfCnpj)) {
@@ -99,8 +117,10 @@ final class CriarContaController
                     ':c' => $agora,
                 ]);
 
+                $novoId = (int) $pdo->lastInsertId();
+                (new \LRV\App\Services\Clientes\ConfirmacaoEmailService())->iniciar($novoId);
                 Auth::entrarCliente($email, $senha);
-                $this->criarTrialSeAtivo($pdo, (int) $pdo->lastInsertId());
+                $this->criarTrialSeAtivo($pdo, $novoId);
                 return Resposta::redirecionar('/cliente/painel');
             } catch (\Throwable $e2) {
             }
@@ -116,8 +136,10 @@ final class CriarContaController
             return Resposta::html($html, 400);
         }
 
+        $novoId = (int) $pdo->lastInsertId();
+        (new \LRV\App\Services\Clientes\ConfirmacaoEmailService())->iniciar($novoId);
         Auth::entrarCliente($email, $senha);
-        $this->criarTrialSeAtivo($pdo, (int) $pdo->lastInsertId());
+        $this->criarTrialSeAtivo($pdo, $novoId);
         return Resposta::redirecionar('/cliente/painel');
     }
 

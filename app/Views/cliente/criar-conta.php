@@ -128,6 +128,7 @@ $_logo = SistemaConfig::logoUrl();
           e a <a href="/licenca" target="_blank" style="color:#4F46E5;font-weight:600;">Licença de Uso</a> do sistema.
         </span>
       </label>
+      <?php echo \LRV\App\Services\Seguranca\Captcha::widget(); ?>
       <button class="botao" type="submit" style="width:100%;justify-content:center;margin-top:12px;">Criar minha conta</button>
     </form>
     <div class="auth-footer-links">

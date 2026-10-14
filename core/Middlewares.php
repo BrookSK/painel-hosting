@@ -49,6 +49,27 @@ final class Middlewares
                 return Resposta::redirecionar('/cliente/entrar?conta=inativa');
             }
 
+            // Conta criada pelo próprio cliente precisa confirmar o e-mail antes de usar o painel.
+            // Liberado enquanto isso: pagar, ver assinaturas/faturas, suporte e sair.
+            if (!Auth::estaImpersonando() && \LRV\App\Services\Clientes\ConfirmacaoEmailService::pendente((int) Auth::clienteId())) {
+                $liberadas = ['/cliente/confirmar-email', '/cliente/pagamento', '/cliente/assinaturas', '/cliente/faturas',
+                    '/cliente/tickets', '/cliente/chat', '/cliente/sair', '/cliente/stripe', '/cliente/assinar', '/cliente/planos'];
+                $ok = false;
+                foreach ($liberadas as $p) {
+                    if ($req->caminho === $p || str_starts_with($req->caminho, $p . '/')) {
+                        $ok = true;
+                        break;
+                    }
+                }
+                if (!$ok) {
+                    $accept = strtolower((string) ($req->headers['accept'] ?? ''));
+                    if ($req->metodo !== 'GET' || str_contains($accept, 'application/json')) {
+                        return Resposta::json(['ok' => false, 'erro' => 'Confirme seu e-mail para usar este recurso.'], 403);
+                    }
+                    return Resposta::redirecionar('/cliente/confirmar-email/pendente');
+                }
+            }
+
             // Verificar expiração de sessão por inatividade (24h)
             $lastActivity = (int) ($_SESSION['cliente_last_activity'] ?? 0);
             $timeout = 86400; // 24 horas

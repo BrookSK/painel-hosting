@@ -115,6 +115,11 @@ final class ContratarController
             return Resposta::json(['ok' => false, 'erro' => 'Senha mínima: 8 caracteres.'], 422);
         }
 
+        // Captcha contra cadastro automático por robôs
+        if (!\LRV\App\Services\Seguranca\Captcha::validar((string) ($req->post[\LRV\App\Services\Seguranca\Captcha::CAMPO] ?? ''), \LRV\Core\IpCliente::obter($req->headers))) {
+            return Resposta::json(['ok' => false, 'erro' => 'Confirme que você não é um robô e tente novamente.'], 422);
+        }
+
         $pdo = BancoDeDados::pdo();
 
         // Verificar se email já existe
@@ -150,6 +155,9 @@ final class ContratarController
         }
 
         $clienteId = (int)$pdo->lastInsertId();
+
+        // Confirmação de e-mail (o pagamento continua liberado enquanto isso)
+        (new \LRV\App\Services\Clientes\ConfirmacaoEmailService())->iniciar($clienteId);
 
         // Login automático
         \LRV\Core\Auth::entrarCliente($email, $senha);

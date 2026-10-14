@@ -436,6 +436,20 @@ final class ConfiguracoesController
         Settings::definir('trial.descricao', $trialDescricao);
         Settings::definir('trial.label_cta', $trialLabelCta !== '' ? $trialLabelCta : 'Testar grátis');
 
+        // Cadastro: captcha (Cloudflare Turnstile) e confirmação de e-mail
+        $captchaSite = trim((string) ($req->post['captcha_turnstile_site_key'] ?? ''));
+        $captchaSecret = trim((string) ($req->post['captcha_turnstile_secret'] ?? ''));
+        if (preg_match('/^[A-Za-z0-9_-]{0,100}$/', $captchaSite) === 1) {
+            Settings::definir('captcha.turnstile_site_key', $captchaSite);
+        }
+        if ($captchaSecret !== '' && preg_match('/^[A-Za-z0-9_.-]{1,200}$/', $captchaSecret) === 1) {
+            Settings::definir('captcha.turnstile_secret', $captchaSecret); // vazio = mantém o atual
+        }
+        if (!empty($req->post['captcha_remover_secret'])) {
+            Settings::definir('captcha.turnstile_secret', '');
+        }
+        Settings::definir('signup.exigir_confirmacao_email', !empty($req->post['signup_exigir_confirmacao_email']) ? 1 : 0);
+
         Settings::definir('seo.titulo',              $seoTitulo);
         Settings::definir('seo.descricao',           $seoDescricao);
         Settings::definir('seo.palavras_chave',      $seoPalavrasChave);

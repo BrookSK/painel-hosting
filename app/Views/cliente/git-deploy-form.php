@@ -205,6 +205,16 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
           <button type="button" onclick="document.getElementById('webhookUrl').select();navigator.clipboard.writeText(document.getElementById('webhookUrl').value).then(function(){this.textContent='Copiada!'}.bind(this))" style="position:absolute;top:5px;right:6px;background:#4F46E5;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;">Copiar</button>
         </div>
 
+        <?php $hmacSecret = (string)($dep['webhook_hmac_secret'] ?? ''); ?>
+        <?php if ($hmacSecret !== ''): ?>
+        <div style="font-size:12px;font-weight:600;color:#1e293b;margin:12px 0 6px;">Secret (código secreto do webhook):</div>
+        <div style="position:relative;">
+          <input type="text" id="webhookHmac" readonly value="<?php echo View::e($hmacSecret); ?>" style="width:100%;font-family:monospace;font-size:11px;padding:8px 70px 8px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;box-sizing:border-box;" />
+          <button type="button" onclick="document.getElementById('webhookHmac').select();navigator.clipboard.writeText(document.getElementById('webhookHmac').value).then(function(){this.textContent='Copiado!'}.bind(this))" style="position:absolute;top:5px;right:6px;background:#4F46E5;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;">Copiar</button>
+        </div>
+        <div style="font-size:11px;color:#b45309;margin-top:6px;">Sem esse código no campo <strong>Secret</strong> do seu repositório, a publicação automática não é aceita. Não compartilhe este código.</div>
+        <?php endif; ?>
+
         <div style="font-size:12px;color:#334155;margin-top:12px;font-weight:600;">Como configurar no GitHub:</div>
         <div style="font-size:11px;color:#64748b;margin-top:4px;">
           No repositório: <strong>Settings &rarr; Webhooks &rarr; Add webhook</strong>, e preencha os campos assim:
@@ -212,7 +222,7 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <div style="font-size:11px;color:#475569;margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;line-height:1.9;">
           <div><strong>Payload URL:</strong> cole a URL acima</div>
           <div><strong>Content type:</strong> <code>application/json</code></div>
-          <div><strong>Secret:</strong> deixe <em>em branco</em> (a segurança já está no token da URL)</div>
+          <div><strong>Secret:</strong> cole o código secreto abaixo (obrigatório)</div>
           <div><strong>SSL verification:</strong> <code>Enable SSL verification</code> (recomendado)</div>
           <div><strong>Which events?:</strong> selecione <code>Just the push event</code></div>
           <div><strong>Active:</strong> deixe marcado</div>
@@ -220,8 +230,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
         <div style="font-size:11px;color:#94a3b8;margin-top:8px;">
           Depois clique em <strong>Add webhook</strong>. Os outros campos podem ficar no padrão.
           <ul style="margin:6px 0 0 16px;padding:0;list-style:disc;">
-            <li><strong>GitLab:</strong> Settings &rarr; Webhooks &rarr; URL (cole a URL) &rarr; Trigger: <code>Push events</code> &rarr; Add webhook</li>
-            <li><strong>Bitbucket:</strong> Repository settings &rarr; Webhooks &rarr; Add webhook &rarr; URL (cole a URL) &rarr; Trigger: <code>Repository push</code></li>
+            <li><strong>GitLab:</strong> Settings &rarr; Webhooks &rarr; URL (cole a URL) &rarr; <strong>Secret token</strong> (cole o código secreto) &rarr; Trigger: <code>Push events</code> &rarr; Add webhook</li>
+            <li><strong>Bitbucket:</strong> Repository settings &rarr; Webhooks &rarr; Add webhook &rarr; URL (cole a URL) &rarr; <strong>Secret</strong> (cole o código secreto) &rarr; Trigger: <code>Repository push</code></li>
           </ul>
         </div>
       </div>

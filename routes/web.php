@@ -220,6 +220,10 @@ $roteador->get('/cliente/entrar', [ClienteEntrarController::class, 'formulario']
 $roteador->post('/cliente/entrar', [ClienteEntrarController::class, 'entrar'], [Middlewares::rateLimitIp('login_client', 10, 60)]);
 $roteador->get('/cliente/criar-conta', [CriarContaController::class, 'formulario']);
 $roteador->post('/cliente/criar-conta', [CriarContaController::class, 'criar'], [Middlewares::rateLimitIp('signup', 5, 3600)]);
+// Confirmação de e-mail do cadastro
+$roteador->get('/cliente/confirmar-email', [\LRV\App\Controllers\Cliente\ConfirmarEmailController::class, 'confirmar'], [Middlewares::rateLimitIp('confirm_email', 30, 600)]);
+$roteador->get('/cliente/confirmar-email/pendente', [\LRV\App\Controllers\Cliente\ConfirmarEmailController::class, 'pendente'], [Middlewares::exigirLoginCliente()]);
+$roteador->post('/cliente/confirmar-email/reenviar', [\LRV\App\Controllers\Cliente\ConfirmarEmailController::class, 'reenviar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('confirm_email_resend', 5, 3600)]);
 $roteador->get('/contratar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'wizard']);
 $roteador->post('/contratar/finalizar', [\LRV\App\Controllers\Cliente\ContratarController::class, 'finalizar'], [Middlewares::rateLimitIp('contratar', 5, 60), Middlewares::rateLimitIp('signup_contratar', 10, 3600)]);
 $roteador->get('/cliente/painel', [ClientePainelController::class, 'index'], [Middlewares::exigirLoginCliente()]);
@@ -282,7 +286,7 @@ $roteador->get('/cliente/sair', [ClienteSairController::class, 'sair'], [Middlew
 
 $roteador->post('/webhooks/asaas', [AsaasController::class, 'receber']);
 $roteador->post('/webhooks/stripe', [StripeController::class, 'receber']);
-$roteador->post('/webhooks/git-deploy/{secret}', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'webhook']);
+$roteador->post('/webhooks/git-deploy/{secret}', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'webhook'], [Middlewares::rateLimitIp('git_webhook', 600, 60)]);
 
 // Link público de pagamento (sem login — identidade via token na URL)
 $roteador->get('/pagar/{token}', [\LRV\App\Controllers\PagamentoPublicoController::class, 'mostrar'], [Middlewares::rateLimitIp('pay_link_view', 60, 60)]);
@@ -332,7 +336,10 @@ $roteador->get('/cliente/chat/poll', [ClienteChatController::class, 'poll'], [Mi
 $roteador->post('/cliente/chat/enviar', [ClienteChatController::class, 'enviar'], [Middlewares::exigirLoginCliente(), Middlewares::rateLimitCliente('chat_send', 30, 60)]);
 
 // Upload de arquivo no chat (cliente ou equipe)
-$roteador->post('/chat/upload', [\LRV\App\Controllers\Api\ChatUploadController::class, 'upload']);
+$roteador->post('/chat/upload', [\LRV\App\Controllers\Api\ChatUploadController::class, 'upload'], [Middlewares::rateLimitIp('chat_upload', 30, 300)]);
+// Anexos do chat: entregues só para quem tem direito (equipe ou o cliente da conversa)
+$roteador->get('/chat/arquivo/{nome}', [\LRV\App\Controllers\Api\ChatUploadController::class, 'baixar']);
+$roteador->get('/uploads/chat/{nome}', [\LRV\App\Controllers\Api\ChatUploadController::class, 'baixar']); // links antigos
 
 // E-mails equipe (visão administrativa)
 $roteador->get('/equipe/emails', [EquipeEmailsController::class, 'listar'], [Middlewares::exigirPermissao('manage_users')]);

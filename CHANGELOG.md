@@ -10,6 +10,9 @@ Acompanhe aqui as novidades, melhorias e correções do painel.
 - **Mais segurança para a sua conta e os seus serviços**: fizemos uma revisão completa de segurança no painel, na API e nos servidores, reforçando a proteção dos seus dados, arquivos e sites
 - **Upgrade de plano e serviços adicionais**: ao mudar para um plano maior ou contratar um serviço adicional, geramos a cobrança na hora e o recurso é liberado automaticamente assim que o pagamento é confirmado
 - **Proteção extra no login e na verificação em duas etapas**
+- **Cadastro mais seguro**: contas novas confirmam o e-mail por um link, e o cadastro tem uma verificação contra robôs
+- **Anexos do chat mais protegidos**: os arquivos que você envia no atendimento só podem ser vistos por você e pela nossa equipe
+- **Publicação automática (Auto Deploy) mais segura**: na edição do seu deploy agora aparece um código secreto. Cole esse código no campo **Secret** do webhook no GitHub, GitLab ou Bitbucket. Quem já usa o Auto Deploy continua funcionando normalmente até configurar
 
 ### Corrigido
 - **Pasta liberada para gravação voltava a ficar bloqueada**: depois de usar "Liberar pasta de arquivos", a liberação se perdia na próxima publicação do site e os uploads paravam de funcionar. Agora o painel lembra das pastas liberadas e mantém a permissão a cada publicação

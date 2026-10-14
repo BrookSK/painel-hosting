@@ -565,6 +565,31 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <input class="input" type="text" name="trial_descricao" value="<?php echo View::e((string)($trial_descricao??'')); ?>" placeholder="Experimente gratuitamente por 7 dias, sem cartão de crédito." />
     </div>
 
+    <?php
+      $capSite = (string) \LRV\Core\Settings::obter('captcha.turnstile_site_key', '');
+      $capTemSecret = (string) \LRV\Core\Settings::obter('captcha.turnstile_secret', '') !== '';
+      $exigirConfEmail = (int) \LRV\Core\Settings::obter('signup.exigir_confirmacao_email', 1) === 1;
+    ?>
+    <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Proteção do cadastro</h2>
+    <p class="texto" style="font-size:13px;">Captcha contra robôs (Cloudflare Turnstile, gratuito) e confirmação de e-mail para contas novas. Crie as chaves em dash.cloudflare.com → Turnstile.</p>
+    <div class="grid">
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Turnstile — Site key</label>
+        <input class="input" type="text" name="captcha_turnstile_site_key" value="<?php echo View::e($capSite); ?>" autocomplete="off" />
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Turnstile — Secret key <?php echo $capTemSecret ? '<span style="color:#16a34a;">(configurada)</span>' : ''; ?></label>
+        <input class="input" type="password" name="captcha_turnstile_secret" value="" placeholder="<?php echo $capTemSecret ? 'Deixe em branco para manter' : 'Cole a secret key'; ?>" autocomplete="new-password" />
+        <?php if ($capTemSecret): ?>
+        <label style="font-size:12px;color:#64748b;"><input type="checkbox" name="captcha_remover_secret" value="1" /> Remover (desativa o captcha)</label>
+        <?php endif; ?>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Confirmação de e-mail</label>
+        <label style="font-size:13px;"><input type="checkbox" name="signup_exigir_confirmacao_email" value="1" <?php echo $exigirConfEmail ? 'checked' : ''; ?> /> Exigir que contas novas confirmem o e-mail</label>
+      </div>
+    </div>
+
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;"><?php echo View::e(I18n::t('eq_config.seo')); ?></h2>
     <p class="texto" style="font-size:13px;"><?php echo View::e(I18n::t('eq_config.seo_desc')); ?></p>
     <div class="grid">
