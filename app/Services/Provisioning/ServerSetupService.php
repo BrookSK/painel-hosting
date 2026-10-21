@@ -261,6 +261,8 @@ final class ServerSetupService
         $imagemBase = trim((string)Settings::obter('infra.imagem_base', 'debian:12-slim'));
         if ($imagemBase === '') $imagemBase = 'debian:12-slim';
 
+        $phpmyadminImage = trim((string) Settings::obter('infra.phpmyadmin_image', 'phpmyadmin/phpmyadmin:latest'));
+
         // ── Wrapper script para ForceCommand ──
         $wrapperScript = <<<'BASH'
     #!/usr/bin/env bash
@@ -672,7 +674,14 @@ final class ServerSetupService
             // ── 12. phpMyAdmin ──
             [
                 'name'           => 'Instalar phpMyAdmin (Docker)',
-                'cmd'            => 'docker ps -a --format "{{.Names}}" | grep -q lrv_phpmyadmin && echo "already exists" || (docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps) . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e PMA_ABSOLUTE_URI=http://pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '/ phpmyadmin/phpmyadmin:latest 2>&1 && echo lrv-pma-ok)',
+                'cmd'            => 'if docker ps -a --format "{{.Names}}" | grep -Fxq lrv_phpmyadmin; then '
+                    . PhpImageSecurity::existingContainerCommand('lrv_phpmyadmin')
+                    . ' && echo lrv-pma-ok; else '
+                    . PhpImageSecurity::prepareCommand($phpmyadminImage)
+                    . ' && docker run -d --name lrv_phpmyadmin --restart unless-stopped --network ' . escapeshellarg($redeVps)
+                    . ' -p 127.0.0.1:8080:80 -e PMA_ARBITRARY=1 -e '
+                    . escapeshellarg('PMA_ABSOLUTE_URI=http://pma-' . $serverId . '.' . trim((string)Settings::obter('infra.temp_domain_base', 'localhost'), '.') . '/')
+                    . ' ' . escapeshellarg($phpmyadminImage) . ' 2>&1 && echo lrv-pma-ok; fi',
                 'ok_if_contains' => 'lrv-pma-ok',
                 'fatal'          => false,
                 'precisa_root'   => true,

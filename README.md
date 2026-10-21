@@ -6,13 +6,15 @@ Plataforma de gerenciamento de hospedagem cloud em PHP MVC próprio, sem framewo
 
 ## Requisitos
 
-- PHP 8.1+
+- PHP 8.3+ (conforme `composer.json`), com as correções de segurança do fornecedor
 - MySQL 8.0+
 - Composer
 - SSH access ao servidor de nodes
 - (Opcional) Stripe, Asaas para billing
 - (Opcional) Mailcow para e-mail por cliente
 - (Opcional) Ratchet (já incluso via Composer) para WebSocket (terminal + chat)
+
+Para imagens e correções do interpretador, consulte o [procedimento de segurança do PHP](docs/php-security-2026-10-21.md).
 
 ## Instalação
 
