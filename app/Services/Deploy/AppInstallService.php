@@ -6,6 +6,7 @@ namespace LRV\App\Services\Deploy;
 
 use LRV\App\Services\Infra\SshCrypto;
 use LRV\App\Services\Provisioning\DockerCli;
+use LRV\App\Services\Provisioning\PhpImageSecurity;
 use LRV\Core\BancoDeDados;
 use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Settings;
@@ -86,13 +87,23 @@ final class AppInstallService
         $slug = (string) ($app['slug'] ?? 'app');
         $nomeContainer = 'app_' . $slug . '_' . $applicationId;
 
+        $phpTemplate = in_array($slug, ['wordpress', 'php-laravel', 'roundcube'], true);
+        if ($phpTemplate) {
+            $image = trim((string) Settings::obter('infra.php_image.' . $slug, $image));
+            $log('Verificando PHP da imagem ' . $image . '...');
+            $check = $this->docker->executar(PhpImageSecurity::prepareCommand($image));
+            if (!str_contains((string) ($check['saida'] ?? ''), PhpImageSecurity::OK)) {
+                throw new \RuntimeException('Não foi possível confirmar a correção de segurança do PHP da imagem.');
+            }
+        } else {
+            $log('Pull da imagem ' . $image . '...');
+            $this->docker->executar('docker pull ' . escapeshellarg($image));
+        }
+
+        // Só remover a aplicação anterior após validar a imagem candidata.
         // Remover container anterior se existir
         $log('Removendo container anterior (se existir)...');
         try { $this->docker->removerContainer($nomeContainer); } catch (\Throwable) {}
-
-        // Pull
-        $log('Pull da imagem ' . $image . '...');
-        $this->docker->executar('docker pull ' . escapeshellarg($image));
 
         // Montar comando docker run
         $envVars = $this->mergeEnv(
