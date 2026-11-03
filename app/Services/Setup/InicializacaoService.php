@@ -196,11 +196,18 @@ final class InicializacaoService
                     ':e' => date('Y-m-d H:i:s'),
                 ]);
 
-                $pdo->commit();
+                // ALTER TABLE/CREATE no MySQL faz commit implícito e encerra a transação;
+                // chamar commit()/rollBack() sem transação ativa lança exceção (erro 500).
+                if ($pdo->inTransaction()) {
+                    $pdo->commit();
+                }
                 $novas++;
+                $log('OK: ' . $nome);
             } catch (\Throwable $e) {
-                $pdo->rollBack();
-                throw $e;
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw new \RuntimeException('Falha na migration ' . $nome . ': ' . $e->getMessage(), 0, $e);
             }
         }
 
