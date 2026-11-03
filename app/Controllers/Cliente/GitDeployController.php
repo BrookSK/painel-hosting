@@ -442,8 +442,13 @@ final class GitDeployController
         // safe.directory evita "dubious ownership" do git ao rodar comandos git no console.
         $prefixoGit = 'git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
         // Garantir escrita na pasta (chown de deploy anterior pode ter deixado como www-data).
-        $prefixoPerm = 'sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
-        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPerm . $prefixoGit . $prefixoPhp . $command . ' 2>&1';
+        // Antes: "chown -R" no projeto inteiro a cada comando. Com node_modules isso levava
+        // minutos e o console mostrava "Erro de rede". Agora o comando roda com sudo quando o
+        // usuário do SSH não é root (os arquivos pertencem ao usuário do PHP).
+        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoGit . $prefixoPhp . $command . ' 2>&1';
+        if ((string)($dep['ssh_user'] ?? 'root') !== 'root') {
+            $fullCmd = 'sudo -n bash -c ' . escapeshellarg($fullCmd);
+        }
 
         $exec = new \LRV\App\Services\Infra\SshExecutor();
         $host = (string)($dep['ip_address'] ?? '');
