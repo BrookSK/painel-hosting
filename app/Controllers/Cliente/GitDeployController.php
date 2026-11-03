@@ -465,10 +465,21 @@ final class GitDeployController
 
         $output = $this->filtrarOutputSsh((string)($result['saida'] ?? ''));
 
-        // O console troca o dono da pasta para o usuário do SSH antes do comando; devolver
-        // ao usuário do PHP e reaplicar as pastas liberadas para gravação.
+        // Depois do comando, só reaplica as pastas liberadas para gravação (rápido).
+        // Não refaz o projeto inteiro: em projetos com node_modules isso estoura o tempo
+        // da requisição e o console mostrava "Erro de rede".
         try {
-            $this->reaplicarPermissoes($this->abrirSshDoServidor($dep, 120), $dep, $deployPath);
+            $pastas = $this->pastasGravaveis($dep);
+            if ($pastas !== []) {
+                $runCmd = $this->abrirSshDoServidor($dep, 60);
+                $dono = escapeshellarg($this->detectarDonoPhp($runCmd));
+                $c = 'true';
+                foreach ($pastas as $rel) {
+                    $a = escapeshellarg($deployPath . '/' . $rel);
+                    $c .= ' ; (sudo chown -R ' . $dono . ':' . $dono . ' ' . $a . ' && sudo chmod -R 775 ' . $a . ') 2>/dev/null';
+                }
+                $runCmd($c);
+            }
         } catch (\Throwable) {}
 
         return Resposta::json(['ok' => true, 'output' => $output]);
