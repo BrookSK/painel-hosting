@@ -149,6 +149,10 @@ final class ArquivosController
         } else {
             $result = $this->execInContainer($clienteId, $vpsId, $cmd);
         }
+        // Mostrar o erro real em vez de "salvar" sem gravar nada
+        if (($result['ok'] ?? false) && !str_contains((string) ($result['output'] ?? ''), 'OK')) {
+            $result = ['ok' => false, 'erro' => 'Não foi possível salvar: ' . trim(substr((string) ($result['output'] ?? ''), 0, 300))];
+        }
         return Resposta::json($result);
     }
 
@@ -616,6 +620,12 @@ final class ArquivosController
         $porta = (int)($row['ssh_port'] ?? 22);
         $usuario = (string)($row['ssh_user'] ?? 'root');
         $authType = (string)($row['ssh_auth_type'] ?? 'key');
+
+        // Os arquivos do site pertencem ao usuário do PHP (ex.: "www" no aPanel). Se o SSH
+        // não for root, sem sudo não dá para criar/editar arquivos ali (falhava em silêncio).
+        if ($usuario !== 'root') {
+            $cmd = 'sudo -n bash -c ' . escapeshellarg($cmd);
+        }
 
         try {
             if ($authType === 'password') {
