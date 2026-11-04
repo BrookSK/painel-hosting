@@ -1322,6 +1322,76 @@ final class GitDeployController
     }
 
     /**
+     * Trecho de shell que define $PM2_NOMES com os processos PM2 cujo cwd está dentro
+     * da pasta deste deploy (ex.: ecosystem com nome próprio). Se nenhum for encontrado,
+     * usa "deploy-<id>". Nomes são filtrados para [A-Za-z0-9._-].
+     */
+    private function shellNomesPm2(string $deployPath, int $id): string
+    {
+        $js = 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const p=process.argv[1];'
+            . 'const l=JSON.parse(d.slice(d.indexOf("[")));'
+            . 'const n=l.filter(x=>{const c=(x.pm2_env&&x.pm2_env.pm_cwd)||"";return c===p||c.startsWith(p+"/")})'
+            . '.map(x=>String(x.name)).filter(x=>/^[A-Za-z0-9._-]+$/.test(x));'
+            . 'console.log([...new Set(n)].join(" "))}catch(e){}})';
+        return 'PM2_NOMES=$(pm2 jlist 2>/dev/null | node -e ' . escapeshellarg($js) . ' ' . escapeshellarg($deployPath) . ' 2>/dev/null); '
+            . '[ -z "$PM2_NOMES" ] && PM2_NOMES=' . escapeshellarg('deploy-' . $id) . '; ';
+    }
+
+    /**
+     * AJAX: ações PM2 restritas aos processos deste deploy (logs, restart, status).
+     * Roda como o usuário SSH do deploy (sem sudo), para não enxergar o PM2 do root.
+     */
+    public function pm2(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $op = (string)($req->post['op'] ?? '');
+        if (!in_array($op, ['logs', 'restart', 'status'], true)) {
+            return Resposta::json(['ok' => false, 'erro' => 'Operação inválida.']);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.id, g.deploy_path, g.app_type, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.id = :id AND g.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Não encontrado.'], 404);
+        if ((string)($dep['app_type'] ?? '') !== 'nodejs') {
+            return Resposta::json(['ok' => false, 'erro' => 'Disponível apenas para aplicações Node.js.']);
+        }
+
+        try {
+            $deployPath = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoDeploy((string)($dep['deploy_path'] ?? ''), $clienteId, $id, true);
+        } catch (\InvalidArgumentException $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+        $deployPath = rtrim($deployPath, '/');
+
+        $acao = match ($op) {
+            'logs'    => 'for n in $PM2_NOMES; do pm2 logs "$n" --lines 50 --nostream 2>&1; done',
+            'restart' => 'for n in $PM2_NOMES; do pm2 restart "$n" 2>&1; done; for n in $PM2_NOMES; do pm2 describe "$n" 2>&1 | grep -E "status|name|uptime|restarts" ; done',
+            default   => 'for n in $PM2_NOMES; do pm2 describe "$n" 2>&1 | grep -E "status|name|uptime|restarts|memory" ; done',
+        };
+        $cmd = $this->shellNomesPm2($deployPath, $id) . 'echo "Processos: $PM2_NOMES"; ' . $acao;
+
+        try {
+            $runCmd = $this->abrirSshDoServidor($dep, 60);
+            $res = $runCmd($cmd, 60);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+
+        return Resposta::json(['ok' => true, 'output' => $this->filtrarOutputSsh((string)($res['saida'] ?? ''))]);
+    }
+
+    /**
      * AJAX: busca logs do servidor para um git deploy (Nginx, PHP, PM2, app logs).
      */
     public function serverLogs(Requisicao $req): Resposta
@@ -1370,8 +1440,8 @@ final class GitDeployController
             // Logs da aplicação (storage/logs, logs/, .log)
             $cmds[] = 'echo "=== APP LOGS ===" && (tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/storage/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/*.log 2>/dev/null || echo "(sem logs de app)")';
             if ($appType === 'nodejs') {
-                $pm2Name = 'deploy-' . $id;
-                $cmds[] = 'echo "=== PM2 LOGS ===" && pm2 logs ' . escapeshellarg($pm2Name) . ' --nostream --lines ' . $linhas . ' 2>&1 || echo "(sem pm2)"';
+                $cmds[] = 'echo "=== PM2 LOGS ===" && ' . $this->shellNomesPm2($deployPath, $id)
+                    . 'for n in $PM2_NOMES; do pm2 logs "$n" --nostream --lines ' . $linhas . ' 2>&1; done';
             }
         }
 

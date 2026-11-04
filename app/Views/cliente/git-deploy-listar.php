@@ -80,8 +80,8 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       <a href="/cliente/arquivos?vps_id=<?php echo (int)($d['vps_id'] ?? 0); ?>&path=<?php echo urlencode((string)($d['deploy_path'] ?? '/var/www/html')); ?>&direct=1" class="botao sm ghost" title="Ver arquivos"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Arquivos</a>
       <button class="botao sm ghost" onclick="toggleConsole(<?php echo $did; ?>)" title="Executar comandos na pasta do projeto"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Console</button>
       <?php if ($appType === 'nodejs'): ?>
-      <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 restart deploy-<?php echo $did; ?> 2>&1 && pm2 status deploy-<?php echo $did; ?> 2>&1')" title="Reiniciar processo Node.js"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reiniciar</button>
-      <button class="botao sm ghost" onclick="runQuickCmd(<?php echo $did; ?>,'pm2 logs deploy-<?php echo $did; ?> --lines 30 --nostream 2>&1')" title="Ver logs PM2">📜 Logs PM2</button>
+      <button class="botao sm ghost" onclick="runPm2(<?php echo $did; ?>,'restart')" title="Reiniciar processo Node.js"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reiniciar</button>
+      <button class="botao sm ghost" onclick="runPm2(<?php echo $did; ?>,'logs')" title="Ver logs PM2">📜 Logs PM2</button>
       <?php endif; ?>
       <a href="/cliente/git-deploy/editar?id=<?php echo $did; ?>" class="botao sm ghost">✏️ Editar</a>
       <button class="botao sm ghost" onclick="toggleServerLogs(<?php echo $did; ?>)" title="Ver logs do servidor"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Logs servidor</button>
@@ -242,6 +242,25 @@ function toggleConsole(id) {
   var el = document.getElementById('console-' + id);
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
   if (el.style.display !== 'none') document.getElementById('console-input-' + id).focus();
+}
+
+function runPm2(id, op) {
+  var output = document.getElementById('console-output-' + id);
+  var el = document.getElementById('console-' + id);
+  if (el.style.display === 'none') el.style.display = 'block';
+  output.textContent += '$ pm2 ' + op + ' (processos deste deploy)\n⏳ Aguarde...\n';
+  output.scrollTop = output.scrollHeight;
+  var fd = new FormData();
+  fd.append('_csrf', _csrf);
+  fd.append('id', id);
+  fd.append('op', op);
+  fetch('/cliente/git-deploy/pm2', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      output.textContent += d.ok ? ((d.output || '✓ Concluído') + '\n') : ('✘ ' + (d.erro || 'Erro') + '\n');
+      output.scrollTop = output.scrollHeight;
+    })
+    .catch(function() { output.textContent += '✘ Erro de rede\n'; });
 }
 
 function runQuickCmd(id, cmd) {

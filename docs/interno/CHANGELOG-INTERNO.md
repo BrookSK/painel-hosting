@@ -12,6 +12,12 @@
 > **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
 > só o que o cliente precisa saber.
 
+### Isolamento de logs/PM2 por aplicação (3.6.2)
+- `AplicacoesController` (logs do servidor): removidos `error.log` global do Nginx, logs do PHP-FPM e `pm2 logs` sem filtro (mostravam dados de outros sites/sistemas). Agora só access/error log do domínio da aplicação + `docker logs` do container validado
+- Git Deploy: novo `POST /cliente/git-deploy/pm2` (`GitDeployController::pm2`, ops `logs|restart|status`). Roda como o usuário SSH (sem sudo, então não vê o PM2 do root) e só age nos processos cujo `pm2_env.pm_cwd` está dentro do `deploy_path` (resolve nomes do ecosystem, ex.: `central-rz-api`); fallback `deploy-<id>`. Botões "Reiniciar"/"Logs PM2" usam esse endpoint
+- `serverLogs`: seção PM2 usa a mesma resolução de nomes
+- Observação: o Console continua rodando com `sudo` como root para contas com acesso ao servidor; esse acesso é só para contas confiáveis
+
 ### Proteções adicionais (3.6.2) — migration 0100
 - **Cadastro**: captcha Cloudflare Turnstile (`app/Services/Seguranca/Captcha.php`) em `/cliente/criar-conta` e no wizard `/contratar`. Chaves em Equipe → Configurações → Proteção do cadastro (`captcha.turnstile_site_key` / `captcha.turnstile_secret`). Sem chaves = captcha desligado. CSP liberando `challenges.cloudflare.com`
 - **Confirmação de e-mail** (`ConfirmacaoEmailService`, `ConfirmarEmailController`): só contas criadas pelo próprio cliente ficam com `email_verification_pending = 1`. Enquanto pendente, o `exigirLoginCliente` só libera pagamento, assinaturas, faturas, planos, tickets, chat e sair; o resto redireciona para `/cliente/confirmar-email/pendente`. Token de 48h guardado como SHA-256. Desliga em `signup.exigir_confirmacao_email`

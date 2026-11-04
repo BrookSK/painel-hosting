@@ -386,25 +386,25 @@ final class AplicacoesController
         $appType = (string)($app['type'] ?? '');
         $containerId = (string)($app['container_id'] ?? '');
 
+        // Só logs DESTA aplicação. Os logs gerais do servidor (Nginx/PHP-FPM/PM2) têm dados
+        // de todos os sites e sistemas do servidor e não podem ser mostrados ao cliente.
         $cmds = [];
-        if ($tipo === 'all' || $tipo === 'nginx') {
-            $cmds[] = 'echo "=== NGINX ERROR LOG ===" && tail -' . $linhas . ' /var/log/nginx/error.log 2>/dev/null || echo "(vazio)"';
-            if ($domain !== '') {
+        $domainOk = $domain !== '' && \LRV\App\Services\Seguranca\ValidadorInfra::dominioValido($domain);
+        if ($tipo === 'all' || $tipo === 'nginx' || $tipo === 'php') {
+            if ($domainOk) {
                 $vhostLog = str_replace('.', '_', $domain);
-                $cmds[] = 'echo "=== NGINX ACCESS (' . $domain . ') ===" && tail -' . $linhas . ' /var/log/nginx/' . $vhostLog . '.access.log 2>/dev/null || echo "(vazio)"';
+                $cmds[] = 'echo "=== NGINX (' . $domain . ') ===" && (tail -' . $linhas . ' ' . escapeshellarg('/var/log/nginx/' . $vhostLog . '.access.log') . ' ' . escapeshellarg('/www/wwwlogs/' . $domain . '.error.log') . ' 2>/dev/null || echo "(vazio)")';
+            } else {
+                $cmds[] = 'echo "=== NGINX === (configure um domínio para ver os logs do site)"';
             }
-        }
-        if ($tipo === 'all' || $tipo === 'php') {
-            $cmds[] = 'echo "=== PHP-FPM LOG ===" && tail -' . $linhas . ' /var/log/php*fpm*.log 2>/dev/null || echo "(vazio)"';
-            $cmds[] = 'echo "=== PHP ERROR LOG ===" && tail -' . $linhas . ' /tmp/php_errors.log 2>/dev/null || echo "(vazio)"';
         }
         if ($tipo === 'all' || $tipo === 'app') {
-            if ($containerId !== '') {
+            if ($containerId !== '' && preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]+$/', $containerId) === 1) {
                 $cmds[] = 'echo "=== CONTAINER LOGS ===" && docker logs --tail ' . $linhas . ' ' . escapeshellarg($containerId) . ' 2>&1 || echo "(sem container)"';
             }
-            if ($appType === 'nodejs') {
-                $cmds[] = 'echo "=== PM2 LOGS ===" && pm2 logs --nostream --lines ' . $linhas . ' 2>&1 || echo "(sem pm2)"';
-            }
+        }
+        if ($cmds === []) {
+            $cmds[] = 'echo "(sem logs para mostrar)"';
         }
 
         $fullCmd = implode(' ; ', $cmds);
