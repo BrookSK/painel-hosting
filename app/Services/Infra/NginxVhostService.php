@@ -299,6 +299,11 @@ final class NginxVhostService
             . "    ssl_session_timeout 10m;\n"
             . "    error_page 497 https://\$host\$request_uri;\n"
             . "\n"
+            // Validação do Let's Encrypt: servida do disco, não do app (senão o app responde 404)
+            . "    location ^~ /.well-known/acme-challenge/ {\n"
+            . "        root /www/wwwroot/_lrv_acme;\n"
+            . "    }\n"
+            . "\n"
             . "    location / {\n"
             . "        proxy_pass http://127.0.0.1:{$port};\n"
             . "        proxy_set_header Host \$host;\n"
@@ -318,6 +323,11 @@ final class NginxVhostService
         return "server {\n"
             . "    listen 80;\n"
             . "    server_name {$domain};\n"
+            . "\n"
+            // Validação do Let's Encrypt: servida do disco, não do app (senão o app responde 404)
+            . "    location ^~ /.well-known/acme-challenge/ {\n"
+            . "        root /www/wwwroot/_lrv_acme;\n"
+            . "    }\n"
             . "\n"
             . "    location / {\n"
             . "        proxy_pass http://127.0.0.1:{$port};\n"
@@ -817,6 +827,7 @@ final class NginxVhostService
             $webroot = trim((string)($rr['saida'] ?? ''));
         }
 
+        if ($webroot === '') { $webroot = '/www/wwwroot/_lrv_acme'; $this->exec($ssh, $srv, $sudo . 'mkdir -p /www/wwwroot/_lrv_acme/.well-known/acme-challenge'); }
         $srv['_webroot'] = $webroot;
         $certResult = $this->emitirCertificado($ssh, $srv, $domain, $sudo);
         $logs = array_merge($logs, $certResult['logs']);
