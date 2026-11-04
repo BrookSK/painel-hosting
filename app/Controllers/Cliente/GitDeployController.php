@@ -1162,7 +1162,7 @@ final class GitDeployController
         $id = (int)($req->post['id'] ?? 0);
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT g.subdomain, g.temp_domain, g.deploy_path, v.server_id
+            'SELECT g.subdomain, g.temp_domain, g.deploy_path, g.app_type, v.server_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
              WHERE g.id = :id AND g.client_id = :c LIMIT 1'
@@ -1185,6 +1185,11 @@ final class GitDeployController
         // Webroot: o vhost costuma servir de deploy_path/public quando existe
         $deployPath = rtrim((string)($dep['deploy_path'] ?? ''), '/');
         $webroot = $deployPath; // o service detecta /public a partir do vhost se preciso
+        // Apps com proxy (Node/Python/C++): o Nginx não serve a pasta do projeto; a validação
+        // do Let's Encrypt é atendida pela pasta própria configurada no vhost.
+        if (in_array((string)($dep['app_type'] ?? 'php'), ['nodejs', 'python', 'cpp'], true)) {
+            $webroot = '';
+        }
 
         try {
             $res = (new \LRV\App\Services\Infra\NginxVhostService())->regerarSSL($serverId, $domain, $webroot);
