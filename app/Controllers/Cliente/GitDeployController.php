@@ -421,7 +421,8 @@ final class GitDeployController
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT g.deploy_path, g.php_version, g.writable_dirs, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+            'SELECT g.deploy_path, g.php_version, g.writable_dirs, g.vps_id, v.server_id, v.container_id,
+                    s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
              JOIN servers s ON s.id = v.server_id
@@ -436,34 +437,36 @@ final class GitDeployController
         } catch (\InvalidArgumentException $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
-        // Aplicar o mesmo prefixo de PHP do deploy, para que "php"/"composer" no console
-        // usem a versão configurada (ex: php83 do aPanel) em vez do PHP padrão do PATH.
-        $prefixoPhp = $this->montarPrefixoPhp(trim((string)($dep['php_version'] ?? '8.3')));
-        // safe.directory evita "dubious ownership" do git ao rodar comandos git no console.
-        $prefixoGit = 'git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
-        // Garantir escrita na pasta (chown de deploy anterior pode ter deixado como www-data).
-        // Antes: "chown -R" no projeto inteiro a cada comando. Com node_modules isso levava
-        // minutos e o console mostrava "Erro de rede". Agora o comando roda com sudo quando o
-        // usuário do SSH não é root (os arquivos pertencem ao usuário do PHP).
-        $fullCmd = 'cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoGit . $prefixoPhp . $command . ' 2>&1';
-        if ((string)($dep['ssh_user'] ?? 'root') !== 'root') {
-            $fullCmd = 'sudo -n bash -c ' . escapeshellarg($fullCmd);
-        }
 
-        $exec = new \LRV\App\Services\Infra\SshExecutor();
-        $host = (string)($dep['ip_address'] ?? '');
-        $port = (int)($dep['ssh_port'] ?? 22);
-        $user = (string)($dep['ssh_user'] ?? 'root');
-        $authType = (string)($dep['ssh_auth_type'] ?? 'password');
+        // O console é o "terminal do ambiente do cliente", nunca do servidor inteiro.
+        // Nada aqui roda como root: (1) VPS em container -> docker exec no container do
+        // cliente; (2) servidor gerenciado -> usuário SSH sem privilégios (ou o usuário do
+        // PHP, se o SSH for root), com ambiente limpo (env -i), HOME/PATH controlados e
+        // cwd na pasta do deploy.
+        $runCmd = $this->abrirSshDoServidor($dep, 120);
+        $sshUser = trim((string)($dep['ssh_user'] ?? 'root'));
+        $prefixoPhp = $this->montarPrefixoPhp(trim((string)($dep['php_version'] ?? '8.3')));
+        // safe.directory evita "dubious ownership" do git (arquivos pertencem ao usuário do PHP).
+        $prefixoGit = 'git config --global --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null; ';
 
         try {
-            if ($authType === 'password') {
-                $senha = \LRV\App\Services\Infra\SshCrypto::decifrar((string)($dep['ssh_password'] ?? ''));
-                $result = $exec->executarComSenha($host, $port, $user, $senha, $fullCmd, 120);
+            $container = $this->containerDoConsole($runCmd, $dep, $clienteId, $deployPath);
+            if ($container !== null) {
+                // Dentro do container do próprio cliente (é a VPS dele): sem acesso ao host.
+                $fullCmd = 'docker exec -w ' . escapeshellarg($deployPath) . ' ' . escapeshellarg($container)
+                    . ' sh -c ' . escapeshellarg($prefixoGit . $command) . ' 2>&1';
             } else {
-                $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . (string)($dep['ssh_key_id'] ?? '');
-                $result = $exec->executar($host, $port, $user, $keyPath, $fullCmd, 120);
+                // Servidor gerenciado (sem container): bloqueio por lista é PALIATIVO. A solução
+                // definitiva é um usuário Linux por cliente (ou ACL por cliente) — ver changelog interno.
+                $bloqueio = $this->motivoBloqueioConsole($command, $deployPath, $id, (int)($dep['server_id'] ?? 0));
+                if ($bloqueio !== null) {
+                    return Resposta::json(['ok' => true, 'output' => 'Comando bloqueado: ' . $bloqueio . "\nO console só acessa a pasta deste projeto."]);
+                }
+                // Permissões preparadas pelo PAINEL (comando fixo, nunca o do cliente).
+                $this->prepararPermissoesConsole($runCmd, $deployPath, $sshUser);
+                $fullCmd = $this->montarComandoConfinado($deployPath, $sshUser, $runCmd, $prefixoGit . $prefixoPhp . $command, $id);
             }
+            $result = $runCmd($fullCmd, 120);
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
         }
@@ -488,6 +491,119 @@ final class GitDeployController
         } catch (\Throwable) {}
 
         return Resposta::json(['ok' => true, 'output' => $output]);
+    }
+
+    /**
+     * Se a VPS do deploy é um container Docker e a pasta do deploy existe dentro dele,
+     * devolve o nome/ID do container para o console rodar via "docker exec". Senão, null
+     * (servidor gerenciado: o console roda no host, confinado).
+     */
+    private function containerDoConsole(callable $runCmd, array $dep, int $clienteId, string $deployPath): ?string
+    {
+        $containerId = trim((string)($dep['container_id'] ?? ''));
+        if ($containerId === '') return null;
+        $nome = 'vps_client_' . $clienteId . '_' . (int)($dep['vps_id'] ?? 0);
+        $p = escapeshellarg($deployPath);
+        $r = $runCmd(
+            'if docker exec ' . escapeshellarg($nome) . ' test -d ' . $p . ' 2>/dev/null; then echo LRV_CT_NOME;'
+            . ' elif docker exec ' . escapeshellarg($containerId) . ' test -d ' . $p . ' 2>/dev/null; then echo LRV_CT_ID; fi; true',
+            30
+        );
+        $saida = (string)($r['saida'] ?? '');
+        if (str_contains($saida, 'LRV_CT_NOME')) return $nome;
+        if (str_contains($saida, 'LRV_CT_ID')) return $containerId;
+        return null;
+    }
+
+    /**
+     * Bloqueio por lista para o console em servidor gerenciado (sem container).
+     * ATENÇÃO: é paliativo — dá para contornar com criatividade (ex.: montar o nome do
+     * comando em variável). A proteção real é o comando não rodar como root e ficar com
+     * ambiente limpo; a definitiva é um usuário Linux por cliente/ACL.
+     *
+     * @return string|null Motivo do bloqueio, ou null se liberado.
+     */
+    private function motivoBloqueioConsole(string $command, string $deployPath, int $id, int $serverId): ?string
+    {
+        $sep = '(^|[\s;&|()`$\'"=<>])';
+        $fim = '(?=$|[\s;&|()`\'"<>])';
+        if (preg_match('#' . $sep . '(sudo|su|doas|pkexec|runuser|setpriv|chroot|nsenter|unshare|docker|podman|ctr|crictl|systemctl|service|crontab|pm2|ssh|scp|sftp)' . $fim . '#i', $command, $m) === 1) {
+            return 'o comando "' . $m[2] . '" não é permitido no console'
+                . (strtolower($m[2]) === 'pm2' ? ' (use os botões de PM2 do painel)' : '') . '.';
+        }
+        // Caminhos sensíveis do servidor
+        if (preg_match('#(/root\b|~root\b|/etc/(shadow|gshadow|sudoers)|/www/server\b|/proc/|/sys/|/var/run/docker|/run/docker|\.ssh\b|/home\b)#i', $command) === 1) {
+            return 'acesso a área do servidor fora do seu projeto.';
+        }
+        // Sair da pasta com ".."
+        if (preg_match('#(^|[\s/\'"=:])\.\.($|[\s/\'";&|)])#', $command) === 1) {
+            return 'não é permitido sair da pasta do projeto ("..").';
+        }
+        // Pastas de sites: só a do próprio deploy
+        if (preg_match_all('#(/var/www|/www/wwwroot|/srv)(/[^\s;&|()\'"`<>]*)?#', $command, $mm) > 0) {
+            foreach ($mm[0] as $caminho) {
+                $c = rtrim($caminho, '/');
+                if ($c !== $deployPath && !str_starts_with($c . '/', $deployPath . '/')) {
+                    return 'acesso a pasta de outro projeto.';
+                }
+            }
+        }
+        // Outros deploys do mesmo servidor (qualquer cliente)
+        try {
+            $st = BancoDeDados::pdo()->prepare(
+                'SELECT g.deploy_path FROM git_deployments g JOIN vps v ON v.id = g.vps_id WHERE v.server_id = :s AND g.id <> :id'
+            );
+            $st->execute([':s' => $serverId, ':id' => $id]);
+            foreach ($st->fetchAll() ?: [] as $o) {
+                $op = rtrim(trim((string)($o['deploy_path'] ?? '')), '/');
+                if ($op === '' || $op === $deployPath || str_starts_with($deployPath . '/', $op . '/')) continue;
+                if (str_contains($command, $op)) return 'acesso a pasta de outro projeto.';
+            }
+        } catch (\Throwable) {}
+        return null;
+    }
+
+    /**
+     * Feito pelo PAINEL (comando fixo): garante que o usuário SSH consiga gravar na pasta
+     * do deploy mesmo com os arquivos pertencendo ao usuário do PHP (www). Usa ACL
+     * (setfacl) só no deploy_path; sem ACL, cai para grupo do dono + g+rwX. Só roda o
+     * ajuste recursivo quando acha algo sem permissão (rápido nas próximas vezes).
+     */
+    private function prepararPermissoesConsole(callable $runCmd, string $deployPath, string $sshUser): void
+    {
+        // Com SSH root o console roda como o usuário do PHP, que já é o dono dos arquivos.
+        if ($sshUser === 'root' || preg_match('/^[A-Za-z0-9._-]{1,32}$/', $sshUser) !== 1) return;
+        $p = escapeshellarg($deployPath);
+        $u = escapeshellarg($sshUser);
+        $cmd = 'if find ' . $p . ' -maxdepth 4 ! -writable -print -quit 2>/dev/null | grep -q .; then'
+            . ' (sudo -n timeout 90 setfacl -R -m u:' . $u . ':rwX -m d:u:' . $u . ':rwX ' . $p . ')'
+            . ' || (G=$(stat -c %G ' . $p . '); sudo -n timeout 90 chgrp -R "$G" ' . $p
+            . ' && sudo -n timeout 90 chmod -R g+rwX ' . $p
+            . ' && sudo -n timeout 60 find ' . $p . ' -type d -exec chmod g+s {} +);'
+            . ' fi >/dev/null 2>&1; true';
+        try { $runCmd($cmd, 120); } catch (\Throwable) {}
+    }
+
+    /**
+     * Monta o comando do cliente confinado: nunca root, sem sudo, ambiente limpo
+     * (env -i), HOME próprio em /tmp, PATH controlado e cwd na pasta do deploy.
+     */
+    private function montarComandoConfinado(string $deployPath, string $sshUser, callable $runCmd, string $inner, int $id): string
+    {
+        $p = escapeshellarg($deployPath);
+        // SSH root: rebaixa para o usuário do PHP (nunca executa como root).
+        $comoUsuario = '';
+        if ($sshUser === 'root') {
+            $comoUsuario = 'runuser -u ' . escapeshellarg($this->detectarDonoPhp($runCmd)) . ' -- ';
+        }
+        $home = '/tmp/lrv-console-' . $id;
+        // PATH: só diretórios do sistema + onde estiverem node/npm/pnpm/yarn/git/composer.
+        $descobrePath = '__X=""; for b in node npm npx pnpm yarn corepack git composer; do'
+            . ' c=$(command -v "$b" 2>/dev/null) && __X="$__X:$(dirname "$c")"; done; ';
+        $script = 'mkdir -p -m 700 "$HOME" 2>/dev/null; cd ' . $p . ' || exit 1; ' . $inner;
+        return 'cd ' . $p . ' && ' . $descobrePath . $comoUsuario
+            . 'env -i HOME=' . escapeshellarg($home) . ' PATH="/usr/local/bin:/usr/bin:/bin$__X"'
+            . ' LANG=C.UTF-8 TERM=dumb CI=1 bash --noprofile --norc -c ' . escapeshellarg($script) . ' 2>&1';
     }
 
     public function excluir(Requisicao $req): Resposta
@@ -936,9 +1052,31 @@ final class GitDeployController
             $phpVer = trim((string)($dep['php_version'] ?? '8.3'));
             $prefixoPhp = $this->montarPrefixoPhp($phpVer);
 
-            $postResult = $runCmd('cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPhp . $postCmd . ' 2>&1');
-            $postOutput = $this->filtrarOutputSsh((string)($postResult['saida'] ?? ''));
+            // O marcador __POSTDEPLOY_EXIT=<código> informa se o comando deu certo.
+            // A quebra de linha antes do "; echo" evita que um comentário no fim do comando
+            // do cliente engula o marcador.
+            $postResult = $runCmd('cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPhp . $postCmd . " 2>&1\n echo \"__POSTDEPLOY_EXIT=\$?\"");
+            $postBruto = (string)($postResult['saida'] ?? '');
+            $postExit = null;
+            if (preg_match_all('/__POSTDEPLOY_EXIT=(\d+)/', $postBruto, $mExit) && !empty($mExit[1])) {
+                $postExit = (int)end($mExit[1]);
+            }
+            $postBruto = (string)preg_replace('/^.*__POSTDEPLOY_EXIT=\d+.*$\R?/m', '', $postBruto);
+            $postOutput = $this->filtrarOutputSsh($postBruto);
             $output .= "\n--- Pós-deploy (PHP " . $phpVer . ") ---\n" . $postOutput;
+
+            // Falhou (ou não terminou, ex.: tempo esgotado): marcar o deploy como erro e
+            // NÃO mexer no PM2 — o processo antigo continua rodando.
+            if ($postExit !== 0) {
+                // Devolver as permissões do site antes de abortar (o chown acima as alterou)
+                try { $this->reaplicarPermissoes($runCmd, $dep, $deployPath); } catch (\Throwable) {}
+                $motivo = $postExit === null
+                    ? 'o comando não terminou (tempo esgotado ou conexão interrompida)'
+                    : 'código de saída ' . $postExit;
+                $aviso = ($dep['app_type'] ?? '') === 'nodejs' ? ' A aplicação não foi reiniciada; a versão anterior continua no ar.' : '';
+                $trecho = trim(mb_substr($output, -4000));
+                throw new \RuntimeException('O comando pós-deploy falhou (' . $motivo . ').' . $aviso . "\n\n" . $trecho);
+            }
         }
 
         // Capturar commit info ANTES do chown (evita "dubious ownership" do git).
@@ -1018,6 +1156,24 @@ final class GitDeployController
                 . ' && pm2 save 2>&1';
             $pm2Result = $runCmd($startScript);
             $output .= "\n--- PM2 ---\n" . $this->filtrarOutputSsh((string)($pm2Result['saida'] ?? ''));
+
+            // Fazer o PM2 voltar sozinho após reiniciar o servidor (serviço pm2-<usuário>).
+            // Idempotente: só configura se o serviço ainda não existir. Usa o usuário SSH do
+            // deploy (nunca root, a não ser que o próprio SSH seja root). Falha só gera aviso.
+            $startupScript = 'U=$(id -un); H=$HOME; P=$(command -v pm2 2>/dev/null);'
+                . ' if [ -z "$P" ]; then echo "Aviso: pm2 não encontrado, inicialização automática não configurada.";'
+                . ' elif systemctl list-unit-files "pm2-$U.service" 2>/dev/null | grep -q "pm2-$U.service"; then echo "Inicialização automática do PM2 já configurada (pm2-$U).";'
+                . ' else D=$(dirname "$P");'
+                . '   if [ "$(id -u)" = "0" ]; then env PATH="$PATH:/usr/local/bin:$D" "$P" startup systemd -u "$U" --hp "$H" 2>&1;'
+                . '   else sudo -n env PATH="$PATH:/usr/local/bin:$D" "$P" startup systemd -u "$U" --hp "$H" 2>&1; fi'
+                . '   || echo "Aviso: não foi possível configurar a inicialização automática do PM2 (pm2 startup).";'
+                . ' fi; true';
+            try {
+                $startupResult = $runCmd($startupScript);
+                $output .= "\n--- PM2 startup ---\n" . $this->filtrarOutputSsh((string)($startupResult['saida'] ?? ''));
+            } catch (\Throwable $e) {
+                $output .= "\n--- PM2 startup ---\nAviso: " . $e->getMessage();
+            }
         }
 
         return ['hash' => $hash, 'message' => $message, 'author' => $author, 'output' => $output];

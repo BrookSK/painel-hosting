@@ -220,6 +220,11 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
         <input class="input" type="text" name="infra_phpmyadmin_url" value="<?php echo View::e((string)($infra_phpmyadmin_url??'')); ?>" placeholder="https://phpmyadmin.seudominio.com" />
         <p class="texto" style="font-size:12px;margin-top:4px;">URL do phpMyAdmin para gerenciar bancos de dados. Deixe vazio para esconder o botão phpMyAdmin dos clientes.</p>
       </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:6px;">Limite de upload nos sites (Nginx)</label>
+        <input class="input" type="text" name="infra_nginx_client_max_body_size" value="<?php echo View::e((string)($infra_nginx_client_max_body_size??'100m')); ?>" placeholder="100m" maxlength="10" />
+        <p class="texto" style="font-size:12px;margin-top:4px;">Limite de upload por requisição nos sites (ex.: 100m, máx. 2g). Vale para sites novos e ao regenerar.</p>
+      </div>
     </div>
 
     <h2 class="titulo" style="font-size:16px;margin:20px 0 12px;">Servidor Proxy (Domínios Temporários)</h2>

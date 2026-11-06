@@ -198,6 +198,7 @@ $roteador->get('/equipe/clientes/novo', [ClientesController::class, 'novo'], [Mi
 $roteador->get('/equipe/clientes/editar', [ClientesController::class, 'editar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->get('/equipe/clientes/ver', [ClientesController::class, 'ver'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/salvar', [ClientesController::class, 'salvar'], [Middlewares::exigirPermissao('manage_users')]);
+$roteador->post('/equipe/clientes/backup-raizes', [ClientesController::class, 'backupRaizes'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/ocultar', [ClientesController::class, 'ocultar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/deletar', [ClientesController::class, 'deletar'], [Middlewares::exigirPermissao('manage_users')]);
 $roteador->post('/equipe/clientes/inativar', [ClientesController::class, 'inativar'], [Middlewares::exigirPermissao('manage_users')]);
@@ -437,6 +438,7 @@ $roteador->get('/cliente/backups', [\LRV\App\Controllers\Cliente\BackupsControll
 $roteador->post('/cliente/backups/criar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'criar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_create', 3, 60)]);
 $roteador->get('/cliente/backups/baixar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'baixar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);
 $roteador->post('/cliente/backups/restaurar', [\LRV\App\Controllers\Cliente\BackupsController::class, 'restaurar'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_restore', 2, 60)]);
+$roteador->post('/cliente/backups/pastas', [\LRV\App\Controllers\Cliente\BackupsController::class, 'pastas'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano(), Middlewares::rateLimitCliente('backup_paths', 20, 60)]);
 
 // Armazenamento cliente
 $roteador->get('/cliente/armazenamento', [\LRV\App\Controllers\Cliente\ArmazenamentoController::class, 'index'], [Middlewares::exigirLoginCliente(), Middlewares::verificarFeaturePlano()]);

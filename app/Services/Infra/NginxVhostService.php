@@ -289,6 +289,7 @@ final class NginxVhostService
             . "    listen 80;\n"
             . "    listen 443 ssl http2;\n"
             . "    server_name {$domain};\n"
+            . "    client_max_body_size " . \LRV\Core\ConfiguracoesSistema::nginxClientMaxBodySize() . ";\n"
             . "\n"
             . "    ssl_certificate {$certDir}/fullchain.pem;\n"
             . "    ssl_certificate_key {$certDir}/privkey.pem;\n"
@@ -323,6 +324,7 @@ final class NginxVhostService
         return "server {\n"
             . "    listen 80;\n"
             . "    server_name {$domain};\n"
+            . "    client_max_body_size " . \LRV\Core\ConfiguracoesSistema::nginxClientMaxBodySize() . ";\n"
             . "\n"
             // Validação do Let's Encrypt: servida do disco, não do app (senão o app responde 404)
             . "    location ^~ /.well-known/acme-challenge/ {\n"
@@ -349,8 +351,13 @@ final class NginxVhostService
      * MESMO server block — gerando um arquivo completo e válido de uma vez, sem
      * precisar injetar linhas via sed depois (que era frágil e quebrava o vhost).
      */
-    private function gerarConfigStaticSite(string $domain, string $rootPath, string $phpVersion = '8.3', bool $isAaPanel = false, string $certDir = ''): string
+    private function gerarConfigStaticSite(string $domain, string $rootPath, string $phpVersion = '8.3', bool $isAaPanel = false, string $certDir = '', bool $spaFallback = false): string
     {
+        // Site estático (sem index.php, com index.html): rotas internas de SPA (Vite/React)
+        // caem no index.html ao recarregar. Arquivos e pastas reais continuam tendo
+        // prioridade, então sites de várias páginas seguem funcionando.
+        $fallback = $spaFallback ? '/index.html' : '/index.php?$query_string';
+
         // aaPanel usa /tmp/php-cgi-XX.sock, instalação padrão usa /run/php/phpX.X-fpm.sock
         $phpShort = str_replace('.', '', $phpVersion); // "8.3" → "83"
         $fpmSocket = $isAaPanel
@@ -371,12 +378,13 @@ final class NginxVhostService
         return "server {\n"
             . $listenBlock
             . "    server_name {$domain};\n"
+            . "    client_max_body_size " . \LRV\Core\ConfiguracoesSistema::nginxClientMaxBodySize() . ";\n"
             . "    root {$rootPath};\n"
             . "    index index.php index.html index.htm;\n"
             . $sslBlock
             . "\n"
             . "    location / {\n"
-            . "        try_files \$uri \$uri/ /index.php?\$query_string;\n"
+            . "        try_files \$uri \$uri/ {$fallback};\n"
             . "    }\n"
             . "\n"
             . "    location ~ \\.php\$ {\n"
@@ -441,6 +449,15 @@ final class NginxVhostService
         }
         $logs[] = 'Root detectado: ' . $actualRoot;
 
+        // Fallback de SPA só quando a raiz tem index.html e não tem index.php
+        $spaCmd = 'if test -f ' . escapeshellarg($actualRoot . '/index.php') . '; then echo lrv-tem-php;'
+            . ' elif test -f ' . escapeshellarg($actualRoot . '/index.html') . '; then echo lrv-spa; else echo lrv-nada; fi';
+        $spaResult = $this->exec($ssh, $srv, $spaCmd);
+        $spaFallback = str_contains((string)($spaResult['saida'] ?? ''), 'lrv-spa');
+        if ($spaFallback) {
+            $logs[] = 'Site estático: rotas internas redirecionadas para /index.html.';
+        }
+
         $vhostName = $this->getVhostFileName($domain, $isCustom);
         $sudo = $this->needsSudo($srv) ? 'sudo ' : '';
 
@@ -473,7 +490,7 @@ final class NginxVhostService
         }
 
         // ETAPA 2: Gerar o vhost completo (com SSL embutido se o cert foi emitido) e gravar.
-        $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion, $isCustom, $certDir);
+        $config = $this->gerarConfigStaticSite($domain, $actualRoot, $phpVersion, $isCustom, $certDir, $spaFallback);
         $b64 = base64_encode($config);
 
         if ($isCustom) {

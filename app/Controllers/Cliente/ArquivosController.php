@@ -115,7 +115,11 @@ final class ArquivosController
         $path = (string)($req->query['path'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
-        $cmd = 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1';
+        // Arquivo de 0 bytes (ex.: .env recém-criado): a saída vazia era tratada como falha
+        // e o editor não abria. Um marcador deixa claro que o arquivo existe e está vazio.
+        $marcadorVazio = '__LRV_ARQUIVO_VAZIO__';
+        $p = escapeshellarg($path);
+        $cmd = 'if [ -f ' . $p . ' ] && [ ! -s ' . $p . ' ]; then echo ' . $marcadorVazio . '; else head -c 102400 ' . $p . ' 2>&1; fi';
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
@@ -125,7 +129,12 @@ final class ArquivosController
         }
         if (!$result['ok']) return Resposta::json($result);
 
-        return Resposta::json(['ok' => true, 'content' => $result['output'], 'path' => $path]);
+        $conteudo = (string)($result['output'] ?? '');
+        if (trim($conteudo) === $marcadorVazio) {
+            $conteudo = '';
+        }
+
+        return Resposta::json(['ok' => true, 'content' => $conteudo, 'path' => $path]);
     }
 
     public function salvar(Requisicao $req): Resposta
@@ -595,7 +604,7 @@ final class ArquivosController
 
         $prefixo = '__b=$(realpath -m -- ' . escapeshellarg($base) . '); __p=$(realpath -m -- ' . escapeshellarg($path) . '); '
             . 'case "$__p" in "$__b"|"$__b"/*) ;; *) echo "Acesso negado: fora da pasta do site."; exit 1;; esac; ';
-        return ['ok' => true, 'prefixo' => $prefixo];
+        return ['ok' => true, 'prefixo' => $prefixo, 'base' => $base];
     }
 
     private function execDirectOnServer(int $clienteId, int $vpsId, string $cmd, string $path = ''): array
@@ -621,10 +630,20 @@ final class ArquivosController
         $usuario = (string)($row['ssh_user'] ?? 'root');
         $authType = (string)($row['ssh_auth_type'] ?? 'key');
 
-        // Os arquivos do site pertencem ao usuário do PHP (ex.: "www" no aPanel). Se o SSH
-        // não for root, sem sudo não dá para criar/editar arquivos ali (falhava em silêncio).
-        if ($usuario !== 'root') {
-            $cmd = 'sudo -n bash -c ' . escapeshellarg($cmd);
+        // Os arquivos do site pertencem ao usuário do PHP (ex.: "www" no aPanel). Antes o
+        // comando rodava com "sudo" como ROOT; agora roda como o DONO da pasta do deploy
+        // (nunca root) e continua preso ao deploy_path pelo prefixo de realpath acima.
+        // Se não der para trocar de usuário, roda como o próprio usuário SSH.
+        $b = escapeshellarg((string) $guarda['base']);
+        $c = escapeshellarg($cmd);
+        if ($usuario === 'root') {
+            $cmd = '__o=$(stat -c %U -- ' . $b . ' 2>/dev/null); '
+                . 'if [ -n "$__o" ] && [ "$__o" != root ]; then runuser -u "$__o" -- bash -c ' . $c . '; '
+                . 'else echo "Acesso negado: pasta do site pertence ao root."; exit 1; fi';
+        } else {
+            $cmd = '__o=$(stat -c %U -- ' . $b . ' 2>/dev/null); '
+                . 'if [ -n "$__o" ] && [ "$__o" != root ] && [ "$__o" != "$(id -un)" ] && sudo -n -u "$__o" true 2>/dev/null; '
+                . 'then sudo -n -u "$__o" bash -c ' . $c . '; else bash -c ' . $c . '; fi';
         }
 
         try {

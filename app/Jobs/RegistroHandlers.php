@@ -214,13 +214,21 @@ final class RegistroHandlers
             if ($backupId <= 0 || $vpsId <= 0) throw new \InvalidArgumentException('Dados inválidos.');
 
             $pdo = BancoDeDados::pdo();
-            $bk = $pdo->prepare("SELECT file_path FROM backups WHERE id = :id AND status = 'completed'");
-            $bk->execute([':id' => $backupId]);
+            try {
+                $bk = $pdo->prepare("SELECT file_path, manifest FROM backups WHERE id = :id AND status = 'completed'");
+                $bk->execute([':id' => $backupId]);
+            } catch (\Throwable) {
+                // migration 0101 ainda não aplicada
+                $bk = $pdo->prepare("SELECT file_path, NULL AS manifest FROM backups WHERE id = :id AND status = 'completed'");
+                $bk->execute([':id' => $backupId]);
+            }
             $row = $bk->fetch();
             if (!is_array($row)) throw new \RuntimeException('Backup não encontrado.');
 
-            $localFile = (string)($row['file_path'] ?? '');
-            if ($localFile === '' || !is_file($localFile)) throw new \RuntimeException('Arquivo de backup não encontrado.');
+            $filePath = (string)($row['file_path'] ?? '');
+            if ($filePath === '') throw new \RuntimeException('Arquivo de backup não encontrado.');
+            $manifest = json_decode((string)($row['manifest'] ?? ''), true);
+            $manifest = is_array($manifest) ? $manifest : null;
 
             $vps = $pdo->prepare('SELECT client_id, server_id FROM vps WHERE id = :id');
             $vps->execute([':id' => $vpsId]);
@@ -230,6 +238,26 @@ final class RegistroHandlers
             $clientId = (int)($v['client_id'] ?? 0);
             $serverId = (int)($v['server_id'] ?? 0);
             if ($serverId <= 0) throw new \RuntimeException('VPS sem node.');
+
+            // Backup remoto no mesmo servidor da VPS: extrai direto, sem upload
+            $remotoDireto = null;
+            $localFile = '';
+            $localTemp = false;
+            if (str_starts_with($filePath, 'remote:')) {
+                $partes = explode(':', $filePath, 3);
+                if ((int)($partes[1] ?? 0) === $serverId && (string)($partes[2] ?? '') !== '') {
+                    $remotoDireto = (string)$partes[2];
+                } else {
+                    $ctx->log('Baixando backup do servidor de origem...');
+                    $baixado = (new \LRV\App\Services\Backup\VpsBackupService(new DockerCli()))->baixarRemoto($filePath);
+                    if ($baixado === null) throw new \RuntimeException('Arquivo de backup não encontrado.');
+                    $localFile = $baixado;
+                    $localTemp = true;
+                }
+            } else {
+                $localFile = $filePath;
+                if (!is_file($localFile)) throw new \RuntimeException('Arquivo de backup não encontrado.');
+            }
 
             $docker = new DockerCli();
             $svc = new VpsProvisioningService($docker);
@@ -254,28 +282,67 @@ final class RegistroHandlers
                 $docker->definirRemoto($host, $porta, $usuario, $keyPath);
             }
 
-            $volumeBase = (string)\LRV\Core\Settings::obter('infra.volume_base', '/vps');
-            $remoteFile = '/tmp/restore_' . $backupId . '_' . time() . '.tar.gz';
+            $volumeBase = rtrim((string)\LRV\Core\Settings::obter('infra.volume_base', '/vps'), '/');
+            // Mesmo volume_base_path usado pelo backup
+            try {
+                $vb = $pdo->prepare('SELECT volume_base_path FROM servers WHERE id = :id LIMIT 1');
+                $vb->execute([':id' => $serverId]);
+                $vbp = trim((string)($vb->fetchColumn() ?: ''));
+                if ($vbp !== '') $volumeBase = rtrim($vbp, '/');
+            } catch (\Throwable) {}
+            $sudo = $usuario !== 'root' ? 'sudo -n ' : '';
 
-            // Upload do backup para o node
-            $ctx->log('Enviando backup para o node...');
-            $exec = new \LRV\App\Services\Infra\SshExecutor();
-            $b64 = base64_encode(file_get_contents($localFile));
-            // Enviar em chunks via SSH
-            $chunkSize = 500000; // ~500KB por comando
-            $chunks = str_split($b64, $chunkSize);
-            $docker->executar('rm -f ' . escapeshellarg($remoteFile));
-            foreach ($chunks as $i => $chunk) {
-                $docker->executar('echo ' . escapeshellarg($chunk) . ' >> ' . escapeshellarg($remoteFile . '.b64'));
+            if ($remotoDireto !== null) {
+                $remoteFile = $remotoDireto;
+            } else {
+                $remoteFile = '/tmp/restore_' . $backupId . '_' . time() . '.tar.gz';
+
+                // Upload do backup para o node
+                $ctx->log('Enviando backup para o node...');
+                $b64 = base64_encode((string)file_get_contents($localFile));
+                if ($localTemp) @unlink($localFile);
+                // Enviar em chunks via SSH
+                $chunkSize = 500000; // ~500KB por comando
+                $chunks = str_split($b64, $chunkSize);
+                $docker->executar('rm -f ' . escapeshellarg($remoteFile));
+                foreach ($chunks as $i => $chunk) {
+                    $docker->executar('echo ' . escapeshellarg($chunk) . ' >> ' . escapeshellarg($remoteFile . '.b64'));
+                }
+                $docker->executar('base64 -d ' . escapeshellarg($remoteFile . '.b64') . ' > ' . escapeshellarg($remoteFile) . ' && rm -f ' . escapeshellarg($remoteFile . '.b64'));
             }
-            $docker->executar('base64 -d ' . escapeshellarg($remoteFile . '.b64') . ' > ' . escapeshellarg($remoteFile) . ' && rm -f ' . escapeshellarg($remoteFile . '.b64'));
 
-            // Extrair no volume
-            $ctx->log('Restaurando arquivos...');
-            $dirCliente = rtrim($volumeBase, '/') . '/client_' . $clientId;
-            $docker->executar('rm -rf ' . escapeshellarg($dirCliente) . '/*');
-            $docker->executar('tar -xzf ' . escapeshellarg($remoteFile) . ' -C ' . escapeshellarg($volumeBase));
-            $docker->executar('rm -f ' . escapeshellarg($remoteFile));
+            try {
+                // Pasta do cliente no volume (sempre em backups legados, sem manifesto)
+                if ($manifest === null || !empty($manifest['client_dir'])) {
+                    $ctx->log('Restaurando arquivos...');
+                    $dirCliente = $volumeBase . '/client_' . $clientId;
+                    $docker->executar($sudo . 'rm -rf ' . escapeshellarg($dirCliente) . '/*');
+                    $docker->executar($sudo . 'tar -xzf ' . escapeshellarg($remoteFile) . ' -C ' . escapeshellarg($volumeBase) . ' ' . escapeshellarg('client_' . $clientId));
+                }
+
+                // Pastas extras: só as que ainda são permitidas hoje (sem apagar o destino)
+                $extras = is_array($manifest['extra_paths'] ?? null) ? $manifest['extra_paths'] : [];
+                foreach ($extras as $p) {
+                    if (!is_string($p)) continue;
+                    try {
+                        $p = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoBackupExtra($p, $clientId, $vpsId);
+                    } catch (\InvalidArgumentException $e) {
+                        $ctx->log('Pasta ' . $p . ' não restaurada: ' . $e->getMessage());
+                        continue;
+                    }
+                    $ctx->log('Restaurando ' . $p . '...');
+                    $docker->executar($sudo . 'tar -xzf ' . escapeshellarg($remoteFile) . ' -C / ' . escapeshellarg(ltrim($p, '/')));
+                }
+
+                if (!empty($manifest['databases'])) {
+                    $ctx->log('Dumps de banco não são importados automaticamente; estão em _lrv_db/ no arquivo.');
+                }
+            } finally {
+                // Nunca apagar o backup original; só o temporário enviado
+                if ($remotoDireto === null) {
+                    $docker->executar('rm -f ' . escapeshellarg($remoteFile));
+                }
+            }
 
             $ctx->log('Backup restaurado.');
         });

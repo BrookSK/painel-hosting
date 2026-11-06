@@ -137,6 +137,119 @@ final class ValidadorInfra
         return $path;
     }
 
+    /** Regex das pastas que podem entrar no backup (e das raízes liberadas pela equipe). */
+    public const RE_BACKUP_EXTRA = '#^/(var/www|www/wwwroot)(/[A-Za-z0-9][A-Za-z0-9._-]{0,80}){1,6}$#';
+
+    /** Pastas compartilhadas do servidor que nunca entram no backup de um cliente. */
+    public const BACKUP_PASTAS_PROIBIDAS = ['/', '/var/www', '/var/www/html', '/var/www/default', '/var/www/lrv', '/www/wwwroot'];
+
+    /**
+     * Normaliza e valida só o formato de um caminho de backup/raiz (sem consultar o banco).
+     */
+    public static function formatoCaminhoBackup(string $path): string
+    {
+        $path = rtrim(trim(str_replace('\\', '/', $path)), '/');
+        if ($path === '' || !preg_match(self::RE_BACKUP_EXTRA, $path)) {
+            throw new \InvalidArgumentException('Pasta inválida: use algo como /var/www/minha-pasta (só letras, números, ponto, hífen e underline).');
+        }
+        foreach (explode('/', $path) as $seg) {
+            if ($seg === '..' || $seg === '.') {
+                throw new \InvalidArgumentException('Pasta inválida.');
+            }
+        }
+        if (in_array($path, self::BACKUP_PASTAS_PROIBIDAS, true)) {
+            throw new \InvalidArgumentException('Esta pasta é compartilhada do servidor e não pode entrar no backup.');
+        }
+        foreach (['/www/server', '/etc', '/root'] as $pre) {
+            if ($path === $pre || str_starts_with($path, $pre . '/')) {
+                throw new \InvalidArgumentException('Esta pasta não pode entrar no backup.');
+            }
+        }
+        return $path;
+    }
+
+    /**
+     * Raízes extras liberadas pela equipe para o cliente ({cliente_id} já substituído).
+     * Retorna [] se a coluna ainda não existir (migration 0101 não aplicada).
+     *
+     * @return list<string>
+     */
+    public static function raizesBackupCliente(int $clienteId): array
+    {
+        try {
+            $st = BancoDeDados::pdo()->prepare('SELECT backup_extra_roots FROM clients WHERE id = :c LIMIT 1');
+            $st->execute([':c' => $clienteId]);
+            $json = (string) ($st->fetchColumn() ?: '');
+        } catch (\Throwable) {
+            return [];
+        }
+        $lista = json_decode($json, true);
+        if (!is_array($lista)) {
+            return [];
+        }
+        $out = [];
+        foreach ($lista as $r) {
+            if (!is_string($r)) {
+                continue;
+            }
+            try {
+                $out[] = self::formatoCaminhoBackup(str_replace('{cliente_id}', (string) $clienteId, $r));
+            } catch (\InvalidArgumentException) {
+                // raiz inválida é ignorada
+            }
+        }
+        return array_values(array_unique($out));
+    }
+
+    /**
+     * Pasta extra de backup: precisa estar dentro de um Git Deploy do cliente NA MESMA VPS
+     * ou de uma raiz liberada pela equipe para o cliente, e nunca sobrepor a pasta de outro cliente.
+     *
+     * @return string caminho normalizado
+     */
+    public static function exigirCaminhoBackupExtra(string $path, int $clienteId, int $vpsId): string
+    {
+        $path = self::formatoCaminhoBackup($path);
+
+        $dentro = static fn (string $base): bool => $base !== '' && ($path === $base || str_starts_with($path . '/', $base . '/'));
+
+        $pdo = BancoDeDados::pdo();
+        $permitido = false;
+        $st = $pdo->prepare('SELECT deploy_path FROM git_deployments WHERE client_id = :c AND vps_id = :v');
+        $st->execute([':c' => $clienteId, ':v' => $vpsId]);
+        foreach ($st->fetchAll() ?: [] as $r) {
+            if ($dentro(rtrim(str_replace('\\', '/', (string) $r['deploy_path']), '/'))) {
+                $permitido = true;
+                break;
+            }
+        }
+        if (!$permitido) {
+            foreach (self::raizesBackupCliente($clienteId) as $raiz) {
+                if ($dentro($raiz)) {
+                    $permitido = true;
+                    break;
+                }
+            }
+        }
+        if (!$permitido) {
+            throw new \InvalidArgumentException('Só é possível incluir pastas dos seus projetos nesta VPS ou pastas liberadas pela equipe.');
+        }
+
+        // Não pode coincidir nem ficar dentro/por cima da pasta de outro cliente
+        $st = $pdo->prepare('SELECT deploy_path FROM git_deployments WHERE client_id <> :c');
+        $st->execute([':c' => $clienteId]);
+        foreach ($st->fetchAll() ?: [] as $r) {
+            $outro = rtrim((string) $r['deploy_path'], '/');
+            if ($outro === '') {
+                continue;
+            }
+            if ($outro === $path || str_starts_with($path . '/', $outro . '/') || str_starts_with($outro . '/', $path . '/')) {
+                throw new \InvalidArgumentException('Esta pasta está em uso por outro projeto e não pode entrar no backup.');
+            }
+        }
+        return $path;
+    }
+
     /**
      * Configurações de PHP do site: só chaves conhecidas e valores numéricos com teto.
      * (Evita injetar diretivas como auto_prepend_file no php.ini do servidor.)

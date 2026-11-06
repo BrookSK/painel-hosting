@@ -391,4 +391,20 @@ if (in_array($delStatus, ['pending', 'running'], true)
   </table>
 </div>
 
+<!-- Raízes extras de backup liberadas para o cliente -->
+<?php
+$raizesAtuais = json_decode((string)($cliente['backup_extra_roots'] ?? ''), true);
+$raizesAtuais = is_array($raizesAtuais) ? implode("\n", array_filter($raizesAtuais, 'is_string')) : '';
+?>
+<div class="card-new" style="margin-top:16px;">
+  <div class="card-new-title">Pastas liberadas para backup</div>
+  <p class="texto" style="font-size:12px;margin:4px 0 8px;">Uma pasta por linha, em /var/www ou /www/wwwroot (ex.: /var/www/central-rz-dados). Aceita {cliente_id}. O cliente poderá incluir essas pastas (e subpastas) no backup das VPS dele. As pastas dos Git Deploys do cliente já são liberadas automaticamente.</p>
+  <form method="post" action="/equipe/clientes/backup-raizes">
+    <input type="hidden" name="_csrf" value="<?php echo View::e(\LRV\Core\Csrf::token()); ?>" />
+    <input type="hidden" name="id" value="<?php echo (int)$cliente['id']; ?>" />
+    <textarea class="input" name="raizes" rows="4" style="width:100%;font-family:monospace;font-size:12px;"><?php echo View::e($raizesAtuais); ?></textarea>
+    <button class="botao sm" type="submit" style="margin-top:8px;">Salvar pastas</button>
+  </form>
+</div>
+
 <?php require __DIR__ . '/../_partials/layout-equipe-fim.php'; ?>

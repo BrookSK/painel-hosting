@@ -9,6 +9,8 @@ $backups = is_array($backups ?? null) ? $backups : [];
 $sucesso = (string)($sucesso ?? '');
 $erro    = (string)($erro ?? '');
 $erroParam = (string)($_GET['erro'] ?? '');
+$pastasExtras = is_array($pastasExtras ?? null) ? $pastasExtras : [];
+$pastasDeploy = is_array($pastasDeploy ?? null) ? $pastasDeploy : [];
 
 $pageTitle = 'Backups';
 require __DIR__ . '/../_partials/layout-cliente-inicio.php';
@@ -41,11 +43,15 @@ function _bkSize(int $bytes): string {
   <div class="sucesso">Backup solicitado. Ele será processado em breve.</div>
 <?php elseif ($sucesso === 'restaurando'): ?>
   <div class="sucesso">Restauração iniciada. Sua VPS será atualizada em breve.</div>
+<?php elseif ($sucesso === 'pastas'): ?>
+  <div class="sucesso">Pastas do backup atualizadas.</div>
 <?php endif; ?>
 <?php if ($erroParam === 'sem_slots'): ?>
   <div class="erro">Seu plano não inclui backups. Faça upgrade para ter acesso.</div>
 <?php elseif ($erroParam === 'em_andamento'): ?>
   <div class="erro">Já existe um backup em andamento para esta VPS.</div>
+<?php elseif ($erro !== ''): ?>
+  <div class="erro"><?php echo View::e($erro); ?></div>
 <?php endif; ?>
 
 <!-- Criar backup -->
@@ -75,6 +81,51 @@ function _bkSize(int $bytes): string {
     <?php endif; ?>
   </div>
 
+  <?php if ($slots > 0):
+    $extrasV = $pastasExtras[$vId] ?? [];
+    $atalhos = array_values(array_diff($pastasDeploy[$vId] ?? [], $extrasV));
+  ?>
+  <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;">
+    <div style="font-weight:600;margin-bottom:6px;">Pastas extras no backup</div>
+    <?php if (empty($extrasV)): ?>
+      <div style="color:#94a3b8;margin-bottom:8px;">Nenhuma pasta extra.</div>
+    <?php else: ?>
+      <?php foreach ($extrasV as $p): ?>
+      <form method="post" action="/cliente/backups/pastas" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+        <input type="hidden" name="vps_id" value="<?php echo $vId; ?>" />
+        <input type="hidden" name="acao" value="remover" />
+        <input type="hidden" name="caminho" value="<?php echo View::e($p); ?>" />
+        <code><?php echo View::e($p); ?></code>
+        <button class="botao ghost sm" type="submit" style="font-size:11px;">Remover</button>
+      </form>
+      <?php endforeach; ?>
+    <?php endif; ?>
+    <form method="post" action="/cliente/backups/pastas" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+      <input type="hidden" name="vps_id" value="<?php echo $vId; ?>" />
+      <input type="hidden" name="acao" value="adicionar" />
+      <input type="text" name="caminho" placeholder="/var/www/meu-projeto/uploads" maxlength="300" style="flex:1;min-width:220px;" />
+      <button class="botao sm" type="submit" style="font-size:11px;">Adicionar</button>
+    </form>
+    <?php if (!empty($atalhos)): ?>
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span style="color:#64748b;">Adicionar rápido:</span>
+      <?php foreach ($atalhos as $p): ?>
+      <form method="post" action="/cliente/backups/pastas" style="display:inline;">
+        <input type="hidden" name="_csrf" value="<?php echo View::e(Csrf::token()); ?>" />
+        <input type="hidden" name="vps_id" value="<?php echo $vId; ?>" />
+        <input type="hidden" name="acao" value="adicionar" />
+        <input type="hidden" name="caminho" value="<?php echo View::e($p); ?>" />
+        <button class="botao ghost sm" type="submit" style="font-size:11px;">+ <?php echo View::e($p); ?></button>
+      </form>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+    <div style="margin-top:8px;font-size:12px;color:#64748b;">Os bancos de dados desta VPS também entram no backup, mas não são restaurados automaticamente: a cópia fica dentro do arquivo baixado, na pasta <code>_lrv_db</code>.</div>
+  </div>
+  <?php endif; ?>
+
   <?php if (empty($vpsBackups)): ?>
     <div style="text-align:center;padding:20px 0;color:#94a3b8;font-size:13px;">Nenhum backup ainda.</div>
   <?php else: ?>
@@ -94,7 +145,11 @@ function _bkSize(int $bytes): string {
           <?php foreach ($vpsBackups as $b): $bId = (int)($b['id'] ?? 0); ?>
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td style="padding:8px 12px;color:#94a3b8;">#<?php echo $bId; ?></td>
-            <td style="padding:8px 12px;"><?php echo _bkStatus((string)($b['status'] ?? '')); ?></td>
+            <td style="padding:8px 12px;"><?php echo _bkStatus((string)($b['status'] ?? '')); ?>
+              <?php if (trim((string)($b['warnings'] ?? '')) !== ''): ?>
+                <div style="font-size:11px;color:#b45309;white-space:pre-line;margin-top:4px;">⚠ <?php echo View::e((string)$b['warnings']); ?></div>
+              <?php endif; ?>
+            </td>
             <td style="padding:8px 12px;"><?php echo _bkSize((int)($b['file_size'] ?? 0)); ?></td>
             <td style="padding:8px 12px;"><?php echo View::e(date('d/m/Y H:i', strtotime((string)($b['created_at'] ?? 'now')))); ?></td>
             <td style="padding:8px 12px;"><?php echo ($b['completed_at'] ?? null) ? View::e(date('d/m/Y H:i', strtotime((string)$b['completed_at']))) : '—'; ?></td>

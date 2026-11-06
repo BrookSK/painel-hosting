@@ -48,6 +48,7 @@ final class ConfiguracoesController
             'infra_node_max_util_percent' => (string) ConfiguracoesSistema::infraNodeMaxUtilPercent(),
             'infra_temp_domain_base' => (string) Settings::obter('infra.temp_domain_base', ''),
             'infra_phpmyadmin_url' => (string) Settings::obter('infra.phpmyadmin_url', ''),
+            'infra_nginx_client_max_body_size' => ConfiguracoesSistema::nginxClientMaxBodySize(),
             'cloudflare_api_token' => (string) Settings::obter('cloudflare.api_token', ''),
             'cloudflare_zone_id' => (string) Settings::obter('cloudflare.zone_id', ''),
             'github_token' => (string) Settings::obter('github.token', ''),
@@ -157,6 +158,9 @@ final class ConfiguracoesController
         $infraNodeMaxUtilPercent = $in->postInt('infra_node_max_util_percent', 50, 100, false);
         $tempDomainBase = $in->postString('infra_temp_domain_base', 253, false);
         $phpmyadminUrl = $in->postString('infra_phpmyadmin_url', 500, false);
+        // Limite de upload do Nginx: valor inválido mantém o atual
+        $nginxMaxBody = ConfiguracoesSistema::normalizarClientMaxBodySize($in->postString('infra_nginx_client_max_body_size', 10, false))
+            ?? ConfiguracoesSistema::nginxClientMaxBodySize();
         $proxyServerIp = ''; // deprecated
         $proxyServerSshPort = 22;
         $proxyServerSshUser = 'root';
@@ -262,6 +266,7 @@ final class ConfiguracoesController
                 'infra_node_max_util_percent' => $infraNodeMaxUtilPercent > 0 ? (string) $infraNodeMaxUtilPercent : '85',
                 'infra_temp_domain_base' => $tempDomainBase,
                 'infra_phpmyadmin_url' => $phpmyadminUrl,
+                'infra_nginx_client_max_body_size' => $nginxMaxBody,
                 'cloudflare_api_token' => $cloudflareApiToken,
                 'cloudflare_zone_id' => $cloudflareZoneId,
                 'github_token' => $githubToken,
@@ -369,6 +374,7 @@ final class ConfiguracoesController
         Settings::definir('infra.node_max_util_percent', $infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85);
         Settings::definir('infra.temp_domain_base', trim($tempDomainBase, '.'));
         Settings::definir('infra.phpmyadmin_url', trim($phpmyadminUrl));
+        Settings::definir('infra.nginx_client_max_body_size', $nginxMaxBody);
         if ($cloudflareApiToken !== '') {
             Settings::definir('cloudflare.api_token', $cloudflareApiToken);
         }
@@ -529,6 +535,7 @@ final class ConfiguracoesController
             'infra_node_max_util_percent' => (string) ($infraNodeMaxUtilPercent > 0 ? $infraNodeMaxUtilPercent : 85),
             'infra_temp_domain_base' => $tempDomainBase,
             'infra_phpmyadmin_url' => $phpmyadminUrl,
+            'infra_nginx_client_max_body_size' => $nginxMaxBody,
             'cloudflare_api_token' => $cloudflareApiToken,
             'cloudflare_zone_id' => $cloudflareZoneId,
             'github_token' => $githubToken,
