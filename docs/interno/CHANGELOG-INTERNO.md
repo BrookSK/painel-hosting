@@ -12,6 +12,9 @@
 > **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
 > só o que o cliente precisa saber.
 
+### Fallback de SPA em site estático (3.6.2)
+- `NginxVhostService::criarVhostStaticSite`: se a raiz tem `index.html` e não tem `index.php`, o vhost usa `try_files $uri $uri/ /index.html;` (antes `/index.php?$query_string`, que dava "File not found." no F5 de rotas internas). Vale para vhosts novos e a cada deploy. Trazido isolado da branch `feature/isolamento-por-cliente`
+
 ### Isolamento de logs/PM2 por aplicação (3.6.2)
 - `AplicacoesController` (logs do servidor): removidos `error.log` global do Nginx, logs do PHP-FPM e `pm2 logs` sem filtro (mostravam dados de outros sites/sistemas). Agora só access/error log do domínio da aplicação + `docker logs` do container validado
 - Git Deploy: novo `POST /cliente/git-deploy/pm2` (`GitDeployController::pm2`, ops `logs|restart|status`). Roda como o usuário SSH (sem sudo, então não vê o PM2 do root) e só age nos processos cujo `pm2_env.pm_cwd` está dentro do `deploy_path` (resolve nomes do ecosystem, ex.: `central-rz-api`); fallback `deploy-<id>`. Botões "Reiniciar"/"Logs PM2" usam esse endpoint

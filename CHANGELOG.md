@@ -17,6 +17,7 @@ Acompanhe aqui as novidades, melhorias e correções do painel.
 ### Corrigido
 - **Pasta liberada para gravação voltava a ficar bloqueada**: depois de usar "Liberar pasta de arquivos", a liberação se perdia na próxima publicação do site e os uploads paravam de funcionar. Agora o painel lembra das pastas liberadas e mantém a permissão a cada publicação
 - **Publicação via Git (Git Deploy) e tarefas no servidor**: para contas novas, esses recursos passam a ser liberados pelo nosso suporte. Se você já usa, nada muda. Se quiser começar a usar, é só abrir um chamado
+- **Sites estáticos (React, Vite e similares)**: recarregar a página em um endereço interno do site não dá mais "página não encontrada"
 
 ---
 
