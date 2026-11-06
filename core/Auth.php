@@ -14,17 +14,30 @@ final class Auth
 
     /**
      * O cliente pode usar recursos que rodam comandos direto no SERVIDOR (fora do container)?
-     * Liberado só pela equipe (clients.host_access_enabled). Fail-closed: erro/coluna ausente = não.
+     * Liberado pelo plano (assinatura ativa com Git Deploy) ou pela equipe (clients.host_access_enabled).
+     * Conta inativa nunca tem acesso.
      */
     public static function clienteTemAcessoServidor(int $clienteId): bool
     {
         if ($clienteId <= 0) {
             return false;
         }
+        if (self::clienteBloqueado($clienteId)) {
+            return false;
+        }
         try {
             $s = BancoDeDados::pdo()->prepare('SELECT host_access_enabled FROM clients WHERE id = :id LIMIT 1');
             $s->execute([':id' => $clienteId]);
-            return (int) $s->fetchColumn() === 1;
+            if ((int) $s->fetchColumn() === 1) {
+                return true;
+            }
+        } catch (\Throwable) {
+        }
+        // Liberado automaticamente pelo plano: assinatura ativa cujo plano inclui Git Deploy.
+        // O isolamento (usuário Linux por cliente / container) é o que protege o servidor.
+        try {
+            return \LRV\App\Services\Plans\PlanFeatureService::planoAtivo($clienteId) !== null
+                && \LRV\App\Services\Plans\PlanFeatureService::temAcesso($clienteId, 'git_deploy');
         } catch (\Throwable) {
             return false;
         }

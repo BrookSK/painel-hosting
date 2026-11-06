@@ -154,13 +154,13 @@ $roteador->post('/equipe/vps/reiniciar', [EquipeVpsController::class, 'reiniciar
 $roteador->post('/equipe/vps/remover', [EquipeVpsController::class, 'remover'], [Middlewares::exigirPermissao('manage_vps'), Middlewares::rateLimitEquipe('vps_action', 10, 60)]);
 $roteador->get('/equipe/vps/logs', [EquipeVpsController::class, 'logs'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->post('/equipe/vps/atualizar-pagina-manutencao', [EquipeVpsController::class, 'atualizarPaginaManutencao'], [Middlewares::exigirPermissao('manage_vps')]);
-$roteador->get('/equipe/terminal', [TerminalController::class, 'index'], [Middlewares::exigirPermissao('manage_terminal')]);
-$roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_token', 60, 60)]);
-$roteador->post('/equipe/terminal/exec', [TerminalController::class, 'exec'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_exec', 120, 60)]);
-$roteador->post('/equipe/terminal/upload', [TerminalController::class, 'upload'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::rateLimitEquipe('terminal_upload', 30, 60)]);
-$roteador->get('/equipe/terminal/download', [TerminalController::class, 'download'], [Middlewares::exigirPermissao('manage_terminal')]);
-$roteador->get('/equipe/terminal/auditoria', [TerminalController::class, 'auditoria'], [Middlewares::exigirPermissao('manage_terminal')]);
-$roteador->get('/equipe/terminal/auditoria/ver', [TerminalController::class, 'auditoriaVer'], [Middlewares::exigirPermissao('manage_terminal')]);
+$roteador->get('/equipe/terminal', [TerminalController::class, 'index'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe()]);
+$roteador->post('/equipe/terminal/token', [TerminalController::class, 'emitirToken'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe(), Middlewares::rateLimitEquipe('terminal_token', 60, 60)]);
+$roteador->post('/equipe/terminal/exec', [TerminalController::class, 'exec'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe(), Middlewares::rateLimitEquipe('terminal_exec', 120, 60)]);
+$roteador->post('/equipe/terminal/upload', [TerminalController::class, 'upload'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe(), Middlewares::rateLimitEquipe('terminal_upload', 30, 60)]);
+$roteador->get('/equipe/terminal/download', [TerminalController::class, 'download'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe()]);
+$roteador->get('/equipe/terminal/auditoria', [TerminalController::class, 'auditoria'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe()]);
+$roteador->get('/equipe/terminal/auditoria/ver', [TerminalController::class, 'auditoriaVer'], [Middlewares::exigirPermissao('manage_terminal'), Middlewares::exigir2faEquipe()]);
 $roteador->get('/equipe/jobs', [JobsController::class, 'listar'], [Middlewares::exigirPermissao('manage_vps')]);
 $roteador->get('/equipe/jobs/ver', [JobsController::class, 'ver'], [Middlewares::exigirPermissao('manage_vps')]);
 
@@ -409,6 +409,7 @@ $roteador->post('/cliente/git-deploy/regenerar-chave', [\LRV\App\Controllers\Cli
 $roteador->post('/cliente/git-deploy/regerar-ssl', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'regerarSsl'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_ssl', 5, 300)]);
 $roteador->post('/cliente/git-deploy/ajustar-permissoes', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'ajustarPermissoes'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_perms', 10, 300)]);
 $roteador->post('/cliente/git-deploy/console', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'console'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_console', 60, 60)]);
+$roteador->post('/cliente/git-deploy/pasta-dados', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'pastaDados'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_perms', 10, 300)]);
 $roteador->post('/cliente/git-deploy/pm2', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'pm2'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado(), Middlewares::rateLimitCliente('git_pm2', 30, 60)]);
 $roteador->get('/cliente/git-deploy/server-logs', [\LRV\App\Controllers\Cliente\GitDeployController::class, 'serverLogs'], [Middlewares::exigirLoginCliente(), Middlewares::exigirAcessoServidor(), Middlewares::verificarFeaturePlano(), Middlewares::bloquearClienteGerenciado()]);
 

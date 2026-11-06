@@ -12,6 +12,18 @@
 > **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
 > só o que o cliente precisa saber.
 
+### Isolamento por cliente em servidor gerenciado (3.6.2)
+- `UsuarioClienteService`: usuário Linux por cliente `lrv_c<id>` (home `/home/lrv_c<id>` 700, sem sudo, removido de sudo/wheel/admin/docker), criado sob demanda pelo usuário SSH do painel. Só vale para `servers.is_managed_server = 1`
+- Dono das pastas do cliente = `lrv_c<id>`, grupo = grupo do PHP-FPM (`www` no aPanel), `o-rwx`, setgid nas pastas, `umask 027`. Ajuste recursivo só quando `find` acha algo fora do padrão. Pastas liberadas para gravação + `storage`/`bootstrap/cache` com `g+w`
+- Git Deploy (git, deploy key em `~/.ssh` do cliente, pós-deploy, commit, PM2) roda como `lrv_c<id>` via `sudo -n -u` / `runuser` + `env -i`. PM2 por cliente com `pm2 startup systemd -u lrv_c<id>`. Na 1ª execução os processos do deploy no PM2 do usuário SSH são removidos (libera a porta)
+- Console do Git Deploy em servidor gerenciado: roda como `lrv_c<id>` **sem lista de bloqueio** (pode usar pm2, chmod, chown nas próprias pastas). A lista paliativa ficou só para host não gerenciado sem container. VPS em container continua com `docker exec`
+- Gerenciador de arquivos (modo direto) e upload: como `lrv_c<id>`; upload vai para `/tmp`, `chown` para o cliente e `mv` feito pelo cliente dentro da pasta validada. Pastas de `clients.backup_extra_roots` também podem ser abertas
+- Botões PM2, logs do servidor (app/PM2) e excluir deploy usam o PM2 do cliente
+- `POST /cliente/git-deploy/pasta-dados` (`pastaDados`): "Liberar pasta" com caminho absoluto. Aceita pasta dentro dos projetos do cliente, raiz liberada pela equipe, pasta inexistente/vazia ou já do cliente; recusa pasta de projeto de outro cliente
+- `Auth::clienteTemAcessoServidor`: liberado automaticamente com assinatura ativa cujo plano inclui `git_deploy` (ou `host_access_enabled`); conta inativa nunca. `api_provisioning_enabled` (endpoints que geram custo sem pagamento) continua manual
+- Terminal da equipe: novo `Middlewares::exigir2faEquipe()` em todas as rotas `/equipe/terminal*` (além de `manage_terminal` e auditoria já existentes)
+- Atenção: sites hospedados fora do painel no mesmo servidor (ex.: `/www/wwwroot/*` com 755) continuam legíveis por qualquer usuário local; aplicar `chmod o-rwx` neles
+
 ### Backup: pastas extras e bancos de dados; limite de upload no Nginx (3.6.2) — migration 0101
 - **Migration** `2026_10_14_0101_backup_pastas_extras.sql`: `vps.backup_extra_paths`, `clients.backup_extra_roots`, `backups.manifest`, `backups.warnings` (todas `TEXT NULL`, `ADD COLUMN IF NOT EXISTS`). Todo o código tolera a migration ainda não aplicada (try/catch com fallback)
 - **Pastas extras** (`ValidadorInfra::exigirCaminhoBackupExtra`, `formatoCaminhoBackup`, `raizesBackupCliente`): regex `^/(var/www|www/wwwroot)(/seg){1,6}$`, sem `.`/`..`; proibidos `/var/www`, `/var/www/html|default|lrv`, `/www/wwwroot` e prefixos `/www/server`, `/etc`, `/root`. Aceita só se estiver dentro de um `deploy_path` do cliente **na mesma VPS** ou de uma raiz liberada em `clients.backup_extra_roots` (`{cliente_id}` substituído); rejeita colisão com `deploy_path` de outro cliente. Revalidado no backup e no restore

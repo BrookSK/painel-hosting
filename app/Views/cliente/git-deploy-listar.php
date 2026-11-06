@@ -367,6 +367,7 @@ function ajustarPermissoes(id) {
     '  public/uploads\n' +
     '  storage\n' +
     '  public/arquivos\n\n' +
+    'Pasta de dados fora do projeto? Informe o caminho completo, ex.: /var/www/meu-app-dados\n\n' +
     'O sistema vai ajustar o dono e a permissão para que o site consiga salvar imagens e documentos.',
     'public/uploads'
   );
@@ -381,9 +382,10 @@ function ajustarPermissoes(id) {
   var fd = new FormData();
   fd.append('_csrf', _csrf);
   fd.append('id', id);
-  fd.append('pasta', pasta.trim());
+  var absoluta = pasta.trim().charAt(0) === '/';
+  fd.append(absoluta ? 'caminho' : 'pasta', pasta.trim());
 
-  fetch('/cliente/git-deploy/ajustar-permissoes', { method: 'POST', body: fd })
+  fetch(absoluta ? '/cliente/git-deploy/pasta-dados' : '/cliente/git-deploy/ajustar-permissoes', { method: 'POST', body: fd })
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (btn) { btn.disabled = false; btn.innerHTML = txt; }

@@ -455,6 +455,13 @@ final class GitDeployController
                 // Dentro do container do próprio cliente (é a VPS dele): sem acesso ao host.
                 $fullCmd = 'docker exec -w ' . escapeshellarg($deployPath) . ' ' . escapeshellarg($container)
                     . ' sh -c ' . escapeshellarg($prefixoGit . $command) . ' 2>&1';
+            } elseif (\LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0))) {
+                // Servidor gerenciado: roda como o usuário Linux do cliente (sem sudo).
+                // Ele é dono só das pastas dele, então pode rodar qualquer comando
+                // (pm2, chmod, chown nas próprias pastas...) sem alcançar outros clientes.
+                $U = \LRV\App\Services\Infra\UsuarioClienteService::class;
+                $U::garantir($runCmd, $clienteId, $sshUser);
+                $fullCmd = $U::comoCliente($clienteId, $sshUser, $prefixoPhp . $command . ' 2>&1', $deployPath) . ' 2>&1';
             } else {
                 // Servidor gerenciado (sem container): bloqueio por lista é PALIATIVO. A solução
                 // definitiva é um usuário Linux por cliente (ou ACL por cliente) — ver changelog interno.
@@ -477,7 +484,7 @@ final class GitDeployController
         // Não refaz o projeto inteiro: em projetos com node_modules isso estoura o tempo
         // da requisição e o console mostrava "Erro de rede".
         try {
-            $pastas = $this->pastasGravaveis($dep);
+            $pastas = \LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0)) ? [] : $this->pastasGravaveis($dep);
             if ($pastas !== []) {
                 $runCmd = $this->abrirSshDoServidor($dep, 60);
                 $dono = escapeshellarg($this->detectarDonoPhp($runCmd));
@@ -617,7 +624,7 @@ final class GitDeployController
 
         // Buscar dados completos do deploy (para apagar arquivos e remover proxy)
         $st = $pdo->prepare(
-            'SELECT g.temp_domain, g.deploy_path, g.app_type,
+            'SELECT g.temp_domain, g.deploy_path, g.app_type, v.server_id,
                     s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
@@ -656,7 +663,14 @@ final class GitDeployController
                         // Parar processo PM2 se for Node.js
                         $pm2Cmd = '';
                         if (($dep['app_type'] ?? '') === 'nodejs') {
-                            $pm2Cmd = 'pm2 delete deploy-' . $id . ' 2>/dev/null; pm2 save 2>/dev/null; ';
+                            $pm2Cmd = $this->shellNomesPm2($deployPath, $id) . 'for n in $PM2_NOMES; do pm2 delete "$n" >/dev/null 2>&1; done; pm2 save >/dev/null 2>&1; ';
+                            // Servidor gerenciado: o processo roda no PM2 do usuário do cliente
+                            if (\LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0))) {
+                                $pm2Cmd = \LRV\App\Services\Infra\UsuarioClienteService::comoCliente($clienteId, $user, $pm2Cmd . 'true', $deployPath) . '; ' . $pm2Cmd;
+                            }
+                        }
+                        if (\LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0)) && $user !== 'root') {
+                            $pm2Cmd .= 'sudo -n ';
                         }
 
                         $rmCmd = $pm2Cmd . 'rm -rf ' . escapeshellarg($deployPath);
@@ -878,6 +892,28 @@ final class GitDeployController
      */
     private function reaplicarPermissoes(callable $runCmd, array $dep, string $deployPath): void
     {
+        $U = \LRV\App\Services\Infra\UsuarioClienteService::class;
+        if ($U::servidorIsolado((int)($dep['server_id'] ?? 0)) && (int)($dep['client_id'] ?? 0) > 0) {
+            // Dono = usuário do cliente; grupo = web (lê o site); pastas liberadas e
+            // storage/cache do framework com escrita para o grupo (o PHP grava nelas).
+            $gravaveis = [];
+            foreach (array_merge(['storage', 'bootstrap/cache'], $this->pastasGravaveis($dep)) as $rel) {
+                $gravaveis[] = $deployPath . '/' . $rel;
+            }
+            $sshUser = trim((string)($dep['ssh_user'] ?? 'root'));
+            $existentes = [];
+            $chk = $runCmd('for d in ' . implode(' ', array_map('escapeshellarg', $gravaveis)) . '; do ' . $U::prefixoAdmin($sshUser) . 'test -d "$d" && echo "$d"; done; true');
+            foreach (preg_split('/\R/', (string)($chk['saida'] ?? '')) ?: [] as $l) {
+                $l = trim($l);
+                if ($l !== '' && in_array($l, $gravaveis, true)) $existentes[] = $l;
+            }
+            // pastas liberadas pelo cliente são criadas mesmo se ainda não existirem
+            foreach ($this->pastasGravaveis($dep) as $rel) {
+                $existentes[] = $deployPath . '/' . $rel;
+            }
+            $U::adotarPasta($runCmd, (int)$dep['client_id'], $sshUser, $deployPath, $U::grupoWeb($runCmd), array_values(array_unique($existentes)));
+            return;
+        }
         $dono = $this->detectarDonoPhp($runCmd);
         $d = escapeshellarg($dono);
         $p = escapeshellarg($deployPath);
@@ -916,6 +952,26 @@ final class GitDeployController
             $keyPath = \LRV\Core\ConfiguracoesSistema::sshKeyDir() . DIRECTORY_SEPARATOR . $keyId;
             $runCmd = fn(string $cmd) => $exec->executar($host, $port, $user, $keyPath, $cmd, 120);
         }
+
+        // Servidor gerenciado: tudo do cliente (git, pós-deploy, PM2) roda como o usuário
+        // Linux dele (lrv_c<id>, sem sudo). O usuário SSH do painel só faz ajustes fixos.
+        $U = \LRV\App\Services\Infra\UsuarioClienteService::class;
+        $clienteDono = (int)($dep['client_id'] ?? 0);
+        $isolado = $U::servidorIsolado((int)($dep['server_id'] ?? 0));
+        $grupoWeb = '';
+        $runGit = $runCmd;
+        if ($isolado) {
+            $U::garantir($runCmd, $clienteDono, $user);
+            $grupoWeb = $U::grupoWeb($runCmd);
+            $runGit = fn(string $cmd) => $runCmd($U::comoCliente($clienteDono, $user, $cmd));
+        }
+        $ajustarDono = function () use ($isolado, $U, $runCmd, $clienteDono, $user, $deployPath, &$grupoWeb): void {
+            if ($isolado) {
+                $U::adotarPasta($runCmd, $clienteDono, $user, $deployPath, $grupoWeb);
+            } else {
+                $runCmd('sudo mkdir -p ' . escapeshellarg($deployPath) . ' 2>/dev/null; sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+            }
+        };
 
         // Ensure git is installed + Fix DNS — tudo numa única conexão SSH
         $runCmd('(which git 2>/dev/null || (apt-get update -qq && apt-get install -y -qq git 2>/dev/null) || true) && (getent hosts github.com >/dev/null 2>&1 || echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf 2>/dev/null || true)');
@@ -972,7 +1028,7 @@ final class GitDeployController
                     . ' && echo "" >> ~/.ssh/config'
                     . ' && chmod 600 ~/.ssh/config'
                     . ' && echo KEY_INSTALLED';
-                $keyResult = $runCmd($installKeyCmd);
+                $keyResult = $runGit($installKeyCmd);
                 if (!str_contains((string)($keyResult['saida'] ?? ''), 'KEY_INSTALLED')) {
                     throw new \RuntimeException('Falha ao instalar deploy key: ' . trim((string)($keyResult['saida'] ?? '')));
                 }
@@ -980,10 +1036,10 @@ final class GitDeployController
         }
 
         // Garantir permissões antes de qualquer operação git
-        $runCmd('sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+        $ajustarDono();
 
         // Check if repo already cloned (and if it's the correct repo)
-        $checkResult = $runCmd('test -d ' . escapeshellarg($deployPath . '/.git') . ' && git -C ' . escapeshellarg($deployPath) . ' remote get-url origin 2>/dev/null || echo "new"');
+        $checkResult = $runGit('test -d ' . escapeshellarg($deployPath . '/.git') . ' && git -C ' . escapeshellarg($deployPath) . ' remote get-url origin 2>/dev/null || echo "new"');
         $currentRemote = trim((string)($checkResult['saida'] ?? 'new'));
         // Se o remote não bate com o repo atual, forçar clone limpo
         $isNew = ($currentRemote === 'new' || $currentRemote === '');
@@ -995,7 +1051,7 @@ final class GitDeployController
 
         if ($isNew) {
             // Garantir que o diretório existe e tem permissão
-            $runCmd('sudo mkdir -p ' . escapeshellarg($deployPath) . ' 2>/dev/null; sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+            $ajustarDono();
 
             // Usar git init + fetch + reset em vez de clone para preservar arquivos locais
             // (database.php, .env, uploads, etc. que não estão no repositório)
@@ -1004,11 +1060,11 @@ final class GitDeployController
                 . ' && git remote remove origin 2>/dev/null; git remote add origin ' . escapeshellarg($repoUrl) . ' 2>&1'
                 . ' && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git fetch origin 2>&1'
                 . ' && git checkout -B ' . escapeshellarg($branch) . ' origin/' . escapeshellarg($branch) . ' 2>&1';
-            $r = $runCmd($initCmd);
+            $r = $runGit($initCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         } else {
             // Atualizar remote origin para a URL correta (pode ter mudado)
-            $runCmd('cd ' . escapeshellarg($deployPath) . ' && git remote set-url origin ' . escapeshellarg($repoUrl) . ' 2>/dev/null');
+            $runGit('cd ' . escapeshellarg($deployPath) . ' && git remote set-url origin ' . escapeshellarg($repoUrl) . ' 2>/dev/null');
             if ($forceOverwrite) {
                 // git reset --hard: restaura todos os arquivos rastreados para o estado do remote
                 // Não usar git clean: preserva arquivos não rastreados (uploads, imports, .env, etc.)
@@ -1017,7 +1073,7 @@ final class GitDeployController
             } else {
                 $pullCmd = 'cd ' . escapeshellarg($deployPath) . ' && git stash 2>&1 && ' . $gitSshPrefix . 'GIT_TERMINAL_PROMPT=0 git pull origin ' . escapeshellarg($branch) . ' 2>&1 && git stash pop 2>&1';
             }
-            $r = $runCmd($pullCmd);
+            $r = $runGit($pullCmd);
             $output .= $this->filtrarOutputSsh((string)($r['saida'] ?? ''));
         }
 
@@ -1044,7 +1100,9 @@ final class GitDeployController
             // Garantir que o usuário atual tenha permissão de escrita na pasta antes
             // de rodar o composer/npm (um chown para www-data de deploy anterior pode
             // impedir a gravação de composer.lock, vendor/, node_modules/, etc.).
-            $runCmd('sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+            if (!$isolado) {
+                $runCmd('sudo chown -R $(whoami):$(whoami) ' . escapeshellarg($deployPath) . ' 2>/dev/null; true');
+            }
 
             // Usar a versão de PHP escolhida no deploy. O comando "composer" no shell
             // costuma apontar para o PHP padrão do sistema (que pode não ter as extensões
@@ -1055,7 +1113,7 @@ final class GitDeployController
             // O marcador __POSTDEPLOY_EXIT=<código> informa se o comando deu certo.
             // A quebra de linha antes do "; echo" evita que um comentário no fim do comando
             // do cliente engula o marcador.
-            $postResult = $runCmd('cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPhp . $postCmd . " 2>&1\n echo \"__POSTDEPLOY_EXIT=\$?\"");
+            $postResult = $runGit('cd ' . escapeshellarg($deployPath) . ' && ' . $prefixoPhp . $postCmd . " 2>&1\n echo \"__POSTDEPLOY_EXIT=\$?\"");
             $postBruto = (string)($postResult['saida'] ?? '');
             $postExit = null;
             if (preg_match_all('/__POSTDEPLOY_EXIT=(\d+)/', $postBruto, $mExit) && !empty($mExit[1])) {
@@ -1086,7 +1144,7 @@ final class GitDeployController
             . ' sudo git config --system --add safe.directory ' . escapeshellarg($deployPath) . ' 2>/dev/null;'
             . ' cd ' . escapeshellarg($deployPath) . ';'
             . ' echo "LRV_COMMIT_START"; git log -1 --format="%H|%s|%an" 2>&1; echo "LRV_COMMIT_END"';
-        $commitResult = $runCmd($commitCmd);
+        $commitResult = $runGit($commitCmd);
         $finalOutput = (string)($commitResult['saida'] ?? '');
 
         // Corrigir permissões DEPOIS de capturar o commit — numa conexão separada.
@@ -1154,8 +1212,21 @@ final class GitDeployController
                 . '   echo "Nenhum arquivo de entrada encontrado";'
                 . ' fi'
                 . ' && pm2 save 2>&1';
-            $pm2Result = $runCmd($startScript);
+            if ($isolado) {
+                // Migração: processos deste deploy que ainda rodam no PM2 do usuário SSH do
+                // painel são removidos de lá (senão a porta continua ocupada).
+                try {
+                    $runCmd($this->shellNomesPm2($deployPath, (int)($dep['id'] ?? 0))
+                        . 'for n in $PM2_NOMES; do pm2 delete "$n" >/dev/null 2>&1; done; pm2 save >/dev/null 2>&1; true');
+                } catch (\Throwable) {}
+            }
+            $pm2Result = $runGit($startScript);
             $output .= "\n--- PM2 ---\n" . $this->filtrarOutputSsh((string)($pm2Result['saida'] ?? ''));
+
+            if ($isolado) {
+                $output .= "\n--- PM2 startup ---\n" . $U::garantirPm2Startup($runCmd, $clienteDono, $user);
+                return ['hash' => $hash, 'message' => $message, 'author' => $author, 'output' => $output];
+            }
 
             // Fazer o PM2 voltar sozinho após reiniciar o servidor (serviço pm2-<usuário>).
             // Idempotente: só configura se o serviço ainda não existir. Usa o usuário SSH do
@@ -1417,6 +1488,32 @@ final class GitDeployController
         try {
             $runCmd = $this->abrirSshDoServidor($dep, 60);
 
+            // Servidor gerenciado com usuário por cliente: a pasta continua sendo do cliente
+            // e ganha escrita para o grupo do web (o PHP grava uploads nela).
+            if (\LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0))) {
+                $rel = trim(substr($alvo, strlen($deployPath)), '/');
+                $st = $pdo->prepare('SELECT writable_dirs FROM git_deployments WHERE id = :id AND client_id = :c');
+                $st->execute([':id' => $id, ':c' => $clienteId]);
+                $lista = json_decode((string)($st->fetchColumn() ?: ''), true);
+                $lista = is_array($lista) ? $lista : [];
+                if ($rel !== '' && !in_array($rel, $lista, true) && count($lista) < 30) {
+                    $lista[] = $rel;
+                    try {
+                        $pdo->prepare('UPDATE git_deployments SET writable_dirs = :w WHERE id = :id AND client_id = :c')
+                            ->execute([':w' => json_encode(array_values($lista)), ':id' => $id, ':c' => $clienteId]);
+                    } catch (\Throwable) {}
+                }
+                $depIso = $dep + ['client_id' => $clienteId, 'writable_dirs' => json_encode($lista)];
+                \LRV\App\Services\Infra\UsuarioClienteService::garantir($runCmd, $clienteId, (string)($dep['ssh_user'] ?? 'root'));
+                $this->reaplicarPermissoes($runCmd, $depIso, $deployPath);
+                return Resposta::json([
+                    'ok' => true,
+                    'mensagem' => 'Permissões corrigidas em ' . $alvo . '. O seu projeto e o site conseguem gravar nessa pasta.',
+                    'pasta' => $alvo,
+                    'gravavel' => true,
+                ]);
+            }
+
             // 1) Descobrir o usuário que roda o PHP-FPM do site (dono correto no aPanel costuma ser "www")
             $donoResult = $runCmd(
                 "ps -o user= -C php-fpm 2>/dev/null | sort -u | grep -v '^root$' | head -1"
@@ -1478,6 +1575,87 @@ final class GitDeployController
     }
 
     /**
+     * Botão "Corrigir permissões" de uma pasta de dados fora do projeto
+     * (ex.: /var/www/meu-app-dados). Passa a pasta para o usuário Linux do cliente.
+     * Só aceita: pasta dentro de um projeto do cliente, pasta liberada pela equipe,
+     * pasta que ainda não existe (criada para o cliente) ou que já é do cliente.
+     * POST: id (deployment), caminho (absoluto)
+     */
+    public function pastaDados(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::json(['ok' => false, 'erro' => 'Não autenticado.'], 401);
+
+        $id = (int)($req->post['id'] ?? 0);
+        $caminho = (string)($req->post['caminho'] ?? '');
+
+        $pdo = BancoDeDados::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT g.deploy_path, g.vps_id, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+             FROM git_deployments g
+             JOIN vps v ON v.id = g.vps_id
+             JOIN servers s ON s.id = v.server_id
+             WHERE g.id = :id AND g.client_id = :c LIMIT 1'
+        );
+        $stmt->execute([':id' => $id, ':c' => $clienteId]);
+        $dep = $stmt->fetch();
+        if (!is_array($dep)) return Resposta::json(['ok' => false, 'erro' => 'Deploy não encontrado.'], 404);
+
+        $U = \LRV\App\Services\Infra\UsuarioClienteService::class;
+        if (!$U::servidorIsolado((int)$dep['server_id'])) {
+            return Resposta::json(['ok' => false, 'erro' => 'Disponível apenas em servidores gerenciados. Na sua VPS você tem acesso total pelo console.']);
+        }
+
+        $V = \LRV\App\Services\Seguranca\ValidadorInfra::class;
+        try {
+            $caminho = $V::formatoCaminhoBackup($caminho);
+        } catch (\InvalidArgumentException $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+        $liberada = true;
+        try {
+            $caminho = $V::exigirCaminhoBackupExtra($caminho, $clienteId, (int)$dep['vps_id']);
+        } catch (\InvalidArgumentException) {
+            $liberada = false;
+        }
+        // Nunca sobre pasta de projeto de outro cliente
+        $st = $pdo->prepare('SELECT deploy_path FROM git_deployments WHERE client_id <> :c');
+        $st->execute([':c' => $clienteId]);
+        foreach ($st->fetchAll() ?: [] as $r) {
+            $o = rtrim((string)$r['deploy_path'], '/');
+            if ($o !== '' && ($o === $caminho || str_starts_with($caminho . '/', $o . '/') || str_starts_with($o . '/', $caminho . '/'))) {
+                return Resposta::json(['ok' => false, 'erro' => 'Esta pasta pertence a outro projeto.']);
+            }
+        }
+
+        try {
+            $runCmd = $this->abrirSshDoServidor($dep, 60);
+            $sshUser = (string)($dep['ssh_user'] ?? 'root');
+            $usuario = $U::garantir($runCmd, $clienteId, $sshUser);
+            $s = $U::prefixoAdmin($sshUser);
+            $c = escapeshellarg($caminho);
+
+            if (!$liberada) {
+                // Fora das pastas do cliente: só se não existir, estiver vazia ou já for dele.
+                $r = $runCmd('if ! ' . $s . 'test -e ' . $c . '; then echo LRV_NOVA;'
+                    . ' elif [ "$(' . $s . 'stat -c %U ' . $c . ')" = ' . escapeshellarg($usuario) . ' ]; then echo LRV_DONO;'
+                    . ' elif ' . $s . 'test -d ' . $c . ' && [ -z "$(' . $s . 'ls -A ' . $c . ')" ]; then echo LRV_VAZIA;'
+                    . ' else echo LRV_OCUPADA; fi; true', 30);
+                $saida = (string)($r['saida'] ?? '');
+                if (str_contains($saida, 'LRV_OCUPADA') || !preg_match('/LRV_(NOVA|DONO|VAZIA)/', $saida)) {
+                    return Resposta::json(['ok' => false, 'erro' => 'Esta pasta já existe e tem arquivos de outro dono. Peça à equipe para liberá-la para você (abra um chamado).']);
+                }
+            }
+
+            // Pasta de dados: o app (rodando como o cliente) grava; o web só precisa ler/gravar se servir arquivos.
+            $U::adotarPasta($runCmd, $clienteId, $sshUser, $caminho, $U::grupoWeb($runCmd), [$caminho]);
+            return Resposta::json(['ok' => true, 'mensagem' => 'Pronto: a pasta ' . $caminho . ' agora é do seu projeto e pode ser gravada por ele.']);
+        } catch (\Throwable $e) {
+            return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Trecho de shell que define $PM2_NOMES com os processos PM2 cujo cwd está dentro
      * da pasta deste deploy (ex.: ecosystem com nome próprio). Se nenhum for encontrado,
      * usa "deploy-<id>". Nomes são filtrados para [A-Za-z0-9._-].
@@ -1510,7 +1688,7 @@ final class GitDeployController
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT g.id, g.deploy_path, g.app_type, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
+            'SELECT g.id, g.deploy_path, g.app_type, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
              JOIN servers s ON s.id = v.server_id
@@ -1539,6 +1717,10 @@ final class GitDeployController
 
         try {
             $runCmd = $this->abrirSshDoServidor($dep, 60);
+            if (\LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0))) {
+                // PM2 do próprio cliente (lrv_c<id>): só enxerga os processos dele
+                $cmd = \LRV\App\Services\Infra\UsuarioClienteService::comoCliente($clienteId, (string)($dep['ssh_user'] ?? 'root'), $cmd, $deployPath);
+            }
             $res = $runCmd($cmd, 60);
         } catch (\Throwable $e) {
             return Resposta::json(['ok' => false, 'erro' => $e->getMessage()]);
@@ -1561,7 +1743,7 @@ final class GitDeployController
 
         $pdo = BancoDeDados::pdo();
         $stmt = $pdo->prepare(
-            'SELECT g.deploy_path, g.subdomain, g.app_type, g.app_port,
+            'SELECT g.deploy_path, g.subdomain, g.app_type, g.app_port, v.server_id,
                     s.ip_address, s.ssh_port, s.ssh_user, s.ssh_password, s.ssh_auth_type, s.ssh_key_id
              FROM git_deployments g
              JOIN vps v ON v.id = g.vps_id
@@ -1593,12 +1775,19 @@ final class GitDeployController
             }
         }
         if ($tipo === 'all' || $tipo === 'app') {
+            $cmdsApp = [];
             // Logs da aplicação (storage/logs, logs/, .log)
-            $cmds[] = 'echo "=== APP LOGS ===" && (tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/storage/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/*.log 2>/dev/null || echo "(sem logs de app)")';
+            $cmdsApp[] = 'echo "=== APP LOGS ===" && (tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/storage/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/logs/*.log 2>/dev/null || tail -' . $linhas . ' ' . escapeshellarg($deployPath) . '/*.log 2>/dev/null || echo "(sem logs de app)")';
             if ($appType === 'nodejs') {
-                $cmds[] = 'echo "=== PM2 LOGS ===" && ' . $this->shellNomesPm2($deployPath, $id)
+                $cmdsApp[] = 'echo "=== PM2 LOGS ===" && ' . $this->shellNomesPm2($deployPath, $id)
                     . 'for n in $PM2_NOMES; do pm2 logs "$n" --nostream --lines ' . $linhas . ' 2>&1; done';
             }
+            $appCmd = implode(' ; ', $cmdsApp);
+            if (\LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($dep['server_id'] ?? 0))) {
+                // Arquivos e PM2 do cliente: lidos como o usuário dele
+                $appCmd = \LRV\App\Services\Infra\UsuarioClienteService::comoCliente($clienteId, (string)($dep['ssh_user'] ?? 'root'), $appCmd, $deployPath);
+            }
+            $cmds[] = $appCmd;
         }
 
         $fullCmd = implode(' ; ', $cmds);

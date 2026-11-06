@@ -16,10 +16,12 @@ Acompanhe aqui as novidades, melhorias e correções do painel.
 - **Agora você pode escolher pastas extras dos seus projetos para entrar no backup**, direto na tela de Backups, inclusive com atalhos para as pastas dos seus projetos publicados via Git
 - **Os backups passam a incluir uma cópia dos seus bancos de dados**. A cópia fica dentro do arquivo do backup e não é restaurada automaticamente
 - **Sites aceitam envio de arquivos maiores**
+- **Console e gerenciador de arquivos com acesso completo ao seu projeto**: rode qualquer comando nos seus projetos publicados via Git, com cada conta separada das demais
+- **Publicação via Git liberada automaticamente** nos planos que incluem o recurso
+- **"Liberar pasta" também para pastas de dados** fora do projeto (informe o caminho completo)
 
 ### Corrigido
 - **Pasta liberada para gravação voltava a ficar bloqueada**: depois de usar "Liberar pasta de arquivos", a liberação se perdia na próxima publicação do site e os uploads paravam de funcionar. Agora o painel lembra das pastas liberadas e mantém a permissão a cada publicação
-- **Publicação via Git (Git Deploy) e tarefas no servidor**: para contas novas, esses recursos passam a ser liberados pelo nosso suporte. Se você já usa, nada muda. Se quiser começar a usar, é só abrir um chamado
 - **Publicação via Git mostra erro quando o comando pós-deploy falha**: se a instalação ou o build der errado, a publicação aparece como erro, com o motivo no histórico. Em aplicações Node.js, a versão anterior continua no ar
 - **Aplicações Node.js voltam sozinhas** depois que o servidor reinicia
 - **Sites estáticos (React, Vite e similares)**: recarregar a página em um endereço interno do site não dá mais "página não encontrada"
