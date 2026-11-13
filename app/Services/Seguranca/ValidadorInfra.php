@@ -104,7 +104,8 @@ final class ValidadorInfra
     {
         $path = rtrim(trim(str_replace('\\', '/', $path)), '/');
         $re = $legado
-            ? '#^/(var/www|www/wwwroot)(/[A-Za-z0-9][A-Za-z0-9._-]{0,80}){1,4}$#'
+            // /desenvolvimento/wwwroot: pasta usada por deploys antigos de servidores de desenvolvimento
+            ? '#^/(var/www|www/wwwroot|desenvolvimento/wwwroot)(/[A-Za-z0-9][A-Za-z0-9._-]{0,80}){1,4}$#'
             : '#^/var/www(/[A-Za-z0-9][A-Za-z0-9._-]{0,80}){1,4}$#';
         if (!preg_match($re, $path)) {
             throw new \InvalidArgumentException('Pasta de publicação inválida: use algo como /var/www/meu-site (só letras, números, ponto, hífen e underline).');
