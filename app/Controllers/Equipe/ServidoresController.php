@@ -102,6 +102,8 @@ final class ServidoresController
         if (!is_array($servidor)) return Resposta::texto('Servidor não encontrado.', 404);
 
         $servidor['ssh_password'] = '';
+        $servidor['edge_tem_senha'] = !empty($servidor['edge_ssh_password']);
+        $servidor['edge_ssh_password'] = '';
 
         // Carregar passos detalhados para inicialização parcial
         $passos = [];
@@ -177,6 +179,20 @@ final class ServidoresController
         }
         if ($sshUser === '') {
             return $this->renderizarComDados($dados, 'Informe o usuário SSH.');
+        }
+        // Proxy de borda: validar antes de gravar qualquer coisa
+        if (!empty($req->post['edge_enabled'])) {
+            $erroEdge = \LRV\App\Services\Infra\EdgeProxyService::validarCampos(
+                trim((string)($req->post['edge_ssh_host'] ?? '')),
+                (int)($req->post['edge_ssh_port'] ?? 22),
+                trim((string)($req->post['edge_ssh_user'] ?? '')),
+                rtrim(trim((string)($req->post['edge_rules_dir'] ?? '')), '/'),
+                trim((string)($req->post['edge_backend_ip'] ?? '')),
+                trim((string)($req->post['edge_cert_resolver'] ?? '')) ?: 'letsencrypt'
+            );
+            if ($erroEdge !== null) {
+                return $this->renderizarComDados($dados, $erroEdge);
+            }
         }
 
         // Validação por tipo de auth
@@ -276,6 +292,35 @@ final class ServidoresController
                     ->execute([':mrp' => \LRV\App\Services\Infra\SshCrypto::cifrar($mysqlRootPass), ':id' => $savedId]);
             }
         } catch (\Throwable) {}
+
+        // Proxy de borda (Traefik em outra máquina, para servidor sem IP público próprio)
+        $edgeOn = !empty($req->post['edge_enabled']) ? 1 : 0;
+        $edgeHost = trim((string)($req->post['edge_ssh_host'] ?? ''));
+        $edgePort = (int)($req->post['edge_ssh_port'] ?? 22);
+        $edgeUser = trim((string)($req->post['edge_ssh_user'] ?? ''));
+        $edgeSenha = (string)($req->post['edge_ssh_password'] ?? '');
+        $edgeDir = rtrim(trim((string)($req->post['edge_rules_dir'] ?? '')), '/');
+        $edgeIp = trim((string)($req->post['edge_backend_ip'] ?? ''));
+        $edgeRes = trim((string)($req->post['edge_cert_resolver'] ?? '')) ?: 'letsencrypt';
+        try {
+            BancoDeDados::pdo()->prepare('UPDATE servers SET edge_enabled = :on, edge_ssh_host = :h, edge_ssh_port = :p, edge_ssh_user = :u, edge_rules_dir = :d, edge_backend_ip = :ip, edge_cert_resolver = :r WHERE id = :id')
+                ->execute([
+                    ':on' => $edgeOn,
+                    ':h' => $edgeHost !== '' ? $edgeHost : null,
+                    ':p' => $edgeHost !== '' ? $edgePort : null,
+                    ':u' => $edgeUser !== '' ? $edgeUser : null,
+                    ':d' => $edgeDir !== '' ? $edgeDir : null,
+                    ':ip' => $edgeIp !== '' ? $edgeIp : null,
+                    ':r' => $edgeRes,
+                    ':id' => $savedId,
+                ]);
+            if ($edgeSenha !== '') {
+                BancoDeDados::pdo()->prepare('UPDATE servers SET edge_ssh_password = :s WHERE id = :id')
+                    ->execute([':s' => \LRV\App\Services\Infra\SshCrypto::cifrar($edgeSenha), ':id' => $savedId]);
+            }
+        } catch (\Throwable) {
+            // migration 0102 ainda não aplicada
+        }
 
         // Marca online
         try {

@@ -121,6 +121,28 @@ require __DIR__ . '/../_partials/layout-equipe-inicio.php';
       <p class="texto" style="font-size:12px;margin-top:4px;">Comando para recarregar o Nginx após criar/remover vhosts. Padrão: <code>systemctl reload nginx</code>. Para aaPanel: <code>/etc/init.d/nginx reload</code>.</p>
     </div>
 
+    <?php $edgeOn = !empty($servidor['edge_enabled']); ?>
+    <div style="margin-top:14px;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;">
+        <input type="checkbox" name="edge_enabled" value="1" <?php echo $edgeOn ? 'checked' : ''; ?> onchange="document.getElementById('edge-campos').style.display=this.checked?'block':'none'" style="accent-color:#0ea5e9;width:16px;height:16px;" />
+        Atrás de proxy de borda (Traefik)
+      </label>
+      <p class="texto" style="font-size:12px;margin-top:4px;">Para servidor sem IP público próprio (ex.: VPS dentro de um dedicado). O DNS dos domínios aponta para o IP do dedicado; o painel grava uma regra <code>lrv-&lt;domínio&gt;.yml</code> por domínio na pasta do Traefik, que emite o SSL e repassa para o IP interno deste servidor. O certbot deste servidor deixa de ser usado. Regras de outros sistemas na pasta nunca são alteradas.</p>
+      <div id="edge-campos" style="display:<?php echo $edgeOn ? 'block' : 'none'; ?>;margin-top:8px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">
+          <div><label style="font-size:12px;">Host SSH do proxy</label><input class="input" type="text" name="edge_ssh_host" value="<?php echo View::e((string)($servidor['edge_ssh_host'] ?? '')); ?>" placeholder="177.104.147.103" /></div>
+          <div><label style="font-size:12px;">Porta SSH</label><input class="input" type="number" name="edge_ssh_port" value="<?php echo View::e((string)($servidor['edge_ssh_port'] ?? '22')); ?>" /></div>
+          <div><label style="font-size:12px;">Usuário SSH</label><input class="input" type="text" name="edge_ssh_user" value="<?php echo View::e((string)($servidor['edge_ssh_user'] ?? '')); ?>" placeholder="ubuntu" /></div>
+        </div>
+        <div style="margin-top:8px;"><label style="font-size:12px;">Senha SSH do proxy</label><input class="input" type="password" name="edge_ssh_password" value="" autocomplete="new-password" placeholder="<?php echo !empty($servidor['edge_tem_senha']) ? '(configurada — deixe vazio para manter)' : ''; ?>" /></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-top:8px;">
+          <div><label style="font-size:12px;">Pasta das regras (file provider)</label><input class="input" type="text" name="edge_rules_dir" value="<?php echo View::e((string)($servidor['edge_rules_dir'] ?? '')); ?>" placeholder="/opt/osops-edge/dynamic" /></div>
+          <div><label style="font-size:12px;">IP interno deste servidor</label><input class="input" type="text" name="edge_backend_ip" value="<?php echo View::e((string)($servidor['edge_backend_ip'] ?? '')); ?>" placeholder="10.200.0.16" /></div>
+          <div><label style="font-size:12px;">certResolver</label><input class="input" type="text" name="edge_cert_resolver" value="<?php echo View::e((string)($servidor['edge_cert_resolver'] ?? 'letsencrypt')); ?>" /></div>
+        </div>
+      </div>
+    </div>
+
     <div style="margin-top:14px;">
       <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> URL do phpMyAdmin</label>
       <input class="input" type="text" name="phpmyadmin_url" value="<?php echo View::e((string)($servidor['phpmyadmin_url'] ?? '')); ?>" placeholder="http://ip:888/phpmyadmin_xxx/index.php" />

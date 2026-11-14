@@ -12,6 +12,14 @@
 > **Ao lançar uma versão:** registre tudo aqui primeiro e depois escreva, no `CHANGELOG.md`,
 > só o que o cliente precisa saber.
 
+### Proxy de borda (Traefik) para servidor sem IP público (3.6.2) — migration 0102
+- Migration `2026_11_14_0102_servers_edge_proxy.sql` (número 0102 porque a 0101 está na branch `feature/isolamento-por-cliente`): `servers.edge_enabled`, `edge_ssh_host/port/user/password` (senha cifrada com `SshCrypto`), `edge_rules_dir`, `edge_backend_ip`, `edge_cert_resolver`
+- `EdgeProxyService`: grava `lrv-<dominio>.yml` (router `websecure` + `certResolver`, service `http://<ip interno>:80`, escrita atômica tmp+mv) na pasta do file provider do Traefik via SSH; remove ao excluir o vhost. Nunca toca arquivos sem prefixo `lrv-`
+- `NginxVhostService`: com borda ativa, `criarVhost`, `criarVhostProxy` e `criarVhostStaticSite` não emitem SSL local (vhost só HTTP) e publicam a regra; `regerarSSL` só regrava a regra; `removerVhost` apaga a regra. Sem borda (ou sem a migration) o comportamento é o de antes
+- Equipe → Servidores → editar: bloco "Atrás de proxy de borda (Traefik)", validado antes de gravar
+- Uso atual: servidor `eveo.dois.lrvweb` (VPS 10.200.0.16 no dedicado 177.104.147.103). SSH do painel pela porta 2248 do dedicado (`socat`, serviço `lrvweb-ssh`). Usuário `ubuntu` do dedicado com ACL de escrita só em `/opt/osops-edge/dynamic`
+- Não coberto: migração de WordPress (`WordPressMigrationService`) ainda roda certbot local
+
 ### Fallback de SPA em site estático (3.6.2)
 - `NginxVhostService::criarVhostStaticSite`: se a raiz tem `index.html` e não tem `index.php`, o vhost usa `try_files $uri $uri/ /index.html;` (antes `/index.php?$query_string`, que dava "File not found." no F5 de rotas internas). Vale para vhosts novos e a cada deploy. Trazido isolado da branch `feature/isolamento-por-cliente`
 

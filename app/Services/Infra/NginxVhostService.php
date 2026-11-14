@@ -112,6 +112,12 @@ final class NginxVhostService
             return ['ok' => false, 'erro' => 'Falha ao criar vhost Nginx.', 'logs' => $logs];
         }
 
+        // Servidor atrás de proxy de borda: o proxy emite o SSL e recebe a regra do domínio
+        if (EdgeProxyService::ativo($serverId)) {
+            $e = EdgeProxyService::publicar($serverId, $domain);
+            return ['ok' => true, 'logs' => array_merge($logs, $e['logs'])];
+        }
+
         // 2. Gerar SSL (se solicitado)
         if ($ssl) {
             $srv['_app_port'] = $port;
@@ -149,6 +155,7 @@ final class NginxVhostService
         }
 
         try { $this->exec($ssh, $srv, $cmd); } catch (\Throwable) {}
+        EdgeProxyService::remover($serverId, $domain);
     }
 
     /**
@@ -462,7 +469,8 @@ final class NginxVhostService
         // vhost final. Assim geramos o arquivo de config completo (com as diretivas SSL)
         // de uma só vez — sem injetar linhas via sed depois (frágil, quebrava o vhost).
         $certDir = '';
-        if ($ssl) {
+        $borda = EdgeProxyService::ativo($serverId);
+        if ($ssl && !$borda) {
             $srv['_webroot'] = $actualRoot;
             $certResult = $this->emitirCertificado($ssh, $srv, $domain, $sudo);
             $logs = array_merge($logs, $certResult['logs']);
@@ -529,6 +537,10 @@ final class NginxVhostService
             }
         }
 
+        if ($borda) {
+            $logs = array_merge($logs, EdgeProxyService::publicar($serverId, $domain)['logs']);
+        }
+
         return ['ok' => true, 'logs' => $logs];
     }
 
@@ -578,6 +590,10 @@ final class NginxVhostService
 
         if (!str_contains($result['saida'] ?? '', 'lrv-vhost-ok')) {
             return ['ok' => false, 'erro' => 'Falha ao criar vhost proxy Nginx.', 'logs' => $logs];
+        }
+
+        if (EdgeProxyService::ativo($serverId)) {
+            return ['ok' => true, 'logs' => array_merge($logs, EdgeProxyService::publicar($serverId, $domain)['logs'])];
         }
 
         // Sempre emitir SSL
@@ -822,6 +838,12 @@ final class NginxVhostService
         $confFile = $vhostPath . '/' . $vhostName . '.conf';
         $ssh = new SshExecutor();
         $logs = [];
+
+        // Atrás de proxy de borda: o SSL é do proxy; só regrava a regra do domínio
+        if (EdgeProxyService::ativo($serverId)) {
+            $e = EdgeProxyService::publicar($serverId, $domain);
+            return ['ok' => $e['ok'], 'logs' => $e['logs']];
+        }
 
         // Não-gerenciado: certbot --nginx resolve tudo (emite + injeta no vhost)
         if (!$isManaged) {
