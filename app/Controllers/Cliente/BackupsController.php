@@ -33,15 +33,37 @@ final class BackupsController
         if (!empty($vpsList)) {
             $vpsIds = array_column($vpsList, 'id');
             $ph = implode(',', array_fill(0, count($vpsIds), '?'));
-            $bkStmt = $pdo->prepare("SELECT id, vps_id, status, file_size, error, created_at, completed_at FROM backups WHERE vps_id IN ({$ph}) ORDER BY id DESC LIMIT 50");
-            $bkStmt->execute($vpsIds);
+            try {
+                $bkStmt = $pdo->prepare("SELECT id, vps_id, status, file_size, error, warnings, manifest, created_at, completed_at FROM backups WHERE vps_id IN ({$ph}) ORDER BY id DESC LIMIT 50");
+                $bkStmt->execute($vpsIds);
+            } catch (\Throwable) {
+                // migration 0101 ainda não aplicada
+                $bkStmt = $pdo->prepare("SELECT id, vps_id, status, file_size, error, created_at, completed_at FROM backups WHERE vps_id IN ({$ph}) ORDER BY id DESC LIMIT 50");
+                $bkStmt->execute($vpsIds);
+            }
             $backups = $bkStmt->fetchAll() ?: [];
+        }
+
+        // Pastas extras e atalhos (pastas dos Git Deploys) por VPS
+        $pastasExtras = [];
+        $pastasDeploy = [];
+        foreach ($vpsList as $v) {
+            $vId = (int) $v['id'];
+            $pastasExtras[$vId] = self::pastasDaVps($vId);
+            $gd = $pdo->prepare('SELECT DISTINCT deploy_path FROM git_deployments WHERE client_id = :c AND vps_id = :v');
+            $gd->execute([':c' => $clienteId, ':v' => $vId]);
+            $pastasDeploy[$vId] = array_values(array_filter(array_map(
+                static fn ($p) => rtrim((string) $p, '/'),
+                $gd->fetchAll(\PDO::FETCH_COLUMN) ?: []
+            )));
         }
 
         return Resposta::html(View::renderizar(__DIR__ . '/../../Views/cliente/backups.php', [
             'vpsList' => $vpsList,
             'backups' => $backups,
-            'erro'    => '',
+            'pastasExtras' => $pastasExtras,
+            'pastasDeploy' => $pastasDeploy,
+            'erro'    => mb_substr((string)($req->query['erro'] ?? ''), 0, 300),
             'sucesso' => (string)($req->query['ok'] ?? ''),
         ]));
     }
@@ -107,6 +129,68 @@ final class BackupsController
         $pdo->prepare('UPDATE backups SET job_id = :j WHERE id = :id')->execute([':j' => $jobId, ':id' => $backupId]);
 
         return Resposta::redirecionar('/cliente/backups?ok=criado');
+    }
+
+    /** Lê as pastas extras de backup da VPS ([] se a migration 0101 não rodou). */
+    private static function pastasDaVps(int $vpsId): array
+    {
+        try {
+            $st = BancoDeDados::pdo()->prepare('SELECT backup_extra_paths FROM vps WHERE id = :id LIMIT 1');
+            $st->execute([':id' => $vpsId]);
+            $lista = json_decode((string) ($st->fetchColumn() ?: ''), true);
+        } catch (\Throwable) {
+            return [];
+        }
+        return is_array($lista) ? array_values(array_filter($lista, 'is_string')) : [];
+    }
+
+    /** Adiciona/remove uma pasta extra do backup da VPS. */
+    public function pastas(Requisicao $req): Resposta
+    {
+        $clienteId = Auth::clienteId();
+        if ($clienteId === null) return Resposta::redirecionar('/cliente/entrar');
+
+        $vpsId = (int)($req->post['vps_id'] ?? 0);
+        $acao = (string)($req->post['acao'] ?? '');
+        $caminho = (string)($req->post['caminho'] ?? '');
+        if ($vpsId <= 0 || !in_array($acao, ['adicionar', 'remover'], true)) {
+            return Resposta::texto('Dados inválidos.', 400);
+        }
+
+        $pdo = BancoDeDados::pdo();
+        $vps = $pdo->prepare("SELECT v.id, v.plan_id FROM vps v WHERE v.id = :id AND v.client_id = :c AND v.deleted_at IS NULL");
+        $vps->execute([':id' => $vpsId, ':c' => $clienteId]);
+        if (!$vps->fetch()) return Resposta::texto('VPS não encontrada.', 404);
+
+        $lista = self::pastasDaVps($vpsId);
+
+        if ($acao === 'adicionar') {
+            try {
+                $caminho = \LRV\App\Services\Seguranca\ValidadorInfra::exigirCaminhoBackupExtra($caminho, $clienteId, $vpsId);
+            } catch (\InvalidArgumentException $e) {
+                return Resposta::redirecionar('/cliente/backups?erro=' . urlencode($e->getMessage()));
+            }
+            if (!in_array($caminho, $lista, true)) {
+                if (count($lista) >= 20) {
+                    return Resposta::redirecionar('/cliente/backups?erro=' . urlencode('Limite de pastas extras atingido.'));
+                }
+                $lista[] = $caminho;
+            }
+        } else {
+            $caminho = rtrim(trim(str_replace('\\', '/', $caminho)), '/');
+            $lista = array_values(array_filter($lista, static fn ($p) => $p !== $caminho));
+        }
+
+        try {
+            $pdo->prepare('UPDATE vps SET backup_extra_paths = :p WHERE id = :id')->execute([
+                ':p' => $lista === [] ? null : json_encode(array_values(array_unique($lista)), JSON_UNESCAPED_SLASHES),
+                ':id' => $vpsId,
+            ]);
+        } catch (\Throwable) {
+            return Resposta::redirecionar('/cliente/backups?erro=' . urlencode('Recurso ainda não disponível. Tente novamente mais tarde.'));
+        }
+
+        return Resposta::redirecionar('/cliente/backups?ok=pastas');
     }
 
     public function baixar(Requisicao $req): Resposta

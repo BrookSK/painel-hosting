@@ -143,6 +143,46 @@ final class ClientesController
         ]));
     }
 
+    /** Raízes extras (por cliente) que o cliente pode incluir no backup. */
+    public function backupRaizes(Requisicao $req): Resposta
+    {
+        $id = (int)($req->post['id'] ?? 0);
+        if ($id <= 0) return Resposta::redirecionar('/equipe/clientes');
+
+        $linhas = preg_split('/\r\n|\r|\n/', (string)($req->post['raizes'] ?? '')) ?: [];
+        $raizes = [];
+        foreach ($linhas as $l) {
+            $l = trim($l);
+            if ($l === '') continue;
+            try {
+                // valida com o id real e guarda com o placeholder original
+                \LRV\App\Services\Seguranca\ValidadorInfra::formatoCaminhoBackup(str_replace('{cliente_id}', (string)$id, $l));
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION['flash_error'] = 'Pasta inválida "' . mb_substr($l, 0, 120) . '": ' . $e->getMessage();
+                return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+            }
+            $raizes[] = rtrim(str_replace('\\', '/', $l), '/');
+        }
+        $raizes = array_values(array_unique($raizes));
+        if (count($raizes) > 10) {
+            $_SESSION['flash_error'] = 'Máximo de 10 pastas.';
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+        }
+
+        try {
+            BancoDeDados::pdo()->prepare('UPDATE clients SET backup_extra_roots = :r WHERE id = :id')->execute([
+                ':r' => $raizes === [] ? null : json_encode($raizes, JSON_UNESCAPED_SLASHES),
+                ':id' => $id,
+            ]);
+        } catch (\Throwable) {
+            $_SESSION['flash_error'] = 'Rode a migration 2026_10_14_0101 antes de usar este recurso.';
+            return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id);
+        }
+
+        $_SESSION['flash_success'] = 'Pastas liberadas para backup atualizadas.';
+        return Resposta::redirecionar('/equipe/clientes/ver?id=' . $id . '&ok=backup_raizes');
+    }
+
     public function salvar(Requisicao $req): Resposta
     {
         $id     = (int)($req->post['id'] ?? 0);

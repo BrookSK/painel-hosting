@@ -115,7 +115,11 @@ final class ArquivosController
         $path = (string)($req->query['path'] ?? '');
         if ($path === '') return Resposta::json(['ok' => false, 'erro' => 'Caminho vazio.']);
 
-        $cmd = 'head -c 102400 ' . escapeshellarg($path) . ' 2>&1';
+        // Arquivo de 0 bytes (ex.: .env recém-criado): a saída vazia era tratada como falha
+        // e o editor não abria. Um marcador deixa claro que o arquivo existe e está vazio.
+        $marcadorVazio = '__LRV_ARQUIVO_VAZIO__';
+        $p = escapeshellarg($path);
+        $cmd = 'if [ -f ' . $p . ' ] && [ ! -s ' . $p . ' ]; then echo ' . $marcadorVazio . '; else head -c 102400 ' . $p . ' 2>&1; fi';
         if ($appId > 0) {
             $result = $this->execInAppContainer($clienteId, $appId, $cmd);
         } elseif ($direct === 1) {
@@ -125,7 +129,12 @@ final class ArquivosController
         }
         if (!$result['ok']) return Resposta::json($result);
 
-        return Resposta::json(['ok' => true, 'content' => $result['output'], 'path' => $path]);
+        $conteudo = (string)($result['output'] ?? '');
+        if (trim($conteudo) === $marcadorVazio) {
+            $conteudo = '';
+        }
+
+        return Resposta::json(['ok' => true, 'content' => $conteudo, 'path' => $path]);
     }
 
     public function salvar(Requisicao $req): Resposta
@@ -322,6 +331,19 @@ final class ArquivosController
             $usuario = (string)($row['ssh_user'] ?? 'root');
             $authType = (string)($row['ssh_auth_type'] ?? 'key');
 
+            // Servidor gerenciado: o arquivo vai para /tmp, passa a ser do usuário do cliente
+            // e é movido para o destino COMO o cliente (respeitando a pasta do site).
+            $destinoFinal = $fullPath;
+            $isoUp = false;
+            try {
+                $sv = $pdo->prepare('SELECT server_id FROM vps WHERE id = :id AND client_id = :c LIMIT 1');
+                $sv->execute([':id' => $vpsId, ':c' => $clienteId]);
+                $isoUp = \LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int) $sv->fetchColumn());
+            } catch (\Throwable) {}
+            if ($isoUp) {
+                $fullPath = '/tmp/lrv_up_' . bin2hex(random_bytes(8));
+            }
+
             try {
                 if ($authType === 'password') {
                     $senha = SshCrypto::decifrar((string)($row['ssh_password'] ?? ''));
@@ -339,8 +361,30 @@ final class ArquivosController
                 return Resposta::json(['ok' => false, 'erro' => 'Falha ao enviar: ' . substr((string)($scpResult['saida'] ?? ''), 0, 300)]);
             }
 
+            if ($isoUp) {
+                $U = \LRV\App\Services\Infra\UsuarioClienteService::class;
+                $adm = $U::prefixoAdmin($usuario);
+                $t = escapeshellarg($fullPath);
+                $mover = $adm . 'chown ' . escapeshellarg($U::nomeUsuario($clienteId)) . ' ' . $t . ' && ' . $adm . 'chmod 600 ' . $t . ' && echo LRV_TMP_OK';
+                $r = $authType === 'password'
+                    ? $ssh->executarComSenha($ip, $porta, $usuario, $senha, $mover, 15)
+                    : $ssh->executar($ip, $porta, $usuario, $keyPath, $mover, 15);
+                $mv = str_contains((string)($r['saida'] ?? ''), 'LRV_TMP_OK')
+                    ? $this->execDirectOnServer($clienteId, $vpsId, 'mv -f -- ' . $t . ' ' . escapeshellarg($destinoFinal) . ' && chmod 640 ' . escapeshellarg($destinoFinal) . ' && echo LRV_MV_OK', $destinoFinal)
+                    : ['ok' => false];
+                if (!str_contains((string)($mv['output'] ?? ''), 'LRV_MV_OK')) {
+                    try {
+                        $authType === 'password'
+                            ? $ssh->executarComSenha($ip, $porta, $usuario, $senha, $adm . 'rm -f ' . $t, 10)
+                            : $ssh->executar($ip, $porta, $usuario, $keyPath, $adm . 'rm -f ' . $t, 10);
+                    } catch (\Throwable) {}
+                    return Resposta::json(['ok' => false, 'erro' => 'Falha ao gravar o arquivo na pasta do site. Use "Liberar pasta" no Git Deploy para corrigir as permissões.']);
+                }
+                $fullPath = $destinoFinal;
+            }
+
             // Corrigir permissões do arquivo enviado (SCP copia com permissões do tmp)
-            try {
+            if (!$isoUp) try {
                 $chmodCmd = 'chmod 644 ' . escapeshellarg($fullPath) . ' && chown www-data:www-data ' . escapeshellarg($fullPath) . ' 2>/dev/null; true';
                 if ($authType === 'password') {
                     $ssh->executarComSenha($ip, $porta, $usuario, $senha, $chmodCmd, 10);
@@ -590,12 +634,21 @@ final class ArquivosController
             }
         }
         if ($base === null) {
+            // Pastas de dados liberadas pela equipe para este cliente (ex.: /var/www/app-dados)
+            foreach (\LRV\App\Services\Seguranca\ValidadorInfra::raizesBackupCliente($clienteId) as $raiz) {
+                if ($path === $raiz || str_starts_with($path . '/', $raiz . '/')) {
+                    $base = $raiz;
+                    break;
+                }
+            }
+        }
+        if ($base === null) {
             return ['ok' => false, 'erro' => 'Você só pode acessar arquivos dentro da pasta dos seus sites.'];
         }
 
         $prefixo = '__b=$(realpath -m -- ' . escapeshellarg($base) . '); __p=$(realpath -m -- ' . escapeshellarg($path) . '); '
             . 'case "$__p" in "$__b"|"$__b"/*) ;; *) echo "Acesso negado: fora da pasta do site."; exit 1;; esac; ';
-        return ['ok' => true, 'prefixo' => $prefixo];
+        return ['ok' => true, 'prefixo' => $prefixo, 'base' => $base];
     }
 
     private function execDirectOnServer(int $clienteId, int $vpsId, string $cmd, string $path = ''): array
@@ -609,7 +662,7 @@ final class ArquivosController
         $cmd = $guarda['prefixo'] . $cmd;
 
         $pdo = BancoDeDados::pdo();
-        $stmt = $pdo->prepare("SELECT v.id, v.status, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
+        $stmt = $pdo->prepare("SELECT v.id, v.status, v.server_id, s.ip_address, s.ssh_port, s.ssh_user, s.ssh_auth_type, s.ssh_key_id, s.ssh_password FROM vps v INNER JOIN servers s ON s.id = v.server_id WHERE v.id = :id AND v.client_id = :c LIMIT 1");
         $stmt->execute([':id' => $vpsId, ':c' => $clienteId]);
         $row = $stmt->fetch();
 
@@ -621,10 +674,26 @@ final class ArquivosController
         $usuario = (string)($row['ssh_user'] ?? 'root');
         $authType = (string)($row['ssh_auth_type'] ?? 'key');
 
-        // Os arquivos do site pertencem ao usuário do PHP (ex.: "www" no aPanel). Se o SSH
-        // não for root, sem sudo não dá para criar/editar arquivos ali (falhava em silêncio).
-        if ($usuario !== 'root') {
-            $cmd = 'sudo -n bash -c ' . escapeshellarg($cmd);
+        // Servidor gerenciado: o gerenciador de arquivos roda como o usuário Linux do
+        // cliente (lrv_c<id>), dono das pastas dele. Sem sudo e sem alcançar outros clientes.
+        $isolado = \LRV\App\Services\Infra\UsuarioClienteService::servidorIsolado((int)($row['server_id'] ?? 0));
+
+        // Os arquivos do site pertencem ao usuário do PHP (ex.: "www" no aPanel). Antes o
+        // comando rodava com "sudo" como ROOT; agora roda como o DONO da pasta do deploy
+        // (nunca root) e continua preso ao deploy_path pelo prefixo de realpath acima.
+        // Se não der para trocar de usuário, roda como o próprio usuário SSH.
+        $b = escapeshellarg((string) $guarda['base']);
+        $c = escapeshellarg($cmd);
+        if ($isolado) {
+            $cmd = \LRV\App\Services\Infra\UsuarioClienteService::comoCliente($clienteId, $usuario, $cmd, (string) $guarda['base']);
+        } elseif ($usuario === 'root') {
+            $cmd = '__o=$(stat -c %U -- ' . $b . ' 2>/dev/null); '
+                . 'if [ -n "$__o" ] && [ "$__o" != root ]; then runuser -u "$__o" -- bash -c ' . $c . '; '
+                . 'else echo "Acesso negado: pasta do site pertence ao root."; exit 1; fi';
+        } else {
+            $cmd = '__o=$(stat -c %U -- ' . $b . ' 2>/dev/null); '
+                . 'if [ -n "$__o" ] && [ "$__o" != root ] && [ "$__o" != "$(id -un)" ] && sudo -n -u "$__o" true 2>/dev/null; '
+                . 'then sudo -n -u "$__o" bash -c ' . $c . '; else bash -c ' . $c . '; fi';
         }
 
         try {

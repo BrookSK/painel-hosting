@@ -23,11 +23,42 @@
 ### Fallback de SPA em site estático (3.6.2)
 - `NginxVhostService::criarVhostStaticSite`: se a raiz tem `index.html` e não tem `index.php`, o vhost usa `try_files $uri $uri/ /index.html;` (antes `/index.php?$query_string`, que dava "File not found." no F5 de rotas internas). Vale para vhosts novos e a cada deploy. Trazido isolado da branch `feature/isolamento-por-cliente`
 
+### Isolamento por cliente em servidor gerenciado (3.6.2)
+- `UsuarioClienteService`: usuário Linux por cliente `lrv_c<id>` (home `/home/lrv_c<id>` 700, sem sudo, removido de sudo/wheel/admin/docker), criado sob demanda pelo usuário SSH do painel. Só vale para `servers.is_managed_server = 1`
+- Dono das pastas do cliente = `lrv_c<id>`, grupo = grupo do PHP-FPM (`www` no aPanel), `o-rwx`, setgid nas pastas, `umask 027`. Ajuste recursivo só quando `find` acha algo fora do padrão. Pastas liberadas para gravação + `storage`/`bootstrap/cache` com `g+w`
+- Git Deploy (git, deploy key em `~/.ssh` do cliente, pós-deploy, commit, PM2) roda como `lrv_c<id>` via `sudo -n -u` / `runuser` + `env -i`. PM2 por cliente com `pm2 startup systemd -u lrv_c<id>`. Na 1ª execução os processos do deploy no PM2 do usuário SSH são removidos (libera a porta)
+- Console do Git Deploy em servidor gerenciado: roda como `lrv_c<id>` **sem lista de bloqueio** (pode usar pm2, chmod, chown nas próprias pastas). A lista paliativa ficou só para host não gerenciado sem container. VPS em container continua com `docker exec`
+- Gerenciador de arquivos (modo direto) e upload: como `lrv_c<id>`; upload vai para `/tmp`, `chown` para o cliente e `mv` feito pelo cliente dentro da pasta validada. Pastas de `clients.backup_extra_roots` também podem ser abertas
+- Botões PM2, logs do servidor (app/PM2) e excluir deploy usam o PM2 do cliente
+- `POST /cliente/git-deploy/pasta-dados` (`pastaDados`): "Liberar pasta" com caminho absoluto. Aceita pasta dentro dos projetos do cliente, raiz liberada pela equipe, pasta inexistente/vazia ou já do cliente; recusa pasta de projeto de outro cliente
+- `Auth::clienteTemAcessoServidor`: liberado automaticamente com assinatura ativa cujo plano inclui `git_deploy` (ou `host_access_enabled`); conta inativa nunca. `api_provisioning_enabled` (endpoints que geram custo sem pagamento) continua manual
+- Terminal da equipe: novo `Middlewares::exigir2faEquipe()` em todas as rotas `/equipe/terminal*` (além de `manage_terminal` e auditoria já existentes)
+- Atenção: sites hospedados fora do painel no mesmo servidor (ex.: `/www/wwwroot/*` com 755) continuam legíveis por qualquer usuário local; aplicar `chmod o-rwx` neles
+
+### Backup: pastas extras e bancos de dados; limite de upload no Nginx (3.6.2) — migration 0101
+- **Migration** `2026_10_14_0101_backup_pastas_extras.sql`: `vps.backup_extra_paths`, `clients.backup_extra_roots`, `backups.manifest`, `backups.warnings` (todas `TEXT NULL`, `ADD COLUMN IF NOT EXISTS`). Todo o código tolera a migration ainda não aplicada (try/catch com fallback)
+- **Pastas extras** (`ValidadorInfra::exigirCaminhoBackupExtra`, `formatoCaminhoBackup`, `raizesBackupCliente`): regex `^/(var/www|www/wwwroot)(/seg){1,6}$`, sem `.`/`..`; proibidos `/var/www`, `/var/www/html|default|lrv`, `/www/wwwroot` e prefixos `/www/server`, `/etc`, `/root`. Aceita só se estiver dentro de um `deploy_path` do cliente **na mesma VPS** ou de uma raiz liberada em `clients.backup_extra_roots` (`{cliente_id}` substituído); rejeita colisão com `deploy_path` de outro cliente. Revalidado no backup e no restore
+- No backup, cada pasta passa por `readlink -f` no servidor (com `sudo -n` se SSH não-root) + `test -d`, e o caminho real é validado de novo (symlink para fora é ignorado com aviso)
+- **Dump dos bancos** (`client_databases` ativos do cliente na VPS): `mysqldump --single-transaction --routines --triggers` via `--defaults-extra-file` (arquivo chmod 600 enviado em base64 para staging `/tmp/lrv_bk_<id>_<rand>` modo 700; no Docker, copiado para `/tmp/lrv.cnf` no container e removido depois). Senha nunca na linha de comando nem no log. Saída em `_lrv_db/<db>.sql` dentro do `.tar.gz`. Falha no dump vira aviso em `backups.warnings`, o backup segue e fica `completed`. Staging removido em `finally`
+- O tar não falha mais quando `client_<id>` não existe (servidor gerenciado); só lança "Nada para incluir no backup" se não houver pasta do cliente, dump nem pasta extra. Com sudo, `chown` do arquivo para o usuário SSH
+- `backups.manifest` = `{"client_dir":bool,"extra_paths":[...],"databases":[...]}`
+- **Restore** (`restaurar_backup`): corrigido — antes fazia `is_file()` em `remote:<id>:<path>` e sempre falhava. Agora, se o backup está no mesmo servidor da VPS, extrai direto do arquivo remoto (sem upload e sem apagar o original); se está em outro servidor, baixa com `baixarRemoto` e envia. Restaura `client_<id>` (se `client_dir` ou backup legado) e as pastas extras que ainda passam na validação, sem apagar o destino. **Dumps de banco não são importados automaticamente** (ficam em `_lrv_db/` para importação manual). Passa a usar `servers.volume_base_path` como o backup
+- Telas: cliente em `/cliente/backups` (lista/adicionar/remover pastas, atalhos com as pastas dos Git Deploys, avisos do backup) via `POST /cliente/backups/pastas` (máx. 20 pastas, rate limit `backup_paths` 20/60s). Equipe em Clientes → ver: "Pastas liberadas para backup" via `POST /equipe/clientes/backup-raizes` (`manage_users`, máx. 10)
+- **Nginx `client_max_body_size`**: setting `infra.nginx_client_max_body_size` (padrão `100m`, aceita `^\d{1,4}[kmg]?$`, máx. 2g, inválido/0 → 100m), editável em Equipe → Configurações. Incluído em `gerarConfigComSSL`, `gerarConfig` e `gerarConfigStaticSite` (vale para vhosts novos e regenerados; os existentes precisam ser regenerados)
+
 ### Isolamento de logs/PM2 por aplicação (3.6.2)
 - `AplicacoesController` (logs do servidor): removidos `error.log` global do Nginx, logs do PHP-FPM e `pm2 logs` sem filtro (mostravam dados de outros sites/sistemas). Agora só access/error log do domínio da aplicação + `docker logs` do container validado
 - Git Deploy: novo `POST /cliente/git-deploy/pm2` (`GitDeployController::pm2`, ops `logs|restart|status`). Roda como o usuário SSH (sem sudo, então não vê o PM2 do root) e só age nos processos cujo `pm2_env.pm_cwd` está dentro do `deploy_path` (resolve nomes do ecosystem, ex.: `central-rz-api`); fallback `deploy-<id>`. Botões "Reiniciar"/"Logs PM2" usam esse endpoint
 - `serverLogs`: seção PM2 usa a mesma resolução de nomes
-- Observação: o Console continua rodando com `sudo` como root para contas com acesso ao servidor; esse acesso é só para contas confiáveis
+
+### Console do Git Deploy confinado ao projeto do cliente (3.6.2)
+- `GitDeployController::console`: removido o `sudo -n bash -c` (rodava como root quando o SSH não era root). Nenhum caminho do console executa mais como root
+- VPS em container (`vps.container_id` preenchido e o `deploy_path` existe no container): `docker exec -w <deploy_path> vps_client_<c>_<v>` (fallback pelo `container_id`), `sh -c`
+- Servidor gerenciado sem container: roda como o usuário SSH (ex.: `lrvweb`); se o SSH for `root`, rebaixa com `runuser -u <usuário do PHP-FPM>`. Ambiente limpo `env -i`, `HOME=/tmp/lrv-console-<id>` (700), `PATH=/usr/local/bin:/usr/bin:/bin` + diretórios de node/npm/npx/pnpm/yarn/corepack/git/composer, `bash --noprofile --norc`, cwd no `deploy_path` validado por `ValidadorInfra::exigirCaminhoDeploy`
+- Bloqueio por lista (`motivoBloqueioConsole`, **paliativo**, contornável): sudo/su/doas/pkexec/runuser/setpriv/chroot/nsenter/unshare/docker/podman/ctr/crictl/systemctl/service/crontab/pm2/ssh/scp/sftp; caminhos `/root`, `~root`, `/etc/shadow|gshadow|sudoers`, `/www/server`, `/proc/`, `/sys/`, socket do Docker, `.ssh`, `/home`; `..`; `/var/www`, `/www/wwwroot`, `/srv` fora do próprio deploy; `deploy_path` de outros deploys do mesmo servidor. PM2 fica nos botões do painel (`/cliente/git-deploy/pm2`)
+- Permissões (`prepararPermissoesConsole`, comando fixo do painel, não do cliente): se houver algo não gravável até 4 níveis, `setfacl -R -m u:<ssh>:rwX -m d:u:<ssh>:rwX <deploy_path>`; sem ACL, `chgrp -R <grupo do dono> + chmod -R g+rwX + g+s` nos diretórios (exige o usuário SSH no grupo do PHP). Só no `deploy_path`
+- `ArquivosController::execDirectOnServer`: sai o `sudo` como root; o comando (já preso ao deploy por `realpath`) roda como o dono da pasta do deploy (`sudo -n -u <dono>`, ou `runuser` com SSH root); se o dono for root, recusa
+- **Solução definitiva proposta**: um usuário Linux por cliente (dono do `deploy_path`, grupo do PHP-FPM com ACL), PM2 por usuário e console via `sudo -u <usuário do cliente>` (ou container por cliente). Hoje todos os clientes de um servidor gerenciado compartilham o mesmo usuário SSH, então o isolamento entre eles depende da lista acima
 
 ### Proteções adicionais (3.6.2) — migration 0100
 - **Cadastro**: captcha Cloudflare Turnstile (`app/Services/Seguranca/Captcha.php`) em `/cliente/criar-conta` e no wizard `/contratar`. Chaves em Equipe → Configurações → Proteção do cadastro (`captcha.turnstile_site_key` / `captcha.turnstile_secret`). Sem chaves = captcha desligado. CSP liberando `challenges.cloudflare.com`
@@ -69,6 +100,12 @@
 - **Proteção extra no login e na verificação em duas etapas**: limite de tentativas que não pode mais ser burlado
 - **Avisos automáticos (webhooks) e migração de WordPress** não podem mais ser usados para acessar a rede interna dos servidores
 - **Equipe**: só superadmin pode criar outros superadmins ou mudar as permissões dos cargos
+
+### Corrigido (Git Deploy / arquivos — 2026-11-03)
+- **Pós-deploy com falha marca o deploy como erro** (`GitDeployController::executarDeploy`): o comando pós-deploy agora termina com `echo "__POSTDEPLOY_EXIT=$?"` (em nova linha, para não ser engolido por comentário). Se o código for diferente de 0, ou se o marcador não aparecer (timeout de 120s / conexão caída), lança exceção: `git_deployments.status=error`, `error_message` e `git_deploy_logs` com status `error` e os últimos 4000 caracteres do output. PM2 não é tocado (o processo antigo segue rodando) e as permissões são reaplicadas antes de abortar. Vale para deploy manual (`deploy`) e webhook (`executarDeployPorId`). O marcador é removido do output exibido
+- **PM2 com inicialização automática**: depois de `pm2 start` + `pm2 save`, roda `pm2 startup systemd -u <usuário SSH> --hp <home>` (com `sudo -n env PATH=...` quando o SSH não é root, usando o caminho absoluto do pm2) só se `pm2-<usuário>.service` ainda não existir. Falha só gera aviso na seção "PM2 startup" do output
+- **SPA estática dava 404 ao recarregar rota interna** (`NginxVhostService::criarVhostStaticSite`/`gerarConfigStaticSite`): se a raiz detectada tem `index.html` e não tem `index.php`, o vhost usa `try_files $uri $uri/ /index.html;`. Arquivos reais têm prioridade (multi-página continua funcionando). Aplica-se a cada deploy (o vhost é regerado)
+- **Editor de arquivos não abria arquivo de 0 bytes** (`ArquivosController::ler` + `cliente/arquivos.php`): arquivo vazio devolve um marcador que vira `content=''`; o JS abre o editor em branco e passou a avisar quando a leitura falha (antes ficava em silêncio)
 
 ---
 

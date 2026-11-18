@@ -152,6 +152,26 @@ final class ConfiguracoesSistema
         return true;
     }
 
+    /** Valida um valor de client_max_body_size (ex.: 100m). Retorna null se inválido, 0 ou acima de 2g. */
+    public static function normalizarClientMaxBodySize(string $v): ?string
+    {
+        $v = strtolower(trim($v));
+        if (preg_match('/^(\d{1,4})([kmg]?)$/', $v, $m) !== 1) {
+            return null;
+        }
+        $bytes = (int) $m[1] * match ($m[2]) { 'k' => 1024, 'm' => 1024 ** 2, 'g' => 1024 ** 3, default => 1 };
+        if ($bytes <= 0 || $bytes > 2 * 1024 ** 3) {
+            return null;
+        }
+        return $v;
+    }
+
+    /** Limite de upload por requisição nos vhosts gerados (padrão 100m). */
+    public static function nginxClientMaxBodySize(): string
+    {
+        return self::normalizarClientMaxBodySize((string) Settings::obter('infra.nginx_client_max_body_size', '100m')) ?? '100m';
+    }
+
     public static function infraNodeMaxUtilPercent(): int
     {
         $v = Settings::obter('infra.node_max_util_percent', 85);

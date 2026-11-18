@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LRV\App\Services\Backup;
 
 use LRV\App\Services\Provisioning\DockerCli;
+use LRV\App\Services\Seguranca\ValidadorInfra;
 use LRV\Core\BancoDeDados;
 use LRV\Core\ConfiguracoesSistema;
 use LRV\Core\Settings;
@@ -128,16 +129,158 @@ final class VpsBackupService
 
         $dirCliente = $volumeBase . '/client_' . $clientId;
 
+        // Usuário SSH não-root precisa de sudo (mesma regra do NginxVhostService::needsSudo)
+        $sudo = $sshUser !== 'root' ? 'sudo -n ' : '';
+        $avisos = [];
+
+        // a) Pastas extras configuradas pelo cliente (revalidadas a cada backup)
+        $extrasCfg = [];
+        try {
+            $stE = $pdo->prepare('SELECT backup_extra_paths FROM vps WHERE id = :id LIMIT 1');
+            $stE->execute([':id' => $vpsId]);
+            $tmp = json_decode((string) ($stE->fetchColumn() ?: ''), true);
+            if (is_array($tmp)) {
+                $extrasCfg = array_values(array_filter($tmp, 'is_string'));
+            }
+        } catch (\Throwable) {
+            // migration 0101 ainda não aplicada
+        }
+
+        $extras = [];
+        foreach ($extrasCfg as $p) {
+            try {
+                $p = ValidadorInfra::exigirCaminhoBackupExtra($p, $clientId, $vpsId);
+            } catch (\InvalidArgumentException $e) {
+                $avisos[] = 'Pasta ' . $p . ' ignorada: ' . $e->getMessage();
+                continue;
+            }
+            // b) Resolver symlinks no servidor e validar o caminho real
+            $r = $this->docker->executar('r=$(' . $sudo . 'readlink -f -- ' . escapeshellarg($p) . ' 2>/dev/null) && ' . $sudo . 'test -d "$r" && printf "%s" "$r"');
+            $real = trim((string) ($r['saida'] ?? ''));
+            if ($real === '') {
+                $avisos[] = 'Pasta ' . $p . ' ignorada: não existe no servidor.';
+                continue;
+            }
+            try {
+                $real = ValidadorInfra::exigirCaminhoBackupExtra($real, $clientId, $vpsId);
+            } catch (\InvalidArgumentException $e) {
+                $avisos[] = 'Pasta ' . $p . ' ignorada: aponta para um local não permitido.';
+                continue;
+            }
+            $extras[$real] = true;
+        }
+        $extras = array_keys($extras);
+
         $remoteFile = '/tmp/backup_vps_' . $vpsId . '_' . $backupId . '_' . date('Ymd_His') . '.tar.gz';
+        $stage = '/tmp/lrv_bk_' . $backupId . '_' . bin2hex(random_bytes(4));
 
-        $log('Criando tar.gz no node...');
-        $cmd = 'test -d ' . escapeshellarg($dirCliente)
-            . ' && tar -czf ' . escapeshellarg($remoteFile)
-            . ' -C ' . escapeshellarg($volumeBase)
-            . ' ' . escapeshellarg('client_' . $clientId);
+        try {
+            // c) Dump dos bancos do cliente nesta VPS
+            $bancos = [];
+            try {
+                $stD = $pdo->prepare("SELECT d.db_name, d.db_user, d.db_password_enc, d.engine, d.container_id, d.db_port FROM client_databases d WHERE d.client_id = :c AND d.vps_id = :v AND d.status = 'active'");
+                $stD->execute([':c' => $clientId, ':v' => $vpsId]);
+                $bancos = $stD->fetchAll() ?: [];
+            } catch (\Throwable) {
+                $bancos = [];
+            }
 
-        $rTar = $this->docker->executar($cmd);
-        $log(trim((string) ($rTar['saida'] ?? '')));
+            $dumps = [];
+            if ($bancos !== []) {
+                $this->docker->executar('mkdir -m 700 ' . escapeshellarg($stage) . ' && mkdir -m 700 ' . escapeshellarg($stage . '/_lrv_db'));
+                foreach ($bancos as $i => $db) {
+                    $dbName = (string) ($db['db_name'] ?? '');
+                    if (!ValidadorInfra::identificadorMysqlValido($dbName)) {
+                        $avisos[] = 'Banco ' . $dbName . ': nome inválido, ignorado.';
+                        continue;
+                    }
+                    $dbUser = (string) ($db['db_user'] ?? '');
+                    $dbPass = \LRV\App\Services\Infra\SshCrypto::decifrar((string) ($db['db_password_enc'] ?? ''));
+                    $esc = static fn (string $s): string => str_replace(['\\', '"', "\n", "\r"], ['\\\\', '\\"', '', ''], $s);
+                    $cnfTxt = "[client]\nuser=\"" . $esc($dbUser) . "\"\npassword=\"" . $esc($dbPass) . "\"\n";
+                    $cnf = $stage . '/my_' . (int) $i . '.cnf';
+                    $sql = $stage . '/_lrv_db/' . $dbName . '.sql';
+                    $err = $stage . '/err';
+
+                    // Senha só trafega em base64 dentro do arquivo (nunca na linha de comando do mysqldump)
+                    $this->docker->executar('umask 077 && printf %s ' . escapeshellarg(base64_encode($cnfTxt)) . ' | base64 -d > ' . escapeshellarg($cnf) . ' && chmod 600 ' . escapeshellarg($cnf));
+
+                    $opts = ' --single-transaction --routines --triggers ';
+                    if ((string) ($db['engine'] ?? 'native') === 'docker') {
+                        $cid = (string) ($db['container_id'] ?? '');
+                        if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/', $cid)) {
+                            $avisos[] = 'Banco ' . $dbName . ': container inválido, ignorado.';
+                            $this->docker->executar('rm -f ' . escapeshellarg($cnf));
+                            continue;
+                        }
+                        $c = escapeshellarg($cid);
+                        $cmdDump = $sudo . 'docker exec -i ' . $c . " sh -c 'cat > /tmp/lrv.cnf && chmod 600 /tmp/lrv.cnf' < " . escapeshellarg($cnf)
+                            . ' && ' . $sudo . 'docker exec ' . $c . ' mysqldump --defaults-extra-file=/tmp/lrv.cnf' . $opts . escapeshellarg($dbName)
+                            . ' > ' . escapeshellarg($sql) . ' 2> ' . escapeshellarg($err)
+                            . '; rc=$?; ' . $sudo . 'docker exec ' . $c . ' rm -f /tmp/lrv.cnf; echo "rc=$rc"';
+                    } else {
+                        $porta = (int) ($db['db_port'] ?? 0);
+                        $cmdDump = 'mysqldump --defaults-extra-file=' . escapeshellarg($cnf) . $opts
+                            . '-h 127.0.0.1 ' . ($porta > 0 ? '-P ' . $porta . ' ' : '') . escapeshellarg($dbName)
+                            . ' > ' . escapeshellarg($sql) . ' 2> ' . escapeshellarg($err) . '; echo "rc=$?"';
+                    }
+                    $rD = $this->docker->executar($cmdDump);
+                    $this->docker->executar('rm -f ' . escapeshellarg($cnf));
+
+                    $ok = str_contains((string) ($rD['saida'] ?? ''), 'rc=0');
+                    if ($ok) {
+                        $rS = $this->docker->executar('test -s ' . escapeshellarg($sql) . ' && echo CHEIO || echo VAZIO');
+                        $ok = str_contains((string) ($rS['saida'] ?? ''), 'CHEIO');
+                    }
+                    if (!$ok) {
+                        $rE = $this->docker->executar('cat ' . escapeshellarg($err) . ' 2>/dev/null; rm -f ' . escapeshellarg($sql));
+                        $msg = 'Banco ' . $dbName . ': falha no dump: ' . substr(trim((string) ($rE['saida'] ?? '')), 0, 300);
+                        $avisos[] = $msg;
+                        $log($msg);
+                        continue;
+                    }
+                    $dumps[] = $dbName;
+                    $log('Dump do banco ' . $dbName . ' concluído.');
+                }
+            }
+
+            // d) Montar o tar com o que existir
+            $rDir = $this->docker->executar('test -d ' . escapeshellarg($dirCliente) . ' && echo SIM || echo NAO');
+            $temDirCliente = str_contains((string) ($rDir['saida'] ?? ''), 'SIM');
+
+            if (!$temDirCliente && $dumps === [] && $extras === []) {
+                throw new \RuntimeException('Nada para incluir no backup.');
+            }
+
+            $log('Criando tar.gz no node...');
+            $cmd = $sudo . 'tar -czf ' . escapeshellarg($remoteFile);
+            if ($temDirCliente) {
+                $cmd .= ' -C ' . escapeshellarg($volumeBase) . ' ' . escapeshellarg('client_' . $clientId);
+            }
+            if ($dumps !== []) {
+                $cmd .= ' -C ' . escapeshellarg($stage) . ' _lrv_db';
+            }
+            foreach ($extras as $p) {
+                $cmd .= ' -C / ' . escapeshellarg(ltrim($p, '/'));
+            }
+            $cmd .= '; echo "rc=$?"';
+
+            $rTar = $this->docker->executar($cmd);
+            $saidaTar = trim((string) ($rTar['saida'] ?? ''));
+            $log($saidaTar);
+            if (!preg_match('/rc=[01]\s*$/', $saidaTar)) {
+                // rc=1 do GNU tar = arquivos mudaram durante a leitura (backup ainda é válido)
+                throw new \RuntimeException('Falha ao criar o arquivo de backup.');
+            }
+            if ($sudo !== '') {
+                $this->docker->executar($sudo . 'chown ' . escapeshellarg($sshUser) . ' ' . escapeshellarg($remoteFile));
+            }
+        } finally {
+            try {
+                $this->docker->executar('rm -rf ' . escapeshellarg($stage));
+            } catch (\Throwable) {
+            }
+        }
 
         $log('Backup concluído. Arquivo salvo no node: ' . $remoteFile);
 
@@ -147,13 +290,27 @@ final class VpsBackupService
             $size = (int)trim((string)($rSize['saida'] ?? '0'));
         } catch (\Throwable) {}
 
-        $up = $pdo->prepare("UPDATE backups SET status='completed', file_path=:p, file_size=:s, completed_at=:c, error=NULL WHERE id=:id");
-        $up->execute([
+        foreach ($avisos as $a) {
+            $log('Aviso: ' . $a);
+        }
+
+        $params = [
             ':p' => 'remote:' . $serverId . ':' . $remoteFile,
             ':s' => $size,
             ':c' => date('Y-m-d H:i:s'),
             ':id' => $backupId,
-        ]);
+        ];
+        // e) Manifesto e avisos (fallback se a migration 0101 ainda não rodou)
+        try {
+            $up = $pdo->prepare("UPDATE backups SET status='completed', file_path=:p, file_size=:s, completed_at=:c, error=NULL, manifest=:m, warnings=:w WHERE id=:id");
+            $up->execute($params + [
+                ':m' => json_encode(['client_dir' => $temDirCliente, 'extra_paths' => $extras, 'databases' => $dumps], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                ':w' => $avisos === [] ? null : implode("\n", $avisos),
+            ]);
+        } catch (\Throwable) {
+            $up = $pdo->prepare("UPDATE backups SET status='completed', file_path=:p, file_size=:s, completed_at=:c, error=NULL WHERE id=:id");
+            $up->execute($params);
+        }
 
         $log('Backup concluído. Tamanho: ' . $size . ' bytes.');
     }

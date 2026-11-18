@@ -296,6 +296,7 @@ final class NginxVhostService
             . "    listen 80;\n"
             . "    listen 443 ssl http2;\n"
             . "    server_name {$domain};\n"
+            . "    client_max_body_size " . \LRV\Core\ConfiguracoesSistema::nginxClientMaxBodySize() . ";\n"
             . "\n"
             . "    ssl_certificate {$certDir}/fullchain.pem;\n"
             . "    ssl_certificate_key {$certDir}/privkey.pem;\n"
@@ -330,6 +331,7 @@ final class NginxVhostService
         return "server {\n"
             . "    listen 80;\n"
             . "    server_name {$domain};\n"
+            . "    client_max_body_size " . \LRV\Core\ConfiguracoesSistema::nginxClientMaxBodySize() . ";\n"
             . "\n"
             // Validação do Let's Encrypt: servida do disco, não do app (senão o app responde 404)
             . "    location ^~ /.well-known/acme-challenge/ {\n"
@@ -383,6 +385,7 @@ final class NginxVhostService
         return "server {\n"
             . $listenBlock
             . "    server_name {$domain};\n"
+            . "    client_max_body_size " . \LRV\Core\ConfiguracoesSistema::nginxClientMaxBodySize() . ";\n"
             . "    root {$rootPath};\n"
             . "    index index.php index.html index.htm;\n"
             . $sslBlock

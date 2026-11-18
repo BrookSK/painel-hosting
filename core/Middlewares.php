@@ -172,6 +172,36 @@ final class Middlewares
         };
     }
 
+    /**
+     * Recursos sensíveis da equipe (terminal dos servidores): só para quem tem 2FA ativo.
+     * O login já exige o código quando o 2FA está ligado.
+     */
+    public static function exigir2faEquipe(): callable
+    {
+        return static function (Requisicao $req): ?Resposta {
+            $id = Auth::equipeId();
+            if ($id === null) {
+                return Resposta::redirecionar('/equipe/entrar');
+            }
+            try {
+                $st = BancoDeDados::pdo()->prepare('SELECT 1 FROM user_totp WHERE user_id = :id AND enabled = 1 LIMIT 1');
+                $st->execute([':id' => $id]);
+                $ok = (bool) $st->fetchColumn();
+            } catch (\Throwable) {
+                $ok = false;
+            }
+            if ($ok) {
+                return null;
+            }
+            $msg = 'Ative a verificação em duas etapas (2FA) na sua conta para usar o terminal dos servidores.';
+            if ($req->metodo !== 'GET') {
+                return Resposta::json(['ok' => false, 'erro' => $msg], 403);
+            }
+            $_SESSION['flash_warning'] = $msg;
+            return Resposta::redirecionar('/equipe/2fa/configurar');
+        };
+    }
+
     public static function exigirPermissao(string $permissao): callable
     {
         return static function (Requisicao $req) use ($permissao): ?Resposta {

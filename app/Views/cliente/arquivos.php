@@ -179,10 +179,12 @@ require __DIR__ . '/../_partials/layout-cliente-inicio.php';
       .then(function(d){
         if(!d.ok){alert(d.erro||'Erro');return;}
         document.getElementById('editorTitle').textContent=fullPath;
-        document.getElementById('editorContent').value=d.content;
+        // Arquivo vazio (0 bytes) abre com o editor em branco
+        document.getElementById('editorContent').value=(typeof d.content==='string')?d.content:'';
         document.getElementById('editorModal').style.display='flex';
         document.getElementById('editorModal')._path=fullPath;
-      });
+      })
+      .catch(function(){alert('Não foi possível abrir o arquivo.');});
   };
   window.closeEditor=function(){document.getElementById('editorModal').style.display='none';};
   window.saveFile=function(){
