@@ -444,7 +444,10 @@ final class NginxVhostService
             . ' || (test -d ' . escapeshellarg($rootPath . '/build') . ' && echo "build")'
             . ' || (test -d ' . escapeshellarg($rootPath . '/out') . ' && echo "out")'
             . ' || echo "root"';
-        $detectResult = $this->exec($ssh, $srv, $detectCmd);
+        // Com usuário por cliente, a pasta do site é fechada para "outros": o usuário SSH
+        // do painel só enxerga dentro dela com sudo (comandos fixos, só leitura).
+        $comoAdmin = fn(string $c): string => $this->needsSudo($srv) ? 'sudo -n sh -c ' . escapeshellarg($c) : $c;
+        $detectResult = $this->exec($ssh, $srv, $comoAdmin($detectCmd));
         $buildDir = trim((string)($detectResult['saida'] ?? 'root'));
         $buildDir = preg_replace('/^.*?(public-php|public-html|dist|build|out|root).*$/s', '$1', $buildDir) ?: 'root';
 
@@ -459,7 +462,7 @@ final class NginxVhostService
         // Fallback de SPA só quando a raiz tem index.html e não tem index.php
         $spaCmd = 'if test -f ' . escapeshellarg($actualRoot . '/index.php') . '; then echo lrv-tem-php;'
             . ' elif test -f ' . escapeshellarg($actualRoot . '/index.html') . '; then echo lrv-spa; else echo lrv-nada; fi';
-        $spaResult = $this->exec($ssh, $srv, $spaCmd);
+        $spaResult = $this->exec($ssh, $srv, $comoAdmin($spaCmd));
         $spaFallback = str_contains((string)($spaResult['saida'] ?? ''), 'lrv-spa');
         if ($spaFallback) {
             $logs[] = 'Site estático: rotas internas redirecionadas para /index.html.';
